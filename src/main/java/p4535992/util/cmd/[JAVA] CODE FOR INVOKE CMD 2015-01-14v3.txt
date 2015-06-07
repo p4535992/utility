@@ -1,0 +1,153 @@
+/////////////////////////////////////////////////////////////////
+//How to execute a command int he shell LINUX
+/////////////////////////////////////////////////////////////////
+import java.io.IOException;
+import java.util.*;
+ 
+public class ProcessBuilderExample
+{
+  public static void main(String[] args)
+  throws IOException, InterruptedException
+  {
+    // you need a shell to execute a command pipeline
+    List<String> commands = new ArrayList<String>();
+    commands.add("/bin/sh");
+    commands.add("-c");
+    commands.add("ls -l /var/tmp | grep foo");
+ 
+    SystemCommandExecutor commandExecutor = new SystemCommandExecutor(commands);
+    int result = commandExecutor.executeCommand();
+ 
+    StringBuilder stdout = commandExecutor.getStandardOutputFromCommand();
+    StringBuilder stderr = commandExecutor.getStandardErrorFromCommand();
+ 
+    System.out.println("STDOUT");
+    System.out.println(stdout);
+ 
+    System.out.println("STDERR");
+    System.out.println(stderr);
+  }
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+How to execute a command prompt command & view output in Java
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+ 
+public class RuntimeExec {
+public StreamWrapper getStreamWrapper(InputStream is, String type){
+            return new StreamWrapper(is, type);
+}
+private class StreamWrapper extends Thread {
+    InputStream is = null;
+    String type = null;         
+    String message = null;
+ 
+    public String getMessage() {
+            return message;
+    }
+ 
+    StreamWrapper(InputStream is, String type) {
+        this.is = is;
+        this.type = type;
+    }
+ 
+    public void run() {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            StringBuffer buffer = new StringBuffer();
+            String line = null;
+            while ( (line = br.readLine()) != null) {
+                buffer.append(line);//.append("\n");
+            }
+            message = buffer.toString();
+        } catch (IOException ioe) {
+            ioe.printStackTrace(); 
+        }
+    }
+}
+  
+ 
+// this is where the action is
+public static void main(String[] args) {
+            Runtime rt = Runtime.getRuntime();
+            RuntimeExec rte = new RuntimeExec();
+            StreamWrapper org.p4535992.mvc.error, output;
+ 
+            try {
+                        Process proc = rt.exec("ping localhost");
+                        org.p4535992.mvc.error = rte.getStreamWrapper(proc.getErrorStream(), "ERROR");
+                        output = rte.getStreamWrapper(proc.getInputStream(), "OUTPUT");
+                        int exitVal = 0;
+ 
+                        org.p4535992.mvc.error.start();
+                        output.start();
+                        org.p4535992.mvc.error.join(3000);
+                        output.join(3000);
+                        exitVal = proc.waitFor();
+                        System.out.println("Output: "+output.message+"\nError: "+org.p4535992.mvc.error.message);
+            } catch (IOException e) {
+                        e.printStackTrace();
+            } catch (InterruptedException e) {
+                        e.printStackTrace();
+            }
+            }
+
+            
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+ try {
+    // Execute a command without arguments
+    String command = "ls";
+    Process child = Runtime.getRuntime().exec(command);
+    
+    // Execute a command with an argument
+    command = "ls /tmp";
+    child = Runtime.getRuntime().exec(command);
+} catch (IOException e) {
+}
+
+// In case developer wants to execute a command with more than 
+// one argument, it is necessary to use the overload that requires 
+// the command and its arguments to be supplied in an array:
+
+try {
+    // Execute a command with an argument that contains a space
+    String[] commands = new String[]{"grep", "hello world", "/tmp/f.txt"};
+    
+    commands = new String[]{"grep", "hello world", 
+            "c:\\Documents and Settings\\f.txt"};
+            
+    Process child = Runtime.getRuntime().exec(commands);
+    
+} catch (IOException e) {
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+No need to know where the files are because when you launch a bat file the working dir is the dir where it was launched (the "master folder"), 
+so if you have this structure:
+
+.\mydocuments\folder\mybat.bat
+.\mydocuments\folder\subfolder\file.txt
+
+And the user starts the "mybat.bat", the working dir is ".\mydocuments\folder" so you only need to write the subfolder name in your script:
+
+@Echo OFF
+REM Do anything with ".\Subfolder\File1.txt"
+PUSHD ".\Subfolder"
+Type "File1.txt"
+Pause&Exit
+
+Anyways the working dir is stored in the "%CD%" variable, and the dir where the bat was launched is stored on the argument 0, 
+then if you want to know the working dir in any computer you can do:
+
+@Echo OFF
+Echo Launch dir: "%~dp0"
+Echo Current dir: "%CD%"
+Pause&Exit
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
