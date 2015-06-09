@@ -22,9 +22,9 @@
     <!-- Mapping files -->
     <!-- <mapping resource="Website.hbm.xml"/> -->
     <!-- <mapping resource="GeoDocument.hbm.xml"/> -->
-    <mapping class="org.p4535992.mvc.home.object.GeoDocument" file="" jar="" package="" resource="YYY"/>
-    <mapping class="org.p4535992.mvc.home.object.InfoDocument" file="" jar="" package="" resource="org.p4535992.mvc.home/utils/hibernate/cfg/geolocationdb/infodocument.hbm.xml"/>
-    <mapping class="org.p4535992.mvc.home.object.GeoDomainDocument" file="" jar="" package="" resource="org.p4535992.mvc.home/utils/hibernate/cfg/geolocationdb/geodomaindocument.hbm.xml"/>
-    <mapping class="org.p4535992.mvc.home.object.Website" resource="org.p4535992.mvc.home/utils/hibernate/cfg/geolocationdb/website.hbm.xml"/>
+    <mapping class="home.home.object.GeoDocument" file="" jar="" package="" resource="YYY"/>
+    <mapping class="home.home.object.InfoDocument" file="" jar="" package="" resource="home.home/utils/hibernate/cfg/geolocationdb/infodocument.hbm.xml"/>
+    <mapping class="home.home.object.GeoDomainDocument" file="" jar="" package="" resource="home.home/utils/hibernate/cfg/geolocationdb/geodomaindocument.hbm.xml"/>
+    <mapping class="home.home.object.Website" resource="home.home/utils/hibernate/cfg/geolocationdb/website.hbm.xml"/>
   </session-factory>
 </hibernate-configuration>

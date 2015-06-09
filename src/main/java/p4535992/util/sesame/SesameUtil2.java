@@ -73,7 +73,7 @@ public class SesameUtil2 {
             ){
         this.TYPE_REPOSITORY=TYPE_REPOSITORY;
         this.PATH_FOLDER_STORAGE=PATH_FOLDER_STORAGE;
-        this. PATH_FOLDER_REPOSITORY=PATH_FOLDER_REPOSITORY;
+        this.PATH_FOLDER_REPOSITORY=PATH_FOLDER_REPOSITORY;
         this.RULESET=RULESET;
         this.USER_REPOSITORY= null;
         this.PASSWORD_REPOSITORY=null;
@@ -259,7 +259,7 @@ public class SesameUtil2 {
 
     /**
      * Parses and loads all files specified in PARAM_PRELOAD
-     * @param preloadFolder e.g.  "./preload"
+     * @param preloadFolder e.home.  "./preload"
      * @throws Exception
      */
     public void loadFiles(String preloadFolder) throws Exception {
@@ -622,7 +622,7 @@ public class SesameUtil2 {
     /**
      * Export the contents of the repository (explicit, implicit or all statements) to the given filename in
      * the given RDF format,
-     * @param exportType e.g //explicit,implicit,all,specific
+     * @param exportType e.home //explicit,implicit,all,specific
      */
     public void export(String outputPathFile,String outputFormat,String exportType) throws RepositoryException, UnsupportedRDFormatException, IOException,
             RDFHandlerException {
@@ -943,7 +943,7 @@ public class SesameUtil2 {
         // finally, insert the DatasetGraph instance
         SesameDataset dataset = new SesameDataset(repositoryConnection);
         //From now on the SesameDataset object can be used through the Jena API 
-        //as regular Dataset, e.g. to add some data into it one could something like the
+        //as regular Dataset, e.home. to add some data into it one could something like the
         //following:
         com.hp.hpl.jena.rdf.model.Model model = 
                 com.hp.hpl.jena.rdf.model.ModelFactory.createModelForGraph(dataset.getDefaultGraph());
@@ -1286,7 +1286,7 @@ public class SesameUtil2 {
             else {
                 reader = new BufferedInputStream(new FileInputStream(file), 256 * 1024);
             }
-            // create a parser org.p4535992.mvc.home.initializer.org.p4535992.mvc.config with preferred settings
+            // create a parser home.home.initializer.org.p4535992.mvc.config with preferred settings
            /* boolean verifyData = VERIFY;
             boolean stopAtFirstError = STOP_ON_ERROR;
             boolean preserveBnodeIds = PRESERVE_BNODES;*/
@@ -1301,7 +1301,7 @@ public class SesameUtil2 {
             configs.set(stopAtFirstErrorSet,STOP_ON_ERROR);
             configs.set(preserveBnodeIdsSet,PRESERVE_BNODES);*/
 
-            //ParserConfig org.p4535992.mvc.home.initializer.org.p4535992.mvc.config = new ParserConfig(verifyData, stopAtFirstError, preserveBnodeIds, RDFParser.DatatypeHandling.VERIFY);
+            //ParserConfig home.home.initializer.org.p4535992.mvc.config = new ParserConfig(verifyData, stopAtFirstError, preserveBnodeIds, RDFParser.DatatypeHandling.VERIFY);
             ParserConfig config = new ParserConfig();
             config.set(verifyDataSet,VERIFY);
             config.set(stopAtFirstErrorSet,STOP_ON_ERROR);
@@ -1310,7 +1310,7 @@ public class SesameUtil2 {
             long chunkSize = Long.parseLong(CHUNK_SIZE);
             long start = System.currentTimeMillis();
             // set the parser configuration for our connection
-            /*ParserConfig org.p4535992.mvc.home.initializer.org.p4535992.mvc.config = new ParserConfig(verifyData, stopAtFirstError, preserveBnodeIds, datatypeHandling);*/
+            /*ParserConfig home.home.initializer.org.p4535992.mvc.config = new ParserConfig(verifyData, stopAtFirstError, preserveBnodeIds, datatypeHandling);*/
 
             repositoryConnection.setParserConfig(config);
             RDFParser parser = Rio.createParser(format);

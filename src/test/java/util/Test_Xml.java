@@ -25,7 +25,7 @@ public class Test_Xml {
     
     public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException, IOException, org.jdom2.JDOMException, SAXException, TransformerException {
           String path= System.getProperty("user.dir")+
-                 "\\src\\org.p4535992.mvc.home\\utils\\xml\\hibernate.cfg.xml";
+                 "\\src\\home.home\\utils\\xml\\hibernate.cfg.xml";
           File file = new File(path);
           // <property name="connection.driver_class">com.sql.jdbc.Driver</property>
           //XMLUtil2.updateInnerTextOfSpecificElement(path, "property", "name", "connection.driver_class", "XXXX");

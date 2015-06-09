@@ -26,7 +26,7 @@ public class Test_Jena {
      public static void main(String args[]) throws NullPointerException, InterruptedException, InvocationTargetException, SAXException, IOException,TransformerConfigurationException{  
          //GeoDocumentDAO dao = new GeoDocumentDAO();
          
-         //org.p4535992.mvc.home.utils.log log = new org.p4535992.mvc.home.utils.log("xxx",".txt");
+         //home.home.utils.log log = new home.home.utils.log("xxx",".txt");
          String outputN3Knime= "C:\\Users\\Marco\\Desktop\\File SQL Supporto Programma Tesi\\2015-05-05\\result_silk_km4c-InfoDoc_M-wgs84_COORD_B1.nt";
          File file = new File(outputN3Knime);
          //EncodingUtil.rewriteTheFileToUTF8(file);

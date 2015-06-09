@@ -65,12 +65,61 @@
         <com.fasterxml.jackson.core.version>2.5.3</com.fasterxml.jackson.core.version>
         <org-json.version>20140107</org-json.version>
         <com.google.code.gson>2.3.1</com.google.code.gson>
+        <!-- SPRING FRAMEWORK -->
+        <io.spring.platform-version>1.1.2.RELEASE</io.spring.platform-version>
+        <org.springframework.version>4.1.6.RELEASE</org.springframework.version>
         <!-- Apache -->
         <org.apache.httpcomponents.version>4.4.1</org.apache.httpcomponents.version>
         <org.apache.commons.version>2.0</org.apache.commons.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${org.springframework.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.security</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>io.spring.platform</groupId>
+                <artifactId>platform-bom</artifactId>
+                <version>${io.spring.platform-version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.security</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>xml-apis</groupId>
+                <artifactId>xml-apis</artifactId>
+                <version>1.4.01</version>
+                <scope>runtime</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <!-- SPRING -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+        </dependency>
         <!-- Hibernate -->
         <dependency>
             <groupId>org.hibernate</groupId>

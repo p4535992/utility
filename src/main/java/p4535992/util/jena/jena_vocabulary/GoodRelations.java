@@ -45,7 +45,7 @@ public class GoodRelations {
      *  specified using the properties gr:hasMinValueInteger and gr:hasMaxValueInteger 
      *  to that instance. The unit of measurement is specified using the property 
      *  gr:hasUnitOfMeasurement with a string holding a UN/CEFACT code suitable for 
-     *  durations, e.g. MON (months), DAY (days), HUR (hours), or MIN (minutes). The 
+     *  durations, e.home. MON (months), DAY (days), HUR (hours), or MIN (minutes). The
      *  difference to the gr:validFrom and gr:validThrough properties is that those 
      *  specify the interval during which the gr:Offering is valid, while gr:advanceBookingRequirement 
      *  specifies the acceptable relative amount of time between accepting the offer 
@@ -64,7 +64,7 @@ public class GoodRelations {
     public static final ObjectProperty appliesToPaymentMethod = m_model.createObjectProperty( "http://purl.org/goodrelations/v1#appliesToPaymentMethod" );
     
     /** <p>This states that a particular gr:Offering is available at or from the given 
-     *  gr:Location (e.g. shop or branch).</p>
+     *  gr:Location (e.home. shop or branch).</p>
      */
     public static final ObjectProperty availableAtOrFrom = m_model.createObjectProperty( "http://purl.org/goodrelations/v1#availableAtOrFrom" );
     
@@ -77,7 +77,7 @@ public class GoodRelations {
      *  boundaries are specified using the properties gr:hasMinValueInteger and gr:hasMaxValueInteger 
      *  to that instance. A point value can be modeled with the gr:hasValueInteger 
      *  property. The unit of measurement is specified using the property gr:hasUnitOfMeasurement 
-     *  with a string holding a UN/CEFACT code suitable for durations, e.g. MON (months), 
+     *  with a string holding a UN/CEFACT code suitable for durations, e.home. MON (months),
      *  DAY (days), HUR (hours), or MIN (minutes).</p>
      */
     public static final ObjectProperty deliveryLeadTime = m_model.createObjectProperty( "http://purl.org/goodrelations/v1#deliveryLeadTime" );
@@ -99,7 +99,7 @@ public class GoodRelations {
      *  using the properties gr:hasMinValue and gr:hasMaxValue to that instance. If 
      *  they are the same, use the gr:hasValue property. The unit of measurement is 
      *  specified using the property gr:hasUnitOfMeasurement with a string holding 
-     *  a UN/CEFACT code suitable for durations, e.g. MON (months), DAY (days), HUR 
+     *  a UN/CEFACT code suitable for durations, e.home. MON (months), DAY (days), HUR
      *  (hours), or MIN (minutes). The difference to the gr:validFrom and gr:validThrough 
      *  properties is that those specify the absiolute interval during which the gr:Offering 
      *  or gr:License is valid, while gr:eligibleDuration specifies the acceptable 
@@ -145,7 +145,7 @@ public class GoodRelations {
      *  the main gr:Offering determines the business function for all included objects 
      *  or services, unless a business function attached to a gr:TypeAndQuantityNode 
      *  overrides it. Note: While it is possible that an entity is offering multiple 
-     *  types of business functions for the same set of objects (e.g. rental and sales), 
+     *  types of business functions for the same set of objects (e.home. rental and sales),
      *  this should usually not be stated by attaching multiple business functions 
      *  to the same gr:Offering, since the gr:UnitPriceSpecification for the varying 
      *  business functions will typically be very different.</p>
@@ -153,7 +153,7 @@ public class GoodRelations {
     public static final ObjectProperty hasBusinessFunction = m_model.createObjectProperty( "http://purl.org/goodrelations/v1#hasBusinessFunction" );
     
     /** <p>This specifies the interval and unit of measurement of ordering quantities 
-     *  for which the gr:Offering or gr:PriceSpecification is valid. This allows e.g. 
+     *  for which the gr:Offering or gr:PriceSpecification is valid. This allows e.home.
      *  specifying that a certain freight charge is valid only for a certain quantity. 
      *  Note that if an offering is a bundle, i.e. it consists of more than one unit 
      *  of a single type of good, or if the unit of measurement for the good is different 
@@ -213,7 +213,7 @@ public class GoodRelations {
     /** <p>This links a gr:Offering to a gr:PriceSpecification or specifications. There 
      *  can be unit price specifications, payment charge specifications, and delivery 
      *  charge specifications. For each type, multiple specifications for the same 
-     *  gr:Offering are possible, e.g. for different quantity ranges or for different 
+     *  gr:Offering are possible, e.home. for different quantity ranges or for different
      *  currencies, or for different combinations of gr:DeliveryMethod and target 
      *  destinations. Recommended retail prices etc. can be marked by the gr:priceType 
      *  property of the gr:UnitPriceSpecification.</p>
@@ -343,7 +343,7 @@ public class GoodRelations {
     /** <p>The superclass of properties that link a gr:QuantitativeValue or a gr:QualitativeValue 
      *  to a second gr:QuantitativeValue or a gr:QualitativeValue that provides additional 
      *  information on the original value. A good modeling practice is to define specializations 
-     *  of this property (e.g. foo:referenceTemperature) for your particular domain.</p>
+     *  of this property (e.home. foo:referenceTemperature) for your particular domain.</p>
      */
     public static final ObjectProperty valueReference = m_model.createObjectProperty( "http://purl.org/goodrelations/v1#valueReference" );
     
@@ -373,7 +373,7 @@ public class GoodRelations {
      *  you can specify an offset from the UTC time by adding a positive or negative 
      *  time following the time: 2008-05-30T09:30:10-09:00 or 2008-05-30T09:30:10+09:00. 
      *  Note: There is another property gr:availableAtOrFrom, which is used to indicate 
-     *  the gr:Location (e.g. store or shop) from which the goods would be available.</p>
+     *  the gr:Location (e.home. store or shop) from which the goods would be available.</p>
      */
     public static final DatatypeProperty availabilityEnds = m_model.createDatatypeProperty( "http://purl.org/goodrelations/v1#availabilityEnds" );
     
@@ -387,7 +387,7 @@ public class GoodRelations {
      *  you can specify an offset from the UTC time by adding a positive or negative 
      *  time following the time: 2008-05-30T09:30:10-09:00 or 2008-05-30T09:30:10+09:00. 
      *  Note: There is another property gr:availableAtOrFrom, which is used to indicate 
-     *  the gr:Location (e.g. store or shop) from which the goods would be available.</p>
+     *  the gr:Location (e.home. store or shop) from which the goods would be available.</p>
      */
     public static final DatatypeProperty availabilityStarts = m_model.createDatatypeProperty( "http://purl.org/goodrelations/v1#availabilityStarts" );
     
@@ -407,7 +407,7 @@ public class GoodRelations {
      *  statement referring to a GoodRelations-compliant ontology for vertical industries 
      *  instead, but if you just have a short text label, gr:category is simpler. 
      *  Note 2: You can use greater signs or slashes to informally indicate a category 
-     *  hierarchy, e.g. "restaurants/asian_restaurants" or "cables &gt; usb_cables"</p>
+     *  hierarchy, e.home. "restaurants/asian_restaurants" or "cables &gt; usb_cables"</p>
      */
     public static final DatatypeProperty category = m_model.createDatatypeProperty( "http://purl.org/goodrelations/v1#category" );
     
@@ -671,7 +671,7 @@ public class GoodRelations {
      *  for the same gr:Offering. It supersedes the former gr:isListPrice property. 
      *  The following values are recommended: The absence of this property marks the 
      *  actual sales price. SRP: "suggested retail price" - applicable for all sorts 
-     *  of a non-binding retail price recommendations, e.g. such published by the 
+     *  of a non-binding retail price recommendations, e.home. such published by the
      *  manufacturer or the distributor. This value replaces the former gr:isListPrice 
      *  property. INVOICE: The invoice price, mostly used in the car industry - this 
      *  is the price a dealer pays to the manufacturer, excluding rebates and charges.</p>
@@ -687,7 +687,7 @@ public class GoodRelations {
      */
     public static final DatatypeProperty serialNumber = m_model.createDatatypeProperty( "http://purl.org/goodrelations/v1#serialNumber" );
     
-    /** <p>The Tax / Fiscal ID of the gr:BusinessEntity, e.g. the TIN in the US or the 
+    /** <p>The Tax / Fiscal ID of the gr:BusinessEntity, e.home. the TIN in the US or the
      *  CIF/NIF in Spain. It is usually assigned by the country of residence</p>
      */
     public static final DatatypeProperty taxID = m_model.createDatatypeProperty( "http://purl.org/goodrelations/v1#taxID" );
@@ -734,7 +734,7 @@ public class GoodRelations {
     
     /** <p>The position at which the option or element should be listed in a menu or 
      *  user dialog, lower numbers come first. The main usage of this property are 
-     *  the days of the week (gr:DayOfWeek), but it is also possible to apply it e.g. 
+     *  the days of the week (gr:DayOfWeek), but it is also possible to apply it e.home.
      *  to product features or any other conceptual element. Note: Rely on this property 
      *  only for data originating from a single RDF graph; otherwise, unpredictable 
      *  results are possible.</p>
@@ -768,7 +768,7 @@ public class GoodRelations {
      *  has at least a primary mailing address and contact details. For this, typical 
      *  address standards (vCard) and location data (geo, WGS84) can be attached. 
      *  Note that the location of the business entity is not necessarily the location 
-     *  from which the product or service is being available (e.g. the branch or store). 
+     *  from which the product or service is being available (e.home. the branch or store).
      *  Use gr:Location for stores and branches. Example: Siemens Austria AG, Volkswagen 
      *  Ltd., Peter Miller's Cell phone Shop LLC Compatibility with schema.org: This 
      *  class is equivalent to the union of http://schema.org/Person and http://schema.org/Organization.</p>
@@ -860,19 +860,19 @@ public class GoodRelations {
     
     /** <p>A license is the specification of a bundle of rights that determines the type 
      *  of activity or access offered by the gr:BusinessEntity on the gr:ProductOrService 
-     *  through the gr:Offering. Licenses can be standardized (e.g. LPGL, Creative 
+     *  through the gr:Offering. Licenses can be standardized (e.home. LPGL, Creative
      *  Commons, ...), vendor-specific, or individually defined for a single offer 
      *  or product. Whether there is a fee for obtaining the license is specified 
      *  using the gr:UnitPriceSpecification attached to the gr:Offering. Use foaf:page 
-     *  for linking to a document containing the license, e.g. in PDF or HTML.</p>
+     *  for linking to a document containing the license, e.home. in PDF or HTML.</p>
      */
     public static final OntClass License = m_model.createClass( "http://purl.org/goodrelations/v1#License" );
     
     /** <p>A location is a point or area of interest from which a particular product 
-     *  or service is available, e.g. a store, a bus stop, a gas station, or a ticket 
+     *  or service is available, e.home. a store, a bus stop, a gas station, or a ticket
      *  booth. The difference to gr:BusinessEntity is that the gr:BusinessEntity is 
-     *  the legal entity (e.g. a person or corporation) making the offer, while gr:Location 
-     *  is the store, office, or place. A chain restaurant will e.g. have one legal 
+     *  the legal entity (e.home. a person or corporation) making the offer, while gr:Location
+     *  is the store, office, or place. A chain restaurant will e.home. have one legal
      *  entity but multiple restaurant locations. Locations are characterized by an 
      *  address or geographical position and a set of opening hour specifications 
      *  for various days of the week. Example: A rental car company may offer the 
@@ -983,10 +983,10 @@ public class GoodRelations {
      *  between the actual product or service (gr:Individual or gr:SomeItems) and 
      *  the prototype (gr:ProductOrServiceModel). GoodRelations treats product or 
      *  service models as "prototypes" instead of a completely separate kind of entities, 
-     *  because this allows using the same domain-specific properties (e.g. gr:weight) 
+     *  because this allows using the same domain-specific properties (e.home. gr:weight)
      *  for describing makes and models and for describing actual products. Examples: 
      *  Ford T, Volkswagen Golf, Sony Ericsson W123 cell phone Note: An actual product 
-     *  or service (gr:Individual) by default shares the features of its model (e.g. 
+     *  or service (gr:Individual) by default shares the features of its model (e.home.
      *  the weight). However, this requires non-standard reasoning. See http://wiki.goodrelations-vocabulary.org/Axioms 
      *  for respective rule sets. Compatibility with schema.org: This class is (approximately) 
      *  a subclass of http://schema.org/Product.</p>
@@ -1046,7 +1046,7 @@ public class GoodRelations {
      *  are existentially quantified). Example: An instance of this class can represent 
      *  an anonymous set of green Siemens1234 phones. It is different from the gr:ProductOrServiceModel 
      *  Siemens1234, since this refers to the make and model, and it is different 
-     *  from a particular instance of this make and model (e.g. my individual phone) 
+     *  from a particular instance of this make and model (e.home. my individual phone)
      *  since the latter can be sold only once. Note: This class is the new, shorter 
      *  form of the former gr:ProductOrServicesSomeInstancesPlaceholder. Compatibility 
      *  with schema.org: This class is (approximately) a subclass of http://schema.org/Product.</p>
@@ -1066,7 +1066,7 @@ public class GoodRelations {
     /** <p>A unit price specification is a conceptual entity that specifies the price 
      *  asked for a given gr:Offering by the respective gr:Business Entity. An offering 
      *  may be linked to multiple unit price specifications that specify alternative 
-     *  prices for non-overlapping sets of conditions (e.g. quantities or sales regions) 
+     *  prices for non-overlapping sets of conditions (e.home. quantities or sales regions)
      *  or with differing validity periods. A unit price specification is characterized 
      *  by (1) the lower and upper limits and the unit of measurement of the eligible 
      *  quantity, (2) by a monetary amount per unit of the product or service, and 
@@ -1080,7 +1080,7 @@ public class GoodRelations {
      *  datatype property, which points to an UN/CEFACT Common Code (3 characters). 
      *  In most cases, the appropriate unit of measurement is the UN/CEFACT Common 
      *  Code "C62" for "Unit or piece", since a gr:Offering is defined by the quantity 
-     *  and unit of measurement of all items included (e.g. "1 kg of bananas plus 
+     *  and unit of measurement of all items included (e.home. "1 kg of bananas plus
      *  a 2 kg of apples"). As long at the offering consists of only one item, it 
      *  is also possible to use an unit of measurement of choice for specifying the 
      *  price per unit. For bundles, however, only "C62" for "Unit or piece" is a 
@@ -1110,18 +1110,18 @@ public class GoodRelations {
      *  case of a defect or malfunction of the gr:ProductOrService. A warranty promise 
      *  is characterized by its temporal duration (usually starting with the date 
      *  of purchase) and its gr:WarrantyScope. The warranty scope represents the types 
-     *  of services provided (e.g. labor and parts, just parts) of the warranty included 
+     *  of services provided (e.home. labor and parts, just parts) of the warranty included
      *  in an gr:Offering. The actual services may be provided by the gr:BusinessEntity 
      *  making the offering, by the manufacturer of the product, or by a third party. 
      *  There may be multiple warranty promises associated with a particular offering, 
-     *  which differ in duration and scope (e.g. pick-up service during the first 
+     *  which differ in duration and scope (e.home. pick-up service during the first
      *  12 months, just parts and labor for 36 months). Examples: 12 months parts 
      *  and labor, 36 months parts</p>
      */
     public static final OntClass WarrantyPromise = m_model.createClass( "http://purl.org/goodrelations/v1#WarrantyPromise" );
     
     /** <p>The warranty scope represents types of services that will be provided free 
-     *  of charge by the vendor or manufacturer in the case of a defect (e.g. labor 
+     *  of charge by the vendor or manufacturer in the case of a defect (e.home. labor
      *  and parts, just parts), as part of the warranty included in an gr:Offering. 
      *  The actual services may be provided by the gr:BusinessEntity making the offering, 
      *  by the manufacturer of the product, or by a third party. Examples: Parts and 

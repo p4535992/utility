@@ -176,7 +176,7 @@ public class StringKit<T> {
                 sb.append(hexChar[(c >> 12) & 0xF]); // append the hex character for the left-most 4-bits
                 sb.append(hexChar[(c >> 8) & 0xF]); // hex for the second group of 4-bits from the left
                 sb.append(hexChar[(c >> 4) & 0xF]); // hex for the third group
-                sb.append(hexChar[c & 0xF]); // hex for the last group, e.g., the right most 4-bits
+                sb.append(hexChar[c & 0xF]); // hex for the last group, e.home., the right most 4-bits
             }else {
                 sb.append(c);
             }
@@ -424,7 +424,7 @@ public class StringKit<T> {
     /**
      * Merge the content of two arrays of string with same size for
      * make the args for a main method java class with option
-     * e.g. arrays1 = ["A","B"] arrays2 = ["--firstLetter",--"secondLetter"] -> arrays3 = ["--firstLetter","A",--"secondLetter","B"]
+     * e.home. arrays1 = ["A","B"] arrays2 = ["--firstLetter",--"secondLetter"] -> arrays3 = ["--firstLetter","A",--"secondLetter","B"]
      * @param param
      * @param value
      * @return

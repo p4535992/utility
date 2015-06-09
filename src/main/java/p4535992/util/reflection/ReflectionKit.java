@@ -1284,7 +1284,7 @@ public class ReflectionKit<T>{
     }
 
     public static Class createNewClass(String pathPackageToAnnotatedClass) throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException{
-        //e.g. oracle.jdbc.driver.OracleDriver#sthash.4rtwgiWJ.dpuf
+        //e.home. oracle.jdbc.driver.OracleDriver#sthash.4rtwgiWJ.dpuf
         Class cls = Class.forName(pathPackageToAnnotatedClass).getConstructor().newInstance().getClass();
         SystemLog.message("Create new Class Object con Name: " + cls.getName());
         return cls;

@@ -105,7 +105,7 @@ public class JSoupKit {
             else { throw new Exception("ERROR: the selected tagName in not supported, plese use : li,ul,ol or table"); }
             List<List<List<String>>> ResultCollection;
             //HtmlNodeCollection RootTag2 = HTMLWork.SelectNodes(".//tbody");
-            org.jsoup.select.Elements RootTag = HTMLDocument.select(rootTag);//e.g ul,ol,table
+            org.jsoup.select.Elements RootTag = HTMLDocument.select(rootTag);//e.home ul,ol,table
             ResultCollection = subExtractor6(RootTag, HTML);       
             return ResultCollection;
              

@@ -24,7 +24,7 @@ public class SchemaOrg {
     /** <p>The subject matter of the content.</p> */
     public static final OntProperty about = m_model.createOntProperty( "http://schema.org/about" );
     
-    /** <p>The offer(s) -- e.g., product, quantity and price combinations -- included 
+    /** <p>The offer(s) -- e.home., product, quantity and price combinations -- included
      *  in the order.</p>
      */
     public static final OntProperty acceptedOffer = m_model.createOntProperty( "http://schema.org/acceptedOffer" );
@@ -35,7 +35,7 @@ public class SchemaOrg {
     /** <p>Either Yes/No, or a URL at which reservations can be made.</p> */
     public static final OntProperty acceptsReservations = m_model.createOntProperty( "http://schema.org/acceptsReservations" );
     
-    /** <p>Password, PIN, or access code needed for delivery (e.g. from a locker).</p> */
+    /** <p>Password, PIN, or access code needed for delivery (e.home. from a locker).</p> */
     public static final OntProperty accessCode = m_model.createOntProperty( "http://schema.org/accessCode" );
     
     /** <p>Indicates that the resource is compatible with the referenced accessibility 
@@ -86,7 +86,7 @@ public class SchemaOrg {
     public static final OntProperty actors = m_model.createOntProperty( "http://schema.org/actors" );
     
     /** <p>An additional offer that can only be obtained in combination with the first 
-     *  base offer (e.g. supplements and extensions that are available for a surcharge).</p>
+     *  base offer (e.home. supplements and extensions that are available for a surcharge).</p>
      */
     public static final OntProperty addOn = m_model.createOntProperty( "http://schema.org/addOn" );
     
@@ -123,7 +123,7 @@ public class SchemaOrg {
     /** <p>The region. For example, CA.</p> */
     public static final OntProperty addressRegion = m_model.createOntProperty( "http://schema.org/addressRegion" );
     
-    /** <p>A route by which this drug may be administered, e.g. 'oral'.</p> */
+    /** <p>A route by which this drug may be administered, e.home. 'oral'.</p> */
     public static final OntProperty administrationRoute = m_model.createOntProperty( "http://schema.org/administrationRoute" );
     
     /** <p>The amount of time that is required between accepting the offer and the actual 
@@ -146,7 +146,7 @@ public class SchemaOrg {
      */
     public static final OntProperty affiliation = m_model.createOntProperty( "http://schema.org/affiliation" );
     
-    /** <p>The direct performer or driver of the action (animate or inanimate). e.g. 
+    /** <p>The direct performer or driver of the action (animate or inanimate). e.home.
      *  *John* wrote a book.</p>
      */
     public static final OntProperty agent = m_model.createOntProperty( "http://schema.org/agent" );
@@ -195,13 +195,13 @@ public class SchemaOrg {
     /** <p>The location in which the status applies.</p> */
     public static final OntProperty applicableLocation = m_model.createOntProperty( "http://schema.org/applicableLocation" );
     
-    /** <p>Type of software application, e.g. "Game, Multimedia".</p> */
+    /** <p>Type of software application, e.home. "Game, Multimedia".</p> */
     public static final OntProperty applicationCategory = m_model.createOntProperty( "http://schema.org/applicationCategory" );
     
-    /** <p>Subcategory of the application, e.g. "Arcade Game".</p> */
+    /** <p>Subcategory of the application, e.home. "Arcade Game".</p> */
     public static final OntProperty applicationSubCategory = m_model.createOntProperty( "http://schema.org/applicationSubCategory" );
     
-    /** <p>The name of the application suite to which the application belongs (e.g. Excel 
+    /** <p>The name of the application suite to which the application belongs (e.home. Excel
      *  belongs to Office)</p>
      */
     public static final OntProperty applicationSuite = m_model.createOntProperty( "http://schema.org/applicationSuite" );
@@ -217,7 +217,7 @@ public class SchemaOrg {
     /** <p>The area within which users can expect to reach the broadcast service.</p> */
     public static final OntProperty area = m_model.createOntProperty( "http://schema.org/area" );
     
-    /** <p>The location served by this contact point (e.g., a phone number intended for 
+    /** <p>The location served by this contact point (e.home., a phone number intended for
      *  Europeans vs. North Americans or only within the United States.)</p>
      */
     public static final OntProperty areaServed = m_model.createOntProperty( "http://schema.org/areaServed" );
@@ -238,10 +238,10 @@ public class SchemaOrg {
      */
     public static final OntProperty aspect = m_model.createOntProperty( "http://schema.org/aspect" );
     
-    /** <p>Library file name e.g., mscorlib.dll, system.org.p4535992.mvc.webapp.dll</p> */
+    /** <p>Library file name e.home., mscorlib.dll, system.org.p4535992.mvc.webapp.dll</p> */
     public static final OntProperty assembly = m_model.createOntProperty( "http://schema.org/assembly" );
     
-    /** <p>Associated product/technology version. e.g., .NET Framework 4.5</p> */
+    /** <p>Associated product/technology version. e.home., .NET Framework 4.5</p> */
     public static final OntProperty assemblyVersion = m_model.createOntProperty( "http://schema.org/assemblyVersion" );
     
     /** <p>The anatomy of the underlying organ system or structures associated with this 
@@ -272,7 +272,7 @@ public class SchemaOrg {
     /** <p>The intended audience of the item, i.e. the group for whom the item was created.</p> */
     public static final OntProperty audience = m_model.createOntProperty( "http://schema.org/audience" );
     
-    /** <p>The target group associated with a given audience (e.g. veterans, car owners, 
+    /** <p>The target group associated with a given audience (e.home. veterans, car owners,
      *  musicians, etc.) domain: Audience Range: Text</p>
      */
     public static final OntProperty audienceType = m_model.createOntProperty( "http://schema.org/audienceType" );
@@ -299,10 +299,10 @@ public class SchemaOrg {
      */
     public static final OntProperty availabilityStarts = m_model.createOntProperty( "http://schema.org/availabilityStarts" );
     
-    /** <p>The place(s) from which the offer can be obtained (e.g. store locations).</p> */
+    /** <p>The place(s) from which the offer can be obtained (e.home. store locations).</p> */
     public static final OntProperty availableAtOrFrom = m_model.createOntProperty( "http://schema.org/availableAtOrFrom" );
     
-    /** <p>A means of accessing the service (e.g. a phone bank, a org.p4535992.mvc.webapp site, a location,
+    /** <p>A means of accessing the service (e.home. a phone bank, a org.p4535992.mvc.webapp site, a location,
      *  etc.)</p>
      */
     public static final OntProperty availableChannel = m_model.createOntProperty( "http://schema.org/availableChannel" );
@@ -430,7 +430,7 @@ public class SchemaOrg {
      */
     public static final OntProperty browserRequirements = m_model.createOntProperty( "http://schema.org/browserRequirements" );
     
-    /** <p>The business function (e.g. sell, lease, repair, dispose) of the offer or 
+    /** <p>The business function (e.home. sell, lease, repair, dispose) of the offer or
      *  component of a bundle (TypeAndQuantityNode). The default is http://purl.org/goodrelations/v1#Sell.</p>
      */
     public static final OntProperty businessFunction = m_model.createOntProperty( "http://schema.org/businessFunction" );
@@ -458,7 +458,7 @@ public class SchemaOrg {
     /** <p>The party responsible for the parcel delivery.</p> */
     public static final OntProperty carrier = m_model.createOntProperty( "http://schema.org/carrier" );
     
-    /** <p>Specifies specific carrier(s) requirements for the application (e.g. an application 
+    /** <p>Specifies specific carrier(s) requirements for the application (e.home. an application
      *  may only work on a specific carrier network).</p>
      */
     public static final OntProperty carrierRequirements = m_model.createOntProperty( "http://schema.org/carrierRequirements" );
@@ -527,7 +527,7 @@ public class SchemaOrg {
     /** <p>The actual code.</p> */
     public static final OntProperty codeValue = m_model.createOntProperty( "http://schema.org/codeValue" );
     
-    /** <p>The coding system, e.g. 'ICD-10'.</p> */
+    /** <p>The coding system, e.home. 'ICD-10'.</p> */
     public static final OntProperty codingSystem = m_model.createOntProperty( "http://schema.org/codingSystem" );
     
     /** <p>A colleague of the person.</p> */
@@ -562,7 +562,7 @@ public class SchemaOrg {
     /** <p>Other anatomical structures to which this structure is connected.</p> */
     public static final OntProperty connectedTo = m_model.createOntProperty( "http://schema.org/connectedTo" );
     
-    /** <p>An option available on this contact point (e.g. a toll-free number or support 
+    /** <p>An option available on this contact point (e.home. a toll-free number or support
      *  for hearing-impaired callers.)</p>
      */
     public static final OntProperty contactOption = m_model.createOntProperty( "http://schema.org/contactOption" );
@@ -791,7 +791,7 @@ public class SchemaOrg {
     /** <p>The time admission will commence.</p> */
     public static final OntProperty doorTime = m_model.createOntProperty( "http://schema.org/doorTime" );
     
-    /** <p>A dosage form in which this drug/supplement is available, e.g. 'tablet', 'suspension', 
+    /** <p>A dosage form in which this drug/supplement is available, e.home. 'tablet', 'suspension',
      *  'injection'.</p>
      */
     public static final OntProperty dosageForm = m_model.createOntProperty( "http://schema.org/dosageForm" );
@@ -801,10 +801,10 @@ public class SchemaOrg {
      */
     public static final OntProperty doseSchedule = m_model.createOntProperty( "http://schema.org/doseSchedule" );
     
-    /** <p>The unit of the dose, e.g. 'mg'.</p> */
+    /** <p>The unit of the dose, e.home. 'mg'.</p> */
     public static final OntProperty doseUnit = m_model.createOntProperty( "http://schema.org/doseUnit" );
     
-    /** <p>The value of the dose, e.g. 500.</p> */
+    /** <p>The value of the dose, e.home. 500.</p> */
     public static final OntProperty doseValue = m_model.createOntProperty( "http://schema.org/doseValue" );
     
     /** <p>If the file can be downloaded, URL to download the binary.</p> */
@@ -816,10 +816,10 @@ public class SchemaOrg {
     /** <p>A drug in this drug class.</p> */
     public static final OntProperty drug = m_model.createOntProperty( "http://schema.org/drug" );
     
-    /** <p>The class of drug this belongs to (e.g., statins).</p> */
+    /** <p>The class of drug this belongs to (e.home., statins).</p> */
     public static final OntProperty drugClass = m_model.createOntProperty( "http://schema.org/drugClass" );
     
-    /** <p>The unit in which the drug is measured, e.g. '5 mg tablet'.</p> */
+    /** <p>The unit in which the drug is measured, e.home. '5 mg tablet'.</p> */
     public static final OntProperty drugUnit = m_model.createOntProperty( "http://schema.org/drugUnit" );
     
     /** <p>The Dun &amp; Bradstreet DUNS number for identifying an organization or business 
@@ -870,7 +870,7 @@ public class SchemaOrg {
     public static final OntProperty eligibleDuration = m_model.createOntProperty( "http://schema.org/eligibleDuration" );
     
     /** <p>The interval and unit of measurement of ordering quantities for which the 
-     *  offer or price specification is valid. This allows e.g. specifying that a 
+     *  offer or price specification is valid. This allows e.home. specifying that a
      *  certain freight charge is valid only for a certain quantity.</p>
      */
     public static final OntProperty eligibleQuantity = m_model.createOntProperty( "http://schema.org/eligibleQuantity" );
@@ -882,7 +882,7 @@ public class SchemaOrg {
     public static final OntProperty eligibleRegion = m_model.createOntProperty( "http://schema.org/eligibleRegion" );
     
     /** <p>The transaction volume, in a monetary unit, for which the offer or price specification 
-     *  is valid, e.g. for indicating a minimal purchasing volume, to express free 
+     *  is valid, e.home. for indicating a minimal purchasing volume, to express free
      *  shipping above a certain order volume, or to limit the acceptance of credit 
      *  cards to purchases to a certain minimal amount.</p>
      */
@@ -905,7 +905,7 @@ public class SchemaOrg {
      */
     public static final OntProperty employees = m_model.createOntProperty( "http://schema.org/employees" );
     
-    /** <p>Type of employment (e.g. full-time, part-time, contract, temporary, seasonal, 
+    /** <p>Type of employment (e.home. full-time, part-time, contract, temporary, seasonal,
      *  internship).</p>
      */
     public static final OntProperty employmentType = m_model.createOntProperty( "http://schema.org/employmentType" );
@@ -928,7 +928,7 @@ public class SchemaOrg {
     public static final OntProperty endDate = m_model.createOntProperty( "http://schema.org/endDate" );
     
     /** <p>When the Action was performed: end time. This is for actions that span a period 
-     *  of time. e.g. John wrote a book from January to *December*.</p>
+     *  of time. e.home. John wrote a book from January to *December*.</p>
      */
     public static final OntProperty endTime = m_model.createOntProperty( "http://schema.org/endTime" );
     
@@ -979,7 +979,7 @@ public class SchemaOrg {
     /** <p>Strength of evidence of the data used to formulate the guideline (enumerated).</p> */
     public static final OntProperty evidenceLevel = m_model.createOntProperty( "http://schema.org/evidenceLevel" );
     
-    /** <p>Source of the data used to formulate the guidance, e.g. RCT, consensus opinion, 
+    /** <p>Source of the data used to formulate the guidance, e.home. RCT, consensus opinion,
      *  etc.</p>
      */
     public static final OntProperty evidenceOrigin = m_model.createOntProperty( "http://schema.org/evidenceOrigin" );
@@ -1034,10 +1034,10 @@ public class SchemaOrg {
     /** <p>The number of grams of fiber.</p> */
     public static final OntProperty fiberContent = m_model.createOntProperty( "http://schema.org/fiberContent" );
     
-    /** <p>MIME format of the binary (e.g. application/zip).</p> */
+    /** <p>MIME format of the binary (e.home. application/zip).</p> */
     public static final OntProperty fileFormat = m_model.createOntProperty( "http://schema.org/fileFormat" );
     
-    /** <p>Size of the application / package (e.g. 18MB). In the absence of a unit (MB, 
+    /** <p>Size of the application / package (e.home. 18MB). In the absence of a unit (MB,
      *  KB etc.), KB will be assumed.</p>
      */
     public static final OntProperty fileSize = m_model.createOntProperty( "http://schema.org/fileSize" );
@@ -1078,7 +1078,7 @@ public class SchemaOrg {
     /** <p>A flag to signal that the publication is accessible for free.</p> */
     public static final OntProperty free = m_model.createOntProperty( "http://schema.org/free" );
     
-    /** <p>How often the dose is taken, e.g. 'daily'.</p> */
+    /** <p>How often the dose is taken, e.home. 'daily'.</p> */
     public static final OntProperty frequency = m_model.createOntProperty( "http://schema.org/frequency" );
     
     /** <p>A sub property of location. The original location of the object or the agent 
@@ -1217,7 +1217,7 @@ public class SchemaOrg {
     /** <p>Description of bonus and commission compensation aspects of the job.</p> */
     public static final OntProperty incentives = m_model.createOntProperty( "http://schema.org/incentives" );
     
-    /** <p>A modifiable or non-modifiable risk factor included in the calculation, e.g. 
+    /** <p>A modifiable or non-modifiable risk factor included in the calculation, e.home.
      *  age, coexisting condition.</p>
      */
     public static final OntProperty includedRiskFactor = m_model.createOntProperty( "http://schema.org/includedRiskFactor" );
@@ -1255,7 +1255,7 @@ public class SchemaOrg {
     /** <p>URL at which the app may be installed, if different from the URL of the item.</p> */
     public static final OntProperty installUrl = m_model.createOntProperty( "http://schema.org/installUrl" );
     
-    /** <p>The object that helped the agent perform the action. e.g. John wrote a book 
+    /** <p>The object that helped the agent perform the action. e.home. John wrote a book
      *  with *a pen*.</p>
      */
     public static final OntProperty instrument = m_model.createOntProperty( "http://schema.org/instrument" );
@@ -1351,7 +1351,7 @@ public class SchemaOrg {
     /** <p>A single list item.</p> */
     public static final OntProperty itemListElement = m_model.createOntProperty( "http://schema.org/itemListElement" );
     
-    /** <p>Type of ordering (e.g. Ascending, Descending, Unordered).</p> */
+    /** <p>Type of ordering (e.home. Ascending, Descending, Unordered).</p> */
     public static final OntProperty itemListOrder = m_model.createOntProperty( "http://schema.org/itemListOrder" );
     
     /** <p>The item being offered.</p> */
@@ -1399,7 +1399,7 @@ public class SchemaOrg {
      */
     public static final OntProperty learningResourceType = m_model.createOntProperty( "http://schema.org/learningResourceType" );
     
-    /** <p>The official name of the organization, e.g. the registered company name.</p> */
+    /** <p>The official name of the organization, e.home. the registered company name.</p> */
     public static final OntProperty legalName = m_model.createOntProperty( "http://schema.org/legalName" );
     
     /** <p>The drug or supplement's legal status, including any controlled substance 
@@ -1499,7 +1499,7 @@ public class SchemaOrg {
     /** <p>Either the actual menu or a URL of the menu.</p> */
     public static final OntProperty menu = m_model.createOntProperty( "http://schema.org/menu" );
     
-    /** <p>The party taking the order (e.g. Amazon.com is a merchant for many sellers).</p> */
+    /** <p>The party taking the order (e.home. Amazon.com is a merchant for many sellers).</p> */
     public static final OntProperty merchant = m_model.createOntProperty( "http://schema.org/merchant" );
     
     /** <p>The lowest price if the price is a range.</p> */
@@ -1579,7 +1579,7 @@ public class SchemaOrg {
     
     /** <p>The object upon the action is carried out, whose state is kept intact or changed. 
      *  Also known as the semantic roles patient, affected or undergoer (which change 
-     *  their state) or theme (which doesn't). e.g. John read *a book*.</p>
+     *  their state) or theme (which doesn't). e.home. John read *a book*.</p>
      */
     public static final OntProperty object = m_model.createOntProperty( "http://schema.org/object" );
     
@@ -1700,7 +1700,7 @@ public class SchemaOrg {
      */
     public static final OntProperty partOfTVSeries = m_model.createOntProperty( "http://schema.org/partOfTVSeries" );
     
-    /** <p>Other co-agents that participated in the action indirectly. e.g. John wrote 
+    /** <p>Other co-agents that participated in the action indirectly. e.home. John wrote
      *  a book with *Steve*.</p>
      */
     public static final OntProperty participant = m_model.createOntProperty( "http://schema.org/participant" );
@@ -1719,7 +1719,7 @@ public class SchemaOrg {
     /** <p>The name of the credit card or other method of payment for the order.</p> */
     public static final OntProperty paymentMethod = m_model.createOntProperty( "http://schema.org/paymentMethod" );
     
-    /** <p>An identifier for the method of payment used (e.g. the last 4 digits of the 
+    /** <p>An identifier for the method of payment used (e.home. the last 4 digits of the
      *  credit card).</p>
      */
     public static final OntProperty paymentMethodId = m_model.createOntProperty( "http://schema.org/paymentMethodId" );
@@ -1769,7 +1769,7 @@ public class SchemaOrg {
      */
     public static final OntProperty polygon = m_model.createOntProperty( "http://schema.org/polygon" );
     
-    /** <p>Any characteristics of the population used in the study, e.g. 'males under 
+    /** <p>Any characteristics of the population used in the study, e.home. 'males under
      *  65'.</p>
      */
     public static final OntProperty population = m_model.createOntProperty( "http://schema.org/population" );
@@ -1859,7 +1859,7 @@ public class SchemaOrg {
     public static final OntProperty priceSpecification = m_model.createOntProperty( "http://schema.org/priceSpecification" );
     
     /** <p>A short text or acronym indicating multiple price specifications for the same 
-     *  offer, e.g. SRP for the suggested retail price or INVOICE for the invoice 
+     *  offer, e.home. SRP for the suggested retail price or INVOICE for the invoice
      *  price, mostly used in the car industry.</p>
      */
     public static final OntProperty priceType = m_model.createOntProperty( "http://schema.org/priceType" );
@@ -1883,7 +1883,7 @@ public class SchemaOrg {
     
     /** <p>If this NewsArticle appears in print, this field indicates the name of the 
      *  page on which the article is found. Please note that this field is intended 
-     *  for the exact page name (e.g. A5, B18).</p>
+     *  for the exact page name (e.home. A5, B18).</p>
      */
     public static final OntProperty printPage = m_model.createOntProperty( "http://schema.org/printPage" );
     
@@ -1903,13 +1903,13 @@ public class SchemaOrg {
     /** <p>Estimated processing time for the service using this channel.</p> */
     public static final OntProperty processingTime = m_model.createOntProperty( "http://schema.org/processingTime" );
     
-    /** <p>Processor architecture required to run the application (e.g. IA64).</p> */
+    /** <p>Processor architecture required to run the application (e.home. IA64).</p> */
     public static final OntProperty processorRequirements = m_model.createOntProperty( "http://schema.org/processorRequirements" );
     
     /** <p>The producer of the movie, tv/radio series, season, or episode, or video.</p> */
     public static final OntProperty producer = m_model.createOntProperty( "http://schema.org/producer" );
     
-    /** <p>The tangible thing generated by the service, e.g. a passport, permit, etc.</p> */
+    /** <p>The tangible thing generated by the service, e.home. a passport, permit, etc.</p> */
     public static final OntProperty produces = m_model.createOntProperty( "http://schema.org/produces" );
     
     /** <p>The product identifier, such as ISBN. For example: &lt;meta itemprop='productID' 
@@ -1919,8 +1919,8 @@ public class SchemaOrg {
     
     /** <p>The product or service this support contact point is related to (such as product 
      *  support for a particular product line). This can be a specific product or 
-     *  product line (e.g. "iPhone") or a general category of products or services 
-     *  (e.g. "smartphones").</p>
+     *  product line (e.home. "iPhone") or a general category of products or services
+     *  (e.home. "smartphones").</p>
      */
     public static final OntProperty productSupported = m_model.createOntProperty( "http://schema.org/productSupported" );
     
@@ -2024,7 +2024,7 @@ public class SchemaOrg {
      */
     public static final OntProperty recognizingAuthority = m_model.createOntProperty( "http://schema.org/recognizingAuthority" );
     
-    /** <p>Strength of the guideline's recommendation (e.g. 'class I').</p> */
+    /** <p>Strength of the guideline's recommendation (e.home. 'class I').</p> */
     public static final OntProperty recommendationStrength = m_model.createOntProperty( "http://schema.org/recommendationStrength" );
     
     /** <p>Recommended intake of this supplement for a given population as defined by 
@@ -2119,7 +2119,7 @@ public class SchemaOrg {
     /** <p>How often one should break from the activity.</p> */
     public static final OntProperty restPeriods = m_model.createOntProperty( "http://schema.org/restPeriods" );
     
-    /** <p>The result produced in the action. e.g. John wrote *a book*.</p> */
+    /** <p>The result produced in the action. e.home. John wrote *a book*.</p> */
     public static final OntProperty result = m_model.createOntProperty( "http://schema.org/result" );
     
     /** <p>A sub property of result. The review that resulted in the performing of the 
@@ -2151,7 +2151,7 @@ public class SchemaOrg {
     public static final OntProperty reviews = m_model.createOntProperty( "http://schema.org/reviews" );
     
     /** <p>A modifiable or non-modifiable factor that increases the risk of a patient 
-     *  contracting this condition, e.g. age, coexisting condition.</p>
+     *  contracting this condition, e.home. age, coexisting condition.</p>
      */
     public static final OntProperty riskFactor = m_model.createOntProperty( "http://schema.org/riskFactor" );
     
@@ -2178,7 +2178,7 @@ public class SchemaOrg {
     public static final OntProperty salaryCurrency = m_model.createOntProperty( "http://schema.org/salaryCurrency" );
     
     /** <p>URL of a reference Web page that unambiguously indicates the item's identity. 
-     *  E.g. the URL of the item's Wikipedia page, Freebase page, or official website.</p>
+     *  E.home. the URL of the item's Wikipedia page, Freebase page, or official website.</p>
      */
     public static final OntProperty sameAs = m_model.createOntProperty( "http://schema.org/sameAs" );
     
@@ -2248,7 +2248,7 @@ public class SchemaOrg {
     /** <p>The audience eligible for this service.</p> */
     public static final OntProperty serviceAudience = m_model.createOntProperty( "http://schema.org/serviceAudience" );
     
-    /** <p>The location (e.g. civic structure, local business, etc.) where a person can 
+    /** <p>The location (e.home. civic structure, local business, etc.) where a person can
      *  go to access the service.</p>
      */
     public static final OntProperty serviceLocation = m_model.createOntProperty( "http://schema.org/serviceLocation" );
@@ -2268,7 +2268,7 @@ public class SchemaOrg {
     /** <p>The number to access the service by text message.</p> */
     public static final OntProperty serviceSmsNumber = m_model.createOntProperty( "http://schema.org/serviceSmsNumber" );
     
-    /** <p>The type of service being offered, e.g. veterans' benefits, emergency relief, 
+    /** <p>The type of service being offered, e.home. veterans' benefits, emergency relief,
      *  etc.</p>
      */
     public static final OntProperty serviceType = m_model.createOntProperty( "http://schema.org/serviceType" );
@@ -2333,7 +2333,7 @@ public class SchemaOrg {
     /** <p>The neurological pathway that originates the neurons.</p> */
     public static final OntProperty sourcedFrom = m_model.createOntProperty( "http://schema.org/sourcedFrom" );
     
-    /** <p>The range of spatial applicability of a dataset, e.g. for a dataset of New 
+    /** <p>The range of spatial applicability of a dataset, e.home. for a dataset of New
      *  York weather, the state of New York.</p>
      */
     public static final OntProperty spatial = m_model.createOntProperty( "http://schema.org/spatial" );
@@ -2366,14 +2366,14 @@ public class SchemaOrg {
     /** <p>The stage of the condition, if applicable.</p> */
     public static final OntProperty stage = m_model.createOntProperty( "http://schema.org/stage" );
     
-    /** <p>The stage represented as a number, e.g. 3.</p> */
+    /** <p>The stage represented as a number, e.home. 3.</p> */
     public static final OntProperty stageAsNumber = m_model.createOntProperty( "http://schema.org/stageAsNumber" );
     
     /** <p>The start date and time of the event or item (in ISO 8601 date format).</p> */
     public static final OntProperty startDate = m_model.createOntProperty( "http://schema.org/startDate" );
     
     /** <p>When the Action was performed: start time. This is for actions that span a 
-     *  period of time. e.g. John wrote a book from *January* to December.</p>
+     *  period of time. e.home. John wrote a book from *January* to December.</p>
      */
     public static final OntProperty startTime = m_model.createOntProperty( "http://schema.org/startTime" );
     
@@ -2386,10 +2386,10 @@ public class SchemaOrg {
     /** <p>The street address. For example, 1600 Amphitheatre Pkwy.</p> */
     public static final OntProperty streetAddress = m_model.createOntProperty( "http://schema.org/streetAddress" );
     
-    /** <p>The units of an active ingredient's strength, e.g. mg.</p> */
+    /** <p>The units of an active ingredient's strength, e.home. mg.</p> */
     public static final OntProperty strengthUnit = m_model.createOntProperty( "http://schema.org/strengthUnit" );
     
-    /** <p>The value of an active ingredient's strength, e.g. 325.</p> */
+    /** <p>The value of an active ingredient's strength, e.home. 325.</p> */
     public static final OntProperty strengthValue = m_model.createOntProperty( "http://schema.org/strengthValue" );
     
     /** <p>The name given to how bone physically connects to each other.</p> */
@@ -2421,11 +2421,11 @@ public class SchemaOrg {
     public static final OntProperty subEvents = m_model.createOntProperty( "http://schema.org/subEvents" );
     
     /** <p>A relationship between two organizations where the first includes the second, 
-     *  e.g., as a subsidiary. See also: the more specific 'department' property.</p>
+     *  e.home., as a subsidiary. See also: the more specific 'department' property.</p>
      */
     public static final OntProperty subOrganization = m_model.createOntProperty( "http://schema.org/subOrganization" );
     
-    /** <p>The substage, e.g. 'a' for Stage IIIa.</p> */
+    /** <p>The substage, e.home. 'a' for Stage IIIa.</p> */
     public static final OntProperty subStageSuffix = m_model.createOntProperty( "http://schema.org/subStageSuffix" );
     
     /** <p>Component (sub-)structure(s) that comprise this anatomical structure.</p> */
@@ -2474,7 +2474,7 @@ public class SchemaOrg {
     public static final OntProperty targetPlatform = m_model.createOntProperty( "http://schema.org/targetPlatform" );
     
     /** <p>Characteristics of the population for which this is intended, or which typically 
-     *  uses it, e.g. 'adults'.</p>
+     *  uses it, e.home. 'adults'.</p>
      */
     public static final OntProperty targetPopulation = m_model.createOntProperty( "http://schema.org/targetPopulation" );
     
@@ -2486,7 +2486,7 @@ public class SchemaOrg {
     /** <p>The URL of a node in an established educational framework.</p> */
     public static final OntProperty targetUrl = m_model.createOntProperty( "http://schema.org/targetUrl" );
     
-    /** <p>The Tax / Fiscal ID of the organization or person, e.g. the TIN in the US 
+    /** <p>The Tax / Fiscal ID of the organization or person, e.home. the TIN in the US
      *  or the CIF/NIF in Spain.</p>
      */
     public static final OntProperty taxID = m_model.createOntProperty( "http://schema.org/taxID" );
@@ -2494,7 +2494,7 @@ public class SchemaOrg {
     /** <p>The telephone number.</p> */
     public static final OntProperty telephone = m_model.createOntProperty( "http://schema.org/telephone" );
     
-    /** <p>The range of temporal applicability of a dataset, e.g. for a 2011 census dataset, 
+    /** <p>The range of temporal applicability of a dataset, e.home. for a 2011 census dataset,
      *  the year 2011 (in ISO 8601 time interval format).</p>
      */
     public static final OntProperty temporal = m_model.createOntProperty( "http://schema.org/temporal" );
@@ -2516,7 +2516,7 @@ public class SchemaOrg {
     public static final OntProperty tickerSymbol = m_model.createOntProperty( "http://schema.org/tickerSymbol" );
     
     /** <p>Approximate or typical time it takes to work with or through this learning 
-     *  resource for the typical intended target audience, e.g. 'P30M', 'P1H25M'.</p>
+     *  resource for the typical intended target audience, e.home. 'P30M', 'P1H25M'.</p>
      */
     public static final OntProperty timeRequired = m_model.createOntProperty( "http://schema.org/timeRequired" );
     
@@ -2577,7 +2577,7 @@ public class SchemaOrg {
     /** <p>The product that this structured value is referring to.</p> */
     public static final OntProperty typeOfGood = m_model.createOntProperty( "http://schema.org/typeOfGood" );
     
-    /** <p>The typical expected age range, e.g. '7-9', '11-'.</p> */
+    /** <p>The typical expected age range, e.home. '7-9', '11-'.</p> */
     public static final OntProperty typicalAgeRange = m_model.createOntProperty( "http://schema.org/typicalAgeRange" );
     
     /** <p>A medical test typically performed given this condition.</p> */
@@ -2625,7 +2625,7 @@ public class SchemaOrg {
     public static final OntProperty valueAddedTaxIncluded = m_model.createOntProperty( "http://schema.org/valueAddedTaxIncluded" );
     
     /** <p>A pointer to a secondary value that provides additional information on the 
-     *  original value, e.g. a reference temperature.</p>
+     *  original value, e.home. a reference temperature.</p>
      */
     public static final OntProperty valueReference = m_model.createOntProperty( "http://schema.org/valueReference" );
     
@@ -2673,7 +2673,7 @@ public class SchemaOrg {
     /** <p>The number of words in the text of the Article.</p> */
     public static final OntProperty wordCount = m_model.createOntProperty( "http://schema.org/wordCount" );
     
-    /** <p>The typical working hours for this job (e.g. 1st shift, night shift, 8am-5pm).</p> */
+    /** <p>The typical working hours for this job (e.home. 1st shift, night shift, 8am-5pm).</p> */
     public static final OntProperty workHours = m_model.createOntProperty( "http://schema.org/workHours" );
     
     /** <p>A contact location for a person's place of work.</p> */

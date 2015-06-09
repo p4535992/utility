@@ -24,7 +24,7 @@ You can the dependency to this github repository With jitpack (https://jitpack.i
 <!-- Put the Maven coordinates in your HTML: -->
  <pre class="prettyprint">&lt;dependency&gt;
   &lt;groupId&gt;com.github.4535992&lt;/groupId&gt;
-  &lt;artifactId&gt;java-utility&lt;/artifactId&gt;
+  &lt;artifactId&gt;utility&lt;/artifactId&gt;
   &lt;version&gt;<span id="latest_release">1.0</span>&lt;/version&gt;
 &lt;/dependency&gt;  </pre>
 

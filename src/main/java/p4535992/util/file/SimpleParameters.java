@@ -1,4 +1,4 @@
-package p4535992.util.cmd;
+package p4535992.util.file;
 
 /**
  * 2015-04-03
@@ -24,10 +24,10 @@ public class SimpleParameters {
      *            A string of the form "param1=name1 param2=name2".
      * @param pairSeparators
      *            A list of characters that separate the name-value pairs,
-     *            e.g. <space><tab><cr><lf>
+     *            e.home. <space><tab><cr><lf>
      * @param nameValueSeparator
      *            The character that separates the name from the values,
-     *            e.g. '='
+     *            e.home. '='
      */
     public SimpleParameters(String allNameValuePairs, String pairSeparators, char nameValueSeparator) {
         StringTokenizer tokeniser = new StringTokenizer(allNameValuePairs, pairSeparators);
@@ -40,7 +40,7 @@ public class SimpleParameters {
     }
 
     /**
-     * Construct the parameters from an array of name-value pairs, e.g. from
+     * Construct the parameters from an array of name-value pairs, e.home. from
      * "main( String[] args )"
      *
      * @param nameValuePairs

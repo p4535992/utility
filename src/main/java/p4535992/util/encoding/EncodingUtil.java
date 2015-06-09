@@ -581,7 +581,7 @@ public class EncodingUtil {
                     sb.append(hexChar[(c >> 12) & 0xF]); // append the hex character for the left-most 4-bits
                     sb.append(hexChar[(c >> 8) & 0xF]); // hex for the second group of 4-bits from the left
                     sb.append(hexChar[(c >> 4) & 0xF]); // hex for the third group
-                    sb.append(hexChar[c & 0xF]); // hex for the last group, e.g., the right most 4-bits
+                    sb.append(hexChar[c & 0xF]); // hex for the last group, e.home., the right most 4-bits
                 }else {
                     sb.append(c);
                 }
