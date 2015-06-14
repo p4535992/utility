@@ -9,12 +9,10 @@ package util;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import javax.xml.transform.TransformerConfigurationException;
 
 import org.xml.sax.SAXException;
-import p4535992.util.encoding.EncodingUtil;
-import p4535992.util.jena.Jena2Kit;
+import com.p4535992.util.jena.Jena2Kit;
 
 /**
  *

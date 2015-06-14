@@ -1,8 +1,7 @@
 package util;
 
-import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
-import p4535992.util.sesame.SesameUtil2;
+import com.p4535992.util.sesame.SesameUtil28;
 
 /**
  * Created by Marco on 02/05/2015.
@@ -15,7 +14,7 @@ public class Test_Sesame {
             + "       ?p ?o . } LIMIT 10 OFFSET 0 ";
 
     public static void main(String args[]) throws RepositoryException {
-        SesameUtil2 sesame = new SesameUtil2();
+        SesameUtil28 sesame = new SesameUtil28();
         sesame.setParameterLocalRepository(
                 "owlim",
                 "C:\\Users\\Marco\\AppData\\Roaming\\Aduna\\OpenRDF Sesame\\repositories",
@@ -25,9 +24,9 @@ public class Test_Sesame {
                 "siimobility"
                 );
 
-        sesame.setOutput("testSesame", "ttl", true);
-        Repository repository = sesame.connect();
-        sesame.executeSingleQuery(SPARQL);
+//        sesame.setOutput("testSesame", "ttl", true);
+//        Repository repository = sesame.connectToRemoteLocation();
+//        sesame.executeSingleQuery(SPARQL);
 
     }
 }

@@ -7,7 +7,7 @@
 package util;
 
 
-import p4535992.util.encoding.EncodingUtil;
+import com.p4535992.util.encoding.EncodingUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;

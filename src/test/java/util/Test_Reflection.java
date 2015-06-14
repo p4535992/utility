@@ -6,8 +6,8 @@
 
 package util;
 
-import p4535992.util.object.model.GeoDocument;
-import p4535992.util.reflection.ReflectionKit;
+import com.p4535992.util.object.model.GeoDocument;
+import com.p4535992.util.reflection.ReflectionKit;
 
 import java.lang.reflect.Method;
 import java.net.URL;
