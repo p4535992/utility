@@ -1,5 +1,5 @@
 package com.p4535992.util.sesame;
-import com.ontotext.trree.OwlimSchemaRepository;
+
 import com.p4535992.util.file.FileUtil;
 import com.p4535992.util.log.SystemLog;
 import com.p4535992.util.string.StringKit;
@@ -880,15 +880,15 @@ public class SesameUtil28 {
         mRepository = null;
         SystemLog.message("Try to open a connection to a repository Sesame of TYPE:"+TYPE_REPOSITORY+" and ID:"+ID_REPOSITORY+"...");
         File Datadir = new File(PATH_FOLDER_REPOSITORY) ;
-        if(TYPE_REPOSITORY.toLowerCase().contains("owlim")){              
-             OwlimSchemaRepository schema = new OwlimSchemaRepository();
+        if(TYPE_REPOSITORY.toLowerCase().contains("owlim")){
+            /* com.ontotext.trree.OwlimSchemaRepository schema = new com.ontotext.trree.OwlimSchemaRepository();
              schema.setDataDir(Datadir);
              schema.setParameter("storage-folder", PATH_FOLDER_STORAGE);
              schema.setParameter("repository-type", TYPE_REPOSITORY);
              schema.setParameter("ruleset", RULESET);
              // wrap it into a Sesame SailRepository
              //SailRepository repository = new SailRepository(schema);
-            mRepository  = new org.openrdf.repository.sail.SailRepository(schema);
+            mRepository  = new org.openrdf.repository.sail.SailRepository(schema);*/
         }
         else if(TYPE_REPOSITORY.toLowerCase().contains("memory")){
             //Create and initialize a non-inferencing main-memory repository

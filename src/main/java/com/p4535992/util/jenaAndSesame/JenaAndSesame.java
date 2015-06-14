@@ -1,6 +1,5 @@
 package com.p4535992.util.jenaAndSesame;
 
-import com.ontotext.jena.SesameDataset;
 import org.openrdf.model.impl.EmptyModel;
 import org.openrdf.model.impl.TreeModel;
 import org.openrdf.repository.RepositoryConnection;
@@ -33,19 +32,19 @@ public class JenaAndSesame {
      * @return
      * @throws org.openrdf.repository.RepositoryException
      */
-    public static com.hp.hpl.jena.rdf.model.Model convertSesameDataSetToJenaModel(
+  /*  public static com.hp.hpl.jena.rdf.model.Model convertSesameDataSetToJenaModel(
             org.openrdf.repository.Repository repository )
             throws org.openrdf.repository.RepositoryException{
         org.openrdf.repository.RepositoryConnection repositoryConnection = repository.getConnection();
         // finally, insert the DatasetGraph instance
-        SesameDataset dataset = new SesameDataset(repositoryConnection);
+        com.ontotext.jena.SesameDataset dataset = new SesameDataset(repositoryConnection);
         //From now on the SesameDataset object can be used through the Jena API
         //as regular Dataset, e.home. to add some data into it one could something like the
         //following:
         com.hp.hpl.jena.rdf.model.Model model =
                 com.hp.hpl.jena.rdf.model.ModelFactory.createModelForGraph(dataset.getDefaultGraph());
         return model;
-    }
+    }*/
 
 
     /**

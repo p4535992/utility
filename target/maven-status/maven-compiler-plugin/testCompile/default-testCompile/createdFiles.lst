@@ -1,0 +1,6 @@
+util\Test_Xml.class
+util\Test_Http.class
+util\Test_Sesame.class
+util\Test_Reflection.class
+util\Test_Jena.class
+util\Test_Encoding.class
