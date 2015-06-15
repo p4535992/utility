@@ -8,8 +8,6 @@ import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
 import org.openrdf.http.client.SesameClientImpl;
 import org.openrdf.model.*;
-import org.openrdf.model.impl.GraphImpl;
-import org.openrdf.model.impl.TreeModel;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.*;
@@ -221,12 +219,12 @@ public class SesameUtil28 {
      * @throws RDFParseException
      * @throws IOException
      */
-    public static Graph parseFile(File configurationFile, RDFFormat format, String defaultNamespace)
+    public static Model parseFile(File configurationFile, RDFFormat format, String defaultNamespace)
             throws RDFParseException, RDFHandlerException, IOException {
         Reader reader = new FileReader(configurationFile);
-
-        final Graph graph = new TreeModel();//GrapgImpl is deprecated
+       /* final Graph graph = new GraphImpl();*/
         RDFParser parser = Rio.createParser(format);
+        final Model model =  Rio.parse(reader,defaultNamespace, format);
         RDFHandler handler = new RDFHandler() {
             @Override
             public void endRDF() throws RDFHandlerException {
@@ -242,7 +240,7 @@ public class SesameUtil28 {
 
             @Override
             public void handleStatement(Statement statement) throws RDFHandlerException {
-                graph.add(statement);
+                model.add(statement);
             }
 
             @Override
@@ -251,7 +249,7 @@ public class SesameUtil28 {
         };
         parser.setRDFHandler(handler);
         parser.parse(reader, defaultNamespace);
-        return graph;
+        return model;
     }
 
     /**
@@ -769,7 +767,7 @@ public class SesameUtil28 {
     }
 
 
-    public void writeSesameModelToFile( org.openrdf.model.Model myGraph,String outpuPathtFile,String outputFormat) throws FileNotFoundException{
+    public void writeSesameModelToFile(Model myGraph,String outpuPathtFile,String outputFormat) throws FileNotFoundException{
         // a collection of several RDF statements
         FileOutputStream out = new FileOutputStream(outpuPathtFile);
         RDFWriter writer = Rio.createWriter(stringToRDFFormat(outputFormat), out);
@@ -819,7 +817,7 @@ public class SesameUtil28 {
      * @see //JenaKit.getPrettyWriter().write( model, new FileWriter(filename), uri);
      * @return
      */
-    public static org.openrdf.rio.RDFWriter getPrettyWriter() {
+  /*  public static RDFWriter getPrettyWriter() {
         org.openrdf.rio.RDFWriter rdfWriter = null;
         com.hp.hpl.jena.rdf.model.RDFWriterF rdfWriterF = new com.hp.hpl.jena.rdf.model.impl.RDFWriterFImpl();
         try { //
@@ -842,7 +840,7 @@ public class SesameUtil28 {
         }
 
         return rdfWriter;
-    }
+    }*/
     private static Query prepareQuery(String query) throws Exception {
 
         for (QueryLanguage language : queryLanguages) {
@@ -1005,18 +1003,17 @@ public class SesameUtil28 {
      * @param repo
      * @param queryString
      */
-     public static void GraphQueryEvalutation(
-             org.openrdf.repository.Repository repo,String queryString){     
+     public static void GraphQueryEvalutation(Repository repo,String queryString){
           try { 
             //org.openrdf.repository.RepositoryConnection con = repo.getConnection();
             //repositoryConnection = repo.getConnection();
             try {
                  //String queryString = "CONSTRUCT { ?s ?p ?o } WHERE {?s ?p ?o }";
-                org.openrdf.query.GraphQueryResult result = mRepositoryConnection.prepareGraphQuery(
-                    org.openrdf.query.QueryLanguage.SPARQL,queryString ).evaluate();               
+                GraphQueryResult result = mRepositoryConnection.prepareGraphQuery(
+                    QueryLanguage.SPARQL,queryString ).evaluate();
                 try {                 
                     while (result.hasNext()) {
-                        org.openrdf.model.Statement stmt = result.next();
+                        Statement stmt = result.next();
                         // ... do something with the resulting statement here.
                     }
                 } finally { 
@@ -1025,7 +1022,7 @@ public class SesameUtil28 {
             } finally { 
                 //repositoryConnection.close();
             }
-        } catch (org.openrdf.OpenRDFException e) {
+        } catch (OpenRDFException e) {
          // handle exception
         }
       }
@@ -1036,25 +1033,24 @@ public class SesameUtil28 {
      * @param queryString
      * @return
      */
-     public static org.openrdf.model.Model convertGraphQueryEvalutationToSesameModel(
-               org.openrdf.repository.Repository repo,String queryString){             
-           org.openrdf.model.Model resultModel = null;
+     public static Model convertGraphQueryEvalutationToSesameModel(Repository repo,String queryString){
+           Model resultModel = null;
            try {             
              //org.openrdf.repository.RepositoryConnection 
              //repositoryConnection = repo.getConnection();
             try {
                  //String queryString = "CONSTRUCT { ?s ?p ?o } WHERE {?s ?p ?o }";
-                org.openrdf.query.GraphQueryResult result = mRepositoryConnection.prepareGraphQuery(
-                    org.openrdf.query.QueryLanguage.SPARQL,queryString ).evaluate();               
+                GraphQueryResult result = mRepositoryConnection.prepareGraphQuery(
+                    QueryLanguage.SPARQL,queryString ).evaluate();
                 try {                 
-                    resultModel = org.openrdf.query.QueryResults.asModel(result);
+                    resultModel = QueryResults.asModel(result);
                 } finally { 
                     result.close(); 
                 }
             } finally { 
                 //repositoryConnection.close();
             }
-        } catch (org.openrdf.OpenRDFException e) {
+        } catch (OpenRDFException e) {
          // handle exception
         }
         return resultModel;
@@ -1108,7 +1104,7 @@ public class SesameUtil28 {
                 //OutputStream out = new FileOutputStream(pathOutputXmlFileName+".xml");
                 //TupleQueryResultHandler writerXML = new SPARQLResultsXMLWriter(out);
                 OutputStream out;
-                org.openrdf.query.TupleQueryResultHandler trh=null;
+                TupleQueryResultHandler trh=null;
                 if(filePath==null){
                     out = System.out;
                 }else{
@@ -1737,6 +1733,7 @@ public class SesameUtil28 {
         return mRepositoryConnection;
     }
 
+
     // create repository from a template, no substitution of variables
     // also opens the newly created repository
     /**
@@ -1751,40 +1748,46 @@ public class SesameUtil28 {
             throw new SesameManagerException("No connect prior to createRepository");
         }
         Repository systemRepo = mRepositoryManager.getSystemRepository();
-
-        ValueFactory vf = systemRepo.getValueFactory();
-        Graph graph = new GraphImpl();
-        RDFParser rdfParser = Rio.createParser(RDFFormat.TURTLE, vf);
-        rdfParser.setRDFHandler(new StatementCollector(graph));
+        // read the config file and parse to a Model
         try {
-            rdfParser.parse(new StringReader(config), RepositoryConfigSchema.NAMESPACE);
-        } catch (Exception e) {
-            throw new SesameManagerException("Error parsing the config string: ",e);
-        }
-        try {
-            Resource repositoryNode  = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE,RepositoryConfigSchema.REPOSITORY);
-            RepositoryConfig repConfig = RepositoryConfig.create(graph, repositoryNode);
-            repConfig.validate();
-            if (RepositoryConfigUtil.hasRepositoryConfig(systemRepo, repConfig.getID())) {
-                throw new SesameManagerException("Repository already exists with ID "+
-                        repConfig.getID());
-            } else {
-                RepositoryConfigUtil.updateRepositoryConfigs(systemRepo, repConfig);
-                mRepository = mRepositoryManager.getRepository(repConfig.getID());
-                // Sesame complains about the repository already being initialized
-                // for native but not for OWLIM here ... can we always not initialize
-                // here????
-                try {
-                    mRepository.initialize();
-                } catch (IllegalStateException ex) {
-                    System.err.println("Got an IllegalStateException, ignored: "+ex);
-                    // we get this if the SAIL has already been initialized, just
-                    // ignore and be happy that we can be sure that indeed it has
+            //old deprecated code
+            /*ValueFactory vf = systemRepo.getValueFactory();
+            Graph graph = new GraphImpl();
+            RDFParser rdfParser = Rio.createParser(RDFFormat.TURTLE, vf);
+            rdfParser.setRDFHandler(new StatementCollector(graph));
+            rdfParser.parse(new StringReader(config), RepositoryConfigSchema.NAMESPACE);*/
+            Model model = Rio.parse(new StringReader(config),RepositoryConfigSchema.NAMESPACE, RDFFormat.TURTLE);
+            try {
+                // get the unique subject
+                //old deprecated code
+              /*  Resource repositoryNode  = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE,RepositoryConfigSchema.REPOSITORY);
+                RepositoryConfig repConfig = RepositoryConfig.parse(graph, repositoryNode);*/
+                Resource repositoryNode = model.filter(null, RDF.TYPE,RepositoryConfigSchema.REPOSITORY).subjectResource();
+                RepositoryConfig repConfig = new RepositoryConfig();
+                repConfig.parse(model, repositoryNode);
+                repConfig.validate();
+                if (RepositoryConfigUtil.hasRepositoryConfig(systemRepo, repConfig.getID())) {
+                    throw new SesameManagerException("Repository already exists with ID "+repConfig.getID());
+                } else {
+                    RepositoryConfigUtil.updateRepositoryConfigs(systemRepo, repConfig);
+                    mRepository = mRepositoryManager.getRepository(repConfig.getID());
+                    // Sesame complains about the repository already being initialized
+                    // for native but not for OWLIM here ... can we always not initialize
+                    // here????
+                    try {
+                        mRepository.initialize();
+                    } catch (IllegalStateException ex) {
+                        System.err.println("Got an IllegalStateException, ignored: "+ex);
+                        // we get this if the SAIL has already been initialized, just
+                        // ignore and be happy that we can be sure that indeed it has
+                    }
+                    openRepository(repConfig.getID());
                 }
-                openRepository(repConfig.getID());
+            } catch (Exception e) {
+                throw new SesameManagerException("Error creating repository",e);
             }
         } catch (Exception e) {
-            throw new SesameManagerException("Error creating repository",e);
+            throw new SesameManagerException("Error parsing the config string: ",e);
         }
     }
 
@@ -1795,48 +1798,51 @@ public class SesameUtil28 {
      * @param configstring
      * @return
      */
-    @SuppressWarnings("deprecation")
     public void createUnmanagedRepository(File repositoryDirFile, String configstring) {
         isManagedRepository = false;
         SystemLog.message("SesameManager: creating unmanaged repo, dir is " + repositoryDirFile.getAbsolutePath());
-        ValueFactory vf = new MemValueFactory();
-        Graph graph = parseRdf(configstring, vf, RDFFormat.TURTLE);
-        Resource repositoryNode;
         try {
-            repositoryNode = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE, RepositoryConfigSchema.REPOSITORY);
-        } catch (org.openrdf.model.util.GraphUtilException ex) {
+        /*ValueFactory vf = new MemValueFactory();
+        Graph graph = parseRdf(configstring, vf, RDFFormat.TURTLE);*/
+            Model model = Rio.parse(new StringReader(configstring), RepositoryConfigSchema.NAMESPACE, RDFFormat.TURTLE);
+        /*Resource repositoryNode = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE, RepositoryConfigSchema.REPOSITORY);*/
+            Resource repositoryNode = model.filter(null, RDF.TYPE, RepositoryConfigSchema.REPOSITORY).subjectResource();
+            RepositoryConfig repConfig;
+            try {
+                /*repConfig = RepositoryConfig.create(model,repositoryNode);*/
+                repConfig = new RepositoryConfig();
+                repConfig.parse(model, repositoryNode);
+            } catch (RepositoryConfigException ex) {
+                throw new SesameManagerException("Could not create repository from RDF graph", ex);
+            }
+            try {
+                repConfig.validate();
+            } catch (RepositoryConfigException ex) {
+                throw new SesameManagerException("Could not validate repository", ex);
+            }
+            RepositoryImplConfig rpc = repConfig.getRepositoryImplConfig();
+            Repository repo = createRepositoryStack(rpc);
+            repo.setDataDir(repositoryDirFile);
+            try {
+                repo.initialize();
+            } catch (RepositoryException ex) {
+                throw new SesameManagerException("Could not initialize repository", ex);
+            }
+            try {
+                mRepositoryConnection = repo.getConnection();
+                SystemLog.message("Repo dir is " + repo.getDataDir().getAbsolutePath());
+                SystemLog.message("Repo is writable " + repo.isWritable());
+            } catch (RepositoryException ex) {
+                throw new SesameManagerException("Could not get connection for unmanaged repository", ex);
+            }
+        }catch(RDFParseException ex){
             throw new SesameManagerException("Could not get subject of config RDF",ex);
-        }
-        RepositoryConfig repConfig;
-        try {
-            repConfig = RepositoryConfig.create(graph, repositoryNode);
-        } catch (RepositoryConfigException ex) {
-            throw new SesameManagerException("Could not create repository from RDF graph",ex);
-        }
-        try {
-            repConfig.validate();
-        } catch (RepositoryConfigException ex) {
-            throw new SesameManagerException("Could not validate repository",ex);
-        }
-        RepositoryImplConfig rpc = repConfig.getRepositoryImplConfig();
-        Repository repo = createRepositoryStack(rpc);
-        repo.setDataDir(repositoryDirFile);
-        try {
-            repo.initialize();
-        } catch (RepositoryException ex) {
-            throw new SesameManagerException("Could not initialize repository",ex);
-        }
-        try {
-            mRepositoryConnection = repo.getConnection();
-            SystemLog.message("Repo dir is " + repo.getDataDir().getAbsolutePath());
-            SystemLog.message("Repo is writable " + repo.isWritable());
-        } catch (RepositoryException ex) {
-            throw new SesameManagerException("Could not get connection for unmanaged repository",ex);
+        }catch(IOException ex){
+            throw new SesameManagerException("Not found the directory file",ex);
         }
     }
 
-    @SuppressWarnings("deprecation")
-    private Graph parseRdf(String config, ValueFactory vf, RDFFormat lang) {
+  /*  private Graph parseRdf(String config, ValueFactory vf, RDFFormat lang) {
         Graph graph = new org.openrdf.model.impl.GraphImpl(vf);
         RDFParser rdfParser = Rio.createParser(lang, vf);
         rdfParser.setRDFHandler(new StatementCollector(graph));
@@ -1846,28 +1852,34 @@ public class SesameUtil28 {
             throw new SesameManagerException("Could not parse rdf: " + e);
         }
         return graph;
-    }
+    }*/
 
-    @SuppressWarnings("deprecation")
+
     private RepositoryConfig getConfig(String config) {
         Repository myRepository = new SailRepository(new MemoryStore());
         RepositoryConfig repConfig;
         try {
-            myRepository.initialize();
-        } catch (RepositoryException e) {
-            throw new SesameManagerException("Error initializing memory store: "+e);
-        }
-        ValueFactory vf = myRepository.getValueFactory();
-        Graph graph = new org.openrdf.model.impl.GraphImpl(vf);
-        RDFParser rdfParser = Rio.createParser(RDFFormat.TURTLE, vf);
-        rdfParser.setRDFHandler(new StatementCollector(graph));
-        try {
+            try {
+                myRepository.initialize();
+            } catch (RepositoryException e) {
+                throw new SesameManagerException("Error initializing memory store: "+e);
+            }
+            /*
+            ValueFactory vf = myRepository.getValueFactory();
+            Graph graph = new org.openrdf.model.impl.GraphImpl(vf);
+            RDFParser rdfParser = Rio.createParser(RDFFormat.TURTLE, vf);
+            rdfParser.setRDFHandler(new StatementCollector(graph));
             rdfParser.parse(new StringReader(config), RepositoryConfigSchema.NAMESPACE);
-            Resource repositoryNode =
-                    org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE,RepositoryConfigSchema.REPOSITORY);
-            repConfig = RepositoryConfig.create(graph, repositoryNode);
-            repConfig.validate();
 
+            Resource repositoryNode = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE,RepositoryConfigSchema.REPOSITORY);
+            repConfig = RepositoryConfig.create(graph, repositoryNode);
+            repConfig.validate();*/
+
+            Model model = Rio.parse(new StringReader(config), RepositoryConfigSchema.NAMESPACE, RDFFormat.TURTLE);
+            Resource repositoryNode = model.filter(null, RDF.TYPE,RepositoryConfigSchema.REPOSITORY).subjectResource();
+            repConfig = new RepositoryConfig();
+            repConfig.parse(model, repositoryNode);
+            repConfig.validate();
         } catch (Exception e) {
             throw new SesameManagerException("Error parsing the config string "+e);
         }

@@ -9,6 +9,12 @@
     <version>1.0</version>
     <packaging>jar</packaging>
 
+   <!-- <parent>
+        <groupId>com.p4535992</groupId>
+        <artifactId>EAT</artifactId>
+        <version>1.0</version>
+    </parent>-->
+
     <name>${project.artifactId}</name>
     <description>
         Collection of utility classes java for many purpose
