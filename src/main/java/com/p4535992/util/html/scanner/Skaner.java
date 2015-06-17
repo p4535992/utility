@@ -18,18 +18,18 @@ import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.HTMLEditorKit.Parser;
 
 /**
- * Created by Marco on 05/05/2015.
- * @href : https://www.java.net/node/650704
+ * Created by 4535992 on 05/05/2015.
+ * href : https://www.java.net/node/650704
  */
 public class Skaner {
         final Parser parser;
-
+        @SuppressWarnings({"unchecked","rawtypes"})
         public static void main(String[] args) throws IOException {
             Skaner scanner = new Skaner();
             File file = new File("C:\\Users\\Marco\\Desktop\\www.unifi.it.htm");
-            final Map map = scanner.scanHierarchy(file);
+            final Map<Tag,Object> map = scanner.scanHierarchy(file);
             //sort keys by values
-            List list = new ArrayList(map.keySet());
+            List<Object> list = new ArrayList(map.keySet());
             Collections.sort(list,
                     new Comparator() {
                         public int compare(Object key1, Object key2) {
@@ -44,12 +44,12 @@ public class Skaner {
             parser = (new ScannerHTMLEditorKit()).getParser();
         }
 
-        public Map scanHierarchy(File file) throws FileNotFoundException, IOException {
-            Map map = new HashMap();
+        public Map<Tag,Object> scanHierarchy(File file) throws FileNotFoundException, IOException {
+            Map<Tag,Object> map = new HashMap<>();
             scanHierarchyImpl(file, map);
             return map;
         }
-        private void scanHierarchyImpl(File file, Map map) throws FileNotFoundException, IOException {
+        private void scanHierarchyImpl(File file, Map<Tag,Object> map) throws FileNotFoundException, IOException {
             if (file.isDirectory()) {
                 for (File f :file.listFiles()) {
                     scanHierarchyImpl(f, map);
@@ -64,18 +64,18 @@ public class Skaner {
             }
         }
 
-        public void scan(File file, Map map) throws FileNotFoundException, IOException {
+        public void scan(File file, Map<Tag,Object> map) throws FileNotFoundException, IOException {
             scan(new BufferedReader(new FileReader(file)), map);
         }
-        public Map scan(File file) throws FileNotFoundException, IOException {
+        public Map<Tag,Object> scan(File file) throws FileNotFoundException, IOException {
             return scan(new BufferedReader(new FileReader(file)));
         }
 
-        public void scan(Reader in, Map map) throws IOException {
+        public void scan(Reader in, Map<Tag,Object> map) throws IOException {
             parser.parse(in, new ScannerParserCallback(map), false);
         }
-        public Map scan(Reader in) throws IOException {
-            Map map = new HashMap();
+        public Map<Tag,Object> scan(Reader in) throws IOException {
+            Map<Tag,Object> map = new HashMap<>();
             scan(in, map);
             return map;
         }
@@ -83,6 +83,9 @@ public class Skaner {
         //the returned parser creates a new parser on every parse call
         //so one parser is enough
         private static class ScannerHTMLEditorKit extends HTMLEditorKit {
+            
+            private final static long serialVersionUID = 10L;
+            
             @Override
             public Parser getParser() {
                 return super.getParser();
@@ -97,9 +100,9 @@ public class Skaner {
                 };
 
         private static class ScannerParserCallback extends HTMLEditorKit.ParserCallback {
-            final Map map;
+            final Map<Tag,Object> map;
             Parser p;
-            ScannerParserCallback(Map map) {
+            ScannerParserCallback(Map<Tag,Object> map) {
                 this.map = map;
             //p=pp;
             }

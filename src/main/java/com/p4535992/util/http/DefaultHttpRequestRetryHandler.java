@@ -22,9 +22,11 @@ public class DefaultHttpRequestRetryHandler implements HttpRequestRetryHandler {
     /** Whether or not methods that have successfully sent their request will be retried */
     private final boolean requestSentRetryEnabled;
     
-    /**
-     * Default constructor
-     */
+   /**
+    * Default constructor.
+    * @param retryCount number of tentatives.
+    * @param requestSentRetryEnabled  abilitate the retrying.
+    */
     public DefaultHttpRequestRetryHandler(int retryCount, boolean requestSentRetryEnabled) {
         super();
         this.retryCount = retryCount;

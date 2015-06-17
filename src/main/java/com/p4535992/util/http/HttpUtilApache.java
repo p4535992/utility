@@ -88,21 +88,21 @@ import com.p4535992.util.log.SystemLog;
 
 public class HttpUtilApache {
 	/**
-	 * Send a get request
-	 * @param url
-	 * @return response
-	 * @throws IOException 
+	 * Send a get request.
+	 * @param url string of the url resource.
+	 * @return response string of the GET method response.
+	 * @throws IOException resource not found.
 	 */
 	static public String get(String url) throws IOException {
 		return get(url, null);
 	}
 
 	/**
-	 * Send a get request
-	 * @param url         Url as string
-	 * @param headers     Optional map with headers
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Send a get request.
+	 * @param url         Url as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String get(String url,
 			Map<String, String> headers) throws IOException {
@@ -110,12 +110,12 @@ public class HttpUtilApache {
 	}
 
 	/**
-	 * Send a post request
-	 * @param url         Url as string
-	 * @param body        Request body as string
-	 * @param headers     Optional map with headers
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Send a post request.
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String post(String url, String body,
 			Map<String, String> headers) throws IOException {
@@ -123,22 +123,22 @@ public class HttpUtilApache {
 	}
 
 	/**
-	 * Send a post request
-	 * @param url         Url as string
-	 * @param body        Request body as string
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Send a post request.
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String post(String url, String body) throws IOException {
 		return post(url, body, null);
 	}
 
 	/**
-	 * Post a form with parameters
-	 * @param url         Url as string
-	 * @param params      map with parameters/values
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Post a form with parameters.
+	 * @param url         Url as string.
+	 * @param params      map with parameters/values.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String postForm(String url, Map<String, String> params) 
 			throws IOException {
@@ -146,12 +146,12 @@ public class HttpUtilApache {
 	}
 
 	/**
-	 * Post a form with parameters
-	 * @param url         Url as string
-	 * @param params      Map with parameters/values
-	 * @param headers     Optional map with headers
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Post a form with parameters.
+	 * @param url         Url as string.
+	 * @param params      Map with parameters/values.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String postForm(String url, Map<String, String> params,
 			Map<String, String> headers) throws IOException {
@@ -182,12 +182,12 @@ public class HttpUtilApache {
 	}
 
 	/**
-	 * Send a put request
-	 * @param url         Url as string
-	 * @param body        Request body as string
-	 * @param headers     Optional map with headers
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Send a put request.
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String put(String url, String body,
 			Map<String, String> headers) throws IOException {
@@ -195,21 +195,22 @@ public class HttpUtilApache {
 	}
 
 	/**
-	 * Send a put request
-	 * @param url         Url as string
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Send a put request.
+	 * @param url Url as string.
+         * @param body the boy of the html page.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String put(String url, String body) throws IOException {
 		return put(url, body, null);
 	}
 	
 	/**
-	 * Send a delete request
-	 * @param url         Url as string
-	 * @param headers     Optional map with headers
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Send a delete request.
+	 * @param url         Url as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String delete(String url,
 			Map<String, String> headers) throws IOException {
@@ -217,21 +218,21 @@ public class HttpUtilApache {
 	}
 	
 	/**
-	 * Send a delete request
-	 * @param url         Url as string
-	 * @return response   Response as string
-	 * @throws IOException 
+	 * Send a delete request.
+	 * @param url         Url as string.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
 	 */
 	static public String delete(String url) throws IOException {
 		return delete(url, null);
 	}
 	
 	/**
-	 * Append query parameters to given url
-	 * @param url         Url as string
-	 * @param params      Map with query parameters
-	 * @return url        Url with query parameters appended
-	 * @throws IOException 
+	 * Append query parameters to given url.
+	 * @param url         Url as string.
+	 * @param params      Map with query parameters.
+	 * @return url        Url with query parameters appended.
+	 * @throws IOException resource not found.
 	 */
 	static public String appendQueryParams(String url, 
 			Map<String, String> params) throws IOException {
@@ -257,10 +258,10 @@ public class HttpUtilApache {
 	}
 	
 	/**
-	 * Retrieve the query parameters from given url
-	 * @param url         Url containing query parameters
-	 * @return params     Map with query parameters
-	 * @throws IOException 
+	 * Retrieve the query parameters from given url.
+	 * @param url         Url containing query parameters.
+	 * @return params     Map with query parameters.
+	 * @throws IOException resource not found.
 	 */
 	static public Map<String, String> getQueryParams(String url) 
 			throws IOException {
@@ -298,10 +299,10 @@ public class HttpUtilApache {
 	}
 
 	/**
-	 * Returns the url without query parameters
-	 * @param url         Url containing query parameters
-	 * @return url        Url without query parameters
-	 * @throws IOException 
+	 * Returns the url without query parameters.
+	 * @param url         Url containing query parameters.
+	 * @return url        Url without query parameters.
+	 * @throws IOException resource not found.
 	 */
 	static public String removeQueryParams(String url) 
 			throws IOException {
@@ -315,13 +316,13 @@ public class HttpUtilApache {
 	}
 	
 	/**
-	 * Send a request
-	 * @param method      HTTP method, for example "GET" or "POST"
-	 * @param url         Url as string
-	 * @param body        Request body as string
-	 * @param headers     Optional map with headers
+	 * Send a request.
+	 * @param method      HTTP method, for example "GET" or "POST".
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @param headers     Optional map with headers.
 	 * @return response   Response as string
-	 * @throws IOException 
+	 * @throws IOException resource not found.
 	 */
 	static public String fetch(String method, String url, String body,
 			Map<String, String> headers) throws IOException {
@@ -367,10 +368,10 @@ public class HttpUtilApache {
 	}
 	
 	/**
-	 * Read an input stream into a string
-	 * @param in
-	 * @return
-	 * @throws IOException
+	 * Read an input stream into a string.
+	 * @param in stream of the resource.
+	 * @return string of the content of the resource.
+	 * @throws IOException resource not found.
 	 */
 	static public String streamToString(InputStream in) throws IOException {
 		StringBuffer out = new StringBuffer();
@@ -489,8 +490,8 @@ public class HttpUtilApache {
         }
         
         /**
-        * Metodo che stoppa il conteggio del temporizzatore
-        * @param millisec in millisecondi fornito di input
+        * Method for set a waiting from a request to another.
+        * @param millisec input in milliseconds.
         */
         public static void stopExecution(long millisec){
             long t0,t1;
@@ -501,62 +502,11 @@ public class HttpUtilApache {
             while (t1-t0<millisec);
         }
         
-   
-        /*
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet("http://targethost/homepage");
-        CloseableHttpResponse response1 = httpclient.execute(httpGet);
-        // The underlying HTTP connection is still held by the response object
-        // to allow the response content to be streamed directly from the network socket.
-        // In order to ensure correct deallocation of system resources
-        // the user MUST call CloseableHttpResponse#close() from a finally clause.
-        // Please note that if response content is not fully consumed the underlying
-        // connection cannot be safely re-used and will be shut down and discarded
-        // by the connection manager. 
-        try {
-            System.out.println(response1.getStatusLine());
-            HttpEntity entity1 = response1.getEntity();
-            // do something useful with the response body
-            // and ensure it is fully consumed
-            EntityUtils.consume(entity1);
-        } finally {
-            response1.close();
-        }
-
-        HttpPost httpPost = new HttpPost("http://targethost/login");
-        List <NameValuePair> nvps = new ArrayList <NameValuePair>();
-        nvps.add(new BasicNameValuePair("username", "vip"));
-        nvps.add(new BasicNameValuePair("password", "secret"));
-        httpPost.setEntity(new UrlEncodedFormEntity(nvps));
-        CloseableHttpResponse response2 = httpclient.execute(httpPost);
-
-        try {
-            System.out.println(response2.getStatusLine());
-            HttpEntity entity2 = response2.getEntity();
-            // do something useful with the response body
-            // and ensure it is fully consumed
-            EntityUtils.consume(entity2);
-        } finally {
-            response2.close();
-        }
-        */
-        
-        /*
-        // The fluent API relieves the user from having to deal with manual deallocation of system
-        // resources at the cost of having to buffer response content in memory in some cases.
-
-        Request.Get("http://targethost/homepage")
-            .execute().returnContent();
-        Request.Post("http://targethost/login")
-            .bodyForm(Form.form().add("username",  "vip").add("password",  "secret").build())
-            .execute().returnContent();
-        */
-        
         /**
-        * Metodo che permette di leggere il contenuto della risposta Json.
-        * @param rd identifica il buffer eader in cui immagazziniamo la risposta Json
-        * @return restituisce la risposta Json appena letta come una stringa.
-        * @throws IOException 
+        * Method for read a resource allocated on a Reader object.
+        * @param rd buffer reader where the reosurce is allocated.
+        * @return return string of the response.
+        * @throws IOException resource not found.
         */
        private String readAll(Reader rd) throws IOException {
          StringBuilder sb = new StringBuilder();
@@ -567,11 +517,11 @@ public class HttpUtilApache {
          return sb.toString();
        }
        /**
-        * Metodo che legge la risposta Json restituita da un URL fornito di input.
-        * @param url lt'indirizzo org.p4535992.mvc.webapp di input
-        * @return ritorna la risposta Json restituita dall url
-        * @throws IOException
-        * @throws JSONException 
+        * Method read the json response from a url resource.
+        * @param url string as url.
+        * @return json resposne from the url resource.
+        * @throws IOException reosurce not found.
+        * @throws JSONException json object error.
         */
        private JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
          InputStream is = new URL(url).openStream();    
@@ -586,10 +536,9 @@ public class HttpUtilApache {
        }
        
         /**
-        * Semplice metodo che estare il domino org.p4535992.mvc.webapp di appartenenza dell'url analizzato
-        * @param url url di ingresso in fromato stringa
-        * @return il dominio org.p4535992.mvc.webapp dell'url in formato stringa
-        * @throws URISyntaxException 
+        * Method for get the domain name of the site of the url resource.
+        * @param url string as url.
+        * @return domani name of the url resource.  
         */
        public static String getDomainName(String url) {
 

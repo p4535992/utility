@@ -13,9 +13,9 @@ import java.util.Map;
 /**
  * This class encapsulates methods for requesting a server via HTTP GET/POST and
  * provides methods for parsing response from the server.
- * @href: http://www.codejava.net/java-se/networking/an-http-utility-class-to-send-getpost-request
- * @href: http://www.codejava.net/java-se/networking/upload-files-by-sending-multipart-request-programmatically
- * @author www.codejava.net
+ * href: http://www.codejava.net/java-se/networking/an-http-utility-class-to-send-getpost-request.
+ * href: http://www.codejava.net/java-se/networking/upload-files-by-sending-multipart-request-programmatically.
+ * @author www.codejava.net.
  * 
  */
 public class HttpUtility {
@@ -29,10 +29,10 @@ public class HttpUtility {
 	 * Makes an HTTP request using GET method to the specified URL.
 	 * 
 	 * @param requestURL
-	 *            the URL of the remote server
-	 * @return An HttpURLConnection object
+	 *            the URL of the remote server.
+	 * @return An HttpURLConnection object.
 	 * @throws IOException
-	 *             thrown if any I/O org.p4535992.mvc.error occurred
+	 *             thrown if any I/O org.p4535992.mvc.error occurred.
 	 */
 	public static HttpURLConnection sendGetRequest(String requestURL)
 			throws IOException {
@@ -50,12 +50,12 @@ public class HttpUtility {
 	 * Makes an HTTP request using POST method to the specified URL.
 	 * 
 	 * @param requestURL
-	 *            the URL of the remote server
+	 *            the URL of the remote server.
 	 * @param params
-	 *            A map containing POST data in form of key-value pairs
-	 * @return An HttpURLConnection object
+	 *            A map containing POST data in form of key-value pairs.
+	 * @return An HttpURLConnection object.
 	 * @throws IOException
-	 *             thrown if any I/O org.p4535992.mvc.error occurred
+	 *             thrown if any I/O org.p4535992.mvc.error occurred.
 	 */
 	public static HttpURLConnection sendPostRequest(String requestURL,
 			Map<String, String> params) throws IOException {
@@ -93,12 +93,12 @@ public class HttpUtility {
 	}
 
 	/**
-	 * Returns only one line from the server's response. This method should be
-	 * used if the server returns only a single line of String.
+	 * Returns only one line from the server's response. 
+         * This method should be used if the server returns only a single line of String.
 	 * 
-	 * @return a String of the server's response
+	 * @return a String of the server's response.
 	 * @throws IOException
-	 *             thrown if any I/O org.p4535992.mvc.error occurred
+	 *             thrown if any I/O error occurred.
 	 */
 	public static String readSingleLineRespone() throws IOException {
 		InputStream inputStream = null;
@@ -120,9 +120,9 @@ public class HttpUtility {
 	 * Returns an array of lines from the server's response. This method should
 	 * be used if the server returns multiple lines of String.
 	 * 
-	 * @return an array of Strings of the server's response
+	 * @return an array of Strings of the server's response.
 	 * @throws IOException
-	 *             thrown if any I/O org.p4535992.mvc.error occurred
+	 *             thrown if any I/O error occurred.
 	 */
 	public static String[] readMultipleLinesRespone() throws IOException {
 		InputStream inputStream = null;
@@ -142,11 +142,11 @@ public class HttpUtility {
 		}
 		reader.close();
 
-		return (String[]) response.toArray(new String[0]);
+		return response.toArray(new String[0]);
 	}
 	
 	/**
-	 * Closes the connection if opened
+	 * Closes the connection if opened.
 	 */
 	public static void disconnect() {
 		if (httpConn != null) {
@@ -156,10 +156,10 @@ public class HttpUtility {
 
 	/**
 	 * This constructor initializes a new HTTP POST request with content type
-	 * is set to multipart/form-data
-	 * @param requestURL
-	 * @param charset
-	 * @throws IOException
+	 * is set to multipart/form-data.
+	 * @param requestURL url for the request.
+	 * @param charset charset for encoding the request.
+	 * @throws IOException thrown if any I/O error occurred.
 	 */
 	public void MultipartUtility(String requestURL, String charset)
 			throws IOException {
@@ -183,9 +183,9 @@ public class HttpUtility {
 	}
 
 	/**
-	 * Adds a form field to the request
-	 * @param name field name
-	 * @param value field value
+	 * Adds a form field to the request.
+	 * @param name field name.
+	 * @param value field value.
 	 */
 	public void addFormField(String name, String value) {
 		writer.append("--" + boundary).append(LINE_FEED);
@@ -199,10 +199,10 @@ public class HttpUtility {
 	}
 
 	/**
-	 * Adds a upload file section to the request
-	 * @param fieldName name attribute in <input type="file" name="..." />
-	 * @param uploadFile a File to be uploaded
-	 * @throws IOException
+	 * Adds a upload file section to the request.
+	 * @param fieldName name attribute in input type="file" name="..." /.
+	 * @param uploadFile a File to be uploaded.
+	 * @throws IOException thrown if any I/O error occurred..
 	 */
 	public void addFilePart(String fieldName, File uploadFile)
 			throws IOException {
@@ -235,8 +235,8 @@ public class HttpUtility {
 
 	/**
 	 * Adds a header field to the request.
-	 * @param name - name of the header field
-	 * @param value - value of the header field
+	 * @param name - name of the header field.
+	 * @param value - value of the header field.
 	 */
 	public void addHeaderField(String name, String value) {
 		writer.append(name + ": " + value).append(LINE_FEED);
@@ -247,7 +247,7 @@ public class HttpUtility {
 	 * Completes the request and receives response from the server.
 	 * @return a list of Strings as response in case the server returned
 	 * status OK, otherwise an exception is thrown.
-	 * @throws IOException
+	 * @throws IOException thrown if any I/O error occurred.
 	 */
 	public List<String> finish() throws IOException {
 		List<String> response = new ArrayList<String>();

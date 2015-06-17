@@ -18,7 +18,7 @@ public class JacksonKit {
     private Object json2Pojo(String jsonString,Class<?> clazz) throws JAXBException, IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         Object empBeanList = objectMapper.readValue(jsonString,clazz);
-        Object object = (Object) empBeanList;
+        Object object = empBeanList;
         return object;
     }
 

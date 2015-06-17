@@ -1,5 +1,6 @@
 package com.p4535992.util.sql;
 
+import com.p4535992.util.log.SystemLog;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,11 +24,11 @@ public class SQLHelper {
     }
 
     /**
-     * @href: http://www.java2s.com/Code/Java/Database-SQL-JDBC/convertingajavasqlTypesintegervalueintoaprintablename.htm
-     * @param jdbcType
+     * href: http://www.java2s.com/Code/Java/Database-SQL-JDBC/convertingajavasqlTypesintegervalueintoaprintablename.htm
+     * @param jdbcType code int of the type sql.
      */
     public static void getJdbcTypeName(int jdbcType) {
-        Map map = new HashMap();
+        Map<Integer,String> map = new HashMap<>();
         // Get all field in java.sql.Types
         Field[] fields = java.sql.Types.class.getFields();
         for (int i = 0; i < fields.length; i++) {
@@ -36,12 +37,13 @@ public class SQLHelper {
                 Integer value = (Integer) fields[i].get(null);
                 map.put(value, name);
             } catch (IllegalAccessException e) {
+                SystemLog.exception(e);
             }
         }
         System.out.println(map);
     }
 
-    public static Class convertSQLTypes2JavaClass(int type) {
+    public static Class<?> convertSQLTypes2JavaClass(int type) {
         Class<?> result = Object.class;
         switch (type) {
             case Types.CHAR:

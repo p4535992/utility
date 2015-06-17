@@ -19,7 +19,7 @@ import java.util.Vector;
  * Created from 4535992 2015-05-05
  */
 public class StringOutputStreamKit extends OutputStream implements Serializable {
-	
+    private static final long serialVersionUID = 7L;
 /**
  * The internal StringBuffer to contain all the data
  * written to this OutputStream.
@@ -227,7 +227,7 @@ public class StringOutputStreamKit extends OutputStream implements Serializable 
 	 */
 
 	public static byte[] readBytes(InputStream IPut) throws Exception {
-		Vector BytArrsV = new Vector();
+		Vector<byte[]> BytArrsV = new Vector<>();
 		int size=0;
 		byte[] FinalVal = new byte[0];
 		int read=0;
@@ -245,7 +245,7 @@ public class StringOutputStreamKit extends OutputStream implements Serializable 
 			FinalVal = new byte[size];
 			int j = 0;
 			for (i = 0; i < BytArrsV.size(); i++){
-				byte[] byarr = (byte[]) BytArrsV.elementAt(i);
+				byte[] byarr = BytArrsV.elementAt(i);
 				for (int k = 0; k < byarr.length; k++){
 					FinalVal[j++] = byarr[k];
 				}
@@ -291,10 +291,10 @@ public class StringOutputStreamKit extends OutputStream implements Serializable 
 
 	//OTHER METHODS
 	/**
-	 * Returns a String with the content of the InputStream
-	 * @param is with the InputStream
-	 * @return string with the content of the InputStream
-	 * @throws IOException
+	 * Returns a String with the content of the InputStream.
+	 * @param is with the InputStream.
+	 * @return string with the content of the InputStream.
+	 * @throws IOException error.
 	 */
 	public static String convertInputStreamToString(InputStream is)
 			throws IOException {
@@ -319,7 +319,7 @@ public class StringOutputStreamKit extends OutputStream implements Serializable 
 	/**
 	 * Returns am InputStream with the parameter.
 	 *
-	 * @param string
+	 * @param string string.
 	 * @return InputStream with the string value.
 	 */
 	public static InputStream convertStringToInputStream(String string) {

@@ -18,7 +18,7 @@ import javax.swing.text.html.parser.ParserDelegator;
 
 /**
  * Created by 4535992 on 05/05/2015.
- * @href: http://www.java2s.com/Tutorial/Java/0120__Development/UsejavaxswingtexthtmlHTMLEditorKittoparseHTML.htm
+ * href: http://www.java2s.com/Tutorial/Java/0120__Development/UsejavaxswingtexthtmlHTMLEditorKittoparseHTML.htm
  */
 public class HtmlKit {
 
@@ -243,7 +243,7 @@ public class HtmlKit {
      * @return unescaped String.
      * @throws NullPointerException if s is null.
      *
-     * @since ostermillerutils 1.00.00
+     * @since ostermillerutils 1.00.00.
      */
     public static String unescapeHTML(String s){
         StringBuffer result = new StringBuffer(s.length());
@@ -260,7 +260,7 @@ public class HtmlKit {
                         value = Integer.parseInt(escape.substring(1), 10);
                     } else {
                         if (htmlEntities.containsKey(escape)){
-                            value = ((Integer)(htmlEntities.get(escape))).intValue();
+                            value = (htmlEntities.get(escape)).intValue();
                         }
                     }
                 } catch (NumberFormatException x){
@@ -288,9 +288,10 @@ public class HtmlKit {
     /**
      * Filter the specified message string for characters that are sensitive
      * in HTML.  This avoids potential attacks caused by including JavaScript
-     * codes in the request URL that is often reported in org.p4535992.mvc.error messages.
+     * codes in the request URL that is often reported in messages.
      *
-     * @param message The message string to be filtered
+     * @param message The message string to be filtered.
+     * @return message filtered for hat are sensitive in HTML.
      */
     public static String filter(String message) {
 
@@ -323,9 +324,9 @@ public class HtmlKit {
     }
 
     /**
-     * Method to convert a text string to html string
-     * @param text
-     * @return
+     * Method to convert a text string to html string.
+     * @param text string of text to convert.
+     * @return string of text converted to HTML format.
      */
     public static String textToHTML(String text) {
         if(text == null) {
@@ -419,9 +420,9 @@ public class HtmlKit {
      * @param source
      *            the HTML code to be processes
      * @param replaceNl
-     *            if true '\n' will be replaced by &lt;br>
+     *            if true '\n' will be replaced by &lt;br
      * @param replaceTag
-     *            if true '<' will be replaced by &lt; and '>' will be replaced
+     *            if true '' will be replaced by &lt; and '' will be replaced
      *            by &gt;
      * @param replaceQuote
      *            if true '\"' will be replaced by &quot;

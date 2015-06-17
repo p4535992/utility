@@ -40,11 +40,11 @@ public class XMLKit {
 
 
     /**
-     * Method to load the XML Document
-     * @param fileXML the XML file to input
-     * @return the document object initialize
-     * @throws SAXException
-     * @throws IOException
+     * Method to load the XML Document.
+     * @param fileXML the XML file to input.
+     * @return the document object initialize.
+     * @throws SAXException error.
+     * @throws IOException error.
      */
     public static Document loadDocumentFromFile(File fileXML) throws SAXException, IOException {
         //FileInputStream file = new FileInputStream(fileXML); //optional
@@ -55,11 +55,11 @@ public class XMLKit {
     }
 
     /**
-     * Method to load a XML Document
-     * @param xml
-     * @return the document object initialize
-     * @throws SAXException
-     * @throws IOException
+     * Method to load a XML Document.
+     * @param xml string xml.
+     * @return the document object initialize.
+     * @throws SAXException error.
+     * @throws IOException error.
      */
     public static Document loadDocumentFromFile(String xml) throws SAXException, IOException{
         doc = newDocumentXML();
@@ -69,8 +69,8 @@ public class XMLKit {
     }
 
     /**
-     * Method to initialize a new XML document
-     * @return the document object initialize
+     * Method to initialize a new XML document.
+     * @return the document object initialize.
      */
     public static Document newDocumentXML(){
         doc=null;
@@ -89,9 +89,9 @@ public class XMLKit {
     }
 
     /**
-     * Method to insert a new XML file
-     * @param pathFile where you want to insert the new file
-     * @param nameFile name of the XML file
+     * Method to insert a new XML file.
+     * @param pathFile where you want to insert the new file.
+     * @param nameFile name of the XML file.
      */
     public static void creatXMLFile(String pathFile,String nameFile){
         String path = pathFile+File.separator+nameFile;
@@ -114,14 +114,14 @@ public class XMLKit {
     }
 
     /**
-     *  Method for update the value of a attribute
-     * @param xmlFile
-     * @param tagName
-     * @param nameAttribute
-     * @param newValueAttribute
-     * @throws TransformerException
-     * @throws IOException
-     * @throws SAXException
+     * Method for update the value of a attribute
+     * @param xmlFile file xml.
+     * @param tagName string rootTag.
+     * @param nameAttribute string name of attribute.
+     * @param newValueAttribute string new value attribute.
+     * @throws TransformerException error.
+     * @throws IOException error.
+     * @throws SAXException error.
      */
     public static void updateValueOfAttribute(File xmlFile,String tagName,String nameAttribute,String newValueAttribute)
             throws TransformerException, IOException, SAXException {
@@ -145,9 +145,9 @@ public class XMLKit {
     /**
      * Get an Attribute from an Element.  Returns an empty String if none found
      * http://www.java2s.com/Code/Java/XML/ReturnalistofnamedElementswithaspecificattributevalue.htm
-     * @param element the containing Element
-     * @param name the attribute name
-     * @return Attribute as a String
+     * @param element the containing Element.
+     * @param name the attribute name.
+     * @return Attribute as a String.
      */
     public static String getAttribute(Element element, String name) {
         return element.getAttribute(name);
@@ -155,18 +155,18 @@ public class XMLKit {
 
     /**
      * Method to return a list of named Elements with a specific attribute value.
-     * @note http://www.java2s.com/Code/Java/XML/ReturnalistofnamedElementswithaspecificattributevalue.htm
-     * @param element the containing Element
-     * @param name the tag name
-     * @param attribute Attribute name
-     * @param value Attribute value
-     * @param returnFirst Return only the first matching value?
-     * @return List of matching elements
+     * note http://www.java2s.com/Code/Java/XML/ReturnalistofnamedElementswithaspecificattributevalue.htm
+     * @param element the containing Element.
+     * @param name the tag name.
+     * @param attribute Attribute name.
+     * @param value Attribute value.
+     * @param returnFirst Return only the first matching value?.
+     * @return List of matching elements.
      */
-    public static List selectElementsByAttributeValue(
+    public static List<Node> selectElementsByAttributeValue(
             Element element, String name,String attribute, String value,boolean returnFirst) {
         NodeList  elementList = element.getElementsByTagName(name);
-        List resultList  = new ArrayList();
+        List<Node> resultList  = new ArrayList<>();
         for (int i = 0; i < elementList.getLength(); i++) {
             if (getAttribute((Element) elementList.item(i), attribute).equals(value)) {
                 resultList.add(elementList.item(i));
@@ -179,11 +179,12 @@ public class XMLKit {
     }
 
     /**
-     * Method t o return a single first Element with a specific attribute value. (maybe you can find a better method))
-     * @param doc xml file of input
-     * @param tagName string of the name tag xml
-     * @param nameAttribute string of the name attribute xml
-     * @return the element xml with the specific attribute
+     * Method t o return a single first Element with a specific attribute value. 
+     * (maybe you can find a better method))
+     * @param doc xml file of input.
+     * @param tagName string of the name tag xml.
+     * @param nameAttribute string of the name attribute xml.
+     * @return the element xml with the specific attribute.
      */
     public static Element selectFirstElementByAttribute(Document doc,String tagName,String nameAttribute) {
         Element el = doc.getDocumentElement(); //get root element
@@ -198,11 +199,11 @@ public class XMLKit {
     }
 
     /**
-     * Method get all attributes in a xml element
-     * @param el xml element on input
-     * @return arraylist oa attributes
+     * Method get all attributes in a xml element.
+     * @param el xml element on input.
+     * @return array list of attributes.
      */
-    public static ArrayList getAllAttributes(Element el){
+    public static List<Attr> getAllAttributes(Element el){
         ArrayList<Attr> listAttr = new ArrayList<>();
         NamedNodeMap attributes = el.getAttributes();//get map containing the attributes of this node
         int numAttrs = attributes.getLength();  //get the number of nodes in this map
@@ -214,12 +215,10 @@ public class XMLKit {
     }
 
     /**
-     * Get root element
-     * @deprecated  use {@link  Element root = doc.getDocumentElement();} instead.
-     * @param doc xml document file
-     * @return element root of the xml document
+     * Get root element.
+     * @param doc xml document file.
+     * @return element root of the xml document.
      */
-    @Deprecated
     public static Element getRootElement(Document doc){
         Element root;
 //        NodeList list = doc.getChildNodes();
@@ -235,8 +234,10 @@ public class XMLKit {
     }
 
     /**
-     * Method for print on the console the content of a xml file
-     * @param xmlFile the xml file in input
+     * Method for print on the console the content of a xml file.
+     * @param xmlFile the xml file in input.
+     * @throws IOException error.
+     * @throws SAXException error.
      */
     public static void readXMLFileAndPrint(File xmlFile) throws IOException, SAXException {
         //File xmlFile = new File("/Users/mkyong/staff.xml");
@@ -262,8 +263,8 @@ public class XMLKit {
     }
 
     /**
-     * Method to print a single node of a xml document
-     * @param nodeList lista of nodes of a xml document
+     * Method to print a single node of a xml document.
+     * @param nodeList lista of nodes of a xml document.
      */
     private static void printNode(NodeList nodeList) {
         for (int count = 0; count < nodeList.getLength(); count++) {
@@ -292,12 +293,12 @@ public class XMLKit {
     }
 
 
-    /**
+    /*
      * Metodo per l'update del valore di un attributo di un tag in un XML Document with SAX JDOM
-     * @param xmlFile
-     * @param tagName
-     * @param nameAttribute
-     * @param newValueAttribute
+     * @param xmlFile file xml.
+     * @param tagName string tag root xml file.
+     * @param nameAttribute string name of attribute.
+     * @param newValueAttribute string new value attribute.
      */
     /*public static void updateValueOfattributeWithXPath(File xmlFile,String tagName,String nameAttribute,
                            String newValueAttribute) throws ParserConfigurationException, SAXException, XPathExpressionException, IOException {
@@ -311,16 +312,16 @@ public class XMLKit {
     }//updateValueOfattributeSAX*/
 
     /**
-     * Method for update the value of a attribute
-     * @param xmlFile
-     * @param tagName
-     * @param nameAttribute
-     * @param newValueAttribute
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     * @throws XPathExpressionException
-     * @throws IOException
-     * @throws TransformerException
+     * Method for update the value of a attribute.
+     * @param xmlFile file xml.
+     * @param tagName string tag root xml file.
+     * @param nameAttribute string name of attribute.
+     * @param newValueAttribute string new value attribute.
+     * @throws ParserConfigurationException error.
+     * @throws SAXException error.
+     * @throws XPathExpressionException error.
+     * @throws IOException error.
+     * @throws TransformerException error.
      */
     public void updateValueofAttribute(File xmlFile,String tagName,String nameAttribute,
               String newValueAttribute) throws ParserConfigurationException, SAXException, XPathExpressionException, IOException, TransformerException {
@@ -333,11 +334,11 @@ public class XMLKit {
 
     /**
      * To get DOM Document from the xml file.
-     * @param filePath
-     * @return DOM Document
-     * @throws ParserConfigurationException
-     * @throws SAXException
-     * @throws IOException
+     * @param filePath string path to the file.
+     * @return DOM Document.
+     * @throws ParserConfigurationException error.
+     * @throws SAXException error.
+     * @throws IOException error.
      */
     public static Document getDocument(String filePath) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -347,10 +348,10 @@ public class XMLKit {
     }
 
     /**
-     * Method To save the Document in xml file
-     * @param xmlDoc the XML Docuemnt you wan to save
-     * @param filePath where you want ot save the file
-     * @throws TransformerException
+     * Method To save the Document in xml file.
+     * @param xmlDoc the XML Docuemnt you wan to save.
+     * @param filePath where you want ot save the file.
+     * @throws TransformerException error.
      */
     public static void saveToXml(Document xmlDoc, String filePath) throws TransformerException {
         DOMSource source = new DOMSource(xmlDoc);
@@ -369,9 +370,9 @@ public class XMLKit {
     }
 
     /**
-     * Method to convert a Node XML to a Element XML
-     * @param node node XML to input
-     * @return elment XML
+     * Method to convert a Node XML to a Element XML.
+     * @param node node XML to input.
+     * @return elment XML.
      */
     public static Element convertNodeToElement(Node node){
         NodeList list = node.getChildNodes();
@@ -387,9 +388,9 @@ public class XMLKit {
     }
 
     /**
-     * Method to convert a Element XML to a Node XML
-     * @param elem element XML to input
-     * @return node XML
+     * Method to convert a Element XML to a Node XML.
+     * @param elem element XML to input.
+     * @return node XML.
      */
     public static Node convertElementToNode(Element elem){
         Node n = elem.getFirstChild();
@@ -397,9 +398,9 @@ public class XMLKit {
     }
 
     /**
-     * Method to convert a NODE XML to a string
-     * @param n node XML to input
-     * @return string of the node n
+     * Method to convert a NODE XML to a string.
+     * @param n node XML to input.
+     * @return string of the node n.
      */
     public static String convertElementToString(Node n) {
         String name = n.getNodeName();
@@ -449,9 +450,9 @@ public class XMLKit {
 
     /**
      * Load XML document and parse it into DOM.
-     * @param input
+     * @param input input stream.
      */
-    public static void loadXML(InputStream input) throws Exception {
+    public static void loadXML(InputStream input) {
         try {
             // Create Document Builder Factory
             docFactory = DocumentBuilderFactory.newInstance();
@@ -472,21 +473,21 @@ public class XMLKit {
             doc = docBuilder.parse(input);
             // Get Root xmlElement
             setRootElement();
-        } catch (Exception e) {
-            throw new Exception("Error load XML ", e);
+        } catch (SAXException|IOException|ParserConfigurationException e) {
+            SystemLog.exception(e);
         }
     }
 
     /**
-     * Set the Root Element
+     * Set the Root Element.
      */
     public static void setRootElement(){
         rootElement = doc.getDocumentElement();
     }
 
     /**
-     * Get the Root Element
-     * @return the root element
+     * Get the Root Element.
+     * @return the root element.
      */
     public static Element getRootElement(){
         return rootElement;
@@ -494,16 +495,16 @@ public class XMLKit {
 
     /**
      * Check name of root element is as expected.
-     * @param name
-     * @return
+     * @param name name of the root tag.
+     * @return boolean value.
      */
     public static boolean isRootName(String name) {
         return rootElement.getNodeName().equals(name);
     }
 
     /**
-     * Get the type of the xml doc
-     * @return string of the type
+     * Get the type of the xml doc.
+     * @return string of the type.
      */
     public static String getDoctype() {
         DocumentType doctype = doc.getDoctype();
@@ -514,8 +515,8 @@ public class XMLKit {
     }
 
     /**
-     * Get the public id of the xml doc
-     * @return string of the public id
+     * Get the public id of the xml doc.
+     * @return string of the public id.
      */
     public static String getPublicId() {
         DocumentType doctype = doc.getDoctype();
@@ -526,17 +527,17 @@ public class XMLKit {
     }
 
     /**
-     * Get the type of the root type name of the xml doc
-     * @return string of the name of root type
+     * Get the type of the root type name of the xml doc.
+     * @return string of the name of root type.
      */
     public static String getRootTypeName() {
         return rootElement.getSchemaTypeInfo().getTypeName();
     }
 
     /**
-     * Get the content of a  xml doc
-     * @return string of the content o a  xml doc
-     * @throws Exception
+     * Get the content of a  xml doc.
+     * @return string of the content o a  xml doc.
+     * @throws Exception error.
      */
     public static String getContent() throws Exception {
         NodeList childNodes = rootElement.getChildNodes();
@@ -544,10 +545,10 @@ public class XMLKit {
     }
 
     /**
-     * Support the getCOntent() method
-     * @param childNodes nde list of input
-     * @return the string of the nodelist of input
-     * @throws Exception
+     * Support the getCOntent() method.
+     * @param childNodes nde list of input.
+     * @return the string of the nodelist of input.
+     * @throws Exception error.
      */
     private static String serializeNodes(NodeList childNodes) throws Exception {
         DocumentFragment fragment =doc.createDocumentFragment();
@@ -595,6 +596,201 @@ public class XMLKit {
         }
         catch (Exception e) {  SystemLog.exception(e);  }
     }
+    
+    public static Map<String,String> namespaces = new Hashtable<String,String>();
+
+    public static void checkPrefix(String qname)throws Exception{
+        if(qname == null)
+        {
+            throw new Exception("Unexpected null QName");
+        }
+
+        if(qname.indexOf(":") <= 0)
+        {
+            throw new Exception("Missing prefix: " + qname);
+        }
+    }
+
+     public static void checkQName(String qname) throws Exception {
+        checkPrefix(qname);
+        if(qname.indexOf(":") == qname.length())
+        {
+            throw new Exception("Missing local name: " + qname);
+        }
+    }
+
+    /**
+     * Determine if the specified string satisfies the constraints of an XML Name.
+     * This code is seriously incomplete.
+     * @param str string to check.
+     * @return if the string is the name of the xml file.
+     */
+    public static boolean isXMLName(String str)
+    {
+      char name[] = str.toCharArray();
+      if(name[0] == '_'
+      || Character.isLetter(name[0]))
+      {
+        for(int pos = 0; pos < name.length; pos++)
+        {
+          if(!Character.isLetter(name[pos])
+          && !Character.isDigit(name[pos])
+          && name[pos] != '.'
+          && name[pos] != '-'
+          && name[pos] != '_')
+          {
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+
+    public static String xmlDecode(String text) throws Exception {
+      String origText = text;
+      String newText = "";
+      while(text.indexOf("&") >= 0)
+      {
+        int pos = text.indexOf("&");
+        newText += text.substring(0, pos);
+        text = text.substring(pos + 1);
+        pos = text.indexOf(";");
+        if(pos <= 0)
+        {
+          throw new Exception("Improperly escaped character: "+ origText);
+        }
+        String charref = text.substring(0, pos);
+        text = text.substring(pos + 1);
+
+        if(charref.equals("lt"))
+        {
+          newText += "<";
+        }
+        else if(charref.equals("gt"))
+        {
+          newText += ">";
+        }
+        else if(charref.equals("amp"))
+        {
+          newText += "&";
+        }
+        else if(charref.equals("quot"))
+        {
+              newText += "\"";
+        }
+        else if(charref.equals("apos"))
+        {
+          newText += "'";
+        }
+        else if(charref.startsWith("#"))
+        {
+          String number = charref.substring(1);
+          int radix = 10;
+
+          if(charref.startsWith("#x")
+              || charref.startsWith("#X"))
+              {
+                number = charref.substring(2);
+                radix = 16;
+          }
+
+          if("".equals(number))
+          {
+              throw new Exception("Improperly escaped character: "+ charref);
+          }
+          char ch = 0;
+          try
+          {
+            ch =
+            (char) Integer.parseInt(
+            number,
+            radix);
+          }
+          catch(NumberFormatException nfe)
+          {
+              throw new Exception("Improperly escaped character: "+ charref);
+          }
+          newText += ch;
+        }
+        else
+        {
+            throw new Exception("Improperly escaped character: "+ charref);
+        }
+      }//while
+      return newText + text;
+    }
+
+    public static void getNamespaces(String xmlFile) {
+        // Construct a SAX Parser using JAXP
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        // For this app, namespaces and validity are irrelevant
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+
+        // Our handler will actually count the words
+        PrefixGrabber handler = new PrefixGrabber();
+
+        try
+        {
+            // Construct the parser and
+            SAXParser parser = factory.newSAXParser();
+            // use it to parse the document
+            parser.parse(xmlFile, handler);
+          }
+          catch(Exception e)
+          {
+            // Maybe FileNotFound, maybe something else, anyway, life goes
+            // on...
+            return;
+          }
+
+          // Add any newly discovered prefixes to the namespace bindings
+          Hashtable<String,String> docNamespaces = handler.getNamespaces();
+          Enumeration<String> document = docNamespaces.keys();
+          while(document.hasMoreElements())
+          {
+            String prefix = document.nextElement();
+            if(!namespaces.containsKey(prefix))
+            {
+              namespaces.put(prefix, docNamespaces.get(prefix));
+            }
+          }//while
+    }//getNameSpaces
+
+    public static String xmlEncode(String rawtext) {
+        // Now turn that UTF-8 string into something "safe"
+        String rdfString ="<?xml version='1.0' encoding='ISO-8859-1'?>\n";
+        char[] sbuf = rawtext.toCharArray();
+
+        int lastPos = 0;
+        int pos = 0;
+        while(pos < sbuf.length)
+        {
+            char ch = sbuf[pos];
+            if(ch == '\n' || (ch >= ' ' && ch <= '~'))
+            {
+              // nop;
+            }
+            else
+            {
+                if(pos > lastPos)
+                {
+                   String range =new String(sbuf,lastPos,pos - lastPos);
+                   rdfString += range;
+                }
+                rdfString += "&#" + (int) ch + ";";
+                lastPos = pos + 1;
+            }
+            pos++;
+        }
+        if(pos > lastPos)
+        {
+            String range =  new String(sbuf, lastPos, pos - lastPos);
+            rdfString += range;
+        }
+        return rdfString;
+    }//xmlEncode
 }
 
     /**
@@ -603,11 +799,12 @@ public class XMLKit {
  	 * @author Norman Walsh
  	 * @version $Revision: 1.1 $
  	 */
-	class PrefixGrabber extends DefaultHandler {
-        private Hashtable nsHash = new Hashtable();
+    @SuppressWarnings("unchecked")
+    class PrefixGrabber extends DefaultHandler {
+        private Hashtable<String,String> nsHash = new Hashtable<>();
         private boolean root = true;
 
-        public Hashtable getNamespaces() {
+        public Hashtable<String,String> getNamespaces() {
             return nsHash;
         }
 
@@ -619,6 +816,8 @@ public class XMLKit {
 
         public void startElement (String uri, String localName, String qName, Attributes attributes) throws SAXException {
         	    root = false;
-        }
-    }
+        }            
+    }//prefixgrabber
+
+    
 

@@ -17,7 +17,9 @@ public class SiiMobility1_3_4_WithIndividual {
     public static final String NS = "http://www.disit.dinfo.unifi.it/SiiMobility#";
     
     /** <p>The namespace of the vocabulary as a string</p>
-     *  @see #NS */
+     *  @see #NS 
+     *  @return uri
+     */
     public static String getURI() {return NS;}
     
     /** <p>The namespace of the vocabulary as a resource</p> */

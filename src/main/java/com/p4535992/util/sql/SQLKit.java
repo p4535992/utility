@@ -17,11 +17,12 @@ public class  SQLKit<T> {
     private static String clName;
     private static String query;
 
+    @SuppressWarnings("unchecked")
     public SQLKit() {
         java.lang.reflect.Type t = getClass().getGenericSuperclass();
         java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) t;
-        this.cl = (Class) pt.getActualTypeArguments()[0];
-        this.clName = cl.getSimpleName();
+        SQLKit.cl = (Class) pt.getActualTypeArguments()[0];
+        SQLKit.clName = cl.getSimpleName();
     }
 
     public static Map<String,Integer> getColumns(String database,String table,String column) throws SQLException {

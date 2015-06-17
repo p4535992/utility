@@ -32,11 +32,11 @@ public class URLUtil {
    * with pure query targets.
    * 
    * @param base
-   *          base url
+   *          base url.
    * @param target
-   *          target url (may be relative)
+   *          target url (may be relative).
    * @return resolved absolute url.
-   * @throws MalformedURLException
+   * @throws MalformedURLException thrown if any MalformedURL error occurred.
    */
   public static URL resolveURL(URL base, String target)
       throws MalformedURLException {
@@ -60,7 +60,11 @@ public class URLUtil {
     return new URL(base, target);
   }
 
-  /** Handle the case in RFC3986 section 5.4.1 example 7, and similar. */
+  /** Handle the case in RFC3986 section 5.4.1 example 7, and similar. 
+   * @param base url of the site web.
+   * @param target string of the reosurce on the site web.
+   * @return url to the reosurce web.
+   */
   static URL fixPureQueryTargets(URL base, String target)
       throws MalformedURLException {
     if (!target.startsWith("?"))
@@ -89,6 +93,8 @@ public class URLUtil {
    *  </code><br>
    * will return <br>
    * <code> apache.org</code>
+   * @param url url to the resource web.
+   * @return domain name of the resource web.
    * */
 
   public static String getDomainName(URL url) {
@@ -126,10 +132,12 @@ public class URLUtil {
    *  </code><br>
    * will return <br>
    * <code> apache.org</code>
-   * 
-   * @throws MalformedURLException
+   * @param url url to the resource web.
+   * @return domain name of the resource web.
+   * @throws MalformedURLException throw if any MalformedURL error is occured.
    */
-  public static String getDomainName(String url) throws MalformedURLException {return getDomainName(new URL(url));}
+  public static String getDomainName(String url) throws MalformedURLException {
+      return getDomainName(new URL(url));}
 
   /**
    * Returns the top level domain name of the url. The top level domain name of
@@ -140,8 +148,9 @@ public class URLUtil {
    *  </code><br>
    * will return <br>
    * <code> org</code>
-   * 
-   * @throws MalformedURLException
+   * @param url url to the resource web.
+   * @return domain name of the resource web.
+   * @throws MalformedURLException throw if any MalformedURL error is occured.
    */
   public static String getTopLevelDomainName(URL url)
       throws MalformedURLException {
@@ -164,22 +173,23 @@ public class URLUtil {
    *  </code><br>
    * will return <br>
    * <code> org</code>
-   * 
-   * @throws MalformedURLException
+   * @param url url to the resource web.
+   * @return domain name of the resource web.
+   * @throws MalformedURLException throw if any MalformedURL error is occured.
    */
-  /*
-  public static String getTopLevelDomainName(String url)
+   public static String getTopLevelDomainName(String url)
       throws MalformedURLException {
     return getTopLevelDomainName(new URL(url));
-  }
- */
+   }
+ 
   /**
    * Returns whether the given urls have the same domain name. As an example, <br>
    * <code> isSameDomain(new URL("http://lucene.apache.org")
    * , new URL("http://people.apache.org/"))
    * <br> will return true. </code>
-   * 
-   * @return true if the domain names are equal
+   * @param url1 url to the first resource web.
+   * @param url2 url to the second resource web.
+   * @return true if the domain names are equal.
    */
   public static boolean isSameDomainName(URL url1, URL url2) {
     return getDomainName(url1).equalsIgnoreCase(getDomainName(url2));
@@ -225,7 +235,10 @@ public class URLUtil {
     return getDomainSuffix(new URL(url));
   }
  */
-  /** Partitions of the hostname of the url by "." */
+  /** Partitions of the hostname of the url by "." .
+   * @param url url of the resource web.
+   * @return array of string with the full host segment to the resource web.
+   */
   public static String[] getHostSegments(URL url) {
     String host = url.getHost();
     // return whole hostname, if it is an ipv4
@@ -236,8 +249,10 @@ public class URLUtil {
   }
 
   /**
-   * Partitions of the hostname of the url by "."
-   * @throws MalformedURLException
+   * Partitions of the hostname of the url by ".".
+   * @param url string url of input.
+   * @throws MalformedURLException throw if any MalformedURL error is occured.
+   * @return array of string with the stack of the full uri host segment.
    */
   public static String[] getHostSegments(String url)
       throws MalformedURLException {
@@ -245,71 +260,8 @@ public class URLUtil {
   }
 
   /**
-   * <p>
-   * Given two urls, a src and a destination of a redirect, it returns the
-   * representative url.
-   * <p>
-   * 
-   * <p>
-   * This method implements an extended version of the algorithm used by the
-   * Yahoo! Slurp crawler described here:<br>
-   * <a href=
-   * "http://help.yahoo.com/l/nz/yahooxtra/search/webcrawler/slurp-11.html"> How
-   * does the Yahoo! webcrawler handle redirects?</a> <br>
-   * <br>
-   * <ol>
-   * <li>Choose target url if either url is malformed.</li>
-   * <li>If different domains the keep the destination whether or not the
-   * redirect is temp or perm</li>
-   * <ul>
-   * <li>a.com -> b.com*</li>
-   * </ul>
-   * <li>If the redirect is permanent and the source is root, keep the source.</li>
-   * <ul>
-   * <li>*a.com -> a.com?y=1 || *a.com -> a.com/xyz/index.html</li>
-   * </ul>
-   * <li>If the redirect is permanent and the source is not root and the
-   * destination is root, keep the destination</li>
-   * <ul>
-   * <li>a.com/xyz/index.html -> a.com*</li>
-   * </ul>
-   * <li>If the redirect is permanent and neither the source nor the destination
-   * is root, then keep the destination</li>
-   * <ul>
-   * <li>a.com/xyz/index.html -> a.com/abc/page.html*</li>
-   * </ul>
-   * <li>If the redirect is temporary and source is root and destination is not
-   * root, then keep the source</li>
-   * <ul>
-   * <li>*a.com -> a.com/xyz/index.html</li>
-   * </ul>
-   * <li>If the redirect is temporary and source is not root and destination is
-   * root, then keep the destination</li>
-   * <ul>
-   * <li>a.com/xyz/index.html -> a.com*</li>
-   * </ul>
-   * <li>If the redirect is temporary and neither the source or the destination
-   * is root, then keep the shortest url. First check for the shortest host, and
-   * if both are equal then check by path. Path is first by length then by the
-   * number of / path separators.</li>
-   * <ul>
-   * <li>a.com/xyz/index.html -> a.com/abc/page.html*</li>
-   * <li>*www.a.com/xyz/index.html -> www.news.a.com/xyz/index.html</li>
-   * </ul>
-   * <li>If the redirect is temporary and both the source and the destination
-   * are root, then keep the shortest sub-domain</li>
-   * <ul>
-   * <li>*www.a.com -> www.news.a.com</li>
-   * </ul>
-   * <br>
-   * While not in this logic there is a further piece of representative url
-   * logic that occurs during indexing and after scoring. During creation of the
-   * basic fields before indexing, if a url has a representative url stored we
-   * check both the url and its representative url (which should never be the
-   * same) against their linkrank scores and the highest scoring one is kept as
-   * the url and the lower scoring one is held as the orig url inside of the
-   * index.
-   * 
+   * Method for get the representative url of the resource web.
+   * href: http://help.yahoo.com/l/nz/yahooxtra/search/webcrawler/slurp-11.html.
    * @param src
    *          The source url.
    * @param dst
@@ -319,7 +271,7 @@ public class URLUtil {
    * 
    * @return String The representative url.
    */
-  public static String chooseRepr(String src, String dst, boolean temp) {
+  public static String chooseRepresentativeUrl(String src, String dst, boolean temp) {
 
     // validate both are well formed urls
     URL srcUrl;

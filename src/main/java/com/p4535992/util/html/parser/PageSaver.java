@@ -56,7 +56,7 @@ public class PageSaver extends HTMLEditorKit.ParserCallback {
 
     private void writeAttributes(AttributeSet attributes) throws IOException {
 
-        Enumeration e = attributes.getAttributeNames();
+        Enumeration<?> e = attributes.getAttributeNames();
         while (e.hasMoreElements()) {
             Object name = e.nextElement();
             String value = (String) attributes.getAttribute(name);

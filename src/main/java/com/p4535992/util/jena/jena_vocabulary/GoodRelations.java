@@ -15,7 +15,9 @@ public class GoodRelations {
     public static final String NS = "http://purl.org/goodrelations/v1#";
     
     /** <p>The namespace of the vocabulary as a string</p>
-     *  @see #NS */
+     *  @see #NS 
+     *  @return uri
+     */
     public static String getURI() {return NS;}
     
     /** <p>The namespace of the vocabulary as a resource</p> */

@@ -1,9 +1,36 @@
 package com.p4535992.util.jena;
 
+import com.hp.hpl.jena.datatypes.RDFDatatype;
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFactory;
+import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.rdf.model.Literal;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.NodeIterator;
+import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.ResIterator;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.rdf.model.impl.PropertyImpl;
+import com.hp.hpl.jena.rdf.model.impl.SelectorImpl;
+import com.hp.hpl.jena.rdf.model.impl.StatementImpl;
+import com.hp.hpl.jena.vocabulary.RDF;
+import com.hp.hpl.jena.vocabulary.RSS;
+
 import com.p4535992.util.string.StringOutputStreamKit;
-import com.p4535992.util.xml.XMLKit_Extends;
 import com.p4535992.util.file.FileUtil;
 import com.p4535992.util.log.SystemLog;
+import com.p4535992.util.string.StringKit;
+import com.p4535992.util.xml.XMLKit;
 
 import java.io.*;
 import java.net.URI;
@@ -15,42 +42,39 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.RDFWriterRegistry;
 
 /**
  * Class utility for Jena
  * Created by 4535992 in 2015-04-28
  */
 public class Jena2Kit {
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Jena2Kit.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Jena2Kit.class);
     //PRIVATE
     private static String SPARQL_QUERY;
     private static String INFORMAT;
     private static String OUTFORMAT;
 
-    private static Hashtable namespaces = new Hashtable();
-    private static com.hp.hpl.jena.rdf.model.Model model;
-    private static org.apache.jena.riot.Lang OUTLANGFORMAT;
-    private static org.apache.jena.riot.RDFFormat OUTRDFFORMAT;
+    private static final Hashtable<String,String> namespaces = new Hashtable<>();
+    private static Model model;
+    private static Lang OUTLANGFORMAT;
+    private static RDFFormat OUTRDFFORMAT;
 
-    private static org.apache.jena.riot.Lang INLANGFORMAT;
-    private static org.apache.jena.riot.RDFFormat INRDFFORMAT;
+    private static Lang INLANGFORMAT;
+    private static RDFFormat INRDFFORMAT;
 
     //PUBLIC
     public static final String RDF_FORMAT ="RDF/XML-ABBREV";
     public static SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz");
 
-
-    public static com.hp.hpl.jena.rdf.model.Model setNewDefaultModel(){
-        com.hp.hpl.jena.rdf.model.Model model = com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel();
-        return model;
-    }
-
     /**
-     * Method  to Write large model jena to file of text
-     * @param fullPath
-     * @param model
-     * @param outputFormat
-     * @throws IOException
+     * Method  to Write large model jena to file of text.
+     * @param fullPath string of the path to the file.
+     * @param model jena model to write.
+     * @param outputFormat the output format you want to write the model.
+     * @throws IOException throw if any I/O error is occured.
      */
     public static void writeModelToFile(String fullPath, com.hp.hpl.jena.rdf.model.Model model, String outputFormat) throws IOException {
         fullPath =  FileUtil.path(fullPath) + File.separator + FileUtil.filenameNoExt(fullPath)+"."+outputFormat.toLowerCase();
@@ -83,13 +107,12 @@ public class Jena2Kit {
     }
 
     /**
-     * Method  to Write large model jena to file of text
-     * @param fullPath
-     * @param model
-     * @deprecated  use {@link //com.hp.hpl.jena.rdf.model.Model.write(...)} instead.
-     * @throws IOException
+     * Method  to Write large model jena to file of text.
+     * @param fullPath string of the path to the file.
+     * @param model jena model to write.
+     * @throws IOException throw if any I/O error is occured.
      */
-	private static void writeModelToFile1(String fullPath, com.hp.hpl.jena.rdf.model.Model model) throws IOException {
+	private static void writeModelToFile1(String fullPath,Model model) throws IOException {
         Charset ENCODING = StandardCharsets.UTF_8;
         FileUtil.createFile(fullPath);
         Path path = Paths.get(fullPath);
@@ -100,11 +123,12 @@ public class Jena2Kit {
 	  }
 
     /**
-     * Method  to Write large model jena to file of text
-     * @param fullPath
-     * @param model
+     * Method  to Write large model jena to file of text.
+     * @param fullPath string of the path to the file.
+     * @param model jena model to write.
+     * @throws IOException throw if any I/O error is occured.
      */
-    private static void writeModelToFile2(String fullPath, com.hp.hpl.jena.rdf.model.Model model) throws IOException {
+    private static void writeModelToFile2(String fullPath,Model model) throws IOException {
         FileWriter out = new FileWriter(fullPath);
         try {
             model.write(out, OUTLANGFORMAT.getName());
@@ -120,68 +144,97 @@ public class Jena2Kit {
     }
 
     /**
-     * Method  to Write large model jena to file of text
-     * @param fullPath
-     * @param model
+     * Method  to Write large model jena to file of text.
+     * @param fullPath string of the path to the file.
+     * @param model jena model to write.
+     * @throws FileNotFoundException throw if any "File Not Found error" is occured.
      */
-    private static void writeModelToFile3(String fullPath, com.hp.hpl.jena.rdf.model.Model model) throws FileNotFoundException {
+    private static void writeModelToFile3(String fullPath, Model model) throws FileNotFoundException {
         FileOutputStream outputStream = new FileOutputStream(fullPath);
         model.write(outputStream, OUTLANGFORMAT.getName());
     }
     /**
-     * Method  to Write large model jena to file of text
-     * @param fullPath
-     * @param model
+     * Method  to Write large model jena to file of text.
+     * @param fullPath string of the path to the file.
+     * @param model jena model to write.
+     * @throws IOException throw if any I/O error is occured.
      */
     private static void writeModelToFile4(String fullPath, com.hp.hpl.jena.rdf.model.Model model)throws IOException{
         Writer writer = new FileWriter(new File(fullPath));
         model.write(writer, OUTFORMAT);
     }
 
-    public static com.hp.hpl.jena.rdf.model.Model execSparqlConstructorOnModel(String sparql,com.hp.hpl.jena.rdf.model.Model model) {
-        com.hp.hpl.jena.query.Query query = com.hp.hpl.jena.query.QueryFactory.create(sparql) ;
-        com.hp.hpl.jena.query.QueryExecution qexec = com.hp.hpl.jena.query.QueryExecutionFactory.create(query, model) ;
-        com.hp.hpl.jena.rdf.model.Model resultModel = qexec.execConstruct() ;
+    /**
+     * Method for execute a CONSTRUCTOR SPARQL on a Jena Model.
+     * @param sparql sparql query.
+     * @param model jena model.
+     * @return the result of the query allocated on a Jena model.
+     */
+    public static Model execSparqlConstructorOnModel(String sparql,Model model) {
+        Query query = QueryFactory.create(sparql) ;
+        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+        Model resultModel = qexec.execConstruct() ;
         SystemLog.sparql(sparql);
         qexec.close() ;
         return  resultModel;
     }
-
-    public static com.hp.hpl.jena.rdf.model.Model execSparqlDescribeOnModel(String sparql,com.hp.hpl.jena.rdf.model.Model model) {
-        com.hp.hpl.jena.query.Query query = com.hp.hpl.jena.query.QueryFactory.create(sparql) ;
-        com.hp.hpl.jena.query.QueryExecution qexec = com.hp.hpl.jena.query.QueryExecutionFactory.create(query, model) ;
-        com.hp.hpl.jena.rdf.model.Model resultModel = qexec.execDescribe() ;
+    
+    /**
+     * Method for execute a DESCRIIBE SPARQL on a Jena Model.
+     * @param sparql sparql query.
+     * @param model jena model.
+     * @return the result of the query allocated on a Jena model.
+     */
+    public static Model execSparqlDescribeOnModel(String sparql,Model model) {
+        Query query = QueryFactory.create(sparql) ;
+        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+        Model resultModel = qexec.execDescribe() ;
         SystemLog.sparql(sparql);
         qexec.close() ;
         return resultModel;
     }
 
-    public static com.hp.hpl.jena.query.ResultSet execSparqlSelectOnModel(String sparql,com.hp.hpl.jena.rdf.model.Model model) {
-        com.hp.hpl.jena.query.QueryExecution qexec = com.hp.hpl.jena.query.QueryExecutionFactory.create(sparql, model);
-        com.hp.hpl.jena.query.ResultSet  results = qexec.execSelect();
-        results = com.hp.hpl.jena.query.ResultSetFactory.copyResults(results) ; //... make exit from the thread the result of query
+    /**
+     * Method for execute a SELECT SPARQL on a Jena Model.
+     * @param sparql sparql query.
+     * @param model jena model.
+     * @return the result set of the query.
+     */
+    public static ResultSet execSparqlSelectOnModel(String sparql,Model model) {
+        QueryExecution qexec = QueryExecutionFactory.create(sparql, model);
+        ResultSet  results = qexec.execSelect();
+         //... make exit from the thread the result of query
+        results = ResultSetFactory.copyResults(results) ;
         SystemLog.sparql(sparql);
         qexec.close();
         return results;
     }
 
-    public static boolean execSparqlAskOnModel(String sparql,com.hp.hpl.jena.rdf.model.Model model) {
-        com.hp.hpl.jena.query.Query query = com.hp.hpl.jena.query.QueryFactory.create(sparql) ;
-        com.hp.hpl.jena.query.QueryExecution qexec = com.hp.hpl.jena.query.QueryExecutionFactory.create(query, model) ;
+     /**
+     * Method for execute a ASK SPARQL on a Jena Model.
+     * @param sparql sparql query.
+     * @param model jena model.
+     * @return the result set of the query like a boolean value.
+     */
+    public static boolean execSparqlAskOnModel(String sparql,Model model) {
+        Query query = QueryFactory.create(sparql) ;
+        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
         boolean result = qexec.execAsk();
         SystemLog.sparql(sparql);
         qexec.close() ;
         return result;
     }
-	/**
+    
+    /**
      * Metodo per il caricamento di un file di triple in un'oggetto model di JENA.
-     * @param filename, nome del file da caricare.
-     * @param filepath, path del file da caricare,
-     * @param inputFormat, formato del fil di triple da caricare.
-     * @return the jena model of the file
+     * @param filename name of the file of input. 
+     * @param filepath path to the file of input wihtout the name.
+     * @param inputFormat format of the file in input.
+     * @return the jena model of the file.
+     * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
-    public static com.hp.hpl.jena.rdf.model.Model loadFileTriple(String filename,String filepath,String inputFormat) throws FileNotFoundException {
-        com.hp.hpl.jena.rdf.model.Model model = com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel();
+    public static Model loadFileTriple(String filename,String filepath,String inputFormat) throws FileNotFoundException {
+        Model model = ModelFactory.createDefaultModel();
         INLANGFORMAT = stringToRiotLang(inputFormat);
         INRDFFORMAT = stringToRDFFormat(inputFormat);
         INFORMAT = INLANGFORMAT.getLabel().toUpperCase();
@@ -223,11 +276,12 @@ public class Jena2Kit {
         return model;
     }
     /**
-     * Method for load a file of tuples to a jena model
-     * @param file a input file
-     * @return the jena model of the file
+     * Method for load a file of tuples to a jena model.
+     * @param file a input file.
+     * @return the jena model of the file.
+     * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
-     public static com.hp.hpl.jena.rdf.model.Model loadFileTriple(File file) throws FileNotFoundException {
+     public static Model loadFileTriple(File file) throws FileNotFoundException {
          String filename = FileUtil.filenameNoExt(file);
          String filepath = FileUtil.path(file);
          String inputFormat = FileUtil.extension(file);
@@ -237,7 +291,8 @@ public class Jena2Kit {
 
     /**
      * A list of org.apache.jena.riot.Lang file formats.
-     * @exception : "AWT-EventQueue-0" java.lang.NoSuchFieldError: RDFTHRIFT  or CSV
+     * @return all the language Lang supported from jena.
+     * @exception : "AWT-EventQueue-0" java.lang.NoSuchFieldError: RDFTHRIFT  or CSV.
      */
  	private static final org.apache.jena.riot.Lang allFormatsOfRiotLang[] = new org.apache.jena.riot.Lang[] { 
             org.apache.jena.riot.Lang.NTRIPLES, org.apache.jena.riot.Lang.N3,org.apache.jena.riot.Lang.RDFXML,
@@ -250,26 +305,20 @@ public class Jena2Kit {
             //org.apache.jena.riot.Lang.CSV,
             //org.apache.jena.riot.Lang.RDFTHRIFT
         };
- 	/**
-     * A list of org.apache.jena.riot.RDFFormat file formats used in loadFile().
-     */
- 	private static final org.apache.jena.riot.RDFFormat allFormatsOfRDFFormat[] = new org.apache.jena.riot.RDFFormat[] { 	
- 		org.apache.jena.riot.RDFFormat.TURTLE, org.apache.jena.riot.RDFFormat.TTL, 
- 		org.apache.jena.riot.RDFFormat.JSONLD_FLAT,org.apache.jena.riot.RDFFormat.JSONLD_PRETTY,
- 		org.apache.jena.riot.RDFFormat.JSONLD,
- 		org.apache.jena.riot.RDFFormat.RDFJSON,org.apache.jena.riot.RDFFormat.RDFNULL,		
- 		org.apache.jena.riot.RDFFormat.NQUADS,org.apache.jena.riot.RDFFormat.NQ,
- 		org.apache.jena.riot.RDFFormat.NQUADS_ASCII,org.apache.jena.riot.RDFFormat.NQUADS_UTF8,	
- 		org.apache.jena.riot.RDFFormat.NT,org.apache.jena.riot.RDFFormat.NTRIPLES,
- 		org.apache.jena.riot.RDFFormat.NTRIPLES_ASCII,org.apache.jena.riot.RDFFormat.NTRIPLES_UTF8,	
- 		//org.apache.jena.riot.RDFFormat.RDF_THRIFT,org.apache.jena.riot.RDFFormat.RDF_THRIFT_VALUES,
- 		org.apache.jena.riot.RDFFormat.RDFXML,org.apache.jena.riot.RDFFormat.RDFXML_ABBREV,
- 		org.apache.jena.riot.RDFFormat.RDFXML_PLAIN,org.apache.jena.riot.RDFFormat.RDFXML_PRETTY,		
- 		org.apache.jena.riot.RDFFormat.TRIG,org.apache.jena.riot.RDFFormat.TRIG_BLOCKS,
- 		org.apache.jena.riot.RDFFormat.TRIG_FLAT,org.apache.jena.riot.RDFFormat.TRIG_PRETTY,
- 		org.apache.jena.riot.RDFFormat.TURTLE_BLOCKS,org.apache.jena.riot.RDFFormat.RDFXML.TURTLE_FLAT,
- 		org.apache.jena.riot.RDFFormat.RDFXML.TURTLE_PRETTY};
-
+    /**
+     * A list of org.apache.jena.riot.RDFFormat file formats used in jena.
+     * @return all the RDFFormat supported from jena.
+     *
+ 	private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] { 	
+ 		RDFFormat.TURTLE, RDFFormat.TTL,RDFFormat.JSONLD_FLAT,RDFFormat.JSONLD_PRETTY,
+ 		RDFFormat.JSONLD,RDFFormat.RDFJSON,RDFFormat.RDFNULL,RDFFormat.NQUADS,RDFFormat.NQ,
+ 		RDFFormat.NQUADS_ASCII,RDFFormat.NQUADS_UTF8,RDFFormat.NT,RDFFormat.NTRIPLES,
+ 		RDFFormat.NTRIPLES_ASCII,RDFFormat.NTRIPLES_UTF8,RDFFormat.RDFXML,RDFFormat.RDFXML_ABBREV,
+ 		RDFFormat.RDFXML_PLAIN,RDFFormat.RDFXML_PRETTY,RDFFormat.TRIG,RDFFormat.TRIG_BLOCKS,
+ 		RDFFormat.TRIG_FLAT,RDFFormat.TRIG_PRETTY,RDFFormat.TURTLE_BLOCKS,RDFFormat.TURTLE_FLAT,
+ 		RDFFormat.TURTLE_PRETTY};
+        //org.apache.jena.riot.RDFFormat.RDF_THRIFT,org.apache.jena.riot.RDFFormat.RDF_THRIFT_VALUES,
+      */
     /*
     public static com.hp.hpl.jena.datatypes.RDFDatatype convertXSDDatatypeToRDFDatatype(
             com.hp.hpl.jena.datatypes.xsd.XSDDatatype xsdDatatype){
@@ -279,29 +328,30 @@ public class Jena2Kit {
     */
 
     /**
-     * All XSDDatatype
+     * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
+     * @return all the XSDDatatype supported from jena.
      */
-    private static final com.hp.hpl.jena.datatypes.xsd.XSDDatatype allFormatsOfXSDDataTypes[] = new com.hp.hpl.jena.datatypes.xsd.XSDDatatype[]{
-            com.hp.hpl.jena.datatypes.xsd.XSDDatatype.XSDstring
+    private static final XSDDatatype allFormatsOfXSDDataTypes[] = new XSDDatatype[]{
+            XSDDatatype.XSDstring,XSDDatatype.XSDENTITY,XSDDatatype.XSDID,XSDDatatype.XSDIDREF
     };
 
     /**
-     * Method convert a XSDDatatype to a string
-     * @param xsdDatatype
-     * @return string
+     * Method convert a XSDDatatype to a string.
+     * @param xsdDatatype XSDDatatype of input.
+     * @return string uri of the XSDDatatype.
      */
-    public static String XSDDatatypeToString(com.hp.hpl.jena.datatypes.xsd.XSDDatatype xsdDatatype) {
+    public static String XSDDatatypeToString(XSDDatatype xsdDatatype) {
             String uri = xsdDatatype.getURI();
             return  uri;
  	}
 
     /**
-     * Method convert a string to XSDDatatype
-     * @param uri
-     * @return xsdDatatype
+     * Method convert a string to XSDDatatype.
+     * @param uri string uri of the XSDDatatype.
+     * @return xsdDatatype of the string uri if exists.
      */
-    public static com.hp.hpl.jena.datatypes.xsd.XSDDatatype stringToXSDDatatypeToString(String uri) {
-            for (com.hp.hpl.jena.datatypes.xsd.XSDDatatype xsdDatatype : allFormatsOfXSDDataTypes) {
+    public static XSDDatatype stringToXSDDatatypeToString(String uri) {
+            for (XSDDatatype xsdDatatype : allFormatsOfXSDDataTypes) {
                    if(xsdDatatype.getURI().equalsIgnoreCase("http://www.w3.org/2001/XMLSchema#"+uri)){
                        return xsdDatatype;
                    }
@@ -310,11 +360,11 @@ public class Jena2Kit {
  	}
 
     /**
-     * Method convert a string to a rdfformat
-     * @param strFormat
-     * @return rdfformat
+     * Method convert a string to a rdfformat.
+     * @param strFormat string name of the RDFFormat.
+     * @return rdfformat the RDFFormat with the same name.
      */
- 	public static org.apache.jena.riot.RDFFormat stringToRDFFormat(String strFormat) {
+    public static RDFFormat stringToRDFFormat(String strFormat) {
         if(strFormat.toUpperCase().contains("NT") ||
                 strFormat.toUpperCase().contains("NTRIPLES")|| strFormat.toUpperCase().contains("N3")){
             strFormat="N-Triples";
@@ -322,17 +372,18 @@ public class Jena2Kit {
         if(strFormat.toUpperCase().contains("TTL") || strFormat.toUpperCase().contains("TURTLE")){
             strFormat="Turtle";
         }
- 		for (org.apache.jena.riot.RDFFormat rdfFormat : allFormatsOfRDFFormat) {
- 			if (rdfFormat.getLang().getName().equalsIgnoreCase(strFormat))
- 				return rdfFormat;
- 		}
- 		throw new IllegalArgumentException("The RDF format '" + strFormat + "' is not recognised");
+        Collection<RDFFormat> allFormatsOfRDFFormat = RDFWriterRegistry.registered();
+        for(RDFFormat rdfFormat : allFormatsOfRDFFormat) {
+                if (rdfFormat.getLang().getName().equalsIgnoreCase(strFormat))
+                        return rdfFormat;
+        }
+        throw new IllegalArgumentException("The RDF format '" + strFormat + "' is not recognised");
  	}
 
     /**
-     * Method convert a strin formar to a Lang
-     * @param strFormat
-     * @return lang
+     * Method convert a string name of a RDFFormat to a language Lang.
+     * @param strFormat string name of a RDFFormat.
+     * @return lang the language Lang for the same name.
      */
  	public static org.apache.jena.riot.Lang stringToRiotLang(String strFormat) {	
             if(strFormat.toUpperCase().contains("NT") ||
@@ -354,20 +405,18 @@ public class Jena2Kit {
 
 
     /**
-     * Method to print the resultSet to a a specific format of output
-     * @param sparql
-     * @param model
-     * @param fullPathOutputFile
-     * @param outputFormat
-     * @throws FileNotFoundException
-     * @throws IOException
+     * Method to print the resultSet to a a specific format of output.
+     * @param sparql sparql query.
+     * @param model jena model.
+     * @param fullPathOutputFile string to the path of the output file.
+     * @param outputFormat stirng of the output format.
      */
     private static void formatTheResultSetAndPrint(
-            String sparql,com.hp.hpl.jena.rdf.model.Model model,String fullPathOutputFile,String outputFormat){
+            String sparql,Model model,String fullPathOutputFile,String outputFormat){
         try {
             //JSON,CSV,TSV,,RDF,SSE,XML
-            com.hp.hpl.jena.rdf.model.Model resultModel;
-            com.hp.hpl.jena.query.ResultSet results;
+            Model resultModel;
+            ResultSet results;
             if (outputFormat.toLowerCase().contains("csv") || outputFormat.toLowerCase().contains("xml")
                     || outputFormat.toLowerCase().contains("json") || outputFormat.toLowerCase().contains("tsv")
                     || outputFormat.toLowerCase().contains("sse") || outputFormat.toLowerCase().contains("bio")
@@ -382,17 +431,17 @@ public class Jena2Kit {
                 SystemLog.message("Try to write the new file of triple of infodocument to:" + fullPathOutputFile + "...");
                 FileOutputStream fos = new FileOutputStream(new File(fullPathOutputFile));
                 if (outputFormat.toLowerCase().contains("csv")) {
-                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsCSV(fos, results);
+                    ResultSetFormatter.outputAsCSV(fos, results);
                 } else if (outputFormat.toLowerCase().contains("xml")) {
-                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsXML(fos, results);
+                    ResultSetFormatter.outputAsXML(fos, results);
                 } else if (outputFormat.toLowerCase().contains("json")) {
-                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsJSON(fos, results);
+                    ResultSetFormatter.outputAsJSON(fos, results);
                 } else if (outputFormat.toLowerCase().contains("tsv")) {
-                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsTSV(fos, results);
+                    ResultSetFormatter.outputAsTSV(fos, results);
                 } else if (outputFormat.toLowerCase().contains("sse")) {
-                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsSSE(fos, results);
+                    ResultSetFormatter.outputAsSSE(fos, results);
                 } else if (outputFormat.toLowerCase().contains("bio")) {
-                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsBIO(fos, results);
+                    ResultSetFormatter.outputAsBIO(fos, results);
 //                }else if(outputFormat.toLowerCase().contains("rdf")){
 //                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsRDF(fos, "RDF/XML", results);
                 }
@@ -415,13 +464,13 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to convert to RDF to a specific format
-     * @param file
-     * @param outputFormat
-     * @throws IOException
+     * Method to convert to RDF to a specific format.
+     * @param file file to convert.
+     * @param outputFormat string of the output format.
+     * @throws IOException throw if any I/O is occurred.
      */
     public static void convertTo(File file, String outputFormat) throws IOException{
-         com.hp.hpl.jena.rdf.model.Model model = loadFileTriple(file);
+         Model model = loadFileTriple(file);
          String newName = FileUtil.filenameNoExt(file)+"."+outputFormat.toLowerCase();
          String newPath = FileUtil.path(file);
          String sparql;
@@ -468,32 +517,27 @@ public class Jena2Kit {
 
 
     /**
-     * Method to find a property
-     * @param model
-     * @param subject
-     * @param property
-     * @return bool result
+     * Method to find if exists some statement with a specific property.
+     * @param model jena model.
+     * @param subject subject of the statement you want to check.
+     * @param property string of property of the statement you want to check.
+     * @return boolean result if exists or not.
      */
-    public static boolean findProperty(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Resource subject,String property){
+    public static boolean findProperty(Model model,Resource subject,String property){
         boolean foundLocal = false;
         try {
             int pos = property.indexOf(":");
             String prefix = property.substring(0, pos);
             property = property.substring(pos + 1);
-
-            String uri = (String) namespaces.get(prefix);
-
-            com.hp.hpl.jena.rdf.model.Property p = null;
+            String uri =  namespaces.get(prefix);
+            Property p = null;
             if (!"".equals(property)) {
                 p = model.createProperty(uri, property);
             }
-
-            com.hp.hpl.jena.rdf.model.StmtIterator iter =
-                    model.listStatements(
-                            new com.hp.hpl.jena.rdf.model.impl.SelectorImpl( subject, p,(com.hp.hpl.jena.rdf.model.RDFNode) null));
+            StmtIterator iter =model.listStatements(
+                            new SelectorImpl( subject, p,(RDFNode) null));
             while (iter.hasNext() && !foundLocal) {
-                com.hp.hpl.jena.rdf.model.Statement stmt = (com.hp.hpl.jena.rdf.model.Statement) iter.next();
+                Statement stmt = iter.next();
                 com.hp.hpl.jena.rdf.model.Property sp = stmt.getPredicate();
 
                 if (uri.equals(sp.getNameSpace())
@@ -510,87 +554,76 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to copy a Model to another
-     * @param model
-     * @param subject
-     * @param uri
-     * @return
+     * Method to copy a Model to another Model with different uri and specific reources.
+     * @param model jena model for the copy.
+     * @param subject the resoures you want to copy.
+     * @param uri the uri for the new subject copied new model.
+     * @return the copied model.
      */
-    public static com.hp.hpl.jena.rdf.model.Model copyModel(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Resource subject,String uri) {
+    public static Model copyModel(Model model,Resource subject,String uri) {
         try {
-            com.hp.hpl.jena.rdf.model.Model newModel = com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel();
-            com.hp.hpl.jena.rdf.model.Resource newSubject = newModel.createResource(uri);
+            Model newModel = ModelFactory.createDefaultModel();
+            Resource newSubject = newModel.createResource(uri);
             // Copy prefix mappings to the new model...
             newModel.setNsPrefixes(model.getNsPrefixMap());
-            copyToModel(model, subject, newModel, newSubject);
+            newModel = copyToModel(model, subject, newModel, newSubject);
             return newModel;
         } catch (Exception e) {
-            System.err.println("Failed: " + e);
-            e.printStackTrace();
-            System.exit(2);
+            SystemLog.exception(e);
         }
         return null;
     }
 
     /**
-     * Method to copy a Model to another
-     * @param srcModel
-     * @param srcRsrc
-     * @param destModel
-     * @param destRsrc
+     * Method to copy a Model to another Model.
+     * @param srcModel model for the copy.
+     * @param srcRsrc resource of the model for the copy.
+     * @param destModel model copied.
+     * @param destRsrc resource of the model copied.
+     * @return the copied model.
      */
-    public static void copyToModel(
-            com.hp.hpl.jena.rdf.model.Model srcModel,com.hp.hpl.jena.rdf.model.Resource srcRsrc,
-            com.hp.hpl.jena.rdf.model.Model destModel,com.hp.hpl.jena.rdf.model.Resource destRsrc) {
+    public static Model copyToModel(Model srcModel,Resource srcRsrc,Model destModel,Resource destRsrc) {
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator iter = srcModel.listStatements(
-                    new com.hp.hpl.jena.rdf.model.impl.SelectorImpl(srcRsrc,null,(com.hp.hpl.jena.rdf.model.RDFNode) null));
+            StmtIterator iter = srcModel.listStatements(
+                    new SelectorImpl(srcRsrc,null,(RDFNode) null));
             while (iter.hasNext()) {
-                com.hp.hpl.jena.rdf.model.Statement stmt = (com.hp.hpl.jena.rdf.model.Statement) iter.next();
-                com.hp.hpl.jena.rdf.model.RDFNode obj = stmt.getObject();
-
-                if (obj instanceof com.hp.hpl.jena.rdf.model.Resource) {
-                    com.hp.hpl.jena.rdf.model.Resource robj = (com.hp.hpl.jena.rdf.model.Resource) obj;
+                Statement stmt = iter.next();
+                RDFNode obj = stmt.getObject();
+                if (obj instanceof Resource) {
+                    Resource robj = (Resource) obj;
                     if (robj.isAnon()) {
-                        com.hp.hpl.jena.rdf.model.Resource destSubResource = destModel.createResource();
-                        copyToModel(srcModel, robj, destModel, destSubResource);
+                        Resource destSubResource = destModel.createResource();
+                        destModel = copyToModel(srcModel, robj, destModel, destSubResource);
                         obj = destSubResource;
                     }
                 }
-                com.hp.hpl.jena.rdf.model.Statement newStmt =
-                        destModel.createStatement(destRsrc,stmt.getPredicate(),obj);
+                Statement newStmt =destModel.createStatement(destRsrc,stmt.getPredicate(),obj);
                 destModel.add(newStmt);
             }
         } catch (Exception e) {
-            System.err.println("Failed: " + e);
-            e.printStackTrace();
-            System.exit(2);
+            SystemLog.exception(e);
         }
+        return destModel;
     }
 
     /**
-     * Method to load a Model
-     * @param filename
-     * @return model
+     * Method to load a a file to a Jena Model.
+     * @param filePath string path to the file.
+     * @return model model loaded with the file.
      */
-    public static com.hp.hpl.jena.rdf.model.Model loadModel(String filename) {
+    public static Model loadFileToModel(String filePath) {
         // I used to pass encoding in here, but that's dumb. I'm reading XML
         // which is self-describing.
-        com.hp.hpl.jena.rdf.model.Model model = com.hp.hpl.jena.rdf.model.ModelFactory.createDefaultModel();
-        SystemLog.message("Loading " + filename + "...");
+        Model model = ModelFactory.createDefaultModel();
+        SystemLog.message("Loading " + filePath + "...");
         try {
-            File inputFile = new File(filename);
+            File inputFile = new File(filePath);
             FileInputStream input = new FileInputStream(inputFile);
             if (input == null) {
-                SystemLog.warning("Failed to open " + filename);
+                SystemLog.warning("Failed to open " + filePath);
             }
             model.read(input, FileUtil.convertFileToStringUriWithPrefix(inputFile));
-            input.close();
-        } catch (FileNotFoundException fnfe) {
-            SystemLog.exception(fnfe);
-        } catch (UnsupportedEncodingException e) {
-            SystemLog.exception(e);
+            input.close();     
         } catch (IOException e) {
             SystemLog.exception(e);
         }
@@ -598,74 +631,79 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to merge two Model
-     * @param model
-     * @param newModel
-     * @return model
+     * Method to merge two Jena Model.
+     * @param model first jena model.
+     * @param newModel second jena model.
+     * @return merged jena model.
      */
-    public static com.hp.hpl.jena.rdf.model.Model mergeModel(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Model newModel) {
+    public static Model mergeModel(Model model,Model newModel) {
         try {
-            com.hp.hpl.jena.rdf.model.ResIterator ri = newModel.listSubjects();
+           ResIterator ri = newModel.listSubjects();
             while (ri.hasNext()) {
-                com.hp.hpl.jena.rdf.model.Resource newSubject = (com.hp.hpl.jena.rdf.model.Resource) ri.next();
-                com.hp.hpl.jena.rdf.model.Resource subject;
+                Resource newSubject = ri.next();
+                Resource subject;
                 if (newSubject.isAnon()) {
                     // nevermind; copyToModel will handle this case recursively
                 } else {
                     subject = model.createResource(newSubject.getURI());
-                    copyToModel(newModel, newSubject, model, subject);
+                    model = copyToModel(newModel, newSubject, model, subject);
                 }
             }
         } catch (Exception e) {
-            System.err.println("Failed: " + e);
-            e.printStackTrace();
-            System.exit(2);
+            SystemLog.exception(e);
         }
         return model;
     }
 
     /**
-     * Method to delete literal
-     * @param model
-     * @param subject
-     * @param property
-     * @param value
+     * Method to delete literal on a Jena Model.
+     * @param model jena model.
+     * @param subject subject of the statement.
+     * @param property property of the statement.
+     * @param value value of the literal of the statement to remove from Jena model.
      */
-    public static void deleteLiteral(com.hp.hpl.jena.rdf.model.Model model,
-                                     com.hp.hpl.jena.rdf.model.Resource subject,String property,String value) {
+    public static void deleteLiteral(Model model,Resource subject,String property,String value) {
         String prefix = "";
         int pos = property.indexOf(":");
         prefix = property.substring(0, pos);
         property = property.substring(pos + 1);
         try {
-            String uri = (String) namespaces.get(prefix);
-            com.hp.hpl.jena.rdf.model.Property p = model.createProperty(uri, property);
-            com.hp.hpl.jena.rdf.model.RDFNode v =(com.hp.hpl.jena.rdf.model.RDFNode) model.createLiteral(value);
-            com.hp.hpl.jena.rdf.model.Statement s = model.createStatement(subject, p, v);
+            String uri = namespaces.get(prefix);
+            Property p = model.createProperty(uri, property);
+            RDFNode v =(RDFNode) model.createLiteral(value);
+            Statement s = model.createStatement(subject, p, v);
             model.remove(s);
         } catch (Exception e) {
             // nop;
         }
     }
+    
+    /**
+     * Method to query/read for a literal on a Jena Model. 
+     * @param model jena model.
+     * @param subject subject of the statement.
+     * @param property property of the statement.
+     * @return string of the literal.
+     */
+    public static String queryLiteral(Model model,Resource subject,String property){
+        return findLiteral(model, subject, property);
+    }
 
     /**
-     * Method to query a literal
-     * @param model
-     * @param subject
-     * @param property
-     * @param prefix
-     * @return string
+     * Method to query/read for a literal on a Jena Model. 
+     * @param model jena model.
+     * @param subject subject of the statement.
+     * @param property property of the statement.
+     * @return string of the literal.
      */
-    public static String queryLiteral(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Resource subject,String property,String prefix){
+    public static String findLiteral(Model model,Resource subject,String property){
         int pos = property.indexOf(":");
-        prefix = property.substring(0, pos);
+        String prefix = property.substring(0, pos);
         property = property.substring(pos + 1);
         try {
-            com.hp.hpl.jena.rdf.model.Property p = null;
+            Property p = null;
             if(prefix!=null) {
-                String uri = (String) namespaces.get(prefix);
+                String uri = namespaces.get(prefix);
                 if(!uri.isEmpty()||uri!=null) {
                     p = model.createProperty(uri, property);
                 }else{
@@ -674,13 +712,12 @@ public class Jena2Kit {
             }else{
                 p = model.createProperty(property);
             }
-            com.hp.hpl.jena.rdf.model.RDFNode v = null;
-            com.hp.hpl.jena.rdf.model.StmtIterator iter = model.listStatements(
-                    new com.hp.hpl.jena.rdf.model.impl.SelectorImpl(subject, p, v));
+            RDFNode v = null;
+            StmtIterator iter = model.listStatements( new SelectorImpl(subject, p, v));
             while (iter.hasNext()) {
-                com.hp.hpl.jena.rdf.model.Statement stmt = (com.hp.hpl.jena.rdf.model.Statement) iter.next();
-                com.hp.hpl.jena.rdf.model.RDFNode obj = stmt.getObject();
-                if (obj instanceof com.hp.hpl.jena.rdf.model.Literal) {
+                Statement stmt = iter.next();
+                RDFNode obj = stmt.getObject();
+                if (obj instanceof Literal) {
                     return obj.toString();
                 }
             }
@@ -690,53 +727,51 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to update a literal on a model jena
-     * @param model
-     * @param subject
-     * @param property
-     * @param value
-     * @param prefix
+     * Method to update a literal on a Jena model.
+     * @param model jena model.
+     * @param subject subject of the statement.
+     * @param property property of the statement.
+     * @param value value of the literal of the statement to remove from Jena model.
      */
-    public static void updateLiteral(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Resource subject,String property,String value,String prefix) {
+    public static void updateLiteral(Model model,Resource subject,String property,String value) {
         try {
-            String rdfValue = queryLiteral(model, subject, property,prefix);
+            //int pos = property.indexOf(":");
+            //String prefix = property.substring(0, pos);
+            String rdfValue = queryLiteral(model, subject, property);
             if (value != null && !value.equals(rdfValue)) {
                 SystemLog.message("Updating " + property + "=" + value);
                 deleteLiteral(model, subject, property, rdfValue);
                 int pos = property.indexOf(":");
-                prefix = property.substring(0, pos);
+                String prefix = property.substring(0, pos);
                 property = property.substring(pos + 1);
-                String uri = (String) namespaces.get(prefix);
-                com.hp.hpl.jena.rdf.model.Property p = model.createProperty(uri, property);
-                com.hp.hpl.jena.rdf.model.RDFNode v =(com.hp.hpl.jena.rdf.model.RDFNode) model.createLiteral(value);
-                com.hp.hpl.jena.rdf.model.Statement s = model.createStatement(subject, p, v);
+                String uri = namespaces.get(prefix);
+                Property p = model.createProperty(uri, property);
+                RDFNode v =(com.hp.hpl.jena.rdf.model.RDFNode) model.createLiteral(value);
+                Statement s = model.createStatement(subject, p, v);
                 model.add(s);
             }
         } catch (Exception e) {
-            System.out.println("Exception in ul");
-            e.printStackTrace();
-            // nop;
+            SystemLog.exception(e);
         }
     }
 
     /**
-     *  Method to get the namespaces on a model jena
-     * @param namespace
-     * @return
+     * Method to get/find the namespaces on a model jena.
+     * @param namespace string as uri of a namespace.
+     * @return the prefix for the namespace.
      */
-    public static String getNamespacePrefix(String namespace) {
+    public static String findNamespacePrefix(String namespace) {
         if (namespaces.containsValue(namespace)) {
             // find it...
-            Enumeration keys = namespaces.keys();
+            Enumeration<String> keys = namespaces.keys();
             while (keys.hasMoreElements()) {
-                String prefix = (String) keys.nextElement();
-                if (namespace.equals((String) namespaces.get(prefix))) {
+                String prefix = keys.nextElement();
+                if (namespace.equals(namespaces.get(prefix))) {
                     return prefix;
                 }
             }
-            System.err.println("Internal org.p4535992.mvc.error: this can't happen.");
-            return "XXX";
+            System.err.println("Internal error: this can't happen.");
+            return null;
         } else {
             // add it...
             String p = "dp";
@@ -752,14 +787,21 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to convert a model to a string object
-     * @param showRDF
-     * @param baseURI
-     * @return
+     * Method to convert a model to a string object.
+     * @param showRDF jena model.
+     * @param baseURI uri prefix of the ontology on the jena model.
+     * @param outputFormat string of the output format.
+     * @return content string of the jena model.
      */
-    public static String modelToString(com.hp.hpl.jena.rdf.model.Model showRDF, String baseURI) {
+    public static String convertModelToString(Model showRDF, String baseURI,String outputFormat) {
         StringOutputStreamKit stringOutput = new StringOutputStreamKit();
-        showRDF.write(stringOutput, "RDF/XML-ABBREV", baseURI);
+        if(!StringKit.isNullOrEmpty(outputFormat)){
+             RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
+             if(rdfFormat==null){outputFormat = "RDF/XML-ABBREV";}
+        }else{
+            outputFormat = "RDF/XML-ABBREV";
+        }
+        showRDF.write(stringOutput,outputFormat, baseURI);
         String rawString = stringOutput.toString();
         // The rawString contains the octets of the utf-8 representation of the
         // data as individual characters. This is really unusual, but it's true.
@@ -774,46 +816,47 @@ public class Jena2Kit {
             // this can't happen
         }
         // Now encode it "safely" as XML
-        String rdfString = XMLKit_Extends.xmlEncode(rawString);
+        String rdfString = XMLKit.xmlEncode(rawString);
         return rdfString;
     }
 
     /**
      * Method to delete a specific resource , property on model jena
-     * @param model
-     * @param subject
-     * @param property
+     * @param model jena model.
+     * @param subject subject of the statement.
+     * @param property property of the statement.
+     * @return jena model.
      */
-    public static void delete(com.hp.hpl.jena.rdf.model.Model model, com.hp.hpl.jena.rdf.model.Resource subject, String property) {
-        String prefix = "";
+    public static Model deleteProperty(Model model, Resource subject, String property) {
+        String prefix;
         int pos = property.indexOf(":");
         prefix = property.substring(0, pos);
         property = property.substring(pos + 1);
-        com.hp.hpl.jena.rdf.model.Property p = null;
-        String uri = (String) namespaces.get(prefix);
+        Property p = null;
+        String uri = namespaces.get(prefix);
         if (!"".equals(property)) {
             p = model.createProperty(uri, property);
         }
 
-        com.hp.hpl.jena.rdf.model.StmtIterator iter =
-                model.listStatements(
-                        new com.hp.hpl.jena.rdf.model.impl.SelectorImpl(subject,p,(com.hp.hpl.jena.rdf.model.RDFNode) null));
+        StmtIterator iter =model.listStatements(new SelectorImpl(subject,p,(RDFNode) null));
         while (iter.hasNext()) {
-            com.hp.hpl.jena.rdf.model.Statement stmt = (com.hp.hpl.jena.rdf.model.Statement) iter.next();
+            Statement stmt = iter.next();
             p = stmt.getPredicate();
             if (p.getNameSpace() == null) {
                 continue;
             }
             if (p.getNameSpace().equals(uri)) {
                 String type = "literal";
-                if (stmt.getObject()instanceof com.hp.hpl.jena.rdf.model.Resource) {
+                if (stmt.getObject()instanceof Resource) {
                     type = "resource";
                 }
                 SystemLog.message("\tdelete " + type + ": " + prefix + ":" + p.getLocalName()
                         + "=" + stmt.getObject().toString());
                 model.remove(stmt);
+                return model;
             }
         }
+        return null;
     }
 
     /**
@@ -826,13 +869,14 @@ public class Jena2Kit {
     */
 
     /**
-     * Method to set a property on a model jena
-     * @param resource
-     * @param property
-     * @param value
+     * Method to update a property on a model jena.
+     * @param model jena model.
+     * @param subject subject of the statement.
+     * @param property property of the statement to set.
+     * @param value value of the object of the statement.
+     * @return jena model.
      */
-    public static void setProperty(
-            com.hp.hpl.jena.rdf.model.Resource resource,com.hp.hpl.jena.rdf.model.Property property,Object value) {
+    public static Model updateProperty(Model model,Resource subject,Property property,Object value) {
         try {
             /*
             StmtIterator iterator =
@@ -842,23 +886,54 @@ public class Jena2Kit {
                     iterator.remove();
             }
             */
-            resource.removeAll(property);
-            resource.addProperty(property, (com.hp.hpl.jena.rdf.model.RDFNode) value);
+            //... you must already create the resources
+            //subject = model.getResource(redirectionURI);
+            //subject = model.createResource("");
+            //...Delete all the statements with predicate p for this resource from its associated model.
+            subject.removeAll(property);
+            subject.addProperty(property, (RDFNode) value);         
+            return model;
         } catch (Exception e) {
             SystemLog.exception(e);
         }
+        return null;
+    }
+    
+    /**
+     * Method for delete statement with specific proprety and literal on a Jena model.
+     * @param model jena model.
+     * @param subject subject of the statement.
+     * @param property property of the statement to set.
+     * @param languageLiteral language of the literal.
+     * @param valueLiteral value of the literal.
+     * @return a jena model.
+     */
+    public Model deletePropertyAndObject(Model model,Resource subject,Property property,
+            String languageLiteral, String valueLiteral) {
+        NodeIterator nodeIterator = model.listObjectsOfProperty(property);
+        RDFNode foundToDelete = null;
+        while (nodeIterator.hasNext()) {
+            RDFNode next = nodeIterator.next();
+            boolean langsAreIdentical = next.asLiteral().getLanguage().equals(languageLiteral);
+            boolean valuesAreIdentical = next.asLiteral().getLexicalForm().equals(valueLiteral);
+            if (langsAreIdentical && valuesAreIdentical) {
+                foundToDelete = next;
+                break;
+            }
+        }
+        model.remove(subject, property, foundToDelete);
+        return model;
     }
 
     /**
-     * Method to get first the value of the property
-     * can use model.getProperty() directly now?
-     * @param resource
-     * @param property
-     * @return
+     * Method to get/find first the value of the property
+     * can use model.getProperty() directly now.
+     * @param subject subject of the statement.
+     * @param property property of the statement to set.
+     * @return value of the literal.
      */
-    public static com.hp.hpl.jena.rdf.model.RDFNode getFirstPropertyValue(
-            com.hp.hpl.jena.rdf.model.Resource resource,com.hp.hpl.jena.rdf.model.Property property) {
-        com.hp.hpl.jena.rdf.model.Statement statement = resource.getProperty(property);
+    public static RDFNode findFirstPropertyValue(Resource subject,Property property) {
+        Statement statement = subject.getProperty(property);
         if(statement == null){
             return null;
         }
@@ -866,17 +941,17 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to get the rdf type
-     * @param resource
-     * @return
+     * Method to get/find the rdf type from a Resource.
+     * @param subject subject of the statement.
+     * @return the string of the RdfType.
      */
-    public static String getRdfType(com.hp.hpl.jena.rdf.model.Resource resource) {
-        if (resource.isAnon()) {
+    public static String findRdfType(Resource subject) {
+        if (subject.isAnon()) {
             // @@TODO this whole lot needs improving
             return "anon";
         }
         //show(resource);
-        com.hp.hpl.jena.rdf.model.RDFNode type = getFirstPropertyValue(resource, com.hp.hpl.jena.vocabulary.RDF.type);
+        RDFNode type = findFirstPropertyValue(subject, RDF.type);
         if (type == null) {
             return "untyped";
         }
@@ -884,29 +959,29 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to get the uri froma reosurce on a model jena
-     * @param resource
-     * @param uri
+     * Method to get the uri from a Reosurce on a model jena.
+     * @param resource resource uri.
+     * @param uri new uri for the resource.
      */
-    public static void setUri(com.hp.hpl.jena.rdf.model.Resource resource, URI uri) {
+    public static void updateUri(Resource resource, URI uri) {
         try {
-            com.hp.hpl.jena.rdf.model.Model model = resource.getModel();
-            com.hp.hpl.jena.rdf.model.Resource newResource = model.createResource(uri.toString());
-            com.hp.hpl.jena.rdf.model.StmtIterator iterator = resource.listProperties();
+            Model model = resource.getModel();
+            Resource newResource = model.createResource(uri.toString());
+            StmtIterator iterator = resource.listProperties();
             // copy properties from old resource
             // buffer used to avoid concurrent modification
-            Set statements = new HashSet();
+            Set<Statement> statements = new HashSet<>();
             while (iterator.hasNext()) {
-                com.hp.hpl.jena.rdf.model.Statement stmt = iterator.next();
+                Statement stmt = iterator.next();
                 statements.add(stmt);
                 // changed for Jena 2
                 newResource.addProperty(stmt.getPredicate(), stmt.getObject());
                 //model.remove(stmt);
             }
-            Iterator setIterator = statements.iterator();
-            com.hp.hpl.jena.rdf.model.Statement statement;
+            Iterator<Statement> setIterator = statements.iterator();
+            Statement statement;
             while (setIterator.hasNext()) {
-                statement = (com.hp.hpl.jena.rdf.model.Statement) setIterator.next();
+                statement = setIterator.next();
                 if (model.contains(statement)) {
                     model.remove(statement);
                 }
@@ -917,35 +992,35 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to get the title from a ID
-     * @param title
-     * @return string
+     * Method to get the title from a ID.
+     * @param title string of the title of the resource.
+     * @return string index of the resource.
      */
-    public static String titleToID(String title) {
+    public static String convertTitleToID(String title) {
         return title.replace(' ', '_');
     }
 
     /**
-     * Method to show a statement on a model jena
-     * @param statement
+     * Method to show a statement on a model jena to the console.
+     * @param statement statement to print to the console.
      */
-    public static void show(com.hp.hpl.jena.rdf.model.Statement statement) {
+    public static void show(Statement statement) {
         show(statement.getSubject());
         show(statement.getPredicate());
-        if (statement.getObject() instanceof com.hp.hpl.jena.rdf.model.Resource) {
-            show((com.hp.hpl.jena.rdf.model.Resource) statement.getObject());
+        if (statement.getObject() instanceof Resource) {
+            show((Resource) statement.getObject());
         } else {
             System.out.println(statement.getObject());
         }
     }
 
     /**
-     * Method to show a resource on a model jena
-     * @param resource
+     * Method to show a resource on a model jena to the console.
+     * @param resource resource to print to the console.
      */
-    public static void show(com.hp.hpl.jena.rdf.model.Resource resource) {
+    public static void show(Resource resource) {
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator iterator =resource.listProperties();
+            StmtIterator iterator =resource.listProperties();
             show(iterator);
         } catch (Exception exception) {
             exception.printStackTrace();
@@ -953,63 +1028,65 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to show a iterators on a model jena
-     * @param iterator
+     * Method to show a iterators on a model jena to the console.
+     * @param iterator list of the statement to print on the console.
      */
-    public static void show(com.hp.hpl.jena.rdf.model.StmtIterator iterator) {
-        StringBuffer buffer = new StringBuffer("\n--v--");
-        try {
-            //StmtIterator iterator = resource.listProperties();
-            while (iterator.hasNext()) {
-                buffer.append( "\n" + iterator.next().toString());
-            }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+    public static void show(StmtIterator iterator) {
+        StringBuilder buffer = new StringBuilder("\n--v--");
+        //StmtIterator iterator = resource.listProperties();
+        while (iterator.hasNext()) {
+            buffer.append( "\n" + iterator.next().toString());
         }
         buffer.append("\n--^--");
         System.out.println(buffer);
     }
 
     /**
-     * Method to show a model jena
-     * @param model
+     * Method to show a model jena to the console.
+     * @param model jena model to print tot the console.
+     * @param outputFormat string of the output format.
      */
-    public static void show(com.hp.hpl.jena.rdf.model.Model model) {
-        System.out.println(modelToString(model));
+    public static void show(Model model,String outputFormat) {
+        System.out.println(convertModelToString(model,outputFormat));
     }
 
     /**
-     * Method to convert a model jena to string
-     * @param model
-     * @return string of the model
+     * Method to convert a model jena to string.
+     * @param model jena model.
+     * @param outputFormat string of the output format.
+     * @return string of the jena model.
      */
-    public static String modelToString(com.hp.hpl.jena.rdf.model.Model model) {
-        //System.out.println("MODEL TO STRPING");
+    public static String convertModelToString(Model model,String outputFormat) {
         if (model == null) {
             return "Null Model.";
+        }
+        if(!StringKit.isNullOrEmpty(outputFormat)){
+             RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
+             if(rdfFormat==null){outputFormat = "RDF/XML-ABBREV";}
+        }else{
+            outputFormat = "RDF/XML-ABBREV";
         }
         StringWriter stringOut = new StringWriter();
         try {
             //setCommonPrefixes(model);
-            model.write(stringOut,"RDF/XML-ABBREV",com.hp.hpl.jena.vocabulary.RSS.getURI());
+            model.write(stringOut,"RDF/XML-ABBREV",RSS.getURI());
             // http://base
             stringOut.flush();
             stringOut.close();
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+           SystemLog.exception(e);
         }
         return stringOut.toString();
     }
 
     /**
-     * Method to set the prefix on a model jena
-     * @param model
-     * @param namespaces
-     * @return the model jena with the prefix
+     * Method to set the prefix on a model jena.
+     * @param model jena model.
+     * @param namespaces map of namespace with prefix.
+     * @return the model jena with the prefix of namespace.
      */
-    public static com.hp.hpl.jena.rdf.model.Model setCommonPrefixes(
-            com.hp.hpl.jena.rdf.model.Model model,Map<String,String> namespaces) {
-        for(Map.Entry entry : namespaces.entrySet()) {
+    public static Model setCommonPrefixes(Model model,Map<String,String> namespaces) {
+        for(Map.Entry<String,String> entry : namespaces.entrySet()) {
             //model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
             //model.setNsPrefix("vis", "http://ideagraph.org/xmlns/idea/graphic#");
             model.setNsPrefix(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
@@ -1018,55 +1095,49 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to replace a resource on a model jena
-     * @param model
-     * @param oldResource
-     * @param newResource
-     * @return
+     * Method to replace a resource on a model jena. 
+     * @param oldResource resource to replace.
+     * @param newResource the new resource.  
      */
-    public static com.hp.hpl.jena.rdf.model.Model replaceResource(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Resource oldResource,
-            com.hp.hpl.jena.rdf.model.Resource newResource) {
+    public static void updateResource(Resource oldResource,Resource newResource) {
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator statements = model.listStatements();
-            com.hp.hpl.jena.rdf.model.Statement statement;
-            com.hp.hpl.jena.rdf.model.Resource subject;
-            com.hp.hpl.jena.rdf.model.RDFNode object = null;
+            StmtIterator statements = model.listStatements();
+            Statement statement;
+            Resource subject;
+            RDFNode object = null;
             // buffer in List to avoid concurrent modification exception
-            List statementList = new ArrayList();
+            List<Statement> statementList = new ArrayList<>();
             while (statements.hasNext()) {
                 statementList.add(statements.next());
             }
 
             for (int i = 0;i < statementList.size(); i++) {
-                statement = (com.hp.hpl.jena.rdf.model.Statement) statementList.get(i);
+                statement = statementList.get(i);
                 subject = statement.getSubject();
                 object = statement.getObject();
                 if (subject.equals(oldResource)) {
-                    replaceSubjectResource(statement,newResource);
+                    updateSubjectResource(statement,newResource);
                 }
                 if ((object instanceof com.hp.hpl.jena.rdf.model.Resource) &&
                         (oldResource.equals((com.hp.hpl.jena.rdf.model.Resource) object))) {
-                    replaceObjectResource( statement,newResource);
+                    updateObjectResource( statement,newResource);
                 }
             }
 
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-        return model;
+        } catch (Exception e) {
+            SystemLog.exception(e);
+        }      
     }
 
     /**
-     * Method to replace a subject/resource on a model jena
-     * @param statement
-     * @param newSubject
+     * Method to replace/update a subject/resource on a model jena.
+     * @param statement statement with the resource to replace/update
+     * @param newSubject new resource to add tot he model.
      */
-    public static void replaceSubjectResource(
-            com.hp.hpl.jena.rdf.model.Statement statement,com.hp.hpl.jena.rdf.model.Resource newSubject) {
-        com.hp.hpl.jena.rdf.model.Statement newStatement;
+    public static void updateSubjectResource(Statement statement,Resource newSubject) {
+        Statement newStatement;
         try {
-            com.hp.hpl.jena.rdf.model.Model model = statement.getModel();
+            Model model = statement.getModel();
             newStatement = model.createStatement(newSubject,
                     statement.getPredicate(),statement.getObject());
             model.remove(statement);
@@ -1077,15 +1148,14 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to replace aobject resource
-     * @param statement
-     * @param newObject
+     * Method to replace/update a object resource.
+     * @param statement statement with the object to replace/update
+     * @param newObject new value of the object
      */
-    public static void replaceObjectResource(
-            com.hp.hpl.jena.rdf.model.Statement statement,com.hp.hpl.jena.rdf.model.Resource newObject) {
-        com.hp.hpl.jena.rdf.model.Statement newStatement;
+    public static void updateObjectResource(Statement statement,Resource newObject) {
+        Statement newStatement;
         try {
-            com.hp.hpl.jena.rdf.model.Model model = statement.getModel();
+            Model model = statement.getModel();
             newStatement =model.createStatement(statement.getSubject(),
                     statement.getPredicate(),newObject);
             model.remove(statement);
@@ -1096,97 +1166,97 @@ public class Jena2Kit {
     }
 
     /**
-     * Method copies all properties across to new resource, just replaces type
-     * @param resource
-     * @param newType
+     * Method copies all properties across to new resource, just replaces type.
+     * @param resource the resource to update the type.
+     * @param newType the new type for the resource.
      */
-    public static void replaceType(com.hp.hpl.jena.rdf.model.Resource resource,com.hp.hpl.jena.rdf.model.Resource newType) {
+    public static void updateTypeResource(Resource resource,Resource newType) {
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator iterator = resource.listProperties();
-            com.hp.hpl.jena.rdf.model.Property property = null;
-            com.hp.hpl.jena.rdf.model.Statement statement = null;
+            StmtIterator iterator = resource.listProperties();
+            Property property = null;
+            Statement statement = null;
 
             while (iterator.hasNext()) {
                 statement = iterator.next();
                 property = statement.getPredicate();
-                if (property.equals(com.hp.hpl.jena.vocabulary.RDF.type)) {
+                if (property.equals(RDF.type)) {
                     break; // to stop concurrent mod exc
                 }
             }
-            if (property.equals(com.hp.hpl.jena.vocabulary.RDF.type)) {
+            if (property.equals(RDF.type)) {
                 resource.getModel().remove(statement);
-                resource.addProperty(com.hp.hpl.jena.vocabulary.RDF.type, newType);
+                resource.addProperty(RDF.type, newType);
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+            SystemLog.exception(e);
         }
     }
 
     /**
-     * Method approximate : returns first match
-     * @param model
-     * @param rdfNode
-     * @return
+     * Method approximate : returns first match.
+     * @param model jena model.
+     * @param rdfNode property to find.
+     * @return resource you found.
      */
-    public static com.hp.hpl.jena.rdf.model.Resource getParent(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.RDFNode rdfNode) {
-        if (rdfNode instanceof com.hp.hpl.jena.rdf.model.Property) {
-            return getParentResource(model,(com.hp.hpl.jena.rdf.model.Property) rdfNode);
+    public static Resource findParent(Model model,RDFNode rdfNode) {
+        if (rdfNode instanceof Property) {
+            return findParentResource(model,(Property) rdfNode);
         }
-        return getParentProperty(model, rdfNode);
+        return findParentProperty(model, rdfNode);
     }
 
 
     /**
-     * Mthod  returns predicate of first statement with matching object
-     * @param model
-     * @param rdfNode
-     * @return
+     * Method  returns predicate of first statement with matching object.
+     * @param model jena model.
+     * @param rdfNode property to find.
+     * @return poroperty you found.
      */
-    public static com.hp.hpl.jena.rdf.model.Property getParentProperty(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.RDFNode rdfNode) {
-        com.hp.hpl.jena.rdf.model.Statement statement = getParentStatement(model, rdfNode);
+    public static Property findParentProperty(Model model,RDFNode rdfNode) {
+        Statement statement = findParentStatement(model, rdfNode);
         if (statement == null) {
             return null;
         }
         return statement.getPredicate();
     }
 
-    // approximate : returns first statement with matching object
-    public static com.hp.hpl.jena.rdf.model.Statement getParentStatement(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.RDFNode rdfNode) {
-        com.hp.hpl.jena.rdf.model.Statement statement;
+    /**
+     * Method approximate : returns first statement with matching object.
+     * @param model jena model.
+     * @param rdfNode resource to find.
+     * @return the statement you found.
+     */
+    public static Statement findParentStatement(Model model,RDFNode rdfNode) {
+        Statement statement;
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator iterator = model.listStatements();
+            StmtIterator iterator = model.listStatements();
             while (iterator.hasNext()) {
-                statement = (com.hp.hpl.jena.rdf.model.Statement) iterator.next();
+                statement = iterator.next();
                 if (rdfNode.equals(statement.getObject())) {
                     //parent = statement.getSubject();
-                    if (!(com.hp.hpl.jena.vocabulary.RDF.type).equals(statement.getPredicate())) {
+                    if (!(RDF.type).equals(statement.getPredicate())) {
                         return statement;
                     }
                 }
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+            SystemLog.exception(e);
         }
         return null;
     }
 
     /**
-     * Method approximate : returns object of first statement with matching predicate
-     * @param model
-     * @param property
-     * @return
+     * Method approximate : returns object of first statement with matching predicate.
+     * @param model jena model.
+     * @param property property to find.
+     * @return resource you found.
      */
-    public static com.hp.hpl.jena.rdf.model.Resource getParentResource(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Property property) {
-        com.hp.hpl.jena.rdf.model.Statement statement;
+    public static Resource findParentResource(Model model,Property property) {
+        Statement statement;
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator iterator = model.listStatements();
-
+            StmtIterator iterator = model.listStatements();
             while (iterator.hasNext()) {
-                statement = (com.hp.hpl.jena.rdf.model.Statement) iterator.next();
+                statement = iterator.next();
                 //changed for Jena 2
                 if (property.equals(statement.getPredicate())) {
                     return statement.getSubject();
@@ -1199,45 +1269,39 @@ public class Jena2Kit {
     }
 
     /**
-     * Method approximate : gets first match (predicate and object)
-     * @param model
-     * @param property
-     * @param object
-     * @return
+     * Method approximate : gets first match (predicate and object).
+     * @param model jena model.
+     * @param property property to find.
+     * @param object object to find.
+     * @return the subject you found.
      */
-    public static com.hp.hpl.jena.rdf.model.Resource getSubject(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Property property,
-            com.hp.hpl.jena.rdf.model.RDFNode object) {
-        com.hp.hpl.jena.rdf.model.Statement statement =getStatement(model, property, object);
+    public static Resource findSubject(Model model,Property property,RDFNode object) {
+        Statement statement =findStatement(model, property, object);
         if (statement == null) {
             return null;
         }
         return statement.getSubject();
     }
 
-
-
     /**
-     * Method approximate : gets first match (predicate and object)
-     * @param model
-     * @param property
-     * @param object
-     * @return
+     * Method approximate : gets first match (predicate and object).
+     * @param model jena model.
+     * @param property porperty to find.
+     * @param object object to find.
+     * @return statemn you found.
      */
-    public static com.hp.hpl.jena.rdf.model.Statement getStatement(
-            com.hp.hpl.jena.rdf.model.Model model,com.hp.hpl.jena.rdf.model.Property property,
-            com.hp.hpl.jena.rdf.model.RDFNode object) {
-        com.hp.hpl.jena.rdf.model.Statement statement;
+    public static Statement findStatement(Model model,Property property,RDFNode object) {
+        Statement statement;
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator iterator = model.listStatements();
+            StmtIterator iterator = model.listStatements();
             while (iterator.hasNext()) {
-                statement = (com.hp.hpl.jena.rdf.model.Statement) iterator.next();
+                statement = iterator.next();
                 if (property.equals(statement.getPredicate())&& object.equals(statement.getObject())) {
                     return statement;
                 }
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+            SystemLog.exception(e);
         }
         return null;
     }
@@ -1256,57 +1320,55 @@ public class Jena2Kit {
      */
 
     /**
-     *
-     * @param resource
-     * @param property
-     * @return
+     * Method approximate : gets first match (object).
+     * @param resource resource to find.
+     * @param property property to find.
+     * @return string of the proerty you found.
      */
-    public static String getProperty(com.hp.hpl.jena.rdf.model.Resource resource,com.hp.hpl.jena.rdf.model.Property property) {
-        com.hp.hpl.jena.rdf.model.RDFNode node = getFirstPropertyValue(resource, property);
+    public static RDFNode findObject(Resource resource,Property property) {
+        RDFNode node = findFirstPropertyValue(resource, property);
         if (node == null) {
             return null;
         }
-        return node.toString();
+        return node;
     }
 
     /**
-     * Method to set/replace a property-object
-     * @param resource
-     * @param property
-     * @param object
+     * Method to set/replace/update a property-object.
+     * @param resource resource to find.
+     * @param property property to find.
+     * @param object value of the object you found.
      */
-    public static void setPropertyObject(
-            com.hp.hpl.jena.rdf.model.Resource resource,com.hp.hpl.jena.rdf.model.Property property,
-            com.hp.hpl.jena.rdf.model.Resource object) {
+    public static void updatePropertyObject(Resource resource,Property property,Resource object) {
         try {
-            com.hp.hpl.jena.rdf.model.StmtIterator iterator = resource.listProperties(property);
+            StmtIterator iterator = resource.listProperties(property);
             while (iterator.hasNext()) {
                 iterator.next();
                 iterator.remove();
             }
             resource.addProperty(property, object);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+            SystemLog.exception(e);
         }
     }
 
     /**
-     * Method for repalce a literal value on the model
-     * @param model
-     * @param literal
-     * @param value
+     * Method for replace/update a literal value on the jena model.
+     * @param model jena model.
+     * @param literal literal to update.
+     * @param value new value of the literal.
      */
-    public static void replaceLiteralValue(com.hp.hpl.jena.rdf.model.Model model,  com.hp.hpl.jena.rdf.model.Literal literal, String value){
-        com.hp.hpl.jena.rdf.model.Literal newLiteral = model.createLiteral(value);
-        Set statements = new HashSet();
-        com.hp.hpl.jena.rdf.model.StmtIterator iterator =model.listStatements(null,null,literal);
+    public static void updateLiteralValue(Model model,Literal literal, String value){
+        Literal newLiteral = model.createLiteral(value);
+        Set<Statement> statements = new HashSet<>();
+        StmtIterator iterator =model.listStatements(null,null,literal);
         while (iterator.hasNext()) {
             statements.add(iterator.next());
         }
-        Iterator setIterator = statements.iterator();
-        com.hp.hpl.jena.rdf.model.Statement statement;
+        Iterator<Statement> setIterator = statements.iterator();
+        Statement statement;
         while (setIterator.hasNext()) {
-            statement = (com.hp.hpl.jena.rdf.model.Statement) setIterator.next();
+            statement =  setIterator.next();
             model.add(statement.getSubject(),statement.getPredicate(),newLiteral);
             model.remove(statement);
         }
@@ -1314,25 +1376,23 @@ public class Jena2Kit {
 
 
     /**
-     * Method to get the isodate from a date
-     * @param date
-     * @return isodate
+     * Method to convert a date to a ISO date.
+     * @param date date to convert.
+     * @return the dat in format iso.
      */
-    public static String toIsoDate(Date date) {
+    public static String convertDateToIsoDate(Date date) {
         return isoDate.format(date);
     }
 
     /**
-     * Method to convert a string to a Date
-     * @usage 2003-10-29T10:05:35-05:00
-     * @param string
-     * @return
+     * Method to convert a string date to a  ISO Date.
+     * e.g. 2003-10-29T10:05:35-05:00.
+     * @param string sting of a date eg 2003-10-29
+     * @return sring of a date in iso date format.
      */
-    public static Date fromIsoDate(String string) {
+    public static Date convertStringDateToIsoDate(String string) {
         Date date = null;
-        System.out.println(string);
         string =string.substring(0, 19)+ "GMT"+ string.substring(19);
-        System.out.println(string);
         try {
             date = isoDate.parse(string);
         } catch (ParseException e) {
@@ -1342,39 +1402,96 @@ public class Jena2Kit {
     }
 
 
-    public static com.hp.hpl.jena.rdf.model.Resource r (String BASE, String localname ) {
-        return com.hp.hpl.jena.rdf.model.ResourceFactory.createResource ( BASE + localname );
+    /**
+     * Method utility: create new resource from uri.
+     * @param BASE base uri.
+     * @param localname local name resource uri.
+     * @return resource uri.
+     */
+    public static Resource r (String BASE, String localname ) {
+        return ResourceFactory.createResource ( BASE + localname );
     }
 
-    public static com.hp.hpl.jena.rdf.model.Property p (String BASE, String localname ) {
-        return com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty(BASE, localname);
+    /**
+     * Method utility: create new property from uri.
+     * @param BASE base uri.
+     * @param localname local name resource uri.
+     * @return property.
+     */
+    public static Property p (String BASE, String localname ) {
+        return ResourceFactory.createProperty(BASE, localname);
     }
 
-    public static com.hp.hpl.jena.rdf.model.Property p (String uriref) {
-        return com.hp.hpl.jena.rdf.model.ResourceFactory.createProperty(uriref);
+    /**
+     * Method utility: create new property from uri.
+     * @param uriref resource uri.
+     * @return property.
+     */
+    public static Property p (String uriref) {
+        return ResourceFactory.createProperty(uriref);
     }
 
-    public static com.hp.hpl.jena.rdf.model.Property pi (String uriref) {
-        return new com.hp.hpl.jena.rdf.model.impl.PropertyImpl(uriref);
+    /**
+     * Method utility: create new property impl from uri.
+     * @param uriref resource uri.
+     * @return property.
+     */
+    public static Property pi (String uriref) {
+        return new PropertyImpl(uriref);
     }
 
-    public static com.hp.hpl.jena.rdf.model.Property pi (String BASE, String localname) {
-        return new com.hp.hpl.jena.rdf.model.impl.PropertyImpl(BASE, localname);
+    /**
+     * Method utility: create new property impl from uri.
+     * @param BASE base uri.
+     * @param localname local name resource uri.
+     * @return property.
+     */
+    public static Property pi (String BASE, String localname) {
+        return new PropertyImpl(BASE, localname);
     }
 
-    public static com.hp.hpl.jena.rdf.model.Literal lp(String value) {
-        return com.hp.hpl.jena.rdf.model.ResourceFactory.createPlainLiteral(value);
+    /**
+     * Method utility: create new plain literal from uri.
+     * @param value string of uri.
+     * @return literal.
+     */
+    public static Literal lp(String value) {
+        return ResourceFactory.createPlainLiteral(value);
     }
 
-    public static com.hp.hpl.jena.rdf.model.Literal lt(Object value) {
-        return com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral ( value );
+    /**
+     * Method utility: create new typed literal from uri.
+     * @param value object of uri.
+     * @return literal.
+     */
+    public static Literal lt(Object value) {
+        return ResourceFactory.createTypedLiteral ( value );
+    }
+    
+    /**
+     * Method utility: create new typed literal from uri.
+     * @param lexicalform lexicalform of the literal.
+     * @param datatype datatype of the literal.
+     * @return literal.
+     */
+    public static Literal lt(String lexicalform, RDFDatatype datatype) {
+        return ResourceFactory.createTypedLiteral ( lexicalform, datatype );
+    }
+    
+    /**
+     * Method utility: create new defautl jena model.
+     * @return jena model.
+     */
+    public static Model m(){
+       return ModelFactory.createDefaultModel();      
     }
 
-    public static com.hp.hpl.jena.rdf.model.Literal lt(String lexicalform, com.hp.hpl.jena.datatypes.RDFDatatype datatype) {
-        return com.hp.hpl.jena.rdf.model.ResourceFactory.createTypedLiteral ( lexicalform, datatype );
-    }
-
-    public static InputStream getResourceAsStream(String filename) {
+    /**
+     * Method for load a file in the resource folder like a inpustream.
+     * @param filename string of path to the file.
+     * @return inputstream of the file.
+     */
+    public static InputStream loadResourceAsStream(String filename) {
         InputStream in = Jena2Kit.class.getClassLoader().getResourceAsStream(filename);
         return in;
     }

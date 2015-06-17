@@ -48,25 +48,25 @@ public class SystemLog {
 
     public SystemLog(){
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        this.LOGNAME = "LOG_"+timeStamp+".txt";
-        this.logging = true;
-        this.LOGFILE = new File(LOGNAME);
+        SystemLog.LOGNAME = "LOG_"+timeStamp+".txt";
+        SystemLog.logging = true;
+        SystemLog.LOGFILE = new File(LOGNAME);
         setLogWriter();
     }
 
     public SystemLog(String LOGNAME, String SUFFIX){
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        this.LOGNAME = LOGNAME +"_"+timeStamp+"."+ SUFFIX;
-        this.logging = true;
-        this.LOGFILE = new File(LOGNAME);
+        SystemLog.LOGNAME = LOGNAME +"_"+timeStamp+"."+ SUFFIX;
+        SystemLog.logging = true;
+        SystemLog.LOGFILE = new File(LOGNAME);
         setLogWriter();
     }
 
     public SystemLog(String LOGNAME, String SUFFIX,String PATHFILE){
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        this.LOGNAME = LOGNAME +"_"+timeStamp+"."+ SUFFIX;
-        this.logging = true;
-        this.LOGFILE = new File(PATHFILE+File.separator+LOGNAME);
+        SystemLog.LOGNAME = LOGNAME +"_"+timeStamp+"."+ SUFFIX;
+        SystemLog.logging = true;
+        SystemLog.LOGFILE = new File(PATHFILE+File.separator+LOGNAME);
         setLogWriter();
     }
 
@@ -76,13 +76,17 @@ public class SystemLog {
      */
     private static void printString2File(String content) {
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(LOGFILE.getAbsolutePath(), true)))) {
+            //try{
             out.print(content+System.getProperty("line.separator"));
             out.flush();
-            out.close();
+            //}finally{
+            //    out.close();
+            //}             
         }catch (IOException e) {
             //exception handling left as an exercise for the reader
         }finally {
             if(LEVEL == 5)System.exit(1);
+            
         }
     }
 
@@ -120,7 +124,7 @@ public class SystemLog {
             //try{
             logWriter.print(sb.toString() + System.getProperty("line.separator"));
             logWriter.flush();
-            logWriter.close();
+            //logWriter.close();
         }catch (IOException e){
         }finally{
             ERROR=false;
@@ -164,7 +168,7 @@ public class SystemLog {
         return usage;
     }
 
-    public static void logger(Class c){logger = org.slf4j.LoggerFactory.getLogger(c);}
+    public static void logger(Class<?> c){logger = org.slf4j.LoggerFactory.getLogger(c);}
 
     public static void logStackTrace(Exception e, Logger logger) {
         logger.debug(e.getMessage());

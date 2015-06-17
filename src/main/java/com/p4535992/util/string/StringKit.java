@@ -26,8 +26,8 @@ import java.util.regex.Pattern;
 /**
  * 2015-04-25
  * @author 4535992
- * @href: http://stackoverflow.com/questions/9572795/convert-list-to-array-in-java
- * @href: http://stackoverflow.com/questions/11404086/how-could-i-initialize-a-generic-array
+ * href: http://stackoverflow.com/questions/9572795/convert-list-to-array-in-java
+ * href: http://stackoverflow.com/questions/11404086/how-could-i-initialize-a-generic-array
  */
 public class StringKit<T> {
     private Class<T> cl;
@@ -69,7 +69,7 @@ public class StringKit<T> {
     /**
      * Returns true if the parameter is null or empty. false otherwise.
      *
-     * @param text
+     * @param text string text.
      * @return true if the parameter is null or empty.
      */
     public static boolean isNullOrEmpty(String text) {
@@ -81,10 +81,10 @@ public class StringKit<T> {
     }
 
     /**
-     * Returns a String with the content of the InputStream
-     * @param is with the InputStream
-     * @return string with the content of the InputStream
-     * @throws IOException
+     * Returns a String with the content of the InputStream.
+     * @param is with the InputStream.
+     * @return string with the content of the InputStream.
+     * @throws IOException throw any error is occurred.
      */
     public static String convertInputStreamToString(InputStream is)
             throws IOException {
@@ -109,7 +109,7 @@ public class StringKit<T> {
     /**
      * Returns am InputStream with the parameter.
      *
-     * @param string
+     * @param string string input.
      * @return InputStream with the string value.
      */
     public static InputStream convertStringToInputStream(String string) {
@@ -140,14 +140,13 @@ public class StringKit<T> {
         * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
         * escaped sequence for characters outside of ASCII.
         * It is equivalent to: native2ascii -encoding utf-8
-        * @param UTF8
-        * @return ASCII 
-        * @throws UnsupportedEncodingException
-        * @throws FileNotFoundException
-        * @throws IOException 
+        * @param UTF8 string encoding utf8
+        * @return ASCII string encoding ascii.
+        * @throws UnsupportedEncodingException throw if any error is occurrred.  
+        * @throws IOException throw if any error is occurrred.
         */
      public static List<String> UTF82UnicodeEscape(File UTF8) throws IOException{
-         List<String> list = new ArrayList<String>();
+         List<String> list = new ArrayList<>();
          if (UTF8==null) {
              System.out.println("Usage: java UTF8ToAscii <filename>");
              return null;
@@ -188,12 +187,11 @@ public class StringKit<T> {
      * Reads file with unicode escaped characters and write them out to
      * stdout in UTF-8
      * This utility is equivalent to: native2ascii -reverse -encoding utf-8
-     * @param ASCII
-     * @return UTF8
-     * @throws FileNotFoundException
-     * @throws IOException
+     * @param ASCII string encoding ascii.
+     * @return UTF8 string encoding utf8.
+     * @throws IOException thorw if any error is occurrred.
       */
-    public static List<String> UnicodeEscape2UTF8(File ASCII) throws FileNotFoundException, IOException {
+    public static List<String> UnicodeEscape2UTF8(File ASCII) throws IOException {
         List<String> list = new ArrayList<>();
           if (ASCII == null) {
               //System.out.println("Usage: java UnicodeEscape2UTF8 <filename>");
@@ -217,9 +215,9 @@ public class StringKit<T> {
 
 
     /**
-     *  convert unicode escapes back to char
-     * @param s
-     * @return
+     *  convert unicode escapes back to char.
+     * @param s string to convert to ascii.
+     * @return string ascii.
      */
     private static String convertUnicodeEscapeToASCII(String s) {
         char[] out = new char[s.length()];
@@ -274,21 +272,22 @@ public class StringKit<T> {
        
     /**
      *Creating a random UUID (Universally unique identifier).
+     * @return string asuuid.
      */
     public static String RandomUUID(){ return  java.util.UUID.randomUUID().toString(); }
    /**
-    * Metodo che converte una stringa a un'oggetto UUID
-    * @param uuid
-    * @return java.util.UUID
+    * Metodo che converte una stringa a un'oggetto UUID.
+    * @param uuid string uuid.
+    * @return java.util.UUID.
     */
     public static java.util.UUID convertStringToUUID(String uuid){return java.util.UUID.fromString(uuid); }
        
     /**
-    * Metodo che matcha e sostituisce determinati parti di una stringa attraverso le regular expression
-    * @param input stringa di input
-    * @param expression regular expression da applicare
-    * @param replace setta la stringa con cui sostituire il risultato del match
-    * @return il risultato in formato stringa della regular expression
+    * Metodo che matcha e sostituisce determinati parti di una stringa attraverso le regular expression.
+    * @param input stringa di input.
+    * @param expression regular expression da applicare.
+    * @param replace setta la stringa con cui sostituire il risultato del match.
+    * @return il risultato in formato stringa della regular expression.
     */
    public static String RegexAndReplace(String input,String expression,String replace){
        String result ="";
@@ -308,9 +307,9 @@ public class StringKit<T> {
 
     /**
     * Setta a null se verifica che la stringa non è
-    * nulla, non è vuota e non è composta da soli spaceToken (white space)
-    * @param s stringa di input
-    * @return  il valore della stringa se null o come è arrivata
+    * nulla, non è vuota e non è composta da soli spaceToken (white space).
+    * @param s stringa di input.
+    * @return  il valore della stringa se null o come è arrivata.
     */
     public static String setNullForEmptyString(String s){
         if(isNullOrEmpty(s)){return null;}
@@ -321,12 +320,13 @@ public class StringKit<T> {
     * Metodo che assegna attraverso un meccanismo di "mapping" ad ogni valore
     * distinto del parametro in questione un numero (la frequenza) prendeno il
     * valore con la massima frequenza abbiamo ricavato il valore più diffuso
-    * per tale parametro
-    * @param al lista dei valori per il determianto parametro del GeoDocument
-    * @return  il valore più diffuso per tale parametro
+    * per tale parametro.
+    * @param al lista dei valori per il determianto parametro del GeoDocument.
+    * @param <T> generic variable.
+    * @return  il valore più diffuso per tale parametro.
     */
     public static <T> T getMoreCommonParameter(ArrayList<T> al){
-       Map<T,Integer> map = new HashMap<T, Integer>();
+       Map<T,Integer> map = new HashMap<>();
        for(int i=0;i<al.size();i++){
            Integer count = map.get(al.get(i));
            map.put(al.get(i), count==null?1:count+1);   //auto boxing and count
@@ -344,40 +344,40 @@ public class StringKit<T> {
     }//getMoreCommonParameter
 
     /**
-     * Metodo che "taglia" la descrizione dell'edificio al minimo indispensabile
-     * @param content stringa del contenuto da tokenizzare
-     * @param symbol simbolo del tokenizer
-     * @return la stringa tokenizzata
+     * Metodo che "taglia" la descrizione dell'edificio al minimo indispensabile.
+     * @param content stringa del contenuto da tokenizzare.
+     * @param symbol simbolo del tokenizer.
+     * @return la stringa tokenizzata.
      */
     private String getTheFirstTokenOfATokenizer(String content,String symbol){
         StringTokenizer st = new StringTokenizer(content, symbol);
         while (st.hasMoreTokens()) {
-            content = st.nextToken().toString();
+            content = st.nextToken();
             if(setNullForEmptyString(content)==null){
-                continue;
             }else{ break;}
         }
         return content;
     }
 
     /**
-     * Method for convert a cstrin to a OutputStream and print to a file
-     * @param content, string to print on the file
-     * @param outputPathFileName, file where i put the stream
+     * Method for convert a cstrin to a OutputStream and print to a file.
+     * @param content string to print on the file.
+     * @param outputPathFileName file where i put the stream.
      */
     public void copyStringToFile(String content, File outputPathFileName) {
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outputPathFileName, true)))) {
             out.print(content);
             out.flush();
-            out.close();
+            //out.close();
         }catch (IOException e) {
             //exception handling left as an exercise for the reader
         }
     }
 
     /**
-     * Method for read the input on the console
-     * @throws IOException
+     * Method for read the input on the console.
+     * @return string print to the console.
+     * @throws IOException throw error if any occurred.
      */
     public String readConsole() throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -397,8 +397,9 @@ public class StringKit<T> {
 
 
     /**
-     * read from a file and append into a StringBuilder every new line
-     * @param filename
+     * read from a file and append into a StringBuilder every new line.
+     * @param filename string path tot the file.
+     * @return string content of file.
      */
     public static String readFileWithStringBuilder(File filename) {
         String readFile = "";
@@ -423,13 +424,14 @@ public class StringKit<T> {
 
     /**
      * Merge the content of two arrays of string with same size for
-     * make the args for a main method java class with option
-     * e.home. arrays1 = ["A","B"] arrays2 = ["--firstLetter",--"secondLetter"] -> arrays3 = ["--firstLetter","A",--"secondLetter","B"]
-     * @param param
-     * @param value
-     * @return
-     * @throws Exception
+     * make the args for a main method java class with option e home.
+     * @param param array of parameter.
+     * @param value array of values.
+     * @param <T> generic type.
+     * @return merged array.
+     * @throws Exception error.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] mergeArrays(T[] param, T[] value) throws Exception {
         T[] array;
         int j = 0;
@@ -454,10 +456,12 @@ public class StringKit<T> {
     }
 
     /**
-     * Method to convert a list to a array object
-     * @param list
-     * @return
+     * Method to convert a list to a array object.
+     * @param list list.
+     * @param <T> generic variable.
+     * @return array .
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] convertListToArray(List<T> list){
         //return list.toArray(new Object[ list.size()]);
         T[] array = (T[]) Array.newInstance(list.get(0).getClass(), list.size());
@@ -493,10 +497,10 @@ public class StringKit<T> {
 
 
     /**
-     * Method to Serializing an Object
-     * @param object
-     * @param nameTempSer
-     * @param <T>
+     * Method to Serializing an Object.
+     * @param object object.
+     * @param nameTempSer string serializable.
+     * @param <T> generic type.
      */
     public static <T> void convertObjectToSerializable(T object,String nameTempSer){
         try
@@ -514,12 +518,13 @@ public class StringKit<T> {
     }
 
     /**
-     * Method to Deserializing an Object
-     * @param object
-     * @param nameTempSer
-     * @param <T>
-     * @return
+     * Method to Deserializing an Object.
+     * @param object object.
+     * @param nameTempSer string serializable.
+     * @param <T> generic type.
+     * @return object serializable.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T convertSerializableToObject(T object,String nameTempSer){
         try
         {
@@ -543,11 +548,13 @@ public class StringKit<T> {
 
     /**
      * Method to cconvert a object by the clazz is equivalent to public T cast(Object o)
-     * but more powerful
-     * @param objectToCast
-     * @param clazz
-     * @return
+     * but more powerful.
+     * @param objectToCast object to cast.
+     * @param clazz a generic class
+     * @param <T> generic variable.
+     * @return object casted to soefic vairable.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T convertInstanceOfObject(Object objectToCast,Class<T> clazz) {
         try {
             if (clazz.isInstance(objectToCast)) {
@@ -562,9 +569,9 @@ public class StringKit<T> {
     }
 
     /**
-     * Method for check if a string rappresent a numeric value
-     * @param str
-     * @return
+     * Method for check if a string rappresent a numeric value.
+     * @param str string rapresentative of a number.
+     * @return booleanvalue if the string rappresent a number or not.
      */
     public static boolean isNumeric(String str) {
         //match a number with optional '-' and decimal.
@@ -574,11 +581,11 @@ public class StringKit<T> {
 
 
     /**
-     * Method for concatenate the content of two arrays in a single array
-     * @param a
-     * @param b
-     * @param <T>
-     * @return
+     * Method for concatenate the content of two arrays in a single array.
+     * @param a first array.
+     * @param b second array.
+     * @param <T> generic variable.
+     * @return array merged.
      */
     public static <T> T[] concatenateArrays(T[] a,T[] b) {
         int aLen = a.length;
@@ -591,13 +598,13 @@ public class StringKit<T> {
     }
 
 
-    /**
-     * Method to concatenate the content of n arrays toa single array
-     * @param first
-     * @param rest
-     * @param <T>
-     * @return
-     */
+    /*
+     * Method to concatenate the content of n arrays toa single array.
+     * @param first first array to merge.
+     * @param rest other arrays to merge.
+     * @param <T> generic variable.
+     * @return merged array.
+     
     public static <T> T[] concatenateArrays(T[] first, T[]... rest) {
         int totalLength = first.length;
         for (T[] array : rest) {
@@ -611,14 +618,16 @@ public class StringKit<T> {
         }
         return result;
     }
+    */
 
 
     /**
-     * Method for copy the content of a array to aniother array of the same type
-     * @param baseArray
-     * @param <T>
-     * @return
+     * Method for copy the content of a array to aniother array of the same type.
+     * @param baseArray array.
+     * @param <T> generic type.
+     * @return array copied.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] copyContentArray(T[] baseArray){
         T[] b = (T[]) Array.newInstance(baseArray.getClass().getComponentType(), baseArray.length);
         //b = Arrays.copyOf(baseArray, baseArray.length);
@@ -630,10 +639,10 @@ public class StringKit<T> {
 
 
     /**
-     * Method to check is a array is empty or with all value null or empty
-     * @param array
-     * @param <T>
-     * @return
+     * Method to check is a array is empty or with all value null or empty.
+     * @param array array.
+     * @param <T> generic type.
+     * @return boolean value.
      */
     public static <T> boolean isArrayEmpty(T[] array){
         boolean empty = true;
@@ -650,12 +659,12 @@ public class StringKit<T> {
 
 
     /**
-     * Method to convert a POJO java object to XML string
-     * @param object
-     * @param clazz
-     * @param <T>
-     * @return
-     * @throws JAXBException
+     * Method to convert a POJO java object to XML string.
+     * @param object object.
+     * @param clazz class.
+     * @param <T> generic type.
+     * @return string.
+     * @throws JAXBException error.
      */
     public static <T> String convertPojoToXml(T object, Class<T> clazz)throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(clazz);
@@ -668,13 +677,14 @@ public class StringKit<T> {
     }
 
     /**
-     * Method to convert a XML string to POJO java object
-     * @param xmlStringData
-     * @param clazz
-     * @param <T>
-     * @return
-     * @throws JAXBException
+     * Method to convert a XML string to POJO java object.
+     * @param xmlStringData string xml.
+     * @param clazz class.
+     * @param <T> generic type.
+     * @return object T.
+     * @throws JAXBException error.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T convertXmlToPojo(String xmlStringData, Class<T> clazz)  throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(clazz);
         StringReader reader = new StringReader(xmlStringData);
@@ -684,9 +694,9 @@ public class StringKit<T> {
     }
 
     /**
-     * Method read a properties file
-     * @param file
-     * @return
+     * Method read a properties file.
+     * @param file file.
+     * @return map of properties.
      */
     public static Map<String,String> readPropertiesFile(File file){
         Map<String,String> map = new HashMap<>();

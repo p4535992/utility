@@ -5,7 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * @note you need the JDOM library for use these
+ * note you need the JDOM library for use these
  * Created by 4535992 on 28/03/2015.
  */
 public class XMLKitJDOM {
@@ -22,7 +22,7 @@ public class XMLKitJDOM {
             org.jdom2.input.SAXBuilder builderSAX = new org.jdom2.input.SAXBuilder();
             File xmlFile = new File(xmlPath);
             // org.jdom2.DefaultJDOMFactory factory =   new org.jdom2.DefaultJDOMFactory();
-            org.jdom2.Document doc = (org.jdom2.Document) builderSAX.build(xmlFile);
+            org.jdom2.Document doc = builderSAX.build(xmlFile);
             org.jdom2.Element hibernate = doc.getRootElement();
             // update class table attribute
             org.jdom2.Element class2 = hibernate.getChild(tagName);
@@ -49,10 +49,10 @@ public class XMLKitJDOM {
     }//updateValueOfattributeSAX
 
     /**
-     * Method for convert a org.jdom2.Document to a org.w3c.dom document
-     * @param jdomdoc org.jdom2.Document of input
-     * @return org.w3c.dom.Document
-     * @throws org.jdom2.JDOMException
+     * Method for convert a org.jdom2.Document to a org.w3c.dom document.
+     * @param jdomdoc org.jdom2.Document of input.
+     * @return org.w3c.dom.Document.
+     * @throws org.jdom2.JDOMException error.
      */
     public static org.w3c.dom.Document convertJDOM2DOMDocument( org.jdom2.Document jdomdoc) throws org.jdom2.JDOMException{
         // insert JDOM to DOM converter:

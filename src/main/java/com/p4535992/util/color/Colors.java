@@ -72,17 +72,28 @@ public class Colors {
         return null;
     }
 
-    /** Returns a color with the specified case-insensitive name.*/
+    /**
+     * Returns a color with the specified case-insensitive name.
+     * @param color color 
+     * @return a color
+     */
     public static String getName(Color color) {
         return color2name.get(color);
     }
 
-    /** Returns a color with the specified case-insensitive name.*/
+    /**
+     * Returns a color with the specified case-insensitive name.
+     * @param name string name of the color
+     * @return the corrrespond color object 
+     */
     public static Color getColor(String name) {
         return name2color.get(name.toLowerCase());
     }
 
-    /** Returns a collection of all color names */
+    /**
+     * Returns a collection of all color names 
+     * @return collection of colors objects
+     */
     public static Collection<String> colors() {
         return name2color.keySet();
     }

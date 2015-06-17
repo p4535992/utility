@@ -17,7 +17,7 @@ public class ReportAttributes  extends HTMLEditorKit.ParserCallback {
     }
 
     private void listAttributes(AttributeSet attributes) {
-        Enumeration e = attributes.getAttributeNames();
+        Enumeration<?> e = attributes.getAttributeNames();
         while (e.hasMoreElements()) {
             Object name = e.nextElement();
             Object value = attributes.getAttribute(name);

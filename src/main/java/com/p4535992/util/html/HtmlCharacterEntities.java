@@ -2,6 +2,7 @@ package com.p4535992.util.html;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
@@ -311,7 +312,7 @@ class CharacterEntityParser {
     /**
      * the entities, keyed by entity name.
      */
-    private final HashMap entities;
+    private final HashMap<Object,Object> entities;
 
     /**
      * Creates a new CharacterEntityParser and initializes the parser with the
@@ -319,15 +320,16 @@ class CharacterEntityParser {
      *
      * @param characterEntities the entities used for the parser
      */
+    @SuppressWarnings("rawtypes")
     public CharacterEntityParser(final Properties characterEntities) {
         if (characterEntities == null) {
             throw new NullPointerException("CharacterEntities must not be null");
         }
 
-        entities = new HashMap(characterEntities);
+        entities = new HashMap<>(characterEntities);
         charMap = new String[65536];
 
-        final Iterator entries = entities.entrySet().iterator();
+        final Iterator<Entry<Object,Object>> entries = entities.entrySet().iterator();
         while (entries.hasNext()) {
             final Map.Entry entry = (Map.Entry) entries.next();
             final String value = (String) entry.getValue();
@@ -345,15 +347,16 @@ class CharacterEntityParser {
      *
      * @param characterEntities the entities used for the parser
      */
-    public CharacterEntityParser(final HashMap characterEntities) {
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public CharacterEntityParser(final HashMap<Object,Object> characterEntities) {
         if (characterEntities == null) {
             throw new NullPointerException("CharacterEntities must not be null");
         }
 
-        entities = (HashMap) characterEntities.clone();
+        entities = (HashMap<Object, Object>) characterEntities.clone();
         charMap = new String[65536];
 
-        final Iterator entries = entities.entrySet().iterator();
+        final Iterator<Entry<Object,Object>> entries = entities.entrySet().iterator();
         while (entries.hasNext()) {
             final Map.Entry entry = (Map.Entry) entries.next();
             final String value = (String) entry.getValue();
@@ -372,7 +375,7 @@ class CharacterEntityParser {
      * @return the CharacterEntityParser initialized with XML entities.
      */
     public static CharacterEntityParser createXMLEntityParser() {
-        final HashMap entities = new HashMap();
+        final HashMap<Object,Object> entities = new HashMap<>();
         entities.put("amp", "&");
         entities.put("quot", "\"");
         entities.put("lt", "<");
@@ -386,7 +389,7 @@ class CharacterEntityParser {
      *
      * @return the properties for this parser.
      */
-    private HashMap getEntities() {
+    private HashMap<Object,Object> getEntities() {
         return entities;
     }
 

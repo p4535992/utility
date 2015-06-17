@@ -2,7 +2,7 @@ package com.p4535992.util.geo;
 
 /**
  * Created by Marco on 06/05/2015.
- * @href: http://www.geodatasource.com/developers/java
+ * href: http://www.geodatasource.com/developers/java
  */
 public class GeoDistanceSimple {
 

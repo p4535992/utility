@@ -115,16 +115,16 @@ public class Test_Reflection {
         
         methods = ReflectionKit.getMethodsByClass(GeoDocument.class);
         
-        Class[] param = new Class[]{String.class};
+        Class<?>[] param = new Class<?>[]{String.class};
         
         Method met1 = ReflectionKit.getMethodByNameAndParam(GeoDocument.class, "setCity", param);
         
         Method met2 =ReflectionKit.getMethodByNameAndParam(GeoDocument.class, "getCity", null);
         
-        Class[] param2 = ReflectionKit.getParametersTypeMethod(met1);
+        Class<?>[] param2 = ReflectionKit.getParametersTypeMethod(met1);
         
-        Class aclass2 = ReflectionKit.getReturnTypeMethod(met2);
-        Class aclass1 = ReflectionKit.getReturnTypeMethod(met1);
+        Class<?> aclass2 = ReflectionKit.getReturnTypeMethod(met2);
+        Class<?> aclass1 = ReflectionKit.getReturnTypeMethod(met1);
 
     }
 }

@@ -15,7 +15,9 @@ public class SchemaOrg {
     public static final String NS = "http://schema.org/";
     
     /** <p>The namespace of the vocabulary as a string</p>
-     *  @see #NS */
+     *  @see #NS 
+     *  @return uri
+     */
     public static String getURI() {return NS;}
     
     /** <p>The namespace of the vocabulary as a resource</p> */

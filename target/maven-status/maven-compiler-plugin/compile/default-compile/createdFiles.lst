@@ -40,7 +40,6 @@ com\p4535992\util\geo\GeoHashUtils.class
 com\p4535992\util\sesame\SesameUtil28$ChunkCommitter.class
 com\p4535992\util\object\model\Website.class
 com\p4535992\util\string\StringKit$ParseState.class
-com\p4535992\util\xml\XMLKit_Extends.class
 com\p4535992\util\jenaAndSesame\JenaAndSesame.class
 com\p4535992\util\http\HttpUtilApacheClient.class
 com\p4535992\util\html\parser\ReportAttributes.class

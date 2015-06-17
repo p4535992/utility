@@ -27,7 +27,7 @@ public class SQLSupport<T>{
     private String[] COLUMNS;
     private Object[] VALUES;
     private int[] TYPES;
-    private SQLSupport support;
+    private SQLSupport<T> support;
 
     public String[] getCOLUMNS() {
         return COLUMNS;
@@ -59,6 +59,7 @@ public class SQLSupport<T>{
         this.TYPES = types;
     }
 
+    @SuppressWarnings("unchecked")
     public SQLSupport(T object){
         support = insertSupport(object);
         this.COLUMNS= support.getCOLUMNS();
@@ -92,20 +93,19 @@ public class SQLSupport<T>{
     /**
      * Method for get from a java class all the information you need for insert
      * a data in a database a homemade very very very base similar hibernate usage
-     * @ATTENTION: you need to be sure all the getter have reference to a field with a hibernate annotation and the attribute column.
-     * @ATTENTION: you need all field of the object class have a hibernate annotation and the attribute column, or at least
+     * ATTENTION: you need to be sure all the getter have reference to a field with a hibernate annotation and the attribute column.
+     * ATTENTION: you need all field of the object class have a hibernate annotation and the attribute column, or at least
      * a personal annotation with the attribute column and a value who is the column of the column.
-     * @param object
-     * @return
-     * @throws IllegalAccessException
-     * @throws NoSuchMethodException
-     * @throws InvocationTargetException
-     * @throws NoSuchFieldException
+     * @param object complex object ot inspect.
+     * @param <T>  generic variable.
+     * @return obecjt SQLSupport.
      */
+    
+    @SuppressWarnings({"unchecked","rawtypes"})
     public static <T> SQLSupport insertSupport(T object){
         SQLSupport support = new SQLSupport();
         try {
-            Map<String, Class> l = ReflectionKit.inspectAndLoadGetterObject(object);
+            Map<String,Class<?>> l = ReflectionKit.inspectAndLoadGetterObject(object);
             Object[] values = new Object[l.size()];
             int[] types = new int[l.size()];
             String[] columns = new String[l.size()];
@@ -115,7 +115,7 @@ public class SQLSupport<T>{
                 Method method = methods.get(i);
                 //Method method = ReflectionKit.getMethodByNameAndParam(object, entry.getKey().toString(), null);
                 values[i] = ReflectionKit.invokeGetterMethod(object, method);
-                Class clazz = fields[i].getType();
+                Class<?> clazz = fields[i].getType();
                 types[i] = SQLHelper.convertClass2SQLTypes(clazz);
                 //System.out.println(method+","+values[i]+","+types[i]);
             }
@@ -147,7 +147,7 @@ public class SQLSupport<T>{
                 }
                 i++;
             }
-        support = new SQLSupport(columns,values,types);
+        support = new SQLSupport<T>(columns,values,types);
         }catch(IllegalAccessException|NoSuchMethodException|
                 InvocationTargetException|NoSuchFieldException e){
             SystemLog.exception(e);
@@ -155,15 +155,16 @@ public class SQLSupport<T>{
         return support;
     }
 
+    @SuppressWarnings("rawtypes")
     public static Class[] getArrayClassesTypes(Class<?> clazz, Class<? extends Annotation> aClass){
         return ReflectionKit.getClassesByFieldsByAnnotation(clazz,aClass);
     }
 
     public static Integer[] getArrayTypes(Class<?> clazz, Class<? extends Annotation> aClass){
         List<Integer> types = new ArrayList<>();
-        Class[] classes = ReflectionKit.getClassesByFieldsByAnnotation(clazz, aClass);
+        Class<?>[] classes = ReflectionKit.getClassesByFieldsByAnnotation(clazz, aClass);
         //GET TYPES SQL
-        for(Class cl: classes){
+        for(Class<?> cl: classes){
             types.add(SQLHelper.convertClass2SQLTypes(cl));
         }
         return StringKit.convertListToArray(types);

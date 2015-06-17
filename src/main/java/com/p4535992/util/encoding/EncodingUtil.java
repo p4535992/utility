@@ -298,25 +298,29 @@ public class EncodingUtil {
         public EncodingUtil(String FILE_NAME,String OUTPUT_FILE_NAME,Charset ENCODING)
         {
             setMapUicodeEscaped();
-            this.FILE_NAME=FILE_NAME;
-            this.OUTPUT_FILE_NAME=OUTPUT_FILE_NAME;
-            this.ENCODING=ENCODING;
+            EncodingUtil.FILE_NAME=FILE_NAME;
+            EncodingUtil.OUTPUT_FILE_NAME=OUTPUT_FILE_NAME;
+            EncodingUtil.ENCODING=ENCODING;
         }
         
         public EncodingUtil(String FILE_NAME,Charset ENCODING)
         {
             setMapUicodeEscaped();
-            this.FILE_NAME=FILE_NAME;           
-            this.ENCODING=ENCODING;
+            EncodingUtil.FILE_NAME=FILE_NAME;           
+            EncodingUtil.ENCODING=ENCODING;
         }
              	
 	//For smaller files
 
-	 /**
-	  Note: the javadoc of Files.readAllLines says it's intended for small
-	  files. But its implementation uses buffering, so it's likely good 
-	  even for fairly large files.
-	 */
+    /**
+     * Read small and large file of text
+     *  Note: the javadoc of Files.readAllLines says it's intended for small
+     *   files. But its implementation uses buffering, so it's likely good 
+     *  even for fairly large files
+     * @param aFileName string path to the file you want to read
+     * @return a list of lines 
+     * @throws IOException file not found
+     */
     public static List<String> readSmallTextFile(String aFileName) throws IOException {
 	    Path path = Paths.get(aFileName);
 	    return Files.readAllLines(path, ENCODING);
@@ -403,10 +407,10 @@ public class EncodingUtil {
                     }catch(java.lang.NullPointerException ne){break;}
                 }
                 out.print(line.toString() + System.getProperty("line.separator"));
-	            out.flush();
+                out.flush();
               }catch(java.lang.NullPointerException ne){break;}
 	      }                
-          out.close();
+                //out.close();
 	    }
         catch(java.lang.NullPointerException ne){return;}
      }
@@ -434,30 +438,35 @@ public class EncodingUtil {
                 }
 	      }//FOREACH LINE
 	    }catch(java.lang.NullPointerException ne){
-                return;
+                SystemLog.warning(ne.getMessage());
         }
      }
 	  
-	  /** Template method that calls {@link #processLine(String)}.  */
-	  public final void processLineByLine(String aFileName) throws IOException {
-		Path path = Paths.get(aFileName);
-	    try (Scanner scanner =  new Scanner(path, ENCODING.name())){
-	      while (scanner.hasNextLine()){
-	        processLine(scanner.nextLine());
-	      }      
-	    }catch(java.lang.NullPointerException ne){return;}
-	  }
+   /**
+    * Template method that calls {@link #processLine(String)}.
+    * @param aFileName string of the path to the file
+    * @throws IOException file not found
+    */
+    public final void processLineByLine(String aFileName) throws IOException {
+          Path path = Paths.get(aFileName);
+      try (Scanner scanner =  new Scanner(path, ENCODING.name())){
+        while (scanner.hasNextLine()){
+          processLine(scanner.nextLine());
+        }      
+      }catch(java.lang.NullPointerException ne){return;}
+    }
 	  
 	  
 	  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	  /** 
 	   Overridable method for processing lines in different ways.	    
-	   <P>This simple default implementation expects simple name-value pairs, separated by an 
+	   This simple default implementation expects simple name-value pairs, separated by an 
 	   '=' sign. Examples of valid input: 
-	   <tt>height = 167cm</tt>
-	   <tt>mass =  65kg</tt>
-	   <tt>disposition =  "grumpy"</tt>
-	   <tt>this is the name = this is the value</tt>
+	   height = 167cm
+	   mass =  65kg
+	   disposition =  "grumpy"
+	   this is the name = this is the value
+           * @param aLine string correspond to a line of the file
 	  */
 	  protected void processLine(String aLine){
 	    //use a second Scanner to parse the content of each line 
@@ -472,34 +481,38 @@ public class EncodingUtil {
 	    }
 	  }
 	  
-	  /** Write fixed content to the given file. */
-      void write() throws IOException  {
-	    SystemLog.message("Try to writing to file named " + FILE_NAME + " with Encoding: " + ENCODING);
+    /** Write fixed content to the given file. */
+    void write() throws IOException  {
+        SystemLog.message("Try to writing to file named " + FILE_NAME + " with Encoding: " + ENCODING);
 	    Writer out = null;
 	    try{
             out = new OutputStreamWriter(new FileOutputStream(FILE_NAME), ENCODING);
         }
-	    finally {
-	      out.close();
-	    }
-	  }
+        finally {
+            out.close();
+        }
+    }
 	  
-	  /** Read the contents of the given file. */
-	  void read() throws IOException {
-	    //log("Reading from file.");
-	    StringBuilder text = new StringBuilder();
-	    String NL = System.getProperty("line.separator");
-	    Scanner scanner = new Scanner(new FileInputStream(FILE_NAME), ENCODING.name());
-	    try {
-	      while (scanner.hasNextLine()){
-	        text.append(scanner.nextLine() + NL);
-	      }
-	    }
-	    finally{
-	      scanner.close();
-	    }
-	    //log("Text read in: " + text);
-	  }
+    
+    /**
+     * Read the contents of the given file. 
+     * @throws IOException file not found
+     */
+    public void read() throws IOException {
+      //log("Reading from file.");
+      StringBuilder text = new StringBuilder();
+      String NL = System.getProperty("line.separator");
+      Scanner scanner = new Scanner(new FileInputStream(FILE_NAME), ENCODING.name());
+      try {
+        while (scanner.hasNextLine()){
+          text.append(scanner.nextLine() + NL);
+        }
+      }
+      finally{
+        scanner.close();
+      }
+      //log("Text read in: " + text);
+    }
 
 	 
 	  /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -508,6 +521,7 @@ public class EncodingUtil {
 	   * This style of implementation does not throw Exceptions to the caller.
 	   *
 	   * @param aFile is a file which already exists and can be read.
+           * @return content of the file
 	   */
 	   static public String getContents(File aFile) {
 	     //...checks on aFile are elided
@@ -539,16 +553,16 @@ public class EncodingUtil {
 	     
 	     return contents.toString();
 	   }
-////////////////////////////////////////////////////////////////////////////////
+
         /**
          * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
          * escaped sequence for characters outside of ASCII.
          * It is equivalent to: native2ascii -encoding utf-8
-         * @param UTF8
-         * @return ASCII 
-         * @throws UnsupportedEncodingException
-         * @throws FileNotFoundException
-         * @throws IOException 
+         * @param UTF8 encoding of input
+         * @return ASCII encoding of output
+         * @throws UnsupportedEncodingException unsupported encoding type
+         * @throws FileNotFoundException file not found
+         * @throws IOException  file not found
          */
         public static List<String> convertUTF8ToUnicodeEscape(File UTF8) throws UnsupportedEncodingException, FileNotFoundException, IOException{
             List<String> list = new ArrayList<>();
@@ -572,10 +586,15 @@ public class EncodingUtil {
         }
 
         private static final char[] hexChar = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-        private static String unicodeEscape(String s) {
+        /**
+         * Method for convert a string UTF-8 to HEX
+         * @param text string of text you want to convert to HEX
+         * @return the text in HEX encoding
+         */
+        private static String unicodeEscape(String text) {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < s.length(); i++) {
-                 char c = s.charAt(i);
+            for (int i = 0; i < text.length(); i++) {
+                 char c = text.charAt(i);
                  if ((c >> 7) > 0) {
                     sb.append("\\u");
                     sb.append(hexChar[(c >> 12) & 0xF]); // append the hex character for the left-most 4-bits
@@ -593,10 +612,10 @@ public class EncodingUtil {
         * Reads file with unicode escaped characters and write them out to
         * stdout in UTF-8
         * This utility is equivalent to: native2ascii -reverse -encoding utf-8
-        * @param ASCII
-        * @return UTF8
-        * @throws FileNotFoundException
-        * @throws IOException 
+        * @param ASCII file of input in ASCII encoding
+        * @return UTF8 file of input in UTF8 encoding
+        * @throws FileNotFoundException file not found
+        * @throws IOException file not found
         */
         public static List<String> convertUnicodeEscapeToUTF8(File ASCII) throws FileNotFoundException, IOException {
             List<String> list = new ArrayList<>();
@@ -620,7 +639,11 @@ public class EncodingUtil {
         
         static enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
         
-        // convert unicode escapes back to char
+        /**
+         *  convert unicode escapes back to char
+         * @param s string to convert unicode escape.
+         * @return string converted.
+         */
         private static String convertUnicodeEscape(String s) {
             char[] out = new char[s.length()];
             ParseState state = ParseState.NORMAL;
@@ -674,8 +697,8 @@ public class EncodingUtil {
 
     /**
      * Method to rewrite a file in the UTF-8 encoding
-     * @param fileASCII
-     * @throws IOException
+     * @param fileASCII file of input in ASCII encoding
+     * @throws IOException file not found
      */
     public static void rewriteTheFileToUTF8(File fileASCII) throws IOException{
         List<String> list = convertUnicodeEscapeToUTF8(fileASCII);
@@ -687,8 +710,8 @@ public class EncodingUtil {
 
     /**
      * Method to rewrite a file in the ASCII encoding
-     * @param fileUTF8
-     * @throws IOException
+     * @param fileUTF8 file of input in UTF8 encoding
+     * @throws IOException file not found
      */
     public static void rewriteTheFileToASCII(File fileUTF8) throws IOException{
         List<String> list = convertUTF8ToUnicodeEscape(fileUTF8);
@@ -700,8 +723,8 @@ public class EncodingUtil {
 
     /**
      * Method to rewrite a file in the ASCII encoding
-     * @param filePathUTF8
-     * @throws IOException
+     * @param filePathUTF8 file of input in UTF8 encoding
+     * @throws IOException file not found
      */
     public static void rewriteTheFileToASCII(String filePathUTF8) throws IOException{
         rewriteTheFileToASCII(new File(filePathUTF8));
@@ -709,8 +732,8 @@ public class EncodingUtil {
 
     /**
      * Method to rewrite a file in the UTF-8 encoding
-     * @param filePathASCII
-     * @throws IOException
+     * @param filePathASCII file of input in ASCII encoding
+     * @throws IOException file not found
      */
     public static void rewriteTheFileToUTF8(String filePathASCII) throws IOException{
         rewriteTheFileToUTF8(new File(filePathASCII));

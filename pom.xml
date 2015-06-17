@@ -62,7 +62,7 @@
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
         <maven-source-plugin.version>2.3</maven-source-plugin.version>
         <maven-javadoc-plugin.version>2.3</maven-javadoc-plugin.version>
-        <maven-exec-plugin.version>1.1.1</maven-exec-plugin.version>
+        <maven-exec-plugin.version>1.2</maven-exec-plugin.version>
         <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
         <!-- XML -->
         <jdom2.version>2.0.6</jdom2.version>
@@ -347,11 +347,41 @@
             <version>${org.apache.commons.version}</version>
         </dependency>
 
+        <!-- MAVEN PLUGIN DEPENDENCY-->
+        <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>${maven-exec-plugin.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>javax.interceptor</groupId>
+            <artifactId>javax.interceptor-api</artifactId>
+            <version>1.2</version>
+        </dependency>
 
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${maven-exec-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <!--
+                <configuration>
+                    <mainClass>C:\apache-camel-2.11.0\examples\camel-example-smooks-  
+                  integration\src\main\java\example\Main< /mainClass>
+                </configuration>
+                -->
+            </plugin>
 
             <plugin>
                 <artifactId>maven-eclipse-plugin</artifactId>
@@ -379,6 +409,16 @@
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
                     <encoding>${encoding}</encoding>
+                    <!-- DO NOT include log4j.properties file in your Jar -->
+                    <excludes>
+                        <exclude>**/log4j.properties</exclude>
+                    </excludes>
+                   <!-- <archive>
+                        <manifest>
+                            &lt;!&ndash; Jar file entry point &ndash;&gt;
+                            <mainClass>home.MainExtractInfo</mainClass>
+                        </manifest>
+                    </archive>-->
                 </configuration>
             </plugin>
 
@@ -408,6 +448,12 @@
                         </goals>
                     </execution>
                 </executions>
+                <!-- This will tell the javadoc execution to ignore all errors 
+                and not let the build fail. -->
+                <!--<configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                    <failOnError>false</failOnError>
+                </configuration>-->
             </plugin>
         </plugins>
     </build>

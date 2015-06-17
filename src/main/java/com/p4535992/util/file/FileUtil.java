@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 /**
- * 2015-005-01
+ * Class with many utilities mathod for magage the file object.
  * @author 4535992
  */
 public class FileUtil {
@@ -23,78 +23,157 @@ public class FileUtil {
     private static char pathSeparator = '\\';
     private static char extensionSeparator = '.';
 
+    /**
+     * Constructor .
+     * @param f file of input
+     */
     public FileUtil(File f) {
-        this.fullPath = f.getAbsolutePath();
-        this.pathSeparator = '/';
-        this.extensionSeparator = '.';
+        FileUtil.fullPath = f.getAbsolutePath();
+        FileUtil.pathSeparator = '/';
+        FileUtil.extensionSeparator = '.';
     }
 
+    /**
+     * Constructor.
+     * @param filePath string of the path to the file
+     */
     public FileUtil(String filePath) {
-        this.fullPath = filePath;
-        this.pathSeparator = '/';
-        this.extensionSeparator = '.';
+        FileUtil.fullPath = filePath;
+        FileUtil.pathSeparator = '/';
+        FileUtil.extensionSeparator = '.';
     }
 
+    /**
+     * Constructor.
+     * @param str string of the path to the file
+     * @param sep path separator
+     * @param ext extension separator (usually '.')
+     */
     public FileUtil(String str, char sep, char ext) {
-        fullPath = str;
-        pathSeparator = sep;
-        extensionSeparator = ext;
+        FileUtil.fullPath = str;
+        FileUtil.pathSeparator = sep;
+        FileUtil.extensionSeparator = ext;
     }
 
+    /**
+     * Method for get the extension from a file.
+     * @param f file of input
+     * @return string of the extension of the file
+     */
     public static String extension(File f) {
         return extension(f.getAbsolutePath());
     }
-
+    /**
+     * Method for get the extension from a file.
+     * @param fullPath string of the path to the file
+     * @return string of the extension of the file
+     */
     public static String extension(String fullPath) {
         int dot = fullPath.lastIndexOf(extensionSeparator);
         return fullPath.substring(dot + 1);
     }
 
-    public static String filenameNoExt(File f) { // gets filename without extension
+    /**
+     * Method for get the filename without extension.
+     * @param f file of input
+     * @return name of the file without the extension
+     */
+    public static String filenameNoExt(File f) { 
         return filenameNoExt(f.getAbsolutePath());
     }
 
-    public static String filenameNoExt(String fullPath) { // gets filename without extension
+    /**
+     * Method for get the filename without extension.
+     * @param fullPath string of the path to the file
+     * @return name of the file without the extension
+     */
+    public static String filenameNoExt(String fullPath) { 
         int dot = fullPath.lastIndexOf(extensionSeparator);
         int sep = fullPath.lastIndexOf(pathSeparator);
         return fullPath.substring(sep + 1, dot);
     }
 
-    public static String filename() { // gets filename without extension       
+    /**
+     * Method for get the name of the file (with extensions).
+     * @return name of the file
+     */
+    public static String filename() {     
         return new File(fullPath).getName();
     }
 
-    public static String filename(File f) { // gets filename without extension             
+    /**
+     * Method for get the name of the file (with extensions).
+     * @param f file of input
+     * @return name of the file
+     */
+    public static String filename(File f) {            
         return f.getName();
     }
 
-    public static String filename(String fullPath) { // gets filename without extension             
+    /**
+     * Method for get the name of the file (with extensions).
+     * @param fullPath string of the path to the file
+     * @return name of the file
+     */
+    public static String filename(String fullPath) {             
         String name = fullPath.replace(FileUtil.path(fullPath), "");
         name = name.replace(File.separator,"");
         return name;
     }
 
+    /**
+     * Method for convert a absolut path to the file to a relative path.
+     * @param base the base of the absolute path where you want start the 
+     * relative path e.g. /var/data
+     * @param absolutePath the full pth to the file e.g. /var/data/stuff/xyz.dat
+     * @return the relative path to the file e.g. stuff/xyz.dat
+     */
     public static String convertToRelativePath(String base,String absolutePath){
         return new File(base).toURI().relativize(new File(absolutePath).toURI()).getPath();
     }
 
+    /**
+     * Method for get the local path in the project.
+     * @param localPath string of the absolute path to the file in the project.
+     * @return the local path to the file in the project
+     */
     public static String localPath(String localPath){
         return localPath("", localPath);
     }
 
+    /**
+     * Method for get the local path in the project.
+     * @param basePath string of the absolute path to the direcotry of the project.
+     * @param localPath string of the absolute path to the file in the project.
+     * @return the local path to the file in the project
+     */
     public static String localPath(String basePath,String localPath){
         basePath = basePath.replace(System.getProperty("user.dir"),"");
         return basePath+File.separator+localPath;
     }
 
+    /**
+     * Method for get the path of a file.
+     * @return the path to the file
+     */
     public static String path() {
         return fullPath.substring(0, fullPath.lastIndexOf(File.separator));
     }
 
+    /**
+     * Method for get the path of a file.
+     * @param f file of input
+     * @return the path to the file
+     */
     public static String path(File f) {
        return path(f.getAbsolutePath());
     }
 
+    /**
+     * Method for get the path of a file.
+     * @param fullPath string of the path to the file
+     * @return the path to the file
+     */
     public static String path(String fullPath) {
         //int sep = fullPath.lastIndexOf(pathSeparator);
         //String path = fullPath.substring(0, sep);
@@ -184,7 +263,8 @@ public class FileUtil {
     }
 
     /**
-     * Removes all files from a given folder
+     * Removes all files from a given folder.
+     * @param path string of the path to the file
      */
     public static void removeDirectory(String path)
     {
@@ -227,15 +307,17 @@ public class FileUtil {
      * For unix-like systems, the absolute filename begins with a '/'
      * and is preceded by "file://".
      * For other systems an extra '/' must be supplied.
+     * @param filePath string of the path to the file
+     * @return path to the in uri formato with prefix file:///
      */
-    public static String convertFileToStringUriWithPrefix(String filename){
-        StringBuffer mapfilename = new StringBuffer( filename ) ;
+    public static String convertFileToStringUriWithPrefix(String filePath){
+        StringBuffer mapfilename = new StringBuffer( filePath ) ;
         for ( int i = 0 ; i < mapfilename.length() ; i++ )
         {
             if ( mapfilename.charAt(i) == '\\' )
                 mapfilename.setCharAt(i, '/') ;
         }
-        if (filename.charAt(0) == '/')
+        if (filePath.charAt(0) == '/')
         {
             return "file://"+mapfilename.toString() ;
         }
@@ -261,8 +343,7 @@ public class FileUtil {
     /**
      * Method for get in more dinamica way the currentdirectory of the projct
      * equivalent to : dir = System.getProperty("user.dir");
-     *
-     * @return
+     * @return string of the path to the user directory of the project
      */
     public static String getUserDir() {
         String dir;
@@ -373,7 +454,7 @@ public class FileUtil {
                 String line = scanner.nextLine();
                 result.append(line).append("\n");
             }
-            scanner.close();
+            //scanner.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -392,16 +473,17 @@ public class FileUtil {
     }
 
     /**
-
      * Add a package name prefix if the name is not absolute Remove leading "/"
-     * if name is absolute
+     * if name is absolute.
+     * @param name string name of the class
+     * @return the full name package+class
      */
     public static String resolveName(String name) {
         if (name == null) {
             return name;
         }
         if (!name.startsWith("/")) {
-            Class c = FileUtil.class;
+            Class<?> c = FileUtil.class;
             while (c.isArray()) {
                 c = c.getComponentType();
             }
@@ -419,20 +501,22 @@ public class FileUtil {
 
 
     /**
-     * Method for compress file of triple before upload to thte repository make the upload more faster
-     * @param file
-     * @return
-     * @throws IOException
+     * Method for compress file of triple before upload to thte repository make
+     * the upload more faster.
+     * @param file file of input
+     * @return inputstream of the file
+     * @throws IOException file not found
      */
     public static InputStream compressFileForUpload(File file) throws IOException{
         return  new GZIPInputStream(new FileInputStream(file));
     }
 
     /**
-     * Method for compress file of triple before upload to thte repository make the upload more faster
-     * @param filePathToFile
-     * @return
-     * @throws IOException
+     * Method for compress file of triple before upload to thte repository 
+     * make the upload more faster.
+     * @param filePathToFile string of the path tot the file
+     * @return inputstream of the file
+     * @throws IOException file not found
      */
     public static InputStream compressFileForUpload(String filePathToFile) throws IOException{
         File file = new File(filePathToFile);
@@ -441,14 +525,13 @@ public class FileUtil {
 
     /**
      * Utility for a depth first traversal of a file-system starting from a
-     * given node (file or directory).
-     * e.home.
+     * given node (file or directory). e.g.
      * FileWalker.Handler handler = new FileWalker.Handler() {
      *
-     * @Override public void file(File file) throws Exception {
+     * Override public void file(File file) throws Exception {
      * statementsLoaded.addAndGet( loadFileChunked(file) );
      * }
-     * @Override public void directory(File directory) throws Exception {
+     * Override public void directory(File directory) throws Exception {
      * log("Loading files from: " + directory.getAbsolutePath());
      * }
      * };
@@ -465,6 +548,7 @@ public class FileUtil {
              * Called to notify that a normal file has been encountered.
              *
              * @param file The file encountered.
+             * @throws Exception error during the search. 
              */
             void file(File file) throws Exception;
 
@@ -472,6 +556,7 @@ public class FileUtil {
              * Called to notify that a directory has been encountered.
              *
              * @param directory The directory encountered.
+             * @throws Exception error during the search. 
              */
             void directory(File directory) throws Exception;
         }
@@ -479,8 +564,7 @@ public class FileUtil {
         /**
          * Set the notification handler.
          *
-         * @param handler The object that receives notifications of encountered
-         *                nodes.
+         * @param handler The object that receives notifications of encountered nodes.
          */
         public void setHandler(Handler handler) {
             this.handler = handler;
@@ -491,8 +575,9 @@ public class FileUtil {
          * short walk, or a directory which will be traversed recursively.
          *
          * @param node The starting point for the walk.
+         * @throws Exception error during the search. 
          */
-        public void walk(File node) throws Exception {
+        public void walk(File node) throws Exception{
             if (node.isDirectory()) {
                 handler.directory(node);
                 File[] children = node.listFiles();

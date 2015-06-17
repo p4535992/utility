@@ -54,7 +54,7 @@ import org.openrdf.query.Update;
 /**
  * Created by 4535992 on 11/06/2015.
  * @author Johann Petrak
- * @href https://gate.ac.uk/releases/gate-8.0-build4825-ALL/plugins/Ontology/src/gate/creole/ontology/impl/sesame/SesameManager.java
+ * href https://gate.ac.uk/releases/gate-8.0-build4825-ALL/plugins/Ontology/src/gate/creole/ontology/impl/sesame/SesameManager.java
  */
 
 public class SesameManager {
@@ -68,8 +68,8 @@ public class SesameManager {
 
     private boolean debug = true;
 
-    private class SesameManagerException
-            extends RuntimeException {
+    private class SesameManagerException extends RuntimeException {
+        private static final long serialVersionUID = 2L;
         public SesameManagerException() {}
 
         public SesameManagerException(String message) {
@@ -134,8 +134,8 @@ public class SesameManager {
      * http:// or https://, otherwise the location is assumed to be a local
      * directory name.
      *
-     * @param repositoryLocation
-     * @param repositoryName
+     * @param repositoryLocation repositorylocation.
+     * @param repositoryName repositoryName.
      */
     public void connectToRepository(String repositoryLocation, String repositoryName) {
         // connect to location and get the manager
@@ -156,7 +156,7 @@ public class SesameManager {
      * http:// or https://, otherwise the location is assumed to be a local
      * directory name.
      *
-     * @param repositoryLocation
+     * @param repositoryLocation repositoryLocation.
      */
     public void connectToLocation(String repositoryLocation) {
         // if the location starts with http:// it will be assumed that this
@@ -186,7 +186,7 @@ public class SesameManager {
     /**
      * Connect to a remote managed repository location.
      *
-     * @param url
+     * @param url url.
      */
     public void connectToRemoteLocation(String url) {
         isManagedRepository = true;
@@ -218,8 +218,8 @@ public class SesameManager {
      * Connect to a local repository location at the given directory.
      * If mustexist is true, it is an error if the directory is not found.
      *
-     * @param dirname
-     * @param mustexist
+     * @param dirname dirname.
+     * @param mustexist mustexists.
      */
     public void connectToLocalLocation(String dirname, boolean mustexist) {
         isManagedRepository = true;
@@ -291,7 +291,7 @@ public class SesameManager {
      * An error is raised if no local or remote location was set prior to
      * calling this method.
      *
-     * @param name
+     * @param name name.
      */
     public void openRepository(String name) {
         logger.debug("Called openRespository with ID "+name);
@@ -350,7 +350,7 @@ public class SesameManager {
      * Create a new managed repository at the current remote or local location
      * using the configuration information passed on as a string.
      *
-     * @param config
+     * @param config config.
      */
     @SuppressWarnings("deprecation")
     public void createRepository(String config) {
@@ -400,9 +400,8 @@ public class SesameManager {
     /**
      * Create an unmanaged repository with files stored in the directory
      * given from the configuration passed as a string.
-     *
-     * @param configstring
-     * @return
+     * @param repositoryDirFile repositoryDirFile.
+     * @param configstring  configstring.
      */
     @SuppressWarnings("deprecation")
     public void createUnmanagedRepository(File repositoryDirFile, String configstring) {
@@ -518,9 +517,9 @@ public class SesameManager {
     /**
      * Substitute variables in a configuration template string.
      *
-     * @param configtemplate
-     * @param variables
-     * @return
+     * @param configtemplate configtemplate.
+     * @param variables variables.
+     * @return string of congi template.
      */
     public static String substituteConfigTemplate(String configtemplate, Map<String,String> variables) {
         // replace all variables in the template then do the actual createRepository
@@ -553,7 +552,7 @@ public class SesameManager {
     /**
      * Delete the managed repository with that name.
      *
-     * @param name
+     * @param name name.
      */
     public void deleteRepository(String name) {
         if(mRepositoryManager != null) {
@@ -586,9 +585,9 @@ public class SesameManager {
     /**
      * Load data into the current repository from a file.
      *
-     * @param from
-     * @param baseURI
-     * @param format
+     * @param from from.
+     * @param baseURI baseURI.
+     * @param format format.
      */
     @SuppressWarnings("deprecation")
     public void importIntoRepository(File from, String baseURI, String format) {
@@ -611,9 +610,9 @@ public class SesameManager {
     /**
      * Load data into the current repository from a stream.
      *
-     * @param from
-     * @param baseURI
-     * @param format
+     * @param from from.
+     * @param baseURI baseURI.
+     * @param format format.
      */
     @SuppressWarnings("deprecation")
     public void importIntoRepository(InputStream from, String baseURI, String format) {
@@ -632,9 +631,9 @@ public class SesameManager {
     /**
      * Load data into the current repository from a reader
      *
-     * @param from
-     * @param baseURI
-     * @param format
+     * @param from from.
+     * @param baseURI baseURI.
+     * @param format format.
      */
     @SuppressWarnings("deprecation")
     public void importIntoRepository(Reader from, String baseURI, String format) {
@@ -650,12 +649,9 @@ public class SesameManager {
         }
     }
 
-    /**
-     * Create a query object for the current repository.
-     *
-     * @param query
-     * @return
-     */
+    
+     //Create a query object for the current repository.
+     
 //    public OntologyTupleQuery createQuery(String query) {
 //        if(mRepositoryConnection != null) {
 //            return new UtilTupleQueryIterator(
@@ -705,7 +701,7 @@ public class SesameManager {
     /**
      * Obtain the repository connection object.
      *
-     * @return
+     * @return RepositoryConnection
      */
     public RepositoryConnection getRepositoryConnection() {
         return mRepositoryConnection;

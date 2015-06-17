@@ -67,14 +67,6 @@ public class InfoDocument {
     
     public InfoDocument (){}
    
-    /**
-     * Geodocument da inserire nella tabella GeoDocument
-     * @param doc_id
-     * @param url
-     * @param city
-     * @param lat
-     * @param lng
-     */
     public InfoDocument(Integer doc_id, URL url, String city, Double lat, Double lng) {
         this.doc_id = doc_id;
         this.url = url;
@@ -83,26 +75,6 @@ public class InfoDocument {
         this.lng = lng;
     }
     
-    
-    /**
-     * GeoDocument da inserire nella tabrella InfoDocument
-     * @param url
-     * @param regione
-     * @param provincia
-     * @param city
-     * @param indirizzo
-     * @param iva
-     * @param email
-     * @param telefono
-     * @param fax
-     * @param edificio
-     * @param lat
-     * @param lng
-     * @param nazione
-     * @param description
-     * @param postalCode
-     * @param indirizzoNoCAP
-     */
     public InfoDocument(URL url, String regione, String provincia, String city,
 			String indirizzo,String iva, String email, String telefono,String fax,
 			String edificio,Double lat, Double lng,String nazione,String description,

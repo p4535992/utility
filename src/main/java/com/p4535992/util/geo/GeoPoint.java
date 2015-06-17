@@ -2,7 +2,7 @@ package com.p4535992.util.geo;
 
 /**
  * Created by 4535992on 06/05/2015.
- * @href: https://github.com/elastic/elasticsearch/blob/master/src/main/java/org/elasticsearch/common/geo/GeoPoint.java
+ * href: https://github.com/elastic/elasticsearch/blob/master/src/main/java/org/elasticsearch/common/geo/GeoPoint.java
  */
 public final class GeoPoint {
 

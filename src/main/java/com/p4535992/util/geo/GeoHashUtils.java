@@ -4,9 +4,8 @@ import java.util.Collection;
 
 /**
  * Created by 4535992 on 06/05/2015.
- * @href: https://github.com/elastic/elasticsearch/blob/master/src/main/java/org/elasticsearch/common/geo/GeoHashUtils.java
- * Utilities for encoding and decoding geohashes. Based on
- * http://en.wikipedia.org/wiki/Geohash.
+ * href: https://github.com/elastic/elasticsearch/blob/master/src/main/java/org/elasticsearch/common/geo/GeoHashUtils.java.
+ * herf http://en.wikipedia.org/wiki/Geohash.
  */
 // LUCENE MONITOR: monitor against spatial package
 // replaced with native DECODE_MAP
@@ -27,11 +26,12 @@ public class GeoHashUtils {
     }
 
     /**
-     * Encodes the given latitude and longitude into a geohash
+     * Encodes the given latitude and longitude into a geohash.
      *
-     * @param latitude  Latitude to encode
-     * @param longitude Longitude to encode
-     * @return Geohash encoding of the longitude and latitude
+     * @param latitude  Latitude to encode.
+     * @param longitude Longitude to encode.
+     * @param precision precision of the coordinates.
+     * @return Geohash encoding of the longitude and latitude.
      */
     public static String encode(double latitude, double longitude, int precision) {
 //        double[] latInterval = {-90.0, 90.0};
@@ -94,21 +94,21 @@ public class GeoHashUtils {
     /**
      * Calculate all neighbors of a given geohash cell.
      *
-     * @param geohash Geohash of the defined cell
-     * @return geohashes of all neighbor cells
+     * @param geohash Geohash of the defined cell.
+     * @return geohashes of all neighbor cells.
      */
     public static Collection<? extends CharSequence> neighbors(String geohash) {
         return addNeighbors(geohash, geohash.length(), new ArrayList<CharSequence>(8));
     }
 
     /**
-     * Calculate the geohash of a neighbor of a geohash
+     * Calculate the geohash of a neighbor of a geohash.
      *
-     * @param geohash the geohash of a cell
-     * @param level   level of the geohash
-     * @param dx      delta of the first grid coordinate (must be -1, 0 or +1)
-     * @param dy      delta of the second grid coordinate (must be -1, 0 or +1)
-     * @return geohash of the defined cell
+     * @param geohash the geohash of a cell.
+     * @param level   level of the geohash.
+     * @param dx      delta of the first grid coordinate (must be -1, 0 or +1).
+     * @param dy      delta of the second grid coordinate (must be -1, 0 or +1).
+     * @return geohash of the defined cell.
      */
     private final static String neighbor(String geohash, int level, int dx, int dy) {
         int cell = decode(geohash.charAt(level - 1));
@@ -159,24 +159,24 @@ public class GeoHashUtils {
         }
     }
 
-    /**
-     * Add all geohashes of the cells next to a given geohash to a list.
-     *
-     * @param geohash   Geohash of a specified cell
-     * @param neighbors list to add the neighbors to
-     * @return the given list
-     */
+   /**
+    * Add all geohashes of the cells next to a given geohash to a list.
+    * @param <E> list of geohash given.
+    * @param geohash Geohash of a specified cell.
+    * @param neighbors llist to add the neighbors to.
+    * @return the given list.
+    */
     public static final <E extends Collection<? super String>> E addNeighbors(String geohash, E neighbors) {
         return addNeighbors(geohash, geohash.length(), neighbors);
     }
 
     /**
      * Add all geohashes of the cells next to a given geohash to a list.
-     *
-     * @param geohash   Geohash of a specified cell
-     * @param length    level of the given geohash
-     * @param neighbors list to add the neighbors to
-     * @return the given list
+     * @param <E> e.
+     * @param geohash   Geohash of a specified cell.
+     * @param length    level of the given geohash.
+     * @param neighbors list to add the neighbors to.
+     * @return the given list.
      */
     public static final <E extends Collection<? super String>> E addNeighbors(String geohash, int length, E neighbors) {
         String south = neighbor(geohash, length, 0, -1);
@@ -271,21 +271,22 @@ public class GeoHashUtils {
     }
 
     /**
-     * Decodes the given geohash
+     * Decodes the given geohash.
      *
-     * @param geohash Geohash to decocde
-     * @return {@link GeoPoint} at the center of cell, given by the geohash
+     * @param geohash Geohash to decocde.
+     * @return {@link GeoPoint} at the center of cell, given by the geohash.
      */
     public static GeoPoint decode(String geohash) {
         return decode(geohash, new GeoPoint());
     }
 
     /**
-     * Decodes the given geohash into a latitude and longitude
+     * Decodes the given geohash into a latitude and longitude.
      *
-     * @param geohash Geohash to decocde
+     * @param geohash Geohash to decocde.
+     * @param ret  GeoPoint for the decode.
      * @return the given {@link GeoPoint} reseted to the center of
-     * cell, given by the geohash
+     * cell, given by the geohash.
      */
     public static GeoPoint decode(String geohash, GeoPoint ret) {
         double[] interval = decodeCell(geohash);
@@ -326,9 +327,9 @@ public class GeoHashUtils {
      * Encodes latitude and longitude information into a single long with variable precision.
      * Up to 12 levels of precision are supported which should offer sub-metre resolution.
      *
-     * @param latitude
-     * @param longitude
-     * @param precision The required precision between 1 and 12
+     * @param latitude latitude coordinates.
+     * @param longitude longitude coordinates.
+     * @param precision The required precision between 1 and 12.
      * @return A single long where 4 bits are used for holding the precision and the remaining
      * 60 bits are reserved for 5 bit cell identifiers giving up to 12 layers.
      */

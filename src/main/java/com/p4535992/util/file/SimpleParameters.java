@@ -1,15 +1,11 @@
 package com.p4535992.util.file;
 
-/**
- * 2015-04-03
- * Created by 4535992
- */
-
 import java.util.*;
 
 /**
  * Utility to read parameters from a string of name-value pairs or an array
- * of string, each containing a name-value pair.
+ * of string, each containing a name-value pair eg Subject=value.
+ * Created by 4535992
  */
 public class SimpleParameters {
     // The storage for the command line parameters
@@ -24,10 +20,10 @@ public class SimpleParameters {
      *            A string of the form "param1=name1 param2=name2".
      * @param pairSeparators
      *            A list of characters that separate the name-value pairs,
-     *            e.home. <space><tab><cr><lf>
+     *            e.home. space tab cr lf.
      * @param nameValueSeparator
      *            The character that separates the name from the values,
-     *            e.home. '='
+     *            e.home. '='.
      */
     public SimpleParameters(String allNameValuePairs, String pairSeparators, char nameValueSeparator) {
         StringTokenizer tokeniser = new StringTokenizer(allNameValuePairs, pairSeparators);
@@ -40,13 +36,13 @@ public class SimpleParameters {
     }
 
     /**
-     * Construct the parameters from an array of name-value pairs, e.home. from
-     * "main( String[] args )"
+     * Construct the parameters from an array of name-value pairs, eg from
+     * "main( String[] args )".
      *
      * @param nameValuePairs
-     *            The array of name-value pairs
+     *            The array of name-value pairs.
      * @param separator
-     *            The character that separates the name from its value
+     *            The character that separates the name from its value.
      */
     public SimpleParameters(String[] nameValuePairs, char separator) {
         parseNameValuePairs(nameValuePairs, separator, true);
@@ -57,7 +53,7 @@ public class SimpleParameters {
      * equals '=' as the separator.
      *
      * @param nameValuePairs
-     *            The array of name-value pairs
+     *            The array of name-value pairs.
      */
     public SimpleParameters(String[] nameValuePairs) {
         parseNameValuePairs(nameValuePairs, '=', true);
@@ -135,7 +131,7 @@ public class SimpleParameters {
      *
      * @param nameValuePairs
      *            An array of name-value pairs, where each string is of the
-     *            form: "<name>'separator'<value>"
+     *            form: "name'separator'value"
      * @param separator
      *            The character that separates the name from the value
      * @param overWrite
@@ -168,13 +164,12 @@ public class SimpleParameters {
     }
 
     /**
-     * Get the name-value pairs as a Map<String,String>
-     *
-     * @return
+     * Get the name-value pairs as a Map.
+     * @return map of name-value.
      */
     public Map<String, String> getParameters() {
         return mParameters;
     }
 
-    //private final Map<String, String> mParameters = new HashMap<String, String>();
+    
 }

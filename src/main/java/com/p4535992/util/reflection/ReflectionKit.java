@@ -21,13 +21,13 @@ import java.util.*;
 /**
  * Class for help me with the first impact with java reflection library
  * To follow all the url help me to create this class:
- * @href: http://my.safaribooksonline.com/video/-/9780133038118?cid=2012-3-blog-video-java-socialmedia
- * @href: http://www.asgteach.com/blog/?p=559
- * @href: http://stackoverflow.com/questions/709961/determining-if-an-object-is-of-primitive-type
- * @href: http://roadtobe.com/supaldubey/creating-and-reading-annotations-reflection-in-java/ (other util)
- * @href: https://github.com/dancerjohn/LibEx/blob/master/libex/src/main/java/org/libex/reflect/ReflectionUtils.java (href)
- * @href: http://www.java2s.com/Code/Java/Reflection/Findasettermethodforthegiveobjectspropertyandtrytocallit.htm
- * @param <T>
+ * href: http://my.safaribooksonline.com/video/-/9780133038118?cid=2012-3-blog-video-java-socialmedia
+ * href: http://www.asgteach.com/blog/?p=559
+ * href: http://stackoverflow.com/questions/709961/determining-if-an-object-is-of-primitive-type
+ * href: http://roadtobe.com/supaldubey/creating-and-reading-annotations-reflection-in-java/ (other util)
+ * href: https://github.com/dancerjohn/LibEx/blob/master/libex/src/main/java/org/libex/reflect/ReflectionUtils.java (href)
+ * href: http://www.java2s.com/Code/Java/Reflection/Findasettermethodforthegiveobjectspropertyandtrytocallit.htm
+ * @param <T> T generic type.
  */
 public class ReflectionKit<T>{
 
@@ -35,21 +35,21 @@ public class ReflectionKit<T>{
     private static final String IS = "is";
     private static final String SET = "set";
     private Class<T> cl;
-    private static String clName;
+    private String clName;
     private static final Set<Class<?>> WRAPPER_TYPES = getWrapperTypes();
 
     /**
-     * Method to check if a specific class is a primitve class
-     * @param aClass
-     * @return
+     * Method to check if a specific class is a primitve class.
+     * @param aClass class of the object you want to test.
+     * @return boolean value if is a primite type or not.
      */
     public static boolean isWrapperType(Class<?> aClass) {
         return WRAPPER_TYPES.contains(aClass);
     }
 
     /**
-     * List of all primitve class
-     * @return
+     * List of all primitve class.
+     * @return all the primitve class on java.
      */
     private static Set<Class<?>> getWrapperTypes(){
         Set<Class<?>> ret = new HashSet<>();
@@ -65,14 +65,19 @@ public class ReflectionKit<T>{
         return ret;
     }
 
+    @SuppressWarnings("unchecked")
     public ReflectionKit(){
         java.lang.reflect.Type t = getClass().getGenericSuperclass();
-        java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) t;
-        this.cl = (Class) pt.getActualTypeArguments()[0];
+        java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) t;    
+        this.cl =  (Class<T>) pt.getActualTypeArguments()[0];
         this.clName = cl.getSimpleName();
     }
 
-    /** Method to get all basic information on a method */
+    /**
+     * Method to get all basic information on a method
+     * @param obj object to inspect.
+     * @return list of array name-value for that object.
+     */
     public static List<String[]> inspectFieldClass(Object obj) {
         return inspectFieldClass(obj.getClass());
     }
@@ -107,7 +112,7 @@ public class ReflectionKit<T>{
             ParameterizedType type = (ParameterizedType) returnType;
             Type[] typeArguments = type.getActualTypeArguments();
             for(Type typeArgument : typeArguments){
-                Class typeArgClass = (Class) typeArgument;
+                Class<?> typeArgClass = (Class<?>) typeArgument;
                 list.add(new String[]{typeArgClass.getName(),getClassReference(typeArgClass)});
             }
         }
@@ -121,7 +126,7 @@ public class ReflectionKit<T>{
             ParameterizedType type = (ParameterizedType) returnType;
             Type[] typeArguments = type.getActualTypeArguments();
             for(Type typeArgument : typeArguments){
-                Class typeArgClass = (Class) typeArgument;
+                Class<?> typeArgClass = (Class<?>) typeArgument;
                 System.out.println("typeArgClass = " + typeArgClass);
                 list.add(new String[]{typeArgClass.getName(),getClassReference(typeArgClass)});
             }
@@ -129,35 +134,35 @@ public class ReflectionKit<T>{
         return list;
     }
 
-    public static Class inspectSimpleTypesMethod(Class<?> aClass,Method method) throws NoSuchMethodException{
+    public static Class<?> inspectSimpleTypesMethod(Class<?> aClass,Method method) throws NoSuchMethodException{
         List<String[]> list = null;
         Type returnType = method.getGenericReturnType();
             ParameterizedType type = (ParameterizedType) returnType;
             Type[] typeArguments = type.getActualTypeArguments();
             for(Type typeArgument : typeArguments){
-                Class typeArgClass = (Class) typeArgument;
+                Class<?> typeArgClass = (Class<?>) typeArgument;
                 System.out.println("typeArgClass = " + typeArgClass);
                 list.add(new String[]{typeArgClass.getName(),getClassReference(typeArgClass)});
             }
         return returnType.getClass();
     }
 
-    public static Map<String,Class> inspectAndLoadGetterObject(Object obj) throws NoSuchMethodException{
+    public static Map<String,Class<?>> inspectAndLoadGetterObject(Object obj) throws NoSuchMethodException{
         List<Method> getter = getGettersClass(obj.getClass());
-        Map<String,Class> map = new HashMap<>();
+        Map<String,Class<?>> map = new HashMap<>();
         for(Method met : getter){
-            Class cl = met.getReturnType();
+            Class<?> cl = met.getReturnType();
             String name = met.getName();
             map.put(name, cl);
         }
         return map;
     }
 
-    public static Map<String,Class> inspectAndLoadSetterObject(Object obj) throws NoSuchMethodException{
+    public static Map<String,Class<?>> inspectAndLoadSetterObject(Object obj) throws NoSuchMethodException{
         List<Method> setter = getSettersClass(obj.getClass());
-        Map<String,Class> map = new HashMap<>();
+        Map<String,Class<?>> map = new HashMap<>();
         for(Method met : setter){
-            Class cl = met.getReturnType();
+            Class<?> cl = met.getReturnType();
             String name = met.getName();
             map.put(name, cl);
         }
@@ -191,9 +196,9 @@ public class ReflectionKit<T>{
 //    }
 
     public static List<String[]> inspectConstructor(Class<?> aClass){
-        Constructor[] constructors = aClass.getConstructors();
+        Constructor<?>[] constructors = aClass.getConstructors();
         List<String[]> oConst = new ArrayList<>();
-        for (Constructor cons : constructors) {
+        for (Constructor<?> cons : constructors) {
             String modify = Modifier.toString(cons.getModifiers());
             String type = cons.getTypeParameters().toString();
             String name = cons.getName();
@@ -211,7 +216,7 @@ public class ReflectionKit<T>{
         return list;
     }
 
-    public static List<Method> getGettersClass(Class aClass){
+    public static List<Method> getGettersClass(Class<?> aClass){
         List<Method> list = new ArrayList<>();
         Method[] methods = aClass.getDeclaredMethods();
         for (Method method : methods)
@@ -220,7 +225,7 @@ public class ReflectionKit<T>{
         return list;
     }
 
-     public static List<Method> getSettersClass(Class aClass){
+     public static List<Method> getSettersClass(Class<?> aClass){
         List<Method> list = new ArrayList<>();
         Method[] methods = aClass.getDeclaredMethods();
         for (Method method : methods)
@@ -282,7 +287,11 @@ public class ReflectionKit<T>{
         return true;
     }
 
-    /** Method to get all methods of a class */
+    /**
+     * Method to get all methods of a class
+     * @param aClass class to inspect.
+     * @return array of methof for that object.
+     */
     public static List<Method> getMethodsByClass(Class<?> aClass){
         Method[] methods = aClass.getMethods();
         return Arrays.asList(methods);
@@ -290,37 +299,52 @@ public class ReflectionKit<T>{
 
     /**
      * Method to get a specific method from a class
-     *If you know the precise parameter types of the method you want to access,
+     * If you know the precise parameter types of the method you want to access,
      * you can do so rather than obtain the array all methods. This example returns
-     * the public method named "nameOfMethod", in the given class which takes a String as parameter:
+     * the public method named "nameOfMethod", in the given class which takes a
+     * String as parameter.
+     * @param aClass class to inspect.
+     * @param nameOfMethod name of th method you want to find.
+     * @param param class of the parameter of the constructor of the method you wan to find.
+     * @return method you found..
+     * @throws NoSuchMethodException throw if any No Such Method error is occurred.
      */
-    public static Method getMethodByNameAndParam(Class<?> aClass, String nameOfMethod, Class[] param) throws NoSuchMethodException{
+    public static Method getMethodByNameAndParam(Class<?> aClass, String nameOfMethod, Class<?>[] param) throws NoSuchMethodException{
         Method method;
         //If the method you are trying to access takes no parameters, pass null as the parameter type array, like this:   
-        if(StringKit.isArrayEmpty(param))method = aClass.getMethod(nameOfMethod,new Class[0]);//nameOfMethod, null
+        if(StringKit.isArrayEmpty(param))method = aClass.getMethod(nameOfMethod,new Class<?>[0]);//nameOfMethod, null
         else method = aClass.getMethod(nameOfMethod,param);// String.class
         return method;
     }
 
     /**
-     * Method to get a specific mehtod form a the reference class of the object
-     * @param MyObject
-     * @param nameOfMethod
-     * @param param
-     * @param <T>
-     * @return
-     * @throws NoSuchMethodException
+     * Method to get a specific mehtod form a the reference class of the object.
+     * @param MyObject generic object to inspect.
+     * @param nameOfMethod name of the method you want to find.
+     * @param param class of the parameter of the constructor of the method you wan to find.
+     * @param <T> generic type.
+     * @return method you found.
+     * @throws NoSuchMethodException throw if any error is occured.
      */
-    public static <T> Method getMethodByNameAndParam(T MyObject, String nameOfMethod, Class[] param) throws NoSuchMethodException{
+    public static <T> Method getMethodByNameAndParam(T MyObject, String nameOfMethod, Class<?>[] param) throws NoSuchMethodException{
             return getMethodByNameAndParam(MyObject.getClass(), nameOfMethod, param); //String.class
     }
 
-    /** Method Parameters : Method where you can read what parameters a given method takes like this: */
-    public static Class[] getParametersTypeMethod(Method method){
+    /**
+     * Method Parameters : Method where you can read what parameters a given method takes like this.
+     * @param method method you want to inspect.
+     * @return  array of class of the parameters of that method.
+     */
+    public static Class<?>[] getParametersTypeMethod(Method method){
         return method.getParameterTypes();
     }
-    /** Return Types: Method where you can access the return type of a method like this: */
-    public static Class getReturnTypeMethod(Method method){
+    
+    /**
+     * Return Types: Method where you can access the return type of a method like this.
+     * @param method method to inspect.
+     * @return the class of the returned type of the method.
+     */
+    public static Class<?> getReturnTypeMethod(Method method){
         return method.getReturnType();
     }
 
@@ -355,9 +379,9 @@ public class ReflectionKit<T>{
         return StringKit.convertListToArray(types);
     }
 
-    public static Class[] getClassesByFieldsByAnnotation(Class<?> clazz,Class<? extends Annotation> aClass){
+    public static Class<?>[] getClassesByFieldsByAnnotation(Class<?> clazz,Class<? extends Annotation> aClass){
         Field[] fields = getFieldsByAnnotation(clazz, aClass);
-        List<Class> classes = new ArrayList<>();
+        List<Class<?>> classes = new ArrayList<>();
         for(Field field : fields) {
             classes.add(field.getType());
         }
@@ -372,27 +396,33 @@ public class ReflectionKit<T>{
      * MyObject instance instead of null;The Method.invoke(Object target, Object ... parameters) method takes an optional amount of parameters,
      * but you must supply exactly one parameter per argument in the method you are invoking. In this case it was
      * a method taking a String, so one String must be supplied.
-     * @param MyObject
-     * @param nameOfMethod
-     * @param param
-     * @return
+     * @param MyObject T object to inspec
+     * @param nameOfMethod name of the methof you want ot find.
+     * @param param class of the parameter of the constructor of the method you wan to find.
+     * @param <T> generic type.
+     * @return result of the return of the method.
+     * @throws IllegalAccessException throw if any error is occurred.
+     * @throws InvocationTargetException throw if any error is occurred.
+     * @throws NoSuchMethodException throw if any error is occurred.
      */
-    public static <T> T invokeObjectMethod(T MyObject, String nameOfMethod, Class[] param)//4th parameter , Class<T> aClass
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeObjectMethod(T MyObject, String nameOfMethod, Class<?>[] param)//4th parameter , Class<T> aClass
             throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
         Method method;
+        T MyTObject2;
         if(param==null || param.length==0 )method = getMethodByNameAndParam(MyObject, nameOfMethod, null);
         else method = getMethodByNameAndParam(MyObject, nameOfMethod, param); //String.class
         try{
             //MyObject = method.invoke(null, param); //if the method you try to invoke is static...
-            MyObject = (T) method.invoke(param);
+            MyTObject2 = (T) method.invoke(param);
         }catch(java.lang.NullPointerException ne){
             //MyObject = method.invoke(MyObject, param); //...if the methos is non-static
-            MyObject = (T) method.invoke(MyObject);
+            MyTObject2 = (T) method.invoke(MyObject);
         }
-        return MyObject;
+        return MyTObject2;
     }
 
-    public static Object invokeObjectMethod(Object MyObject,Method method,Class[] param)
+    public static Object invokeObjectMethod(Object MyObject,Method method,Class<?>[] param)
             throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
         try{
             //MyObject = method.invoke(null, param); //if the method you try to invoke is static...
@@ -416,11 +446,12 @@ public class ReflectionKit<T>{
         return MyObject;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T invokeSetterClass(T MyObject,String methodName,Object values,Class<?> clazzValue)
     {
         try {
             Method method = getMethodByNameAndParam(
-                    MyObject.getClass(),methodName,new Class[]{clazzValue});
+                    MyObject.getClass(),methodName,new Class<?>[]{clazzValue});
             MyObject = (T) method.invoke(MyObject,values);
             return MyObject;
         } catch (InvocationTargetException|IllegalAccessException|
@@ -437,7 +468,7 @@ public class ReflectionKit<T>{
         try {
             //Object MyObject = clazzValue.cast(new Object());
             Method method = getMethodByNameAndParam(
-                   MyObject.getClass(),methodName,new Class[0]);
+                   MyObject.getClass(),methodName,new Class<?>[0]);
             MyObject2 = method.invoke(MyObject, new Object[0]);
             return MyObject2;
         } catch (InvocationTargetException|IllegalAccessException|
@@ -447,16 +478,18 @@ public class ReflectionKit<T>{
         return null;
     }
     
+    @SuppressWarnings("unchecked")
     public static <T> T invokeSetterMethodForObject(T MyObject, Method method, Object values)
             throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
+        T MyObject2;
         try{
             //if the method you try to invoke is static...
-            MyObject = (T) method.invoke(null, values);
+            MyObject2 = (T) method.invoke(null, values);
         }catch(NullPointerException ne) {
             //...The method is not static
-            MyObject = (T) method.invoke(MyObject, values);
+            MyObject2 = (T) method.invoke(MyObject, values);
         }
-        return MyObject;
+        return MyObject2;
     }
 
     public static Object invokeSetterMethod(Object MyObject, Method method, Object values)
@@ -472,16 +505,18 @@ public class ReflectionKit<T>{
         return MyObject2;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T invokeGetterMethodForObject(T MyObject, Method method)
             throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
+        T MyObject2;
         try{
             //if the method you try to invoke is static...
-            MyObject = (T) method.invoke(null,new Object[0]);
+            MyObject2 = (T) method.invoke(null,new Object[0]);
         }catch(NullPointerException ne) {
             //...The method is not static
-            MyObject = (T) method.invoke(MyObject,new Object[0]);
+            MyObject2 = (T) method.invoke(MyObject,new Object[0]);
         }
-        return MyObject;
+        return MyObject2;
     }
 
     public static Object invokeGetterMethod(Object MyObject,Method method)
@@ -497,27 +532,30 @@ public class ReflectionKit<T>{
         return MyObject2;
     }
 
-    /**
-     * Method to get constructor that takes a String as argument
-     * @param MyObject
-     * @param param
-     * @param <T>
-     * @return
-     * @throws NoSuchMethodException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
-     * @throws InvocationTargetException
-     */
-    public static <T> T invokeConstructor(T MyObject, Class[] param, Object[] defaultValues)
+   /**
+    * Method to get constructor that takes a String as argument.
+    * @param <T> generic type.
+    * @param MyObject object T in input.
+    * @param param arrays of class for the constructor.
+    * @param defaultValues array of object for the constructor.
+    * @return T object return from the constructor.
+    * @throws NoSuchMethodException throw if any error is occurred.
+    * @throws InstantiationException throw if any error is occurred.
+    * @throws IllegalAccessException throw if any error is occurred.
+    * @throws IllegalArgumentException throw if any error is occurred.
+    * @throws InvocationTargetException throw if any error is occurred.
+    */
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeConstructor(T MyObject, Class<?>[] param, Object[] defaultValues)
             throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        T myObject = (T) invokeConstructor(MyObject.getClass(), param, defaultValues);
-        return myObject;
+        T myObject2 = (T) invokeConstructor(MyObject.getClass(), param, defaultValues);
+        return myObject2;
     }
-
-    public static <T> T invokeConstructor(Class<T> clazz, Class[] param, Object[] defaultValues)
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeConstructor(Class<T> clazz, Class<?>[] param, Object[] defaultValues)
             throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        Constructor constructor = clazz.getConstructor(param);
+        Constructor<?> constructor = clazz.getConstructor(param);
         T myObject = (T)constructor.newInstance(defaultValues);
         return myObject;
     }
@@ -532,10 +570,10 @@ public class ReflectionKit<T>{
     }
 
 
-    public static URL getCodeSourceLocation(Class aClass) {return aClass.getProtectionDomain().getCodeSource().getLocation(); }
-    public static String getClassReference(Class aClass){ return aClass.getName();}
+    public static URL getCodeSourceLocation(Class<?> aClass) {return aClass.getProtectionDomain().getCodeSource().getLocation(); }
+    public static String getClassReference(Class<?> aClass){ return aClass.getName();}
 
-    /**Method for get all the class in a package with library reflections */
+    //Method for get all the class in a package with library reflections 
 //    public Set<Class<? extends Object>> getClassesByPackage(String pathToPackage){
 //        Reflections reflections = new Reflections(pathToPackage);
 //        Set<Class<? extends Object>> allClasses = reflections.getSubTypesOf(Object.class);
@@ -554,12 +592,10 @@ public class ReflectionKit<T>{
         return list;
     }
     /**
-     *
-     * @param aClass
-     * @return
-     * @href: http://tutorials.jenkov.com/java-reflection/annotations.html
-     * @href: http://stackoverflow.com/questions/20362493/how-to-get-annotation-class-name-attribute-values-using-reflection
-     * @Usage: @Resource(name = "foo", description = "bar")
+     * Method for inspect/find annottion for the class java.
+     * href: http://tutorials.jenkov.com/java-reflection/annotations.html
+     * href: http://stackoverflow.com/questions/20362493/how-to-get-annotation-class-name-attribute-values-using-reflection
+     * Usage: @Resource(name = "foo", description = "bar")
      * name: foo
      * type: class java.lang.Object
      * lookup:
@@ -567,6 +603,11 @@ public class ReflectionKit<T>{
      * authenticationType: CONTAINER
      * mappedName:
      * shareable: true
+     * @param aClass class you want to inspect.
+     * @return list of arrays name-value of the annotation on the class.
+     * @throws IllegalAccessException throw if any error is occurred.
+     * @throws IllegalArgumentException throw if any error is occurred.
+     * @throws InvocationTargetException throw if any error is occurred.
      */
     public static List<Object[]> inspectAnnotationsClass(Class<?> aClass)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
@@ -601,7 +642,7 @@ public class ReflectionKit<T>{
         return list;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes","unchecked"})
     public static List<List<Object[]>> getAnnotationsFieldsOriginal(Class<?> aClass) throws SecurityException, NoSuchFieldException {
         List<List<Object[]>> listOfAnnotation = new ArrayList<>();
         //for(Annotation ann : aClass.getAnnotations()){
@@ -646,9 +687,12 @@ public class ReflectionKit<T>{
     /**
      * Method for check if exists a annotation a a filed of the specific class
      * Usage: System.out.println(isRequired(Employee.class, "email"));
-     * @param aClass
-     * @return
-     * @throws NoSuchFieldException
+     * @param aClass class you want to inspect.
+     * @return list of list of arrays name-value of all annotation on the declareted types.
+     * @throws NoSuchFieldException throw if any error is occurrred.
+     * @throws SecurityException throw if any error is occurrred.
+     * @throws InvocationTargetException throw if any error is occurrred.
+     * @throws IllegalAccessException throw if any error is occurrred.
      */
     @SuppressWarnings("rawtypes")
     public static List<List<Object[]>> getAnnotationsFields(Class<?> aClass) throws SecurityException, NoSuchFieldException, InvocationTargetException, IllegalAccessException {
@@ -666,11 +710,12 @@ public class ReflectionKit<T>{
     /**
      * Method for check if exists a annotation a a filed of the specific class
      * Usage: System.out.println(isRequired(Employee.class, "email"));
-     * @required hibernate
-     * @param aClass
-     * @param field
-     * @return
-     * @throws NoSuchFieldException
+     * @param aClass class you wan to inspect.
+     * @param field field you want o find.
+     * @return list of array name-value with all information on the type field.
+     * @throws NoSuchFieldException throw if any error is occurred.
+     * @throws InvocationTargetException throw if any error is occurrred.
+     * @throws IllegalAccessException throw if any error is occurrred.
      */
     @SuppressWarnings("rawtypes")
     public static List<Object[]> getAnnotationsField(Class<?> aClass, Field field)
@@ -691,7 +736,7 @@ public class ReflectionKit<T>{
         return list;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes","rawtypes","unchecked"})
     public static List<Object[]> getAnnotationField(Annotation annotation)
             throws SecurityException, NoSuchFieldException {
         List<Object[]> list = new ArrayList<>();
@@ -744,7 +789,7 @@ public class ReflectionKit<T>{
         return result;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes","unchecked"})
     public static List<Object[]> getAnnotationField(Class<? extends Annotation> annotationClass,Field field)
             throws SecurityException, NoSuchFieldException {
         List<Object[]> list = new ArrayList<>();
@@ -794,6 +839,7 @@ public class ReflectionKit<T>{
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     public static List<Object[]> getAnnotationClass(Annotation annotation){
         List<Object[]> list = new ArrayList<>();
         Object[] array = new Object[3];
@@ -827,14 +873,18 @@ public class ReflectionKit<T>{
     }
 
 
-    /**
-    * Changes the annotation value for the given key of the given annotation to newValue and returns
+   /**
+      * Changes the annotation value for the given key of the given annotation to newValue and returns
     * the previous value.
-    * @Usage: final Something annotation = (Something) Foobar.class.getAnnotations()[0];
+    * Usage: final Something annotation = (Something) Foobar.class.getAnnotations()[0];
     *         System.out.println("oldAnnotation = " + annotation.someProperty());
     *         changeAnnotationValue(annotation, "someProperty", "another value");
     *         System.out.println("modifiedAnnotation = " + annotation.someProperty());
-    * @href: http://stackoverflow.com/questions/14268981/modify-a-class-definitions-annotation-string-parameter-at-runtime/14276270#14276270
+    * href: http://stackoverflow.com/questions/14268981/modify-a-class-definitions-annotation-string-parameter-at-runtime/14276270#14276270
+    * @param annotation annotation you want ot updte.
+    * @param key key of the attribute you want to update.
+    * @param newValue value of the attribute with the spceific key you want to update.
+    * @return the new object with the annotation update in runtime.
     */
    @SuppressWarnings("unchecked")
    private static Object updateAnnotationValue(Annotation annotation, String key, Object newValue){
@@ -913,7 +963,7 @@ public class ReflectionKit<T>{
     {
         Field field = aClass.getDeclaredField(fieldName);
         field.setAccessible(true);
-        Object returnValue = (Object) field.get(aClass);
+        Object returnValue = field.get(aClass);
         field.setAccessible(false);
         return returnValue;
     }
@@ -930,7 +980,7 @@ public class ReflectionKit<T>{
         return list;
     }
 
-    public static Object copyFieldToClass(Object sourceObject, Class targetClass) {
+    public static Object copyFieldToClass(Object sourceObject, Class<?> targetClass) {
         Object targetValue = null;
         try {
             targetValue = targetClass.newInstance();
@@ -961,7 +1011,7 @@ public class ReflectionKit<T>{
      * @param exclusiveParent
      *            if not null, the base class of startClass whose fields should
      *            not be retrieved.
-     * @return
+     * @return list of iterable field.
      */
     public static Iterable<Field> getFieldsUpTo(Class<?> startClass,  Class<?> exclusiveParent) {
         List<Field> currentClassFields = new ArrayList<>();
@@ -1088,7 +1138,7 @@ public class ReflectionKit<T>{
      * @param property property name (without set. First letter will be
      * capitalized)
      * @param value Value of the property.
-     * @return
+     * @return boolean value is exists the setter method.
      */
     public static boolean callSetter(Object obj, String property, Object value) {
         String key = String.format("%s.%s(%s)", obj.getClass().getName(),
@@ -1116,14 +1166,15 @@ public class ReflectionKit<T>{
 
 
     /**
-     * Scans all classes accessible from the context class loader which belong to the given package and subpackages.
+     * Scans all classes accessible from the context class loader which belong 
+     * to the given package and subpackages.
      *
      * @param packageName The base package
-     * @return The classes
-     * @throws ClassNotFoundException
-     * @throws IOException
+     * @return the array of class in the package.
+     * @throws ClassNotFoundException throw if any error is occurred.
+     * @throws IOException throw if any error is occurred.
      */
-    public static Class[] getClasses(String packageName)
+    public static Class<?>[] getClasses(String packageName)
             throws ClassNotFoundException, IOException {
 //        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         ClassLoader classLoader = ClassLoader.getSystemClassLoader();
@@ -1135,11 +1186,11 @@ public class ReflectionKit<T>{
             URL resource = resources.nextElement();
             dirs.add(new File(resource.getFile()));
         }
-        ArrayList<Class> classes = new ArrayList<Class>();
+        List<Class<?>> classes = new ArrayList<>();
         for (File directory : dirs) {
             classes.addAll(findClasses(directory, packageName));
         }
-        return classes.toArray(new Class[classes.size()]);
+        return classes.toArray(new Class<?>[classes.size()]);
     }
 
     /**
@@ -1147,11 +1198,11 @@ public class ReflectionKit<T>{
      *
      * @param directory   The base directory
      * @param packageName The package name for classes found inside the base directory
-     * @return The classes
-     * @throws ClassNotFoundException
+     * @return list of class in the directory package.
+     * @throws ClassNotFoundException throw if any error is occurred.
      */
-    public static List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {
-        List<Class> classes = new ArrayList<Class>();
+    public static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
+        List<Class<?>> classes = new ArrayList<>();
         if (!directory.exists()) {
             return classes;
         }
@@ -1171,7 +1222,7 @@ public class ReflectionKit<T>{
     public static Method findSetterMethod(
             Object obj,String fieldName, Object value) {
         Class<?> clazz = obj.getClass();
-        Class clazzField = value.getClass();
+        Class<?> clazzField = value.getClass();
         Method m = findSetterMethod(clazz, fieldName, clazzField);
         return m;
     }
@@ -1186,7 +1237,7 @@ public class ReflectionKit<T>{
                 return m;
             } catch (NoSuchMethodException ex) {
                 // try on the interfaces of this class
-                for (Class iface : clazzField.getInterfaces()) {
+                for (Class<?> iface : clazzField.getInterfaces()) {
                     try {
                         m =  clazz.getMethod(setter, iface);
                         return m;
@@ -1202,7 +1253,7 @@ public class ReflectionKit<T>{
     public static Method findGetterMethod(
             Object obj,String fieldName, Object value) {
         Class<?> clazz = obj.getClass();
-        Class clazzField = value.getClass();
+        Class<?> clazzField = value.getClass();
         Method m = findGetterMethod(clazz, fieldName, clazzField);
         return m;
     }
@@ -1213,11 +1264,11 @@ public class ReflectionKit<T>{
                 fieldName.charAt(0), fieldName.substring(1));
         while (clazzField != null) {
             try {
-                m =  clazz.getMethod(getter, new Class[0]);
+                m =  clazz.getMethod(getter, new Class<?>[0]);
                 return m;
             } catch (NoSuchMethodException ex) {
                 // try on the interfaces of this class
-                for (Class iface : clazzField.getInterfaces()) {
+                for (Class<?> iface : clazzField.getInterfaces()) {
                     try {
                         m =  clazz.getMethod(getter, iface);
                         return m;
@@ -1233,7 +1284,7 @@ public class ReflectionKit<T>{
     public static Method findMethod(Object obj,String methodName, Object value) {
         Method m = null;
         Class<?> clazz  = obj.getClass();
-        Class clazzField = value.getClass();
+        Class<?> clazzField = value.getClass();
         findMethod(clazz,methodName,clazzField);
         return m;
     }
@@ -1246,7 +1297,7 @@ public class ReflectionKit<T>{
                 return m;
             } catch (NoSuchMethodException ex) {
                 // try on the interfaces of this class
-                for (Class iface : clazzField.getInterfaces()) {
+                for (Class<?> iface : clazzField.getInterfaces()) {
                     try {
                         m = clazz.getMethod(methodName, iface);
                         return m;

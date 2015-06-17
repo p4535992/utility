@@ -4,7 +4,7 @@ package com.p4535992.util.sesame;
  * Created by 4535992 on 13/06/2015.
  */
 public class SesameManagerException  extends RuntimeException {
-
+    private static final long serialVersionUID = 3L;
     public SesameManagerException() {}
 
     public SesameManagerException(String message) {
