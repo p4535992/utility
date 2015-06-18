@@ -12,7 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import javax.xml.transform.TransformerConfigurationException;
 
 import org.xml.sax.SAXException;
-import com.p4535992.util.jena.Jena2Kit;
+import com.github.p4535992.util.jena.Jena2Kit;
 
 /**
  *

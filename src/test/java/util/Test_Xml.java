@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import javax.xml.transform.TransformerException;
 import org.xml.sax.SAXException;
-import com.p4535992.util.xml.XMLKit;
+import com.github.p4535992.util.xml.XMLKit;
 
 /**
  *

@@ -1,6 +1,6 @@
 package util;
 
-import com.p4535992.util.http.HttpUtilApache;
+import com.github.p4535992.util.http.HttpUtilApache;
 
 import java.net.URISyntaxException;
 
