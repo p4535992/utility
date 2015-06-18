@@ -25,7 +25,7 @@ You can the dependency to this github repository With jitpack (https://jitpack.i
  <pre class="prettyprint">&lt;dependency&gt;
   &lt;groupId&gt;com.github.p4535992&lt;/groupId&gt;
   &lt;artifactId&gt;utility&lt;/artifactId&gt;
-  &lt;version&gt;<span id="latest_release">1.0</span>&lt;/version&gt;
+  &lt;version&gt;<span id="latest_release">1.1</span>&lt;/version&gt;
 &lt;/dependency&gt;  </pre>
 
 <!-- Add this script to update "latest_release" span to latest version -->
