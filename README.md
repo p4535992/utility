@@ -17,20 +17,20 @@ with only jdk use wihout third library.
 
 For the rest do what you want with these file.
 
-[![Release](https://img.shields.io/github/release/4535992/utility.svg?label=maven)](https://jitpack.io/4535992/utility)
+[![Release](https://img.shields.io/github/release/p4535992/utility.svg?label=maven)](https://jitpack.io/p4535992/utility)
 
 You can the dependency to this github repository With jitpack (https://jitpack.io/):
 
 <!-- Put the Maven coordinates in your HTML: -->
  <pre class="prettyprint">&lt;dependency&gt;
-  &lt;groupId&gt;com.github.4535992&lt;/groupId&gt;
+  &lt;groupId&gt;com.github.p4535992&lt;/groupId&gt;
   &lt;artifactId&gt;utility&lt;/artifactId&gt;
   &lt;version&gt;<span id="latest_release">1.0</span>&lt;/version&gt;
 &lt;/dependency&gt;  </pre>
 
 <!-- Add this script to update "latest_release" span to latest version -->
 <script>
-      var user = '4535992'; // Replace with your user/repo
+      var user = 'p4535992'; // Replace with your user/repo
       var repo = 'utility'
 
       var xmlhttp = new XMLHttpRequest();
