@@ -1,8 +1,6 @@
 package com.github.p4535992.util.jenaAndSesame;
 
-import org.openrdf.model.impl.EmptyModel;
 import org.openrdf.model.impl.TreeModel;
-import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.impl.StatementImpl;
 
