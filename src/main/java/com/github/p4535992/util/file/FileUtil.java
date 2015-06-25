@@ -1,22 +1,23 @@
-/*
- * Classe che contiene metodi utili alla gestione dei file
- */
-
 package com.github.p4535992.util.file;
 
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringKit;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
+
+import static java.util.Arrays.*;
 
 /**
  * Class with many utilities mathod for magage the file object.
  * @author 4535992
+ * @version 2015-06-25
  */
+@SuppressWarnings("unused")
 public class FileUtil {
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileUtil.class);
     private static String fullPath;
@@ -181,17 +182,25 @@ public class FileUtil {
         return fullPath.substring(0, fullPath.lastIndexOf(File.separator));
     }
 
-    public static void createFile(String fullPath) throws IOException {
-        File file = new File(fullPath);
-        if (file.createNewFile()) {
-            //System.out.println("File is created!");
-        } else {
-            //System.out.println("File already exists.");
-        }
+    public static File createFile(String fullPath) throws IOException {
+        return createFile(new File(fullPath));
     }
 
-    public static void copyFileCharStream(String fullPathInput, String fullPathOutput)
-            throws FileNotFoundException, IOException {
+    public static File createFile(File file) throws IOException {
+        if(file.createNewFile()){
+            //System.out.println("File is created!");
+            return file;
+        }
+        return null;
+    }
+
+    /**
+     * Method to copy the content from a file to another in char format.
+     * @param fullPathInput string path to the file you want to read the copy.
+     * @param fullPathOutput string path to the file you want write the copy.
+     * @throws IOException throw if any error is occurrred.
+     */
+    public static void copyFileCharStream(String fullPathInput, String fullPathOutput) throws IOException {
         FileReader in = null;
         FileWriter out = null;
         try {
@@ -212,8 +221,13 @@ public class FileUtil {
         }
     }
 
-    public static void copyFileByteStream(String fullPathInput, String fullPathOutput)
-            throws FileNotFoundException, IOException {
+    /**
+     * Method to copy the content from a file to another in byte array format.
+     * @param fullPathInput string path to the file you want to read the copy.
+     * @param fullPathOutput string path to the file you want write the copy.
+     * @throws IOException throw if any error is occurrred.
+     */
+    public static void copyFileByteStream(String fullPathInput, String fullPathOutput) throws IOException {
         FileInputStream in = null;
         FileOutputStream out = null;
         try {
@@ -233,23 +247,37 @@ public class FileUtil {
         }
     }
 
-    public static void createDirectory(String fullPathDir) {
-        String dirname = fullPathDir;
-        File d = new File(dirname);
-        // Create directory now.
-        d.mkdirs();
+    /**
+     * Method to create a directory.
+     * @param fullPathDir string path to the location of the directory.
+     */
+    public static boolean createDirectory(String fullPathDir) {
+        File d = new File(fullPathDir);
+        return d.mkdirs();
     }
 
+    /**
+     * Method to read all file ina direcotry/folder.
+     * @param directory file of the directory/folder.
+     * @return list of files in the directory.
+     */
+    public static List<File> readDirectory(File directory){
+        return readDirectory( directory.getAbsolutePath());
+    }
+
+    /**
+     * Method to read all file ina direcotry/folder.
+     * @param fullPathDir string path to the loaction of the directory/folder.
+     * @return list of files in the directory.
+     */
     public static List<File> readDirectory(String fullPathDir) {
-        File file = null;
+        File file;
         //File[] listOfFiles = new File(fullPathDir).listFiles();
         String[] paths;
         List<File> files = new ArrayList<>();
         try {
-            // insert new file object
-            file = new File(fullPathDir);
-            // array of files and directory
-            paths = file.list();
+            // insert new file object and array of files and directory
+            paths =  new File(fullPathDir).list();
             // for each name in the path array
             for (String path : paths) {
                 // prints filename and directory name
@@ -272,9 +300,13 @@ public class FileUtil {
         if (filePath.exists()) {
             for (String fileInDirectory : filePath.list()) {
                 File tmpFile = new File(path + "/" + fileInDirectory);
-                tmpFile.delete();
+                if(!tmpFile.delete()){
+                    SystemLog.warning("Can't delete the file:"+tmpFile.getAbsolutePath());
+                }
             }
-            filePath.delete();
+            if(!filePath.delete()){
+                SystemLog.warning("Can't delete the file:"+filePath.getAbsolutePath());
+            }
         }
     }
 
@@ -286,6 +318,15 @@ public class FileUtil {
         return convertFileToUri(new File(filePath));
     }
 
+    public static URL convertFileToURL(File file) throws MalformedURLException {
+        return convertFileToUri(file).toURL();
+    }
+
+    public static URL convertFileToURL(String filePath)throws MalformedURLException{
+        return convertFileToURL(new File(filePath));
+
+    }
+
     public static File convertURIToFile(URI uri) throws MalformedURLException {
         return new File(uri.toURL().getFile());
     }
@@ -295,8 +336,19 @@ public class FileUtil {
         //is.close();
     }
 
-    public static File convertResourceToFile(String referenceResourcePath) throws URISyntaxException{
-        return new File(FileUtil.class.getClassLoader().getResource(referenceResourcePath).getFile());
+    /**
+     * Method for convert a reference path to a resource in the classpath to a file with path in the system.
+     * @param referenceResourcePath string of the reference path to the resource.
+     * @param thisClass thi class.
+     * @return file correspondent to the reference file of the resources.
+     */
+    public static File convertResourceToFile(String referenceResourcePath,Class<?> thisClass){
+        try {
+            return new File(thisClass.getClassLoader().getResource(referenceResourcePath).getFile());
+        }catch(NullPointerException ne){
+            SystemLog.exception(ne);
+            return null;
+        }
     }
 
     /**
@@ -311,7 +363,7 @@ public class FileUtil {
      * @return path to the in uri formato with prefix file:///
      */
     public static String convertFileToStringUriWithPrefix(String filePath){
-        StringBuffer mapfilename = new StringBuffer( filePath ) ;
+        StringBuilder mapfilename = new StringBuilder( filePath ) ;
         for ( int i = 0 ; i < mapfilename.length() ; i++ )
         {
             if ( mapfilename.charAt(i) == '\\' )
@@ -442,34 +494,40 @@ public class FileUtil {
 //        File f = new File("/spring-hibernate4v2.xml");
     }
 
-    public static String getResourceAsString(String fileName) {
-        StringBuilder result = new StringBuilder("");
-        //Get file from resources folder
-        //getClass().getResource("")
-        ClassLoader classLoader = FileUtil.class.getClassLoader();
-        File file = new File(classLoader.getResource(fileName).getFile());
-        //File file = new File(FileUtil.class.getResource(fileName).getFile());
-        try (Scanner scanner = new Scanner(file)) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                result.append(line).append("\n");
+    public static String getResourceAsString(String fileName,Class<?> thisClass) {
+        try {
+            StringBuilder result = new StringBuilder("");
+            //Get file from resources folder
+            File file = new File(thisClass.getClassLoader().getResource(fileName).getFile());
+            try (Scanner scanner = new Scanner(file)) {
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    result.append(line).append("\n");
+                }
+                //scanner.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            //scanner.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            return result.toString();
+        }catch(NullPointerException ne){
+            SystemLog.exception(ne);
+            return null;
         }
-        return result.toString();
     }
 
-    public static InputStream getResourceAsStream(Class<?> clazz,String name) {
-
+    public static InputStream getResourceAsStream(String name,Class<?> clazz) {
         name = resolveName(name);
-        ClassLoader cl = clazz.getClassLoader();
-        if (cl==null) {
+        try {
             // A system class.
-            return ClassLoader.getSystemResourceAsStream(name);
+            return clazz.getClassLoader().getSystemResourceAsStream(name);
+        }catch(NullPointerException e) {
+            try {
+                return clazz.getClassLoader().getResourceAsStream(name);
+            }catch(NullPointerException ne){
+                SystemLog.exception(ne);
+                return null;
+            }
         }
-        return cl.getResourceAsStream(name);
     }
 
     /**
@@ -479,7 +537,7 @@ public class FileUtil {
      * @return the full name package+class
      */
     public static String resolveName(String name) {
-        if (name == null) {
+        if (StringKit.isNullOrEmpty(name)) {
             return name;
         }
         if (!name.startsWith("/")) {
@@ -522,6 +580,29 @@ public class FileUtil {
         File file = new File(filePathToFile);
         return compressFileForUpload(file);
     }
+
+    /**
+     * Method for check is a file is a directory/folder.
+     * @param file the file to inspect.
+     * @return if true is a direcotry else ia simple file.
+     */
+    public static boolean isDirectory(File file){
+        if(file.exists()){
+            if(file.isFile()){
+                return false;
+            }else{
+                if(file.isDirectory()){
+                    return true;
+                }
+            }
+        }else{
+            SystemLog.warning("The file:"+file.getAbsolutePath()+" not exists!");
+        }
+        return false;
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Utility for a depth first traversal of a file-system starting from a
@@ -581,7 +662,8 @@ public class FileUtil {
             if (node.isDirectory()) {
                 handler.directory(node);
                 File[] children = node.listFiles();
-                Arrays.sort(children, new Comparator<File>() {
+                //Arrays.sort --> sort
+                sort(children, new Comparator<File>() {
                     @Override
                     public int compare(File lhs, File rhs) {
                         return lhs.getName().compareTo(rhs.getName());

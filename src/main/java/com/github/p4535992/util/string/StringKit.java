@@ -41,8 +41,16 @@ public class StringKit<T> {
 //        this.clName = cl.getSimpleName();
 //    }
 
-    /*
-     * Read String from InputStream and closes it
+    public static String cleanStringHTML(String stringHtml){
+        return stringHtml.replaceAll("\\r\\n|\\r|\\n"," ").trim();
+                //.replace("\\n\\r", "").replace("\\n","").replace("\\r","").trim())
+    }
+
+    /**
+     * Method Read String from InputStream and closes it.
+     * @param is input stream.
+     * @param encoding charset for the encoding.
+     * @return string.
      */
     public static String convertInputStreamToStringNoEncoding(InputStream is, Charset encoding) {
         BufferedReader br = new BufferedReader(new InputStreamReader(is, encoding));
@@ -289,7 +297,7 @@ public class StringKit<T> {
     * @param replace setta la stringa con cui sostituire il risultato del match.
     * @return il risultato in formato stringa della regular expression.
     */
-   public static String RegexAndReplace(String input,String expression,String replace){
+   public static String regexAndReplace(String input,String expression,String replace){
        String result ="";
        if(replace==null){
            Pattern pattern = Pattern.compile(expression);
@@ -304,6 +312,25 @@ public class StringKit<T> {
        }
        return result;
    }
+
+    /**
+     * Methohs remove the symbol if exists in the first and last caracther of the string
+     * @param stringToUpdate string of input.
+     * @param symbol symbol to check.
+     * @return the string update.
+     */
+    private static String removeFirstAndLast(String stringToUpdate, String symbol) {
+        if (!StringKit.isNullOrEmpty(stringToUpdate)) {
+            stringToUpdate = stringToUpdate.replaceAll("(\\" + symbol + ")\\1+", symbol);
+            if (stringToUpdate.substring(0, 1).contains(symbol)) {
+                stringToUpdate = stringToUpdate.substring(1, stringToUpdate.length());
+            }
+            if (stringToUpdate.substring(stringToUpdate.length() - 1, stringToUpdate.length()).contains(symbol)) {
+                stringToUpdate = stringToUpdate.substring(0, stringToUpdate.length() - 1);
+            }
+        }
+        return stringToUpdate;
+    }
 
     /**
     * Setta a null se verifica che la stringa non è
@@ -711,6 +738,22 @@ public class StringKit<T> {
             e.printStackTrace();
         }
         return map;
+    }
+
+    public static boolean isMapEntryNullOrInexistent(Map map,Object key){
+        Object value = map.get(key);
+        if (value != null) {
+            return false;
+        } else {
+            // Key might be present...
+            if (map.containsKey(key)) {
+                // Okay, there's a key but the value is null
+                return true;
+            } else {
+                // Definitely no such key
+                return true;
+            }
+        }
     }
 
 

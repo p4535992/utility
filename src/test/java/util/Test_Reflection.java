@@ -6,7 +6,6 @@
 
 package util;
 
-import com.github.p4535992.util.object.model.GeoDocument;
 import com.github.p4535992.util.reflection.ReflectionKit;
 
 import java.lang.reflect.Method;
@@ -24,16 +23,17 @@ public class Test_Reflection {
      */
     public static void main(String[] args) throws Exception {
         
-         GeoDocument geo = new GeoDocument(
+         /*GeoDocument geo = new GeoDocument(
                 new URL("http://www.url.com"), "regione", "provincia", "city",
                 "indirizzo", "iva", "email", "telefono", "fax",
                 "edificio", (Double) 0.0, (Double) 0.0, "nazione", "description",
                 "postalCode", "indirizzoNoCAP", "indirizzoHasNumber"
         );
+        */
 
         //CHECK IF FIELD HAS A SPECIFIC ANNOTATION (additional for hibernate)
 
-        List<String> ddd = ReflectionKit.getFieldsNameByClass(GeoDocument.class);
+        //List<String> ddd = ReflectionKit.getFieldsNameByClass(GeoDocument.class);
         //List<String[]> test1  = ReflectionKit.getAnnotationsFields(GeoDocument.class);
         //String[] test2 = ReflectionKit.getAnnotationHibernateClass(GeoDocument.class);
 
@@ -94,7 +94,7 @@ public class Test_Reflection {
 
 
 
-        List<Object[]> ssd = ReflectionKit.getAnnotationField(GeoDocument.class, javax.persistence.Column.class, "url");
+//        List<Object[]> ssd = ReflectionKit.getAnnotationField(GeoDocument.class, javax.persistence.Column.class, "url");
 
         //Annotation annColumn = fieldColumn.getAnnotation(javax.persistence.Column.class);
         //List<Object[]> ssd = ReflectionKit.getAnnotationField(GeoDocument.class,javax.persistence.Column.class,"url");
@@ -107,24 +107,24 @@ public class Test_Reflection {
 
         //URL url = ReflectionKit.getCodeSourceLocation(GeoDocument.class);
          //List<String[]> ll2 = ReflectionKit.inspectTypesMethod(GeoDocument.class);
-         List<String[]> ll = ReflectionKit.inspectFieldClass(geo);
+//         List<String[]> ll = ReflectionKit.inspectFieldClass(geo);
          
          
-        String path = ReflectionKit.getClassReference(GeoDocument.class);
+        /*String path = ReflectionKit.getClassReference(GeoDocument.class);
         List<Method> methods = ReflectionKit.getGettersSettersClass(GeoDocument.class);
-        
+
         methods = ReflectionKit.getMethodsByClass(GeoDocument.class);
-        
+
         Class<?>[] param = new Class<?>[]{String.class};
-        
+
         Method met1 = ReflectionKit.getMethodByNameAndParam(GeoDocument.class, "setCity", param);
-        
+
         Method met2 =ReflectionKit.getMethodByNameAndParam(GeoDocument.class, "getCity", null);
-        
+
         Class<?>[] param2 = ReflectionKit.getParametersTypeMethod(met1);
-        
+
         Class<?> aclass2 = ReflectionKit.getReturnTypeMethod(met2);
-        Class<?> aclass1 = ReflectionKit.getReturnTypeMethod(met1);
+        Class<?> aclass1 = ReflectionKit.getReturnTypeMethod(met1);*/
 
     }
 }
