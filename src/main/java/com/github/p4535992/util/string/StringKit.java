@@ -716,14 +716,14 @@ public class StringKit<T> {
 
     /**
      * Method for chek if a specific key on the map is absent or not existsa value for that key.
-     * @param <T> generic key.
-     * @param <E> generic value.
+     * @param <K> generic key.
+     * @param <V> generic value.
      * @param map the map to inspect.
      * @param key the key valur of the map to search.
      * @return if tru exists a value not empty for that key.
      */
-    public static <T,E> boolean isMapEntryNullOrInexistent(Map<T,E> map,T key){
-        E value = map.get(key);
+    public static <K,V> boolean isMapValueNullOrInexistent(Map<K,V> map,K key){
+        V value = map.get(key);
         if (value != null) {
             return false;
         } else {
