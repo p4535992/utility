@@ -4,6 +4,7 @@ import com.github.p4535992.util.reflection.ReflectionKit;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringKit;
 
+import javax.persistence.Column;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -11,23 +12,24 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by 4535992 on 06/05/2015.
+ * @author 4535992
+ * @version 2015-06-26
+ * @param <T> generic tag.
  */
+@SuppressWarnings("unused")
 public class SQLSupport<T>{
     private Class<T> cl;
     private String clName;
 
     //CONSTRUCTOR
-    public SQLSupport() {
-    }
+    public SQLSupport() {}
 
     private String[] COLUMNS;
     private Object[] VALUES;
     private int[] TYPES;
-    private SQLSupport<T> support;
 
     public String[] getCOLUMNS() {
         return COLUMNS;
@@ -59,9 +61,9 @@ public class SQLSupport<T>{
         this.TYPES = types;
     }
 
-    @SuppressWarnings("unchecked")
-    public SQLSupport(T object){
-        support = insertSupport(object);
+    @SuppressWarnings("rawtypes")
+    public <T> SQLSupport(T object){
+        SQLSupport support = SQLSupport.insertSupport(object);
         this.COLUMNS= support.getCOLUMNS();
         this.VALUES = support.getVALUES();
         this.TYPES = support.getTYPES();
@@ -101,53 +103,63 @@ public class SQLSupport<T>{
      * @return obecjt SQLSupport.
      */
     
-    @SuppressWarnings({"unchecked","rawtypes"})
+    @SuppressWarnings("rawtypes")
     public static <T> SQLSupport insertSupport(T object){
         SQLSupport support = new SQLSupport();
         try {
-            Map<String,Class<?>> l = ReflectionKit.inspectAndLoadGetterObject(object);
-            Object[] values = new Object[l.size()];
-            int[] types = new int[l.size()];
-            String[] columns = new String[l.size()];
+            //Map<String,Class<?>> l = ReflectionKit.inspectAndLoadGetterObject(object);
+            //Integer size = object.getClass().getDeclaredFields().length;
+            //Annotation annotation = object.getClass().getAnnotation(javax.persistence.Column.class);
+            Field[] fields = ReflectionKit.getFieldsByAnnotation(object.getClass(),Column.class);
+            Object[] values = new Object[fields.length];
+            int[] types = new int[fields.length];
+            String[] columns = new String[fields.length];
             List<Method> methods = ReflectionKit.getGettersClassOrder(object.getClass());
-            Field[] fields = object.getClass().getDeclaredFields();
-            for (int i = 0; i < l.size(); i++) {
-                Method method = methods.get(i);
-                //Method method = ReflectionKit.getMethodByNameAndParam(object, entry.getKey().toString(), null);
-                values[i] = ReflectionKit.invokeGetterMethod(object, method);
-                Class<?> clazz = fields[i].getType();
-                types[i] = SQLHelper.convertClass2SQLTypes(clazz);
-                //System.out.println(method+","+values[i]+","+types[i]);
-            }
+            //Field[] fields = object.getClass().getDeclaredFields();
             int i = 0;
+            for (Method method: methods) {
+                //Method method = methods.get(i);
+                //Method method = ReflectionKit.getMethodByNameAndParam(object, entry.getKey().toString(), null);
+                if(method!=null){
+                    values[i] = ReflectionKit.invokeGetterMethod(object, method);
+                    Class<?> clazz = fields[i].getType();
+                    types[i] = SQLHelper.convertClass2SQLTypes(clazz);
+                    //System.out.println(method+","+values[i]+","+types[i]);
+                    i++;
+                }
+            }
+            i=0;
             List<List<Object[]>> ssc = ReflectionKit.getAnnotationsFields(object.getClass());
             for (List<Object[]> list : ssc) {
-                int j = 0;
-                boolean flag = false;
-                while (j < list.size()) {
-                    int k = 0;
-                    while (k < list.get(j).length) {
-                       if(list.get(j)[k] instanceof Object[]) {
-                           Object[] obj = (Object[]) list.get(j)[k];
-                           int g = 0;
-                           while (g < obj.length) {
-                               if (obj[g].equals("name")) {
-                                   columns[i] = obj[++g].toString();
-                                   flag = true;
-                                   break;
-                               }
-                               g++;
-                           }
-                       }
-                        if (flag == true) break;
-                        k++;
+                if(list.size() >0) {
+                    int j = 0;
+                    boolean flag = false;
+                    while (j < list.size()) {
+                        int k = 0;
+                        while (k < list.get(j).length) {
+                            if (list.get(j)[k] instanceof Object[]) {
+                                Object[] obj = (Object[]) list.get(j)[k];
+                                int g = 0;
+                                while (g < obj.length) {
+                                    if (obj[g].equals("name")) {
+                                        columns[i] = obj[++g].toString();
+                                        flag = true;
+                                        break;
+                                    }
+                                    g++;
+                                }
+                            }
+                            if (flag) break;
+                            k++;
+                        }
+                        if (flag) break;
+                        j++;
                     }
-                    if (flag == true) break;
-                    j++;
-                }
-                i++;
-            }
-        support = new SQLSupport<T>(columns,values,types);
+                    i++;
+                }//if list.size() > 0
+
+            }//for each ssc
+        support = new SQLSupport(columns,values,types);
         }catch(IllegalAccessException|NoSuchMethodException|
                 InvocationTargetException|NoSuchFieldException e){
             SystemLog.exception(e);
@@ -155,8 +167,8 @@ public class SQLSupport<T>{
         return support;
     }
 
-    @SuppressWarnings("rawtypes")
-    public static Class[] getArrayClassesTypes(Class<?> clazz, Class<? extends Annotation> aClass){
+
+    public static Class<?>[] getArrayClassesTypes(Class<?> clazz, Class<? extends Annotation> aClass){
         return ReflectionKit.getClassesByFieldsByAnnotation(clazz,aClass);
     }
 
@@ -173,7 +185,7 @@ public class SQLSupport<T>{
     public static String[] getArrayColumns(Class<?> clazz, Class<? extends Annotation> aClass,String attributeNameColumnAnnotation) throws NoSuchFieldException {
         List<List<Object[]>> test4 = ReflectionKit.getAnnotationsFields(clazz,aClass);
         int j,i,x;
-        boolean found = false;
+        boolean found;
         String[] columns = new String[test4.size()];
         j=0;
         for(List<Object[]> list : test4){
@@ -205,7 +217,7 @@ public class SQLSupport<T>{
             return iClass;
         } catch (IllegalAccessException|
                 InvocationTargetException|NoSuchMethodException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
         return null;
     }

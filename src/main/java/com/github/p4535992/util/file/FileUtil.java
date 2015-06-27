@@ -250,6 +250,7 @@ public class FileUtil {
     /**
      * Method to create a directory.
      * @param fullPathDir string path to the location of the directory.
+     * @return if true you have created the directory.
      */
     public static boolean createDirectory(String fullPathDir) {
         File d = new File(fullPathDir);
@@ -284,8 +285,7 @@ public class FileUtil {
                 files.add(new File(fullPathDir+File.separator+path));
             }
         } catch (Exception e) {
-            // if any org.p4535992.mvc.error occurs
-            e.printStackTrace();
+          SystemLog.exception(e);
         }
         return files;
     }
@@ -431,20 +431,18 @@ public class FileUtil {
         try
         {
             File file = new File(pathToFile);
-            FileReader fileReader = new FileReader(file);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuffer.append(line);
-                stringBuffer.append("\r\n");
+            try (FileReader fileReader = new FileReader(file)) {
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    stringBuffer.append(line);
+                    stringBuffer.append("\r\n");
+                }
             }
-            fileReader.close();
             System.out.println("Contents of file:");
             System.out.println(stringBuffer.toString());
-        }
-        catch( IOException e)
-        {
-            e.printStackTrace();
+        }catch( IOException e){
+            SystemLog.exception(e);
         }
         return stringBuffer.toString();
     }
@@ -454,26 +452,25 @@ public class FileUtil {
         try
         {
             File file = new File(pathToFile);
-            FileReader fileReader = new FileReader(file);
-            BufferedReader br = new BufferedReader(fileReader);
-            String line;
             String[] lines;
-            List<String> linesSupport= new ArrayList<>();
-            while ((line = br.readLine()) != null) {
-                if(line.trim().length() == 0 || line.contains("#")){
-                    continue;
+            List<String> linesSupport;
+            try (FileReader fileReader = new FileReader(file)) {
+                BufferedReader br = new BufferedReader(fileReader);
+                String line;
+                linesSupport = new ArrayList<>();
+                while ((line = br.readLine()) != null) {
+                    if(line.trim().length() == 0 || line.contains("#")){
+                        continue;
+                    }
+                    linesSupport.add(line.trim());
                 }
-                linesSupport.add(line.trim());
             }
-            fileReader.close();
             lines = new String[ linesSupport.size()];
             linesSupport.toArray(lines);
             params.parseNameValuePairs(lines, separator, true);
             map = params.getParameters();
-        }
-        catch(IOException e)
-        {
-            e.printStackTrace();
+        }catch(IOException e){
+            SystemLog.exception(e);
         }
         return map;
     }
@@ -506,7 +503,7 @@ public class FileUtil {
                 }
                 //scanner.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                SystemLog.exception(e);
             }
             return result.toString();
         }catch(NullPointerException ne){
@@ -519,7 +516,7 @@ public class FileUtil {
         name = resolveName(name);
         try {
             // A system class.
-            return clazz.getClassLoader().getSystemResourceAsStream(name);
+            return ClassLoader.getSystemResourceAsStream(name);
         }catch(NullPointerException e) {
             try {
                 return clazz.getClassLoader().getResourceAsStream(name);

@@ -11,7 +11,7 @@
 
     <groupId>com.github.p4535992</groupId>
     <artifactId>utility</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -51,12 +51,13 @@
         <!-- Version of the libray we used on the project-->
         <hibernate.version>4.3.8.Final</hibernate.version>
         <mysql.version>5.1.6</mysql.version>
-
-
+        <!-- Support Hibernate -->
         <joda-time.version>2.3</joda-time.version>
         <org-jadira-usertype.version>3.0.0.CR1</org-jadira-usertype.version>
+        <!-- JENA and Sesame OpenRDF -->
         <jena.version>2.13.0</jena.version>
         <org-openrdf-sesame.version>2.8.1</org-openrdf-sesame.version>
+        <jsonld-java-jena.version>0.4.1</jsonld-java-jena.version>
         <!-- Version of the Maven properties -->
         <maven-eclipse-plugin.version>2.9</maven-eclipse-plugin.version>
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
@@ -71,13 +72,14 @@
         <!-- JSON -->
         <com.fasterxml.jackson.core.version>2.5.3</com.fasterxml.jackson.core.version>
         <org-json.version>20140107</org-json.version>
-        <com.google.code.gson>2.3.1</com.google.code.gson>
+        <com.google.code.gson.version>2.3.1</com.google.code.gson.version>
         <!-- SPRING FRAMEWORK -->
         <io.spring.platform-version>1.1.2.RELEASE</io.spring.platform-version>
         <org.springframework.version>4.1.6.RELEASE</org.springframework.version>
         <!-- Apache -->
         <org.apache.httpcomponents.version>4.4.1</org.apache.httpcomponents.version>
         <org.apache.commons.version>2.0</org.apache.commons.version>
+        <javax.interceptor-api.version>1.2</javax.interceptor-api.version>
     </properties>
 
     <dependencyManagement>
@@ -94,20 +96,7 @@
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.spring.platform</groupId>
-                <artifactId>platform-bom</artifactId>
-                <version>${io.spring.platform-version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework.security</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
+            </dependency>          
             <dependency>
                 <groupId>xml-apis</groupId>
                 <artifactId>xml-apis</artifactId>
@@ -224,7 +213,7 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.3.1</version>
+            <version>${com.google.code.gson.version}</version>
         </dependency>
 
         <!-- XML -->
@@ -266,7 +255,7 @@
         <dependency>
             <groupId>com.github.jsonld-java</groupId>
             <artifactId>jsonld-java-jena</artifactId>
-            <version>0.4.1</version>
+            <version>${jsonld-java-jena.version}</version>
         </dependency>
 
         <!-- OpenRDF Sesame: Model,MemoryStore,SailRepository,RIO Api,NativeStore,-->
@@ -322,6 +311,7 @@
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-http-server-spring</artifactId>
             <version>${org-openrdf-sesame.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- optional Sesame dependency -->
@@ -329,27 +319,32 @@
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-rio-api</artifactId>
             <version>${org-openrdf-sesame.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-repository-api</artifactId>
             <version>${org-openrdf-sesame.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-sail-api</artifactId>
             <version>${org-openrdf-sesame.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-query</artifactId>
             <version>${org-openrdf-sesame.version}</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-queryparser-sparql</artifactId>
             <version>${org-openrdf-sesame.version}</version>
             <scope>test</scope>
+            <optional>true</optional>
         </dependency>
 
         <!-- Apache Support -->
@@ -375,7 +370,7 @@
         <dependency>
             <groupId>javax.interceptor</groupId>
             <artifactId>javax.interceptor-api</artifactId>
-            <version>1.2</version>
+            <version>${javax.interceptor-api.version}</version>
         </dependency>
 
     </dependencies>

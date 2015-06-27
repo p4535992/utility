@@ -10,7 +10,10 @@ import java.util.Map;
 
 /**
  * Created by 4535992 on 14/05/2015.
+ * @author 4535992
+ * @version 2015-06-26
  */
+@SuppressWarnings("unused")
 public class SQLHelper {
 
     private static Connection conn;
@@ -24,25 +27,32 @@ public class SQLHelper {
     }
 
     /**
-     * href: http://www.java2s.com/Code/Java/Database-SQL-JDBC/convertingajavasqlTypesintegervalueintoaprintablename.htm
+     * Method for get a mapt with all SQL java types.
+     * href: http://www.java2s.com/Code/Java/Database-SQL-JDBC/convertingajavasqlTypesintegervalueintoaprintablename.htm.
      * @param jdbcType code int of the type sql.
+     * @return map of SQL Types with name
      */
-    public static void getJdbcTypeName(int jdbcType) {
+    public static Map<Integer,String> getJdbcTypeName(int jdbcType) {
         Map<Integer,String> map = new HashMap<>();
         // Get all field in java.sql.Types
         Field[] fields = java.sql.Types.class.getFields();
-        for (int i = 0; i < fields.length; i++) {
+        for (Field field : fields) {
             try {
-                String name = fields[i].getName();
-                Integer value = (Integer) fields[i].get(null);
+                String name = field.getName();
+                Integer value = (Integer) field.get(null);
                 map.put(value, name);
             } catch (IllegalAccessException e) {
                 SystemLog.exception(e);
             }
         }
-        System.out.println(map);
+        return map;
     }
 
+    /**
+     * Method for convert a SQLTypes to a java class.
+     * @param type identificator for the SQL java types.
+     * @return the corespondetn java class.
+     */
     public static Class<?> convertSQLTypes2JavaClass(int type) {
         Class<?> result = Object.class;
         switch (type) {
@@ -93,11 +103,16 @@ public class SQLHelper {
                 result = java.sql.Timestamp.class;
                 break;
             case Types.NULL:
-                result = new Object().getClass().getSuperclass();
+                result = Object.class.getSuperclass();
         }
         return result;
     }
 
+    /**
+     * Method for convert a java class to a SQLTypes.
+     * @param aClass the corespondetn java class.
+     * @return the identificator for the SQL java types.
+     */
     public static int convertClass2SQLTypes(Class<?> aClass) {
         int result;
         if(aClass.getName().equals(String.class.getName()))result = Types.VARCHAR;

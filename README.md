@@ -7,6 +7,8 @@ Class utility for the third library:
 - JDOM2
 - Hibernate 4 (in progress)
 - Jena 2
+- Sesame OpenRDF
+- JSoup
 
 (For the future try to put some JDK version 8)
 
@@ -25,7 +27,7 @@ You can the dependency to this github repository With jitpack (https://jitpack.i
  <pre class="prettyprint">&lt;dependency&gt;
   &lt;groupId&gt;com.github.p4535992&lt;/groupId&gt;
   &lt;artifactId&gt;utility&lt;/artifactId&gt;
-  &lt;version&gt;<span id="latest_release">1.1</span>&lt;/version&gt;
+  &lt;version&gt;<span id="latest_release">1.2</span>&lt;/version&gt;
 &lt;/dependency&gt;  </pre>
 
 <!-- Add this script to update "latest_release" span to latest version -->

@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package com.github.p4535992.util.string;
 
 import com.github.p4535992.util.log.SystemLog;
@@ -24,11 +18,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 2015-04-25
+ * Class with many utilities on String and Collection.
  * @author 4535992
+ * @version 2015-06-26
  * href: http://stackoverflow.com/questions/9572795/convert-list-to-array-in-java
  * href: http://stackoverflow.com/questions/11404086/how-could-i-initialize-a-generic-array
+ * @param <T> generic type.
  */
+@SuppressWarnings("unused")
 public class StringKit<T> {
     private Class<T> cl;
     private String clName;
@@ -63,13 +60,13 @@ public class StringKit<T> {
             }
         } catch (IOException io) {
             System.out.println("Failed to read from Stream");
-            io.printStackTrace();
+            SystemLog.exception(io);
         } finally {
             try {
                 br.close();
             } catch (IOException ioex) {
                 System.out.println("Failed to close Streams");
-                ioex.printStackTrace();
+                SystemLog.exception(ioex);
             }
         }
         return sb.toString();
@@ -81,11 +78,7 @@ public class StringKit<T> {
      * @return true if the parameter is null or empty.
      */
     public static boolean isNullOrEmpty(String text) {
-        if (text == null || text.equals("") || text.isEmpty() || text.trim().isEmpty()) {
-            return true;
-        } else {
-            return false;
-        }
+        return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty();
     }
 
     /**
@@ -100,8 +93,7 @@ public class StringKit<T> {
             StringBuilder sb = new StringBuilder();
             String line;
             try {
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(is, "UTF-8"));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append("\n");
                 }
@@ -125,7 +117,7 @@ public class StringKit<T> {
         try {
             is = new ByteArrayInputStream(string.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
         return is;
     }
@@ -159,17 +151,14 @@ public class StringKit<T> {
              System.out.println("Usage: java UTF8ToAscii <filename>");
              return null;
          }
-         BufferedReader r = new BufferedReader(
-                 new InputStreamReader(new FileInputStream(UTF8),"UTF-8" )
-         );
-         String line = r.readLine();
-
-         while (line != null) {
-             //System.out.println(unicodeEscape(line));
-             line = r.readLine();
-             list.add(line);
-         }
-         r.close();
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(UTF8),"UTF-8" ))){
+            String line = r.readLine();
+            while (line != null) {
+                //System.out.println(unicodeEscape(line));
+                line = r.readLine();
+                list.add(line);
+            }
+        }
          return list;
      }
 
@@ -205,23 +194,21 @@ public class StringKit<T> {
               //System.out.println("Usage: java UnicodeEscape2UTF8 <filename>");
               return null;
           }
-        BufferedReader r = new BufferedReader(new FileReader(ASCII));
-        String line = r.readLine();
-        while (line != null) {
-            line = convertUnicodeEscapeToASCII(line);
-            byte[] bytes = line.getBytes("UTF-8");
-            System.out.write(bytes, 0, bytes.length);
-            System.out.println();
-            line = r.readLine();
-            list.add(line);
+        try (BufferedReader r = new BufferedReader(new FileReader(ASCII))) {
+            String line = r.readLine();
+            while (line != null) {
+                line = convertUnicodeEscapeToASCII(line);
+                byte[] bytes = line.getBytes("UTF-8");
+                System.out.write(bytes, 0, bytes.length);
+                System.out.println();
+                line = r.readLine();
+                list.add(line);
+            }
         }
-        r.close();
         return list;
     }
 
-    static enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
-
-
+    enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
     /**
      *  convert unicode escapes back to char.
      * @param s string to convert to ascii.
@@ -303,8 +290,8 @@ public class StringKit<T> {
            Pattern pattern = Pattern.compile(expression);
            Matcher matcher = pattern.matcher(input);
            while(matcher.find()){
-                result = matcher.group().toString();
-                if(result != null && result != ""){break;}
+                result = matcher.group();
+                if(!isNullOrEmpty(result)){break;}
            }
        }else{
            input = input.replaceAll(expression, replace);
@@ -352,12 +339,12 @@ public class StringKit<T> {
     * @param <T> generic variable.
     * @return  il valore più diffuso per tale parametro.
     */
-    public static <T> T getMoreCommonParameter(ArrayList<T> al){
+    public static <T> T getMoreCommonParameter(List<T> al){
        Map<T,Integer> map = new HashMap<>();
-       for(int i=0;i<al.size();i++){
-           Integer count = map.get(al.get(i));
-           map.put(al.get(i), count==null?1:count+1);   //auto boxing and count
-       }
+        for (T anAl : al) {
+            Integer count = map.get(anAl);
+            map.put(anAl, count == null ? 1 : count + 1);   //auto boxing and count
+        }
        T keyParameter=null;
        Integer keyValue =0;
        for ( Map.Entry<T, Integer> entry : map.entrySet()) {
@@ -380,8 +367,9 @@ public class StringKit<T> {
         StringTokenizer st = new StringTokenizer(content, symbol);
         while (st.hasMoreTokens()) {
             content = st.nextToken();
-            if(setNullForEmptyString(content)==null){
-            }else{ break;}
+            if(!isNullOrEmpty(content)){
+                 break;
+            }
         }
         return content;
     }
@@ -414,11 +402,6 @@ public class StringKit<T> {
             input = br.readLine();
             //System.out.print("Enter Integer:");
         }while(br.read() > 0);
-        try{
-            //int i = Integer.parseInt(br.readLine());
-        }catch(NumberFormatException nfe){
-            throw new NumberFormatException("Error while read in console:"+ nfe.getMessage());
-        }
         return input;
     }
 
@@ -431,20 +414,18 @@ public class StringKit<T> {
     public static String readFileWithStringBuilder(File filename) {
         String readFile = "";
         try {
-            BufferedReader br = new BufferedReader(new FileReader(filename));
-            StringBuilder sbFile = new StringBuilder();
-            String line = br.readLine();
-            while (line != null) {
-                sbFile.append(line);// append the line of the file
-                sbFile.append('@');// separate the line with a '@'
-                line = br.readLine();// read the next line of the file
+            try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+                StringBuilder sbFile = new StringBuilder();
+                String line = br.readLine();
+                while (line != null) {
+                    sbFile.append(line);// append the line of the file
+                    sbFile.append('@');// separate the line with a '@'
+                    line = br.readLine();// read the next line of the file
+                }
+                readFile = sbFile.toString();// this string contains the character sequence
             }
-            readFile = sbFile.toString();// this string contains the character sequence
-            br.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
         return  readFile;
     }
@@ -530,16 +511,13 @@ public class StringKit<T> {
      * @param <T> generic type.
      */
     public static <T> void convertObjectToSerializable(T object,String nameTempSer){
-        try
-        {
-            FileOutputStream fileOut = new FileOutputStream("/tmp/"+nameTempSer+".ser");
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
-            out.writeObject(object);
-            out.close();
-            fileOut.close();
+        try{
+            try (FileOutputStream fileOut = new FileOutputStream("/tmp/"+nameTempSer+".ser"); 
+                    ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+                out.writeObject(object);
+            }
             SystemLog.console("Serialized data is saved in /tmp/" + nameTempSer + ".ser");
-        }catch(IOException i)
-        {
+        }catch(IOException i){
            SystemLog.exception(i);
         }
     }
@@ -553,13 +531,11 @@ public class StringKit<T> {
      */
     @SuppressWarnings("unchecked")
     public static <T> T convertSerializableToObject(T object,String nameTempSer){
-        try
-        {
-            FileInputStream fileIn = new FileInputStream("/tmp/"+nameTempSer+".ser");
-            ObjectInputStream in = new ObjectInputStream(fileIn);
-            object = (T) in.readObject();
-            in.close();
-            fileIn.close();
+        try{
+            try (FileInputStream fileIn = new FileInputStream("/tmp/"+nameTempSer+".ser"); 
+                    ObjectInputStream in = new ObjectInputStream(fileIn)) {
+                object = (T) in.readObject();
+            }
         }catch(IOException i)
         {
             SystemLog.exception(i);
@@ -590,7 +566,7 @@ public class StringKit<T> {
                 return (T) objectToCast;
             }
         } catch (ClassCastException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
             return null;
         }
     }
@@ -674,8 +650,8 @@ public class StringKit<T> {
     public static <T> boolean isArrayEmpty(T[] array){
         boolean empty = true;
         if(array!=null && array.length > 0) {
-            for (int i = 0; i < array.length; i++) {
-                if (array[i] != null) {
+            for (T anArray : array) {
+                if (anArray != null) {
                     empty = false;
                     break;
                 }
@@ -699,8 +675,7 @@ public class StringKit<T> {
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         StringWriter writer = new StringWriter();
         marshaller.marshal(object, writer);
-        String xmlStringData = writer.toString();
-        return xmlStringData;
+        return writer.toString();
     }
 
     /**
@@ -716,8 +691,7 @@ public class StringKit<T> {
         JAXBContext context = JAXBContext.newInstance(clazz);
         StringReader reader = new StringReader(xmlStringData);
         Unmarshaller unmarshaller = context.createUnmarshaller();
-        T obj = (T) unmarshaller.unmarshal(reader);
-        return obj;
+        return (T) unmarshaller.unmarshal(reader);
     }
 
     /**
@@ -735,13 +709,21 @@ public class StringKit<T> {
                 map.put(e.getKey().toString(),e.getValue().toString());
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
         return map;
     }
 
-    public static boolean isMapEntryNullOrInexistent(Map map,Object key){
-        Object value = map.get(key);
+    /**
+     * Method for chek if a specific key on the map is absent or not existsa value for that key.
+     * @param <T> generic key.
+     * @param <E> generic value.
+     * @param map the map to inspect.
+     * @param key the key valur of the map to search.
+     * @return if tru exists a value not empty for that key.
+     */
+    public static <T,E> boolean isMapEntryNullOrInexistent(Map<T,E> map,T key){
+        E value = map.get(key);
         if (value != null) {
             return false;
         } else {
@@ -749,13 +731,168 @@ public class StringKit<T> {
             if (map.containsKey(key)) {
                 // Okay, there's a key but the value is null
                 return true;
-            } else {
-                // Definitely no such key
-                return true;
-            }
+            } 
+            // Definitely no such key 
+            return true;
+            
         }
     }
+    
+    /**
+     * Method to convert a Enumeration collection to a List collection.
+     * @param <T> generic type.
+     * @param enumeration enumeration object.
+     * @return the list object.
+     */
+    public static <T> List<T> convertEnumerationToList(Enumeration<T> enumeration){
+        return Collections.list(enumeration);
+    }
+    
+    /**
+     * Method to convert a Enumeration collection to a Set collection.
+     * @param <T> generic type.
+     * @param enumeration enumeration object.
+     * @return the Set object.
+     */
+    public static <T> Set<T> convertEnumerationToSet(Enumeration<T> enumeration){
+        return new HashSet<>(Collections.list(enumeration));
+    }
+    
+    /**
+     * Method to convert a Set collection to a Enumeration collection.
+     * @param <T> generic type.
+     * @param set the set object.
+     * @return the Enumeration object.
+     */
+    public static <T> Enumeration<T> convertSetToEnumaretion(Set<T> set){
+        return Collections.enumeration(set);
+    } 
+    
+   /**
+    * Method to convert a Set collection to a Enumeration collection.
+    * @param <T> generic type.
+    * @param set the set object.
+    * @return the List object.
+    */
+    public static <T> List<T> convertSetToList(Set<T> set){
+        return new ArrayList<>(set);
+    }
 
+    /**
+     * Method to convert a List collection to a Setcollection.
+     * @param <T> generic type.
+     * @param list the List collection.
+     * @return the Set collection.
+     */
+    public static <T> Set<T> convertListToSet(List<T> list){
+        return new HashSet<>(list);
+    }
+    
+    /**
+     * Method to convert a Iterable object to a List Collection.
+     * @param <T> generic type.
+     * @param iterable theItreable object.
+     * @return the List collection.
+     */
+    public static <T> List<T> convertIterableToList(Iterable<T> iterable){
+        if(iterable instanceof List) {
+          return (List<T>) iterable;
+        }
+        List<T> list = new ArrayList<>();
+        if(iterable != null) {
+          for(T e: iterable) {
+            list.add(e);
+          }
+        }
+        return list;
+    }
+    
+    /**
+    * Method to convert a List Collection to Iterable object.
+    * @param <T> generic type.
+    * @param list the List collection.
+    * @return the Iterable object.
+    */
+    public static <T> Iterable<T> convertListToIterable(List<T> list){
+        return convertSetToIterable(convertListToSet(list));     
+    }
+    
+    /**
+    * Method to convert a Array Collection to Iterable object.
+    * @param <T> generic type.
+    * @param array the Array collection.
+    * @return the Iterable object.
+    */
+    public static <T> Iterable<T> convertArrayToIterable(T[] array){
+        return Arrays.asList(array);
+    }
+    
+    /**
+    * Method to convert a Set Collection to Iterable object.
+    * @param <T> generic type.
+    * @param set the set collection.
+    * @return the Iterable object.
+    */
+    public static <T> Iterable<T> convertSetToIterable(Set<T> set){
+        return convertListToIterable(convertSetToList(set));
+    }
+    /**
+    * Method to convert a Iterator Collection to Iterable object.
+    * @param <T> generic type.
+    * @param iterator the Iterator collection.
+    * @return the Iterable object.
+    */
+    public static <T> Iterable<T> convertIteratorToIterable(final Iterator<T> iterator){
+        if (iterator == null) {
+          throw new NullPointerException();
+        }
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return iterator;
+            }
+        };
+    }
+    
+     /**
+    * Method to convert a Iterator Collection to List collection.
+    * @param <T> generic type.
+    * @param iterator the Iterator collection.
+    * @return the List collection.
+    */
+    public static <T> List<T> convertIteratorToList(Iterator<T> iterator){ 
+        List<T> list = new ArrayList<>();
+        while (iterator.hasNext()) {
+            list.add(iterator.next());
+        }
+        return list;
+    }
+    /**
+    * Method to convert a List Collection to Iterator object.
+    * @param <T> generic type.
+    * @param list the List collection.
+    * @return the Iterator object.
+    */
+    public static <T> Iterator<T> convertListToIterator(List<T> list){
+        //Iterator<T> iterator = list.iterator();
+        return list.iterator();
+    }
+    
+    /**
+    * Method to convert a Set Collection to Iterator object.
+    * @param <T> generic type.
+    * @param set the Set collection.
+    * @return the Iterator object.
+    */
+    public static <T> Iterator<T> convertSetToIterator(Set<T> set){
+        return set.iterator();
+    }
+    
+    public static <T> T[] convertSetToArray(Set<T> set){
+        return convertListToArray(convertSetToList(set));
+    }
+    
+   
 
 
 

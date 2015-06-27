@@ -16,9 +16,9 @@ import java.text.DateFormat;
 
 
 /**
- * 2015-04-11
- * Class for print a log file
- * @author 4535992
+ * Class for print a personal log file.
+ * @author 4535992.
+ * @version 2015-06-27.
  */
 public class SystemLog {
     private static SystemLog log;
@@ -120,10 +120,10 @@ public class SystemLog {
         sb.append(logEntry);
         if(ERROR)System.err.println(sb.toString());
         else System.out.println(sb.toString());
-        try(PrintWriter logWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGFILE.getAbsolutePath(), true)))) {
+        try(PrintWriter pWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGFILE.getAbsolutePath(), true)))) {
             //try{
-            logWriter.print(sb.toString() + System.getProperty("line.separator"));
-            logWriter.flush();
+            pWriter.print(sb.toString() + System.getProperty("line.separator"));
+            pWriter.flush();
             //logWriter.close();
         }catch (IOException e){
         }finally{
@@ -139,7 +139,7 @@ public class SystemLog {
     public static void error(String logEntry){level = Level.ERR; ERROR=true;
         write(logEntry);}
     public static void warning(String logEntry){level = Level.WARN; ERROR=true; write(logEntry);}
-    public static void warning(Exception e){level = Level.WARN; ERROR=true; write(e.getMessage()+","+e.getCause());}
+    public static void warning(Exception e){level = Level.WARN; ERROR=true; write(e.getMessage()+","+e.getLocalizedMessage());}
     //public static void ticket(String message){ LEVEL = 1;printString2File(message);}
     public static void hibernate(String logEntry) { level = Level.HIBERNATE; write(logEntry);}
     public static void sparql(String logEntry) { level = Level.SPARQL; write(logEntry);}
@@ -148,7 +148,7 @@ public class SystemLog {
     public static void abort(int rc, String logEntry) {level = Level.ABORT;  ERROR=true;write(logEntry); System.exit(rc);}
     public static void throwException(Throwable throwable){ level = Level.THROW;  ERROR=true; write(throwable.getMessage());}
     public static void exception(Exception e){ level = Level.EXCEP; ERROR=true;e.printStackTrace();}
-
+    public static void loggerInfoSLF4J(org.slf4j.Logger log,String msg){log.info(msg);}
 
     /**
      * If debug is enabled, writes a message to the log.
@@ -164,7 +164,9 @@ public class SystemLog {
     public static String getUsageMessage() {
         String lines[] ={/*TEST MESSAGE*/};
         String usage = "";
-        for (int count = 0;count < lines.length;count++) {usage += lines[count] + "\n";}
+        for (String line : lines) {
+            usage += line + "\n";
+        }
         return usage;
     }
 
@@ -172,8 +174,9 @@ public class SystemLog {
 
     public static void logStackTrace(Exception e, Logger logger) {
         logger.debug(e.getMessage());
-        for(int i=0; i<e.getStackTrace().length; i++)
-            logger.error(e.getStackTrace()[i].toString());
+        for (StackTraceElement stackTrace : e.getStackTrace()) {
+            logger.error(stackTrace.toString());
+        }
     }
 
 
@@ -264,25 +267,25 @@ public class SystemLog {
 
     public enum Level {
         VOID(0), OUT(1), WARN(2),ERR(3),ABORT(4),HIBERNATE(5),SPARQL(6),QUERY(7),THROW(8),EXCEP(9),ATTENTION(10);
-        private Integer value;
+        private final Integer value;
         Level(Integer value) {
             this.value = value;
         }
 
         @Override
         public String toString() {
-            String value="";
+            String prefix="";
             switch (this) {
-                case ERR: value = "[ERROR] -> "; break;
-                case WARN: value ="[WARNING] -> "; break;
-                case ABORT: value ="[EXIT] -> "; break;
-                case HIBERNATE: value = "[HIBERNATE] -> "; break;
-                case SPARQL: value ="[SPARQL] -> "; break;
-                case QUERY: value ="[QUERY] -> "; break;
-                case ATTENTION: value ="=====[ATTENTION]===== -> "; break;
-                case EXCEP: value ="[EXCEPTION] ->"; break;
+                case ERR: prefix = "[ERROR] -> "; break;
+                case WARN: prefix ="[WARNING] -> "; break;
+                case ABORT: prefix ="[EXIT] -> "; break;
+                case HIBERNATE: prefix = "[HIBERNATE] -> "; break;
+                case SPARQL: prefix ="[SPARQL] -> "; break;
+                case QUERY: prefix ="[QUERY] -> "; break;
+                case ATTENTION: prefix ="=====[ATTENTION]===== -> "; break;
+                case EXCEP: prefix ="[EXCEPTION] ->"; break;
             }
-            return value;
+            return prefix;
         }
     };
         

@@ -48,23 +48,30 @@ import org.apache.jena.riot.RDFWriterRegistry;
 /**
  * Class utility for Jena
  * Created by 4535992 in 2015-04-28
+ * @author 4535992
+ * @version 2015-06-26
  */
+@SuppressWarnings("unused")
 public class Jena2Kit {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Jena2Kit.class);
     //PRIVATE
-    private static String SPARQL_QUERY;
-    private static String INFORMAT;
-    private static String OUTFORMAT;
+    public static String INFORMAT,OUTFORMAT;
+    public static Lang OUTLANGFORMAT,INLANGFORMAT;
+    public static RDFFormat OUTRDFFORMAT,INRDFFORMAT;
 
-    private static final Hashtable<String,String> namespaces = new Hashtable<>();
+    public static void setInput(RDFFormat INRDFFORMAT){
+        INFORMAT = INRDFFORMAT.getLang().getName();
+        INLANGFORMAT = INRDFFORMAT.getLang();
+    }
+
+    public static void setOutput(RDFFormat OUTRDFFORMAT){
+        OUTFORMAT = OUTRDFFORMAT.getLang().getName();
+        OUTLANGFORMAT = OUTRDFFORMAT.getLang();
+    }
+
+
     private static Model model;
-    private static Lang OUTLANGFORMAT;
-    private static RDFFormat OUTRDFFORMAT;
-
-    private static Lang INLANGFORMAT;
-    private static RDFFormat INRDFFORMAT;
-
-    //PUBLIC
+    private static final Map<String,String> namespaces = new HashMap<>();
     public static final String RDF_FORMAT ="RDF/XML-ABBREV";
     public static SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz");
 
@@ -171,10 +178,12 @@ public class Jena2Kit {
      */
     public static Model execSparqlConstructorOnModel(String sparql,Model model) {
         Query query = QueryFactory.create(sparql) ;
-        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
-        Model resultModel = qexec.execConstruct() ;
-        SystemLog.sparql(sparql);
-        qexec.close() ;
+        Model resultModel ;
+        try ( //QueryExecutionFactory.create(query, model) ;
+                QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+            resultModel = qexec.execConstruct();
+            SystemLog.sparql(sparql);
+        }
         return  resultModel;
     }
     
@@ -186,10 +195,12 @@ public class Jena2Kit {
      */
     public static Model execSparqlDescribeOnModel(String sparql,Model model) {
         Query query = QueryFactory.create(sparql) ;
-        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
-        Model resultModel = qexec.execDescribe() ;
-        SystemLog.sparql(sparql);
-        qexec.close() ;
+        //QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+        Model resultModel ;
+        try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+            resultModel = qexec.execDescribe();
+            SystemLog.sparql(sparql);
+        }
         return resultModel;
     }
 
@@ -200,12 +211,14 @@ public class Jena2Kit {
      * @return the result set of the query.
      */
     public static ResultSet execSparqlSelectOnModel(String sparql,Model model) {
-        QueryExecution qexec = QueryExecutionFactory.create(sparql, model);
-        ResultSet  results = qexec.execSelect();
-         //... make exit from the thread the result of query
-        results = ResultSetFactory.copyResults(results) ;
-        SystemLog.sparql(sparql);
-        qexec.close();
+        ResultSet results;
+        try ( //QueryExecution qexec = QueryExecutionFactory.create(sparql, model);
+                QueryExecution qexec = QueryExecutionFactory.create(sparql, model)) {
+            results = qexec.execSelect();
+            //... make exit from the thread the result of query
+            results = ResultSetFactory.copyResults(results) ;
+            SystemLog.sparql(sparql);
+        }
         return results;
     }
 
@@ -217,10 +230,12 @@ public class Jena2Kit {
      */
     public static boolean execSparqlAskOnModel(String sparql,Model model) {
         Query query = QueryFactory.create(sparql) ;
-        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
-        boolean result = qexec.execAsk();
-        SystemLog.sparql(sparql);
-        qexec.close() ;
+        boolean result ;
+        //QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+        try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+            result = qexec.execAsk();
+            SystemLog.sparql(sparql);
+        }
         return result;
     }
     
@@ -233,7 +248,7 @@ public class Jena2Kit {
      * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
     public static Model loadFileTriple(String filename,String filepath,String inputFormat) throws FileNotFoundException {
-        Model model = ModelFactory.createDefaultModel();
+        Model m = ModelFactory.createDefaultModel();
         INLANGFORMAT = stringToRiotLang(inputFormat);
         INRDFFORMAT = stringToRDFFormat(inputFormat);
         INFORMAT = INLANGFORMAT.getLabel().toUpperCase();
@@ -253,17 +268,17 @@ public class Jena2Kit {
         SystemLog.message("Try to read file of triples from the path:" + fileInput.getAbsolutePath()+"...");
         try {
             com.hp.hpl.jena.util.FileManager.get().addLocatorClassLoader(Jena2Kit.class.getClassLoader());
-            model = com.hp.hpl.jena.util.FileManager.get().loadModel(fileInput.toURI().toString(),null,INFORMAT);
+            m = com.hp.hpl.jena.util.FileManager.get().loadModel(fileInput.toURI().toString(),null,INFORMAT);
         }catch(Exception e){
             try {
-                model.read(in, null, INFORMAT);
+                m.read(in, null, INFORMAT);
             } catch (Exception e1) {
                 try {
-                    org.apache.jena.riot.RDFDataMgr.read(model, in, INLANGFORMAT);
+                    org.apache.jena.riot.RDFDataMgr.read(m, in, INLANGFORMAT);
                 } catch (Exception e2) {
                     try {
                         //If you are just opening the stream from a file (or URL) then Apache Jena
-                        org.apache.jena.riot.RDFDataMgr.read(model,fileInput.toURI().toString());
+                        org.apache.jena.riot.RDFDataMgr.read(m,fileInput.toURI().toString());
                     } catch (Exception e3) {
                         SystemLog.exception(e3);
                         SystemLog.abort(0, "Failed read the file of triples from the path:" + fileInput.getAbsolutePath());
@@ -272,7 +287,7 @@ public class Jena2Kit {
             }
         }
         SystemLog.message("...file of triples from the path:" + fileInput.getAbsolutePath()+" readed!!");
-        return model;
+        return m;
     }
     /**
      * Method for load a file of tuples to a jena model.
@@ -284,14 +299,13 @@ public class Jena2Kit {
          String filename = FileUtil.filenameNoExt(file);
          String filepath = FileUtil.path(file);
          String inputFormat = FileUtil.extension(file);
-         com.hp.hpl.jena.rdf.model.Model  model = loadFileTriple(filename,filepath,inputFormat);
-         return model;
+         return loadFileTriple(filename,filepath,inputFormat);
      }
 
     /**
      * A list of org.apache.jena.riot.Lang file formats.
-     * @return all the language Lang supported from jena.
-     * @exception : "AWT-EventQueue-0" java.lang.NoSuchFieldError: RDFTHRIFT  or CSV.
+     * return all the language Lang supported from jena.
+     * exception : "AWT-EventQueue-0" java.lang.NoSuchFieldError: RDFTHRIFT  or CSV.
      */
  	private static final org.apache.jena.riot.Lang allFormatsOfRiotLang[] = new org.apache.jena.riot.Lang[] { 
             org.apache.jena.riot.Lang.NTRIPLES, org.apache.jena.riot.Lang.N3,org.apache.jena.riot.Lang.RDFXML,
@@ -328,7 +342,7 @@ public class Jena2Kit {
 
     /**
      * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
-     * @return all the XSDDatatype supported from jena.
+     * return all the XSDDatatype supported from jena.
      */
     private static final XSDDatatype allFormatsOfXSDDataTypes[] = new XSDDatatype[]{
             XSDDatatype.XSDstring,XSDDatatype.XSDENTITY,XSDDatatype.XSDID,XSDDatatype.XSDIDREF
@@ -340,8 +354,7 @@ public class Jena2Kit {
      * @return string uri of the XSDDatatype.
      */
     public static String XSDDatatypeToString(XSDDatatype xsdDatatype) {
-            String uri = xsdDatatype.getURI();
-            return  uri;
+        return xsdDatatype.getURI();
  	}
 
     /**
@@ -414,7 +427,6 @@ public class Jena2Kit {
             String sparql,Model model,String fullPathOutputFile,String outputFormat){
         try {
             //JSON,CSV,TSV,,RDF,SSE,XML
-            Model resultModel;
             ResultSet results;
             if (outputFormat.toLowerCase().contains("csv") || outputFormat.toLowerCase().contains("xml")
                     || outputFormat.toLowerCase().contains("json") || outputFormat.toLowerCase().contains("tsv")
@@ -446,13 +458,13 @@ public class Jena2Kit {
                 }
                 SystemLog.message("... the file of triple Infodoument to:" + fullPathOutputFile + " is been wrote!");
             } else if (outputFormat.toLowerCase().contains("ttl")) {
-                resultModel = execSparqlConstructorOnModel(sparql, model);
+                Model resultModel = execSparqlConstructorOnModel(sparql, model);
                 OUTLANGFORMAT = stringToRiotLang(outputFormat);
                 OUTRDFFORMAT = stringToRDFFormat(outputFormat);
                 OUTFORMAT = outputFormat.toUpperCase();
                 //Writer writer = new FileWriter(new File(fullPathOutputFile));
                 //model.write(writer, outputFormat);
-                writeModelToFile(fullPathOutputFile, model, OUTFORMAT);
+                writeModelToFile(fullPathOutputFile, resultModel, OUTFORMAT);
                 SystemLog.message("... the file of triple Infodoument to:" + fullPathOutputFile + " is been wrote!");
             }
         }catch(Exception e){
@@ -469,7 +481,7 @@ public class Jena2Kit {
      * @throws IOException throw if any I/O is occurred.
      */
     public static void convertTo(File file, String outputFormat) throws IOException{
-         Model model = loadFileTriple(file);
+         Model m = loadFileTriple(file);
          String newName = FileUtil.filenameNoExt(file)+"."+outputFormat.toLowerCase();
          String newPath = FileUtil.path(file);
          String sparql;
@@ -481,7 +493,7 @@ public class Jena2Kit {
              sparql ="SELECT * WHERE{?s ?p ?o}";}
         else{
              sparql ="CONSTRUCT {?s ?p ?o} WHERE{?s ?p ?o}";}
-        formatTheResultSetAndPrint(sparql,model,newPath+File.separator+newName,outputFormat.toLowerCase()  );
+        formatTheResultSetAndPrint(sparql,m,newPath+File.separator+newName,outputFormat.toLowerCase()  );
     }
 
 	/*
@@ -613,20 +625,18 @@ public class Jena2Kit {
     public static Model loadFileToModel(String filePath) {
         // I used to pass encoding in here, but that's dumb. I'm reading XML
         // which is self-describing.
-        Model model = ModelFactory.createDefaultModel();
+        Model m = ModelFactory.createDefaultModel();
         SystemLog.message("Loading " + filePath + "...");
         try {
             File inputFile = new File(filePath);
-            FileInputStream input = new FileInputStream(inputFile);
-            if (input == null) {
-                SystemLog.warning("Failed to open " + filePath);
-            }
-            model.read(input, FileUtil.convertFileToStringUriWithPrefix(inputFile));
-            input.close();     
+            try (FileInputStream input = new FileInputStream(inputFile)) {
+                m.read(input, FileUtil.convertFileToStringUriWithPrefix(inputFile));
+            }     
         } catch (IOException e) {
+            SystemLog.warning("Failed to open " + filePath);
             SystemLog.exception(e);
         }
-        return model;
+        return m;
     }
 
     /**
@@ -641,12 +651,11 @@ public class Jena2Kit {
             while (ri.hasNext()) {
                 Resource newSubject = ri.next();
                 Resource subject;
-                if (newSubject.isAnon()) {
-                    // nevermind; copyToModel will handle this case recursively
-                } else {
+                if (!newSubject.isAnon()) {
                     subject = model.createResource(newSubject.getURI());
                     model = copyToModel(newModel, newSubject, model, subject);
                 }
+                //else : nevermind; copyToModel will handle this case recursively
             }
         } catch (Exception e) {
             SystemLog.exception(e);
@@ -662,18 +671,18 @@ public class Jena2Kit {
      * @param value value of the literal of the statement to remove from Jena model.
      */
     public static void deleteLiteral(Model model,Resource subject,String property,String value) {
-        String prefix = "";
         int pos = property.indexOf(":");
-        prefix = property.substring(0, pos);
+        String prefix = property.substring(0, pos);
         property = property.substring(pos + 1);
         try {
             String uri = namespaces.get(prefix);
             Property p = model.createProperty(uri, property);
-            RDFNode v =(RDFNode) model.createLiteral(value);
+            RDFNode v = model.createLiteral(value);
             Statement s = model.createStatement(subject, p, v);
             model.remove(s);
         } catch (Exception e) {
             // nop;
+            SystemLog.warning("Exception while try to delete a literal:"+e.getMessage());
         }
     }
     
@@ -700,19 +709,14 @@ public class Jena2Kit {
         String prefix = property.substring(0, pos);
         property = property.substring(pos + 1);
         try {
-            Property p = null;
-            if(prefix!=null) {
-                String uri = namespaces.get(prefix);
-                if(!uri.isEmpty()||uri!=null) {
-                    p = model.createProperty(uri, property);
-                }else{
-                    p = model.createProperty(property);
-                }
+            Property p;
+            String uri = namespaces.get(prefix);
+            if(!StringKit.isNullOrEmpty(uri)) {
+                p = model.createProperty(uri, property);
             }else{
                 p = model.createProperty(property);
             }
-            RDFNode v = null;
-            StmtIterator iter = model.listStatements( new SelectorImpl(subject, p, v));
+            StmtIterator iter = model.listStatements( new SelectorImpl(subject, p,(RDFNode) null));
             while (iter.hasNext()) {
                 Statement stmt = iter.next();
                 RDFNode obj = stmt.getObject();
@@ -721,6 +725,7 @@ public class Jena2Kit {
                 }
             }
         } catch (Exception e){
+            SystemLog.warning("Exception while try to find a literal:"+e.getMessage());
         }
         return null;
     }
@@ -745,7 +750,7 @@ public class Jena2Kit {
                 property = property.substring(pos + 1);
                 String uri = namespaces.get(prefix);
                 Property p = model.createProperty(uri, property);
-                RDFNode v =(com.hp.hpl.jena.rdf.model.RDFNode) model.createLiteral(value);
+                RDFNode v =  model.createLiteral(value);
                 Statement s = model.createStatement(subject, p, v);
                 model.add(s);
             }
@@ -762,9 +767,10 @@ public class Jena2Kit {
     public static String findNamespacePrefix(String namespace) {
         if (namespaces.containsValue(namespace)) {
             // find it...
-            Enumeration<String> keys = namespaces.keys();
-            while (keys.hasMoreElements()) {
-                String prefix = keys.nextElement();
+            Iterator<String> keys = 
+                    StringKit.convertSetToIterator(namespaces.keySet());
+            while (keys.hasNext()) {
+                String prefix = keys.next();
                 if (namespace.equals(namespaces.get(prefix))) {
                     return prefix;
                 }
@@ -815,8 +821,7 @@ public class Jena2Kit {
             // this can't happen
         }
         // Now encode it "safely" as XML
-        String rdfString = XMLKit.xmlEncode(rawString);
-        return rdfString;
+        return XMLKit.xmlEncode(rawString);
     }
 
     /**
@@ -964,8 +969,8 @@ public class Jena2Kit {
      */
     public static void updateUri(Resource resource, URI uri) {
         try {
-            Model model = resource.getModel();
-            Resource newResource = model.createResource(uri.toString());
+            Model m = resource.getModel();
+            Resource newResource = m.createResource(uri.toString());
             StmtIterator iterator = resource.listProperties();
             // copy properties from old resource
             // buffer used to avoid concurrent modification
@@ -981,8 +986,8 @@ public class Jena2Kit {
             Statement statement;
             while (setIterator.hasNext()) {
                 statement = setIterator.next();
-                if (model.contains(statement)) {
-                    model.remove(statement);
+                if (m.contains(statement)) {
+                    m.remove(statement);
                 }
             }
         } catch (Exception e) {
@@ -1021,8 +1026,8 @@ public class Jena2Kit {
         try {
             StmtIterator iterator =resource.listProperties();
             show(iterator);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+             SystemLog.exception(e);
         }
     }
 
@@ -1033,9 +1038,7 @@ public class Jena2Kit {
     public static void show(StmtIterator iterator) {
         StringBuilder buffer = new StringBuilder("\n--v--");
         //StmtIterator iterator = resource.listProperties();
-        while (iterator.hasNext()) {
-            buffer.append( "\n" + iterator.next().toString());
-        }
+        while (iterator.hasNext()) buffer.append("\n").append(iterator.next().toString());
         buffer.append("\n--^--");
         System.out.println(buffer);
     }
@@ -1060,15 +1063,19 @@ public class Jena2Kit {
             return "Null Model.";
         }
         if(!StringKit.isNullOrEmpty(outputFormat)){
-             RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
-             if(rdfFormat==null){outputFormat = "RDF/XML-ABBREV";}
+            try {
+                RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
+                outputFormat = rdfFormat.getLang().getName();
+            }catch(IllegalArgumentException e) {
+                outputFormat = "RDF/XML-ABBREV";
+            }
         }else{
             outputFormat = "RDF/XML-ABBREV";
         }
         StringWriter stringOut = new StringWriter();
         try {
             //setCommonPrefixes(model);
-            model.write(stringOut,"RDF/XML-ABBREV",RSS.getURI());
+            model.write(stringOut,outputFormat,RSS.getURI());
             // http://base
             stringOut.flush();
             stringOut.close();
@@ -1103,26 +1110,23 @@ public class Jena2Kit {
             StmtIterator statements = model.listStatements();
             Statement statement;
             Resource subject;
-            RDFNode object = null;
+            RDFNode object;
             // buffer in List to avoid concurrent modification exception
             List<Statement> statementList = new ArrayList<>();
             while (statements.hasNext()) {
                 statementList.add(statements.next());
             }
-
-            for (int i = 0;i < statementList.size(); i++) {
-                statement = statementList.get(i);
+            for (Statement aStatementList : statementList) {
+                statement = aStatementList;
                 subject = statement.getSubject();
                 object = statement.getObject();
                 if (subject.equals(oldResource)) {
-                    updateSubjectResource(statement,newResource);
+                    updateSubjectResource(statement, newResource);
                 }
-                if ((object instanceof com.hp.hpl.jena.rdf.model.Resource) &&
-                        (oldResource.equals((com.hp.hpl.jena.rdf.model.Resource) object))) {
-                    updateObjectResource( statement,newResource);
+                if ((object instanceof Resource) && (oldResource.equals(object))) {
+                    updateObjectResource(statement, newResource);
                 }
             }
-
         } catch (Exception e) {
             SystemLog.exception(e);
         }      
@@ -1136,13 +1140,13 @@ public class Jena2Kit {
     public static void updateSubjectResource(Statement statement,Resource newSubject) {
         Statement newStatement;
         try {
-            Model model = statement.getModel();
-            newStatement = model.createStatement(newSubject,
+            Model m = statement.getModel();
+            newStatement = m.createStatement(newSubject,
                     statement.getPredicate(),statement.getObject());
-            model.remove(statement);
-            model.add(newStatement);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            m.remove(statement);
+            m.add(newStatement);
+        } catch (Exception e) {
+             SystemLog.exception(e);
         }
     }
 
@@ -1154,13 +1158,13 @@ public class Jena2Kit {
     public static void updateObjectResource(Statement statement,Resource newObject) {
         Statement newStatement;
         try {
-            Model model = statement.getModel();
-            newStatement =model.createStatement(statement.getSubject(),
+            Model m = statement.getModel();
+            newStatement =m.createStatement(statement.getSubject(),
                     statement.getPredicate(),newObject);
-            model.remove(statement);
-            model.add(newStatement);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            m.remove(statement);
+            m.add(newStatement);
+        } catch (Exception e) {
+             SystemLog.exception(e);
         }
     }
 
@@ -1174,7 +1178,6 @@ public class Jena2Kit {
             StmtIterator iterator = resource.listProperties();
             Property property = null;
             Statement statement = null;
-
             while (iterator.hasNext()) {
                 statement = iterator.next();
                 property = statement.getPredicate();
@@ -1182,9 +1185,11 @@ public class Jena2Kit {
                     break; // to stop concurrent mod exc
                 }
             }
-            if (property.equals(RDF.type)) {
-                resource.getModel().remove(statement);
-                resource.addProperty(RDF.type, newType);
+            if (property != null) {
+                if (property.equals(RDF.type)) {
+                    resource.getModel().remove(statement);
+                    resource.addProperty(RDF.type, newType);
+                }
             }
         } catch (Exception e) {
             SystemLog.exception(e);
@@ -1261,8 +1266,8 @@ public class Jena2Kit {
                     return statement.getSubject();
                 }
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (Exception e) {
+            SystemLog.exception(e);
         }
         return null;
     }
@@ -1386,7 +1391,7 @@ public class Jena2Kit {
     /**
      * Method to convert a string date to a  ISO Date.
      * e.g. 2003-10-29T10:05:35-05:00.
-     * @param string sting of a date eg 2003-10-29
+     * @param string sting of a date eg 2003-10-29.
      * @return sring of a date in iso date format.
      */
     public static Date convertStringDateToIsoDate(String string) {
@@ -1395,7 +1400,7 @@ public class Jena2Kit {
         try {
             date = isoDate.parse(string);
         } catch (ParseException e) {
-            e.printStackTrace();
+           SystemLog.exception(e);
         }
         return date;
     }
@@ -1488,10 +1493,10 @@ public class Jena2Kit {
     /**
      * Method for load a file in the resource folder like a inpustream.
      * @param filename string of path to the file.
+     * @param thisClass this class.
      * @return inputstream of the file.
      */
-    public static InputStream loadResourceAsStream(String filename) {
-        InputStream in = Jena2Kit.class.getClassLoader().getResourceAsStream(filename);
-        return in;
+    public static InputStream loadResourceAsStream(String filename,Class<?> thisClass) {
+        return thisClass.getClassLoader().getResourceAsStream(filename);
     }
 }//end of the class JenaKit
