@@ -1,5 +1,6 @@
 package com.github.p4535992.util.jena;
 
+import com.github.p4535992.util.collection.CollectionKit;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.query.Query;
@@ -767,8 +768,8 @@ public class Jena2Kit {
     public static String findNamespacePrefix(String namespace) {
         if (namespaces.containsValue(namespace)) {
             // find it...
-            Iterator<String> keys = 
-                    StringKit.convertSetToIterator(namespaces.keySet());
+            Iterator<String> keys =
+                    CollectionKit.convertSetToIterator(namespaces.keySet());
             while (keys.hasNext()) {
                 String prefix = keys.next();
                 if (namespace.equals(namespaces.get(prefix))) {

@@ -1,10 +1,9 @@
 package com.github.p4535992.util.reflection;
 
 
+import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.file.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -335,7 +334,7 @@ public class ReflectionKit<T>{
     public static Method getMethodByNameAndParam(Class<?> aClass, String nameOfMethod, Class<?>[] param) throws NoSuchMethodException{
         Method method;
         //If the method you are trying to access takes no parameters, pass null as the parameter type array, like this:   
-        if(StringKit.isArrayEmpty(param))method = aClass.getMethod(nameOfMethod);//nameOfMethod, null
+        if(CollectionKit.isArrayEmpty(param))method = aClass.getMethod(nameOfMethod);//nameOfMethod, null
         else method = aClass.getMethod(nameOfMethod,param);// String.class
         return method;
     }
@@ -417,7 +416,7 @@ public class ReflectionKit<T>{
                 types.add(field);
             }
         }
-        return StringKit.convertListToArray(types);
+        return CollectionKit.convertListToArray(types);
     }
 
     /**
@@ -432,7 +431,7 @@ public class ReflectionKit<T>{
         for(Field field : fields) {
             classes.add(field.getType());
         }
-        return StringKit.convertListToArray(classes);
+        return CollectionKit.convertListToArray(classes);
     }
 
     /**
@@ -871,7 +870,7 @@ public class ReflectionKit<T>{
             //final Annotation annotation = field.getAnnotation(annotationClass);
             //list = getAnnotationField(aClass, annotation, fieldName);
             if(aObj != null && !aObj.isEmpty()) {
-                Object[] bObj = StringKit.concatenateArrays(fObj, aObj.toArray());
+                Object[] bObj = CollectionKit.concatenateArrays(fObj, aObj.toArray());
                 list.add(bObj);
             }
         }

@@ -1,7 +1,7 @@
 package com.github.p4535992.util.sql;
 
+import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
 
 import java.sql.*;
 import java.util.*;
@@ -142,7 +142,7 @@ public class  SQLKit<T> {
             }
         }
         query +=" FROM "+ nameOfTable +" ";
-        if(!StringKit.isArrayEmpty(columns_where)) {
+        if(!CollectionKit.isArrayEmpty(columns_where)) {
             if(values_where==null){
                 statement = true;
                 //values_where = new Object[columns_where.length];

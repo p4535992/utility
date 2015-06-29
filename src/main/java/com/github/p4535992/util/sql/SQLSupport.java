@@ -1,8 +1,8 @@
 package com.github.p4535992.util.sql;
 
+import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.reflection.ReflectionKit;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
 
 import javax.persistence.Column;
 import java.lang.annotation.Annotation;
@@ -179,7 +179,7 @@ public class SQLSupport<T>{
         for(Class<?> cl: classes){
             types.add(SQLHelper.convertClass2SQLTypes(cl));
         }
-        return StringKit.convertListToArray(types);
+        return CollectionKit.convertListToArray(types);
     }
 
     public static String[] getArrayColumns(Class<?> clazz, Class<? extends Annotation> aClass,String attributeNameColumnAnnotation) throws NoSuchFieldException {
