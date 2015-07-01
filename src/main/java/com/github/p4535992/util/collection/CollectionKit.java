@@ -1,6 +1,7 @@
 package com.github.p4535992.util.collection;
 
 import com.github.p4535992.util.reflection.ReflectionKit;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -19,6 +20,7 @@ public class CollectionKit {
      * @param <T> generic type.
      * @return list with a single element.
      */
+    @SuppressWarnings("rawtypes")
     public static <T> List createListWithSingleElement(T object){
         return Collections.singletonList(object);
     }
@@ -29,6 +31,7 @@ public class CollectionKit {
      * @param <T> generic type.
      * @return set with a single element.
      */
+    @SuppressWarnings("rawtypes")
     public static <T> Set createSetWithSingleElement(T object){
         return Collections.singleton(object);
     }
@@ -142,6 +145,7 @@ public class CollectionKit {
      * @param array the Array collection.
      * @return the Iterable object.
      */
+    @SuppressWarnings("rawtypes")
     public static <T> Iterable convertArrayToIterable(T[] array){
         return Arrays.asList(array);
     }
@@ -295,6 +299,18 @@ public class CollectionKit {
     }
 
     /**
+     * Method to copy apart of the array.
+     * @param oldArray the Array Colecction you wan tot copy.
+     * @param startIndex the start index.
+     * @param endIndex the end index.
+     * @param <T> generic type.
+     * @return the subArray.
+     */
+    public static <T> T[] copyContentArray(T[] oldArray,int startIndex,int endIndex){
+        return Arrays.copyOfRange(oldArray, startIndex, endIndex);
+    }
+
+    /**
      * Method to check is a array is empty or with all value null or empty.
      * @param array array.
      * @param <T> generic type.
@@ -348,22 +364,93 @@ public class CollectionKit {
 
     /**
      * Method to convert a list to a array object.
-     * @param list list.
+     * @param list List Collection..
      * @param <T> generic variable.
-     * @return array .
+     * @return Array Collection .
      */
     @SuppressWarnings("unchecked")
     public static <T> T[] convertListToArray(List<T> list){
-        //return list.toArray(new Object[ list.size()]);
         T[] array = (T[]) Array.newInstance(list.get(0).getClass(), list.size());
-        //T[] items=(T[]) new Object[size]
         if(ReflectionKit.isWrapperType(list.get(0).getClass())){ //if is a primitve class
             for(int i = 0; i < list.size(); i++) array[i] = list.get(i);
-        }else{ //is is not a primitve class
+        }else{ //is is not a primitive class
             list.toArray(array);
         }
         return array;
     }
+
+    /**
+     * Method to convert a List Colection To array Collection.
+     * @param list list collection.
+     * @param clazz the Clazz of the elements of the Arrays.
+     * @param <T> generic variable.
+     * @return Array Collection.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T[] convertListToArray(List<T> list,Class<T> clazz){
+        T[] array = (T[]) Array.newInstance(clazz, list.size());
+        if(ReflectionKit.isWrapperType(list.get(0).getClass())){ //if is a primitve class
+            for(int i = 0; i < list.size(); i++) array[i] = clazz.cast(list.get(i));
+        }else{ //is is not a primitive class
+            list.toArray(array);
+        }
+        return array;
+    }
+
+    /**
+     * Method to convert a Array Collection of Integer to a Array Collection of int.
+     * @param IntegerArray the Array Collection of Integers.
+     * @return Array Collection of int.
+     */
+    public static int[] convertIntegersToInt(Integer[] IntegerArray) {
+       /* int[] result = new int[IntegerArray.length];
+        for (int i = 0; i < IntegerArray.length; i++) {
+            result[i] = IntegerArray[i].intValue();
+        }
+        return result;*/
+        return ArrayUtils.toPrimitive(IntegerArray);
+    }
+
+    /**
+     * Method to convert a Array Collection of int to a Array Collection of Integer.
+     * @param intArray the Array Collection of int.
+     * @return Array Collection of Integer.
+     */
+    public static Integer[] convertIntToIntegers(int[] intArray) {
+        /*Integer[] result = new Integer[intArray.length];
+        for (int i = 0; i < intArray.length; i++) {
+            result[i] = Integer.valueOf(intArray[i]);
+        }
+        return result;*/
+        return ArrayUtils.toObject(intArray);
+    }
+
+
+    // chops a list into non-view sublists of length L
+
+    /**
+     * Method to Split List in n°. SubLIst of length L.
+     * @param list the List Collection To Split.
+     * @param L the Size of all the SubList.
+     * @param <T> generic type.
+     * @return A List Collection of Lists with the same size
+     */
+    public static <T> List<List<T>> chopped(List<T> list, final int L) {
+        List<List<T>> parts = new ArrayList<>();
+        final int N = list.size();
+        for (int i = 0; i < N; i += L) {
+            parts.add(new ArrayList<>(list.subList(i, Math.min(N, i + L))));
+        }
+        return parts;
+    }
+
+
+
+
+
+
+
+
 
 
 }

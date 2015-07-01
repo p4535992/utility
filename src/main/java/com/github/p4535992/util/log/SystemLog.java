@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.text.DateFormat;
+import java.util.List;
 
 
 /**
@@ -148,6 +149,7 @@ public class SystemLog {
     public static void abort(int rc, String logEntry) {level = Level.ABORT;  ERROR=true;write(logEntry); System.exit(rc);}
     public static void throwException(Throwable throwable){ level = Level.THROW;  ERROR=true; write(throwable.getMessage());}
     public static void exception(Exception e){ level = Level.EXCEP; ERROR=true;e.printStackTrace();}
+    public static void throwException(Exception e){Throwable thrw = e.getCause();  throwException(thrw);}
     public static void loggerInfoSLF4J(org.slf4j.Logger log,String msg){log.info(msg);}
 
     /**
@@ -160,6 +162,15 @@ public class SystemLog {
         write(logEntry);
     }
 
+    private static void printStackTrace(Exception e){
+        StackTraceElement elements[] = e.getStackTrace();
+        for (int i = 0, n = elements.length; i < n; i++) {
+            System.err.println(elements[i].getFileName()
+                    + ":" + elements[i].getLineNumber()
+                    + ">> "
+                    + elements[i].getMethodName() + "()");
+        }
+    }
 
     public static String getUsageMessage() {
         String lines[] ={/*TEST MESSAGE*/};

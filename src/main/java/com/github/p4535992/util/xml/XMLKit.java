@@ -29,15 +29,27 @@ import javax.xml.xpath.XPathFactory;
 /**
  * Little Utility for Create,Read,Delete  adn Update XML File without Third Library JAVA
  * Created by 4535992 on 28/03/2015.
+ * @author 4535992.
+ * @version 2015-06-29.
  */
+@SuppressWarnings("unused")
 public class XMLKit {
 
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKit.class);
     private static DocumentBuilderFactory docFactory;
     private static DocumentBuilder docBuilder;
     private static Document doc;
-    private static Element rootElement;
+    public static Map<String,String> namespaces = new Hashtable<>();
 
+
+    private static XMLKit instance = null;
+    protected XMLKit(){ }
+    public static XMLKit getInstance(){
+        if(instance == null) {
+            instance = new XMLKit();
+        }
+        return instance;
+    }
 
     /**
      * Method to load the XML Document.
@@ -73,7 +85,6 @@ public class XMLKit {
      * @return the document object initialize.
      */
     public static Document newDocumentXML(){
-        doc=null;
         try{
             docFactory = DocumentBuilderFactory.newInstance();
             //this line of code not work properly
@@ -126,20 +137,58 @@ public class XMLKit {
     public static void updateValueOfAttribute(File xmlFile,String tagName,String nameAttribute,String newValueAttribute)
             throws TransformerException, IOException, SAXException {
             doc =  loadDocumentFromFile(xmlFile);
-            Element el = selectFirstElementByAttribute(doc, tagName, nameAttribute);
+            Element el = selectFirstElementByAttribute(tagName, nameAttribute);
             //get map containing the attributes of this node
             NamedNodeMap attributes = el.getAttributes();
             //get the number of nodes in this map
             int numAttrs = attributes.getLength();
             for(int i =0; i < numAttrs; i++){
                 Attr attr = (Attr) attributes.item(i);
-                if( attr.getNodeName()==nameAttribute){
+                if(Objects.equals(attr.getNodeName(), nameAttribute)){
                     attr.setValue(newValueAttribute);
                     SystemLog.message("Update the value of the attribute:"+attr.getName()+ "="+newValueAttribute);
                     break;
                 }
             }
             saveToXml(doc, xmlFile.getAbsolutePath());
+    }
+
+    public static void updateValueOfAttribute(String tagName,String nameAttribute,String newValueAttribute)
+            throws TransformerException, IOException, SAXException {
+        Element el = selectFirstElementByAttribute(tagName, nameAttribute);
+        //get map containing the attributes of this node
+        NamedNodeMap attributes = el.getAttributes();
+        //get the number of nodes in this map
+        int numAttrs = attributes.getLength();
+        for(int i =0; i < numAttrs; i++){
+            Attr attr = (Attr) attributes.item(i);
+            if(Objects.equals(attr.getNodeName(), nameAttribute)){
+                attr.setValue(newValueAttribute);
+                SystemLog.message("Update the value of the attribute:"+attr.getName()+ "="+newValueAttribute);
+                break;
+            }
+        }
+    }
+
+    public static void updateValueOfInnerText(Element element,String tagName,String newContent){
+        Element root = doc.getDocumentElement();
+        NodeList rootlist = root.getChildNodes();
+        for(int i=0; i<rootlist.getLength(); i++) {
+            Element theTagFirstLevel = (Element)rootlist.item(i);
+            if(theTagFirstLevel.getTagName().equalsIgnoreCase(tagName)) {
+                NodeList personlist = theTagFirstLevel.getChildNodes();
+                Element name = (Element) personlist.item(0);
+                NodeList namelist = name.getChildNodes();
+                Text nametext = (Text) namelist.item(0);
+                String oldname = nametext.getData();
+                if (!oldname.equals(newContent)) {
+                    nametext.setData(newContent);
+                    SystemLog.message("Update the content of the tag:"+tagName+ "="+newContent);
+                }
+                break;
+            }
+
+        }
     }
 
     /**
@@ -154,8 +203,19 @@ public class XMLKit {
     }
 
     /**
+     * Method to add a new attribute to a Element of the document XML.
+     * @param element the element where add the new attribute.
+     * @param newAttribute the nea attribute toadd.
+     * @param valueAttribute the value of the new attribute.
+     */
+    public static void addAttribute(Element element,String newAttribute,String valueAttribute){
+        Element person = (Element)element.getFirstChild();
+        person.setAttribute(newAttribute,valueAttribute);
+    }
+
+    /**
      * Method to return a list of named Elements with a specific attribute value.
-     * note http://www.java2s.com/Code/Java/XML/ReturnalistofnamedElementswithaspecificattributevalue.htm
+     * http://www.java2s.com/Code/Java/XML/ReturnalistofnamedElementswithaspecificattributevalue.htm
      * @param element the containing Element.
      * @param name the tag name.
      * @param attribute Attribute name.
@@ -181,12 +241,11 @@ public class XMLKit {
     /**
      * Method t o return a single first Element with a specific attribute value. 
      * (maybe you can find a better method))
-     * @param doc xml file of input.
      * @param tagName string of the name tag xml.
      * @param nameAttribute string of the name attribute xml.
      * @return the element xml with the specific attribute.
      */
-    public static Element selectFirstElementByAttribute(Document doc,String tagName,String nameAttribute) {
+    public static Element selectFirstElementByAttribute(String tagName,String nameAttribute) {
         Element el = doc.getDocumentElement(); //get root element
         NodeList  elementList = el.getElementsByTagName(tagName);
         for (int i = 0; i < elementList.getLength(); i++) {
@@ -204,7 +263,7 @@ public class XMLKit {
      * @return array list of attributes.
      */
     public static List<Attr> getAllAttributes(Element el){
-        ArrayList<Attr> listAttr = new ArrayList<>();
+        List<Attr> listAttr = new ArrayList<>();
         NamedNodeMap attributes = el.getAttributes();//get map containing the attributes of this node
         int numAttrs = attributes.getLength();  //get the number of nodes in this map
         for(int i =0; i < numAttrs; i++){
@@ -216,21 +275,10 @@ public class XMLKit {
 
     /**
      * Get root element.
-     * @param doc xml document file.
      * @return element root of the xml document.
      */
-    public static Element getRootElement(Document doc){
-        Element root;
-//        NodeList list = doc.getChildNodes();
-//        for(int i =0; i < list.getLength(); i++){
-//            Node nRoot = list.item(i);
-//            if(nRoot.getNodeType()==Node.ELEMENT_NODE){
-//                root = (Element)nRoot;
-//                break;
-//            }
-//        }
-        root = doc.getDocumentElement();
-        return root;
+    public static Element getRootElement(){
+        return doc.getDocumentElement();
     }
 
     /**
@@ -343,8 +391,7 @@ public class XMLKit {
     public static Document getDocument(String filePath) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-        Document xmlDoc = docBuilder.parse(filePath);
-        return xmlDoc;
+        return docBuilder.parse(filePath);
     }
 
     /**
@@ -393,8 +440,7 @@ public class XMLKit {
      * @return node XML.
      */
     public static Node convertElementToNode(Element elem){
-        Node n = elem.getFirstChild();
-        return n;
+        return elem.getFirstChild();
     }
 
     /**
@@ -411,7 +457,7 @@ public class XMLKit {
         if (name.startsWith("#")) {
             return "";
         }
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append('<').append(name);
         NamedNodeMap attrs = n.getAttributes();
         if (attrs != null) {
@@ -421,7 +467,7 @@ public class XMLKit {
                         .append("=\"").append(attr.getNodeValue()).append("\"");
             }
         }
-        String textContent = null;
+        String textContent;
         NodeList children = n.getChildNodes();
         if (children.getLength() == 0) {
             if ((textContent = n.getTextContent()) != null && !"".equals(textContent)) {
@@ -471,35 +517,19 @@ public class XMLKit {
             });
             // open and parse XML-file
             doc = docBuilder.parse(input);
-            // Get Root xmlElement
-            setRootElement();
         } catch (SAXException|IOException|ParserConfigurationException e) {
             SystemLog.exception(e);
         }
     }
 
-    /**
-     * Set the Root Element.
-     */
-    public static void setRootElement(){
-        rootElement = doc.getDocumentElement();
-    }
 
     /**
-     * Get the Root Element.
-     * @return the root element.
-     */
-    public static Element getRootElement(){
-        return rootElement;
-    }
-
-    /**
-     * Check name of root element is as expected.
+     * Method to Check the name of root element is as expected.
      * @param name name of the root tag.
      * @return boolean value.
      */
     public static boolean isRootName(String name) {
-        return rootElement.getNodeName().equals(name);
+        return getRootElement().getNodeName().equals(name);
     }
 
     /**
@@ -531,7 +561,7 @@ public class XMLKit {
      * @return string of the name of root type.
      */
     public static String getRootTypeName() {
-        return rootElement.getSchemaTypeInfo().getTypeName();
+        return getRootElement().getSchemaTypeInfo().getTypeName();
     }
 
     /**
@@ -540,7 +570,7 @@ public class XMLKit {
      * @throws Exception error.
      */
     public static String getContent() throws Exception {
-        NodeList childNodes = rootElement.getChildNodes();
+        NodeList childNodes = getRootElement().getChildNodes();
         return serializeNodes(childNodes);
     }
 
@@ -597,7 +627,7 @@ public class XMLKit {
         catch (Exception e) {  SystemLog.exception(e);  }
     }
     
-    public static Map<String,String> namespaces = new Hashtable<String,String>();
+
 
     public static void checkPrefix(String qname)throws Exception{
         if(qname == null)
@@ -631,17 +661,15 @@ public class XMLKit {
       if(name[0] == '_'
       || Character.isLetter(name[0]))
       {
-        for(int pos = 0; pos < name.length; pos++)
-        {
-          if(!Character.isLetter(name[pos])
-          && !Character.isDigit(name[pos])
-          && name[pos] != '.'
-          && name[pos] != '-'
-          && name[pos] != '_')
-          {
-            return false;
+          for (char aName : name) {
+              if (!Character.isLetter(aName)
+                      && !Character.isDigit(aName)
+                      && aName != '.'
+                      && aName != '-'
+                      && aName != '_') {
+                  return false;
+              }
           }
-        }
         return true;
       }
       return false;
@@ -650,7 +678,7 @@ public class XMLKit {
     public static String xmlDecode(String text) throws Exception {
       String origText = text;
       String newText = "";
-      while(text.indexOf("&") >= 0)
+      while(text.contains("&"))
       {
         int pos = text.indexOf("&");
         newText += text.substring(0, pos);
@@ -699,7 +727,7 @@ public class XMLKit {
           {
               throw new Exception("Improperly escaped character: "+ charref);
           }
-          char ch = 0;
+          char ch;
           try
           {
             ch =
@@ -768,16 +796,12 @@ public class XMLKit {
         while(pos < sbuf.length)
         {
             char ch = sbuf[pos];
-            if(ch == '\n' || (ch >= ' ' && ch <= '~'))
-            {
-              // nop;
-            }
-            else
+            if(!(ch == '\n' || (ch >= ' ' && ch <= '~')))
             {
                 if(pos > lastPos)
                 {
-                   String range =new String(sbuf,lastPos,pos - lastPos);
-                   rdfString += range;
+                    String range =new String(sbuf,lastPos,pos - lastPos);
+                    rdfString += range;
                 }
                 rdfString += "&#" + (int) ch + ";";
                 lastPos = pos + 1;
@@ -792,32 +816,6 @@ public class XMLKit {
         return rdfString;
     }//xmlEncode
 }
-
-    /**
- 	 * A SAX ContentHandler to find the prefixes declared on the root element.
-     * @note I don't own any right on this piece of code that belongs to Norman Walsh , i just modified for my purpose
- 	 * @author Norman Walsh
- 	 * @version $Revision: 1.1 $
- 	 */
-    @SuppressWarnings("unchecked")
-    class PrefixGrabber extends DefaultHandler {
-        private Hashtable<String,String> nsHash = new Hashtable<>();
-        private boolean root = true;
-
-        public Hashtable<String,String> getNamespaces() {
-            return nsHash;
-        }
-
-        public void startPrefixMapping (String prefix, String uri) throws SAXException {
-            if (root) {
-                nsHash.put(prefix, uri);
-            }
-        }
-
-        public void startElement (String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        	    root = false;
-        }            
-    }//prefixgrabber
 
     
 

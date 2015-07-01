@@ -98,7 +98,6 @@ public class SQLHelper {
             case Types.TIME:
                 result = java.sql.Time.class;
                 break;
-
             case Types.TIMESTAMP:
                 result = java.sql.Timestamp.class;
                 break;
@@ -118,11 +117,12 @@ public class SQLHelper {
         if(aClass.getName().equals(String.class.getName()))result = Types.VARCHAR;
         else if(aClass.getName().equals(java.math.BigDecimal.class.getName()))result = Types.NUMERIC;
         else if(aClass.getName().equals(Boolean.class.getName()))result = Types.BIT;
+        else if(aClass.getName().equals(int.class.getName()))result = Types.INTEGER;
         else if(aClass.getName().equals(Byte.class.getName()))result = Types.TINYINT;
         else if(aClass.getName().equals(Short.class.getName()))result = Types.SMALLINT;
         else if(aClass.getName().equals(Integer.class.getName()))result = Types.INTEGER;
         else if(aClass.getName().equals(Long.class.getName())) result = Types.BIGINT;
-        else if(aClass.getName().equals(Float.class.getName()))result = Types.FLOAT;
+        else if(aClass.getName().equals(Float.class.getName()))result = Types.REAL;
         else if(aClass.getName().equals(Double.class.getName()))result = Types.DOUBLE;
         else if(aClass.getName().equals(Byte[].class.getName()))result = Types.VARBINARY;
         else if(aClass.getName().equals(java.sql.Date.class.getName())) result = Types.DATE;
@@ -131,6 +131,17 @@ public class SQLHelper {
         else if(aClass.getName().equals(java.net.URL.class.getName()))result = Types.VARCHAR;
         else result = Types.NULL;
         return result;
+    }
+
+    public static java.sql.Timestamp getCurrentTimeStamp() {
+        java.util.Date today = new java.util.Date();
+        return new java.sql.Timestamp(today.getTime());
+
+    }
+
+    public static java.sql.Date getCurrentDate() {
+        java.util.Date today = new java.util.Date();
+        return new java.sql.Date(today.getTime());
     }
 
 

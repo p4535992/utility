@@ -5,11 +5,24 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * note you need the JDOM library for use these
+ * note you need the JDOM2 library for use these
  * Created by 4535992 on 28/03/2015.
+ * @author 4535992
+ * @version 2015-06-29
  */
+@SuppressWarnings("unused")
 public class XMLKitJDOM {
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKitJDOM.class);
+
+    private static XMLKitJDOM instance = null;
+    protected XMLKitJDOM(){ }
+    public static XMLKitJDOM getInstance(){
+        if(instance == null) {
+            instance = new XMLKitJDOM();
+        }
+        return instance;
+    }
+
     /**
      * Method for update the value of a attribute of a specific tag in a XML document
      * @param xmlPath xml file of input
@@ -17,7 +30,7 @@ public class XMLKitJDOM {
      * @param nameAttribute name of the attribute
      * @param newValueAttribute name of the value
      */
-    public static void updateValueOfattributeSAX(String xmlPath,String tagName,String nameAttribute,String newValueAttribute){
+    public static void updateValueOfAttributeSAX(String xmlPath,String tagName,String nameAttribute,String newValueAttribute){
         try {
             org.jdom2.input.SAXBuilder builderSAX = new org.jdom2.input.SAXBuilder();
             File xmlFile = new File(xmlPath);

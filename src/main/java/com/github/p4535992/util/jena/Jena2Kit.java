@@ -319,10 +319,11 @@ public class Jena2Kit {
             //org.apache.jena.riot.Lang.CSV,
             //org.apache.jena.riot.Lang.RDFTHRIFT
         };
+
     /**
      * A list of org.apache.jena.riot.RDFFormat file formats used in jena.
      * @return all the RDFFormat supported from jena.
-     *
+     */
  	private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] { 	
  		RDFFormat.TURTLE, RDFFormat.TTL,RDFFormat.JSONLD_FLAT,RDFFormat.JSONLD_PRETTY,
  		RDFFormat.JSONLD,RDFFormat.RDFJSON,RDFFormat.RDFNULL,RDFFormat.NQUADS,RDFFormat.NQ,
@@ -332,7 +333,7 @@ public class Jena2Kit {
  		RDFFormat.TRIG_FLAT,RDFFormat.TRIG_PRETTY,RDFFormat.TURTLE_BLOCKS,RDFFormat.TURTLE_FLAT,
  		RDFFormat.TURTLE_PRETTY};
         //org.apache.jena.riot.RDFFormat.RDF_THRIFT,org.apache.jena.riot.RDFFormat.RDF_THRIFT_VALUES,
-      */
+
     /*
     public static com.hp.hpl.jena.datatypes.RDFDatatype convertXSDDatatypeToRDFDatatype(
             com.hp.hpl.jena.datatypes.xsd.XSDDatatype xsdDatatype){
@@ -385,7 +386,7 @@ public class Jena2Kit {
         if(strFormat.toUpperCase().contains("TTL") || strFormat.toUpperCase().contains("TURTLE")){
             strFormat="Turtle";
         }
-        Collection<RDFFormat> allFormatsOfRDFFormat = RDFWriterRegistry.registered();
+        //Collection<RDFFormat> allFormatsOfRDFFormat = RDFWriterRegistry.registered();
         for(RDFFormat rdfFormat : allFormatsOfRDFFormat) {
                 if (rdfFormat.getLang().getName().equalsIgnoreCase(strFormat))
                         return rdfFormat;
@@ -508,7 +509,7 @@ public class Jena2Kit {
 		which maps Var to Node. Var is ARQ's extension of Node_Variable. Create with Var.alloc(...)
 		You don't need to cast to Node_URI (it's an implementation class really) - at the SPI, there
 		are "Nodes" as generic items (and you can insert Triples that aren't RDF like ones with variables).*/
-   /**
+   /*
     * Get the dc:relation property
     * @return dc:relation property
     */

@@ -134,12 +134,21 @@ public class FileUtil {
     }
 
     /**
+     * Method or get the local path in the project.
+     * @param file File object.
+     * @return the local path to the file in the project.
+     */
+    public static String localPath(File file){
+        return localPath("", file.getAbsolutePath());
+    }
+
+    /**
      * Method for get the local path in the project.
-     * @param localPath string of the absolute path to the file in the project.
+     * @param absolutePath string of the absolute path to the file in the project.
      * @return the local path to the file in the project
      */
-    public static String localPath(String localPath){
-        return localPath("", localPath);
+    public static String localPath(String absolutePath){
+        return localPath("", absolutePath);
     }
 
     /**
@@ -475,9 +484,8 @@ public class FileUtil {
         return map;
     }
 
-    public static  InputStream convertFileToStream(String pathToFile) throws IOException{
+    public static  InputStream convertResourceFileToStream(String pathToFile) throws IOException{
         // JDK7 try-with-resources ensures to close stream automatically
-        //try (InputStream is = getClass().getResourceAsStream(pathToFile)) {
         try (InputStream is = FileUtil.class.getResourceAsStream(pathToFile)) {
             int Byte;       // Byte because byte is keyword!
             while ((Byte = is.read()) != -1 ) {
@@ -491,7 +499,43 @@ public class FileUtil {
 //        File f = new File("/spring-hibernate4v2.xml");
     }
 
-    public static String getResourceAsString(String fileName,Class<?> thisClass) {
+    public static  InputStream convertFileToStream(String pathToFile){
+        try {
+            return new FileInputStream(new File(pathToFile));
+        } catch (FileNotFoundException e) {
+            SystemLog.warning("The file:" + pathToFile + " not exists!!!");
+            return null;
+        }
+    }
+
+    public static InputStream convertFileToStream(File file){
+        try {
+            return new FileInputStream(file);
+        }catch(FileNotFoundException e){
+            SystemLog.warning("The file:"+ file.getAbsolutePath() +" not exists!!!");
+            return null;
+        }
+    }
+
+    public static File convertStreamToFile(InputStream inStream,String filePathOutput) {
+        try(OutputStream outputStream = new FileOutputStream(new File(filePathOutput))) {
+            int read;
+            byte[] bytes = new byte[1024];
+            while ((read = inStream.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, read);
+            }
+        } catch (IOException e) {
+            SystemLog.exception(e);
+        }
+        if(new File(filePathOutput).exists()) {
+            return new File(filePathOutput);
+        }else{
+            SystemLog.warning("The file:"+ new File(filePathOutput).getAbsolutePath() +" not exists!!!");
+            return null;
+        }
+    }
+
+    public static String convertResourceFileAsString(String fileName,Class<?> thisClass) {
         try {
             StringBuilder result = new StringBuilder("");
             //Get file from resources folder
@@ -512,7 +556,7 @@ public class FileUtil {
         }
     }
 
-    public static InputStream getResourceAsStream(String name,Class<?> clazz) {
+    public static InputStream convertResourceFileAsStream(String name,Class<?> clazz) {
         name = resolveName(name);
         try {
             // A system class.
@@ -660,14 +704,16 @@ public class FileUtil {
                 handler.directory(node);
                 File[] children = node.listFiles();
                 //Arrays.sort --> sort
-                sort(children, new Comparator<File>() {
-                    @Override
-                    public int compare(File lhs, File rhs) {
-                        return lhs.getName().compareTo(rhs.getName());
+                if (children != null) {
+                    sort(children, new Comparator<File>() {
+                        @Override
+                        public int compare(File lhs, File rhs) {
+                            return lhs.getName().compareTo(rhs.getName());
+                        }
+                    });
+                    for (File child : children) {
+                        walk(child);
                     }
-                });
-                for (File child : children) {
-                    walk(child);
                 }
             } else {
                 handler.file(node);

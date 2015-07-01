@@ -21,8 +21,7 @@ import java.util.List;
  */
 @SuppressWarnings("unused")
 public class SQLSupport<T>{
-    private Class<T> cl;
-    private String clName;
+    private Class<? extends T> cl;
 
     //CONSTRUCTOR
     public SQLSupport() {}
@@ -55,32 +54,53 @@ public class SQLSupport<T>{
         this.TYPES = TYPES;
     }
 
-    public SQLSupport(String[] columns,Object[] values,int[] types){
+    @SuppressWarnings("rawtypes")
+    protected <T> SQLSupport(String[] columns,Object[] values,int[] types){
+        //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
         this.COLUMNS=columns;
         this.VALUES = values;
         this.TYPES = types;
     }
 
     @SuppressWarnings("rawtypes")
-    public <T> SQLSupport(T object){
+    protected <T> SQLSupport(T object){
+        //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
         SQLSupport support = SQLSupport.insertSupport(object);
         this.COLUMNS= support.getCOLUMNS();
         this.VALUES = support.getVALUES();
         this.TYPES = support.getTYPES();
     }
 
-    public SQLSupport(List<String> columns,List<Object> values,List<Integer> types){
-        String[] acolumns = new String[columns.size()];
-        Object[] avalues = new Object[values.size()];
-        int[] atypes = new int[types.size()];
-        for(int i = 0; i < columns.size(); i++) {
-            acolumns[i] = columns.get(i);
-            avalues[i] = values.get(i);
-            atypes[i] = types.get(i);
+    @SuppressWarnings("rawtypes")
+    protected SQLSupport(List<String> columns,List<Object> values,List<Integer> types){
+        //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
+        this.COLUMNS= CollectionKit.convertListToArray(columns);
+        this.VALUES = CollectionKit.convertListToArray(values);
+        this.TYPES = CollectionKit.convertIntegersToInt(CollectionKit.convertListToArray(types));
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static SQLSupport instance = null;
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public static <T> SQLSupport getInstance(T object){
+        if(instance == null) {
+            instance = new SQLSupport(object);
         }
-        this.COLUMNS=acolumns;
-        this.VALUES = avalues;
-        this.TYPES = atypes;
+        return instance;
+    }
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public static <T> SQLSupport getInstance(String[] columns,Object[] values,Integer[] types){
+        if(instance == null) {
+            instance = new SQLSupport(columns,values,CollectionKit.convertIntegersToInt(types));
+        }
+        return instance;
+    }
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public static <T> SQLSupport getInstance(List<String> columns,List<Object> values,List<Integer> types){
+        if(instance == null) {
+            instance = new SQLSupport(columns,values,types);
+        }
+        return instance;
     }
 
     @Override
@@ -106,6 +126,7 @@ public class SQLSupport<T>{
     @SuppressWarnings("rawtypes")
     public static <T> SQLSupport insertSupport(T object){
         SQLSupport support = new SQLSupport();
+        String attributeAnnotationKey ="name";
         try {
             //Map<String,Class<?>> l = ReflectionKit.inspectAndLoadGetterObject(object);
             //Integer size = object.getClass().getDeclaredFields().length;
@@ -141,7 +162,8 @@ public class SQLSupport<T>{
                                 Object[] obj = (Object[]) list.get(j)[k];
                                 int g = 0;
                                 while (g < obj.length) {
-                                    if (obj[g].equals("name")) {
+                                    //attributeAnnotationKey = "name"
+                                    if (obj[g].equals(attributeAnnotationKey)) {
                                         columns[i] = obj[++g].toString();
                                         flag = true;
                                         break;

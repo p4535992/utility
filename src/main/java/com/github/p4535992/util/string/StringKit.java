@@ -1,5 +1,6 @@
 package com.github.p4535992.util.string;
 
+import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionKit;
 import org.slf4j.Logger;
@@ -589,6 +590,46 @@ public class StringKit<T> {
             SystemLog.exception(e);
         }
         return map;
+    }
+
+    /**
+     * Method to convert a array to a string with a specific separator
+     * @param array the Array Collection.
+     * @param separator the char separator.
+     * @param <T> generic type.
+     * @return the String of the content of the array.
+     */
+    public static <T> String convertArrayContentToSingleString(T[] array,char separator){
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            strBuilder.append( array[i].toString() );
+            if(isNullOrEmpty(Character.toString(separator))&& i < array.length-1){
+                strBuilder.append(separator);
+            }
+        }
+        return strBuilder.toString();
+    }
+
+    /**
+     * Method to convert a array to a string.
+     * @param array the Array Collection.
+     * @param <T> generic type.
+     * @return the String of the content of the array.
+     */
+    public static <T> String convertArrayContentToSingleString(T[] array){
+        String s = Arrays.toString(array);
+        s = s.substring(1,s.length()-1);
+        return s;
+    }
+
+
+    /**
+     * Method to convert Strng to char.
+     * @param string string.
+     * @return Array of char.
+     */
+    public static char[] convertStringToChar(String string){
+        return string.toCharArray();
     }
 
 

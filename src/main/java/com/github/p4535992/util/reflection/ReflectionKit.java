@@ -30,14 +30,10 @@ import java.util.*;
  *
  * http://stackoverflow.com/questions/1555326/java-class-cast-vs-cast-operator
  *
- * @param <T> T generic type.
  */
 @SuppressWarnings("unused")
-public class ReflectionKit<T>{
+public class ReflectionKit{
 
-    /*private Class<T> cl;
-    private String clName;
-    */
     private static final Set<Class<?>> WRAPPER_TYPES = getWrapperTypes();
 
     /**
@@ -1558,5 +1554,11 @@ public class ReflectionKit<T>{
         MyObject = (Object)cons.newInstance();
         return MyObject;
     }*/
+
+    public static Class<?> getTheParentGenericClass(Class<?> thisClass){
+        java.lang.reflect.Type t = thisClass.getGenericSuperclass();
+        java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) t;
+        return (Class) pt.getActualTypeArguments()[0];
+    }
 
 }
