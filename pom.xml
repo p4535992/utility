@@ -39,6 +39,19 @@
         </license>
     </licenses>
 
+    <repositories>
+        <repository>
+            <id>maven.aksw.internal</id>
+            <name>University Leipzig, AKSW Maven2 Repository</name>
+            <url>http://maven.aksw.org/archiva/repository/internal</url>
+        </repository>
+        <repository>
+            <id>maven.aksw.snapshots</id>
+            <name>University Leipzig, AKSW Maven2 Repository</name>
+            <url>http://maven.aksw.org/archiva/repository/snapshots</url>
+        </repository>
+    </repositories>
+
     <properties>
         <!-- Generic properties -->
         <downloadSources>true</downloadSources>
@@ -343,6 +356,25 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- =============== -->
+        <!-- VIRTUOSO-JENA   -->
+        <!-- =============== -->
+        <dependency>
+            <groupId>com.openlink.virtuoso</groupId>
+            <artifactId>virt_jena2</artifactId>
+            <version>7.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.openlink.virtuoso</groupId>
+            <artifactId>virtjdbc4-1</artifactId>
+            <version>7.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.openlink.virtuoso</groupId>
+            <artifactId>virtjena2</artifactId>
+            <version>develop7-2015-06-25</version>
+        </dependency>
+
         <!-- Apache Support -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -377,7 +409,7 @@
 
 
         <!-- =============== -->
-        <!-- LOGGING  -->
+        <!-- LOGGING         -->
         <!-- =============== -->
          <dependency>
              <groupId>org.springframework.boot</groupId>

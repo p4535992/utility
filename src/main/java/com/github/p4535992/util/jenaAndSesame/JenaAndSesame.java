@@ -21,10 +21,23 @@ import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 /**
  * Created by 4535992 on 10/06/2015.
+ * @author 4535992.
+ * @version 2015-07-02.
  */
+@SuppressWarnings("unused")
 public class JenaAndSesame {
 
-    /**
+    private static JenaAndSesame instance = null;
+    protected JenaAndSesame(){}
+
+    public static JenaAndSesame getInstance(){
+        if(instance == null) {
+            instance = new JenaAndSesame();
+        }
+        return instance;
+    }
+
+    /*
      * Method to convert a Sesame Dataset to a JenaModel
      * @param repository
      * @return
@@ -60,7 +73,7 @@ public class JenaAndSesame {
      * @param theRes the jena resource to convert
      * @return the jena resource as a sesame resource
      */
-    public static org.openrdf.model.Resource asSesameResource(Resource theRes) {
+    public org.openrdf.model.Resource asSesameResource(Resource theRes) {
         if (theRes == null) {
             return null;
         }
@@ -77,7 +90,7 @@ public class JenaAndSesame {
      * @param theProperty the Jena Property to convert
      * @return the Jena property as a Sesame Instance
      */
-    public static org.openrdf.model.URI asSesameURI(Property theProperty) {
+    public org.openrdf.model.URI asSesameURI(Property theProperty) {
         if (theProperty == null) {
             return null;
         }
@@ -91,7 +104,7 @@ public class JenaAndSesame {
      * @param theLiteral the Jena Literal to convert
      * @return the Jena Literal as a Sesame Literal
      */
-    public static org.openrdf.model.Literal asSesameLiteral(Literal theLiteral) {
+    public org.openrdf.model.Literal asSesameLiteral(Literal theLiteral) {
         if (theLiteral == null) {
             return null;
         }
@@ -113,7 +126,7 @@ public class JenaAndSesame {
      * @param theNode the Jena node to convert
      * @return the jena node as a Sesame Value
      */
-    public static Value asSesameValue(RDFNode theNode) {
+    public Value asSesameValue(RDFNode theNode) {
         if (theNode == null) {
             return null;
         }
@@ -130,7 +143,7 @@ public class JenaAndSesame {
      * @param theRes the sesame resource to convert
      * @return the sesame resource as a jena resource
      */
-    public static com.hp.hpl.jena.rdf.model.Resource asJenaResource(org.openrdf.model.Resource theRes) {
+    public com.hp.hpl.jena.rdf.model.Resource asJenaResource(org.openrdf.model.Resource theRes) {
         if (theRes == null) {
             return null;
         }
@@ -147,7 +160,7 @@ public class JenaAndSesame {
      * @param theValue the Sesame value
      * @return the sesame value as a Jena node
      */
-    public static RDFNode asJenaNode(Value theValue) {
+    public RDFNode asJenaNode(Value theValue) {
         if (theValue instanceof org.openrdf.model.Literal) {
             return asJenaLiteral( (org.openrdf.model.Literal) theValue);
         }
@@ -161,7 +174,7 @@ public class JenaAndSesame {
      * @param theURI the sesame URI
      * @return the URI as a Jena property
      */
-    public static Property asJenaURI(URI theURI) {
+    public Property asJenaURI(URI theURI) {
         if (theURI == null) {
             return null;
         }
@@ -175,7 +188,7 @@ public class JenaAndSesame {
      * @param theLiteral the Sesame literal
      * @return the sesame literal converted to Jena
      */
-    public static com.hp.hpl.jena.rdf.model.Literal asJenaLiteral(org.openrdf.model.Literal theLiteral) {
+    public com.hp.hpl.jena.rdf.model.Literal asJenaLiteral(org.openrdf.model.Literal theLiteral) {
         if (theLiteral == null) {
             return null;
         }
@@ -197,7 +210,7 @@ public class JenaAndSesame {
      * @param theGraph the Graph to convert
      * @return the set of statements in the Sesame Graph converted and saved in a Jena Model
      */
-    public static Model asJenaModel(Graph theGraph) {
+    public Model asJenaModel(Graph theGraph) {
         Model aModel = ModelFactory.createDefaultModel();
 
         for (final org.openrdf.model.Statement aStmt : theGraph) {
@@ -212,7 +225,7 @@ public class JenaAndSesame {
      * @param theModel the model to convert
      * @return the set of statements in the Jena model saved in a sesame Graph
      */
-    public static org.openrdf.model.Model asSesameModel(Model theModel) {
+    public org.openrdf.model.Model asSesameModel(Model theModel) {
         org.openrdf.model.Model sesameModel = new TreeModel();
         StmtIterator sIter = theModel.listStatements();
         while (sIter.hasNext()) {
@@ -227,7 +240,7 @@ public class JenaAndSesame {
      * @param theStatement the statement to convert
      * @return the equivalent Sesame statement
      */
-    public static org.openrdf.model.Statement asSesameStatement(Statement theStatement) {
+    public org.openrdf.model.Statement asSesameStatement(Statement theStatement) {
         return new StatementImpl(asSesameResource(theStatement.getSubject()),
                 asSesameURI(theStatement.getPredicate()),
                 asSesameValue(theStatement.getObject()));
@@ -238,7 +251,7 @@ public class JenaAndSesame {
      * @param theStatement the statemnet to convert
      * @return the equivalent Jena statement
      */
-    public static Statement asJenaStatement(org.openrdf.model.Statement theStatement) {
+    public Statement asJenaStatement(org.openrdf.model.Statement theStatement) {
         return mInternalModel.createStatement(asJenaResource(theStatement.getSubject()),
                 asJenaURI(theStatement.getPredicate()),
                 asJenaNode(theStatement.getObject()));

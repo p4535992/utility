@@ -2,20 +2,17 @@ package com.github.p4535992.util.sesame;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.StringReader;
 import java.io.InputStream;
 import java.io.Reader;
-
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.log4j.Logger;
 import org.openrdf.http.client.SesameClientImpl;
 import org.openrdf.model.Graph;
 import org.openrdf.model.ValueFactory;
-import org.openrdf.query.MalformedQueryException;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.memory.MemoryStore;
 import org.openrdf.repository.manager.LocalRepositoryManager;
@@ -56,7 +53,7 @@ import org.openrdf.query.Update;
  * @author Johann Petrak
  * href https://gate.ac.uk/releases/gate-8.0-build4825-ALL/plugins/Ontology/src/gate/creole/ontology/impl/sesame/SesameManager.java
  */
-
+@SuppressWarnings("unused")
 public class SesameManager {
     private RepositoryConnection mRepositoryConnection;
     private Repository           mRepository;
@@ -559,9 +556,7 @@ public class SesameManager {
             closeRepository();
             try {
                 boolean done = mRepositoryManager.removeRepository(name);
-            } catch (RepositoryException e) {
-                throw new SesameManagerException("Could not delete repository "+name+": "+e);
-            } catch (RepositoryConfigException e) {
+            } catch (RepositoryException | RepositoryConfigException e) {
                 throw new SesameManagerException("Could not delete repository "+name+": "+e);
             }
         } else {
@@ -689,7 +684,7 @@ public class SesameManager {
 
     public Set<String> getRepositories() {
         if(mRepositoryManager == null) {
-            return new HashSet<String>();
+            return new HashSet<>();
         }
         try {
             return mRepositoryManager.getRepositoryIDs();

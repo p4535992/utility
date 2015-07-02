@@ -2,7 +2,10 @@ package com.github.p4535992.util.sesame;
 
 /**
  * Created by 4535992 on 13/06/2015.
+ * @author unknow.
+ * @version 2015-07-02.
  */
+@SuppressWarnings("unused")
 public class SesameManagerException  extends RuntimeException {
     private static final long serialVersionUID = 3L;
     public SesameManagerException() {}
