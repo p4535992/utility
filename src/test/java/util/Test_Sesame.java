@@ -14,7 +14,7 @@ public class Test_Sesame {
             + "       ?p ?o . } LIMIT 10 OFFSET 0 ";
 
     public static void main(String args[]) throws RepositoryException {
-        SesameUtil28 sesame = new SesameUtil28();
+        SesameUtil28 sesame = SesameUtil28.getInstance();
         sesame.setParameterLocalRepository(
                 "owlim",
                 "C:\\Users\\Marco\\AppData\\Roaming\\Aduna\\OpenRDF Sesame\\repositories",
