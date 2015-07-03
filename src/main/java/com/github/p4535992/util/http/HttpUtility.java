@@ -18,6 +18,7 @@ import java.util.Map;
  * @author www.codejava.net.
  * 
  */
+@SuppressWarnings("unused")
 public class HttpUtility {
 	private static String boundary;
 	private static HttpURLConnection httpConn;
@@ -55,7 +56,7 @@ public class HttpUtility {
 	 *            A map containing POST data in form of key-value pairs.
 	 * @return An HttpURLConnection object.
 	 * @throws IOException
-	 *             thrown if any I/O org.p4535992.mvc.error occurred.
+	 *             thrown if any I/O error occurred.
 	 */
 	public static HttpURLConnection sendPostRequest(String requestURL,
 			Map<String, String> params) throws IOException {

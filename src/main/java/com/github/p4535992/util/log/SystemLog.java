@@ -298,7 +298,7 @@ public class SystemLog {
             }
             return prefix;
         }
-    };
+    }
         
 }
 

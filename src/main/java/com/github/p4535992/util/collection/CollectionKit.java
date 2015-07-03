@@ -1,8 +1,6 @@
 package com.github.p4535992.util.collection;
 
 import com.github.p4535992.util.reflection.ReflectionKit;
-import org.apache.commons.lang3.ArrayUtils;
-
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -408,7 +406,7 @@ public class CollectionKit {
             result[i] = IntegerArray[i].intValue();
         }
         return result;*/
-        return ArrayUtils.toPrimitive(IntegerArray);
+        return org.apache.commons.lang3.ArrayUtils.toPrimitive(IntegerArray);
     }
 
     /**
@@ -422,14 +420,11 @@ public class CollectionKit {
             result[i] = Integer.valueOf(intArray[i]);
         }
         return result;*/
-        return ArrayUtils.toObject(intArray);
+        return org.apache.commons.lang3.ArrayUtils.toObject(intArray);
     }
 
-
-    // chops a list into non-view sublists of length L
-
     /**
-     * Method to Split List in n°. SubLIst of length L.
+     * Method to Split List in n°. SubLIst of length L,chops a list into non-view sublists of length L.
      * @param list the List Collection To Split.
      * @param L the Size of all the SubList.
      * @param <T> generic type.

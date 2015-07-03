@@ -14,6 +14,7 @@ import org.apache.http.protocol.HttpContext;
 /**
  * The default {@link HttpRequestRetryHandler} used by request executors.
  */
+@SuppressWarnings("unused")
 public class DefaultHttpRequestRetryHandler implements HttpRequestRetryHandler {
 
     /** the number of times a method will be retried */

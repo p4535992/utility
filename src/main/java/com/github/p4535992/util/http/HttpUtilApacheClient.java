@@ -3,6 +3,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.util.Arrays;
+import java.util.Collections;
 
 import javax.net.ssl.SSLContext;
 
@@ -60,8 +61,9 @@ import org.apache.http.util.CharArrayBuffer;
  * This example demonstrates how to customize and configure the most common aspects
  * of HTTP request execution and connection management.
  */
+@SuppressWarnings("unused")
 public class HttpUtilApacheClient {
-    public final static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
         // Use custom message parser / writer to customize the way HTTP
         // messages are parsed from and written out to the data stream.
@@ -181,19 +183,18 @@ public class HttpUtilApacheClient {
                 .setCookieSpec(CookieSpecs.DEFAULT)
                 .setExpectContinueEnabled(true)
                 .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
-                .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC))
+                .setProxyPreferredAuthSchemes(Collections.singletonList(AuthSchemes.BASIC))
                 .build();
 
         // Create an HttpClient with the given custom dependencies and configuration.
-        CloseableHttpClient httpclient = HttpClients.custom()
+
+        try (CloseableHttpClient httpclient = HttpClients.custom()
                 .setConnectionManager(connManager)
                 .setDefaultCookieStore(cookieStore)
                 .setDefaultCredentialsProvider(credentialsProvider)
                 .setProxy(new HttpHost("myproxy", 8080))
                 .setDefaultRequestConfig(defaultRequestConfig)
-                .build();
-
-        try {
+                .build()) {
             HttpGet httpget = new HttpGet("http://www.apache.org/");
             // Request configuration can be overridden at the request level.
             // They will take precedence over the one set at the client level.
@@ -213,8 +214,7 @@ public class HttpUtilApacheClient {
             context.setCredentialsProvider(credentialsProvider);
 
             System.out.println("executing request " + httpget.getURI());
-            CloseableHttpResponse response = httpclient.execute(httpget, context);
-            try {
+            try (CloseableHttpResponse response = httpclient.execute(httpget, context)) {
                 HttpEntity entity = response.getEntity();
 
                 System.out.println("----------------------------------------");
@@ -243,11 +243,7 @@ public class HttpUtilApacheClient {
                 // User security token
                 context.getUserToken();
 
-            } finally {
-                response.close();
             }
-        } finally {
-            httpclient.close();
         }
     }
 

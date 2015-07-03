@@ -18,6 +18,7 @@ import java.util.Vector;
  * as its lower 8 bits the value of each byte.
  * Created from 4535992 2015-05-05
  */
+@SuppressWarnings("unused")
 public class StringOutputStreamKit extends OutputStream implements Serializable {
     private static final long serialVersionUID = 7L;
 /**
@@ -75,6 +76,7 @@ public class StringOutputStreamKit extends OutputStream implements Serializable 
  * @param b the byte array to write to the
  * internal StringBuffer.
  */
+	@Override
 	public void write(byte[] b){
 		buf.append(convertBytesToString(b));
 	}

@@ -1,30 +1,12 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-//package org.apache.nutch.util;
 package com.github.p4535992.util.http;
+import com.github.p4535992.util.string.Patterns;
+
 import java.net.MalformedURLException;
 import java.net.*;
 import java.util.regex.Pattern;
 
-//import org.apache.nutch.util.domain.DomainSuffix;
-//import org.apache.nutch.util.domain.DomainSuffixes;
-
 /** Utility class for URL analysis */
+@SuppressWarnings("unused")
 public class URLUtil {
 
   /**
@@ -38,25 +20,11 @@ public class URLUtil {
    * @return resolved absolute url.
    * @throws MalformedURLException thrown if any MalformedURL error occurred.
    */
-  public static URL resolveURL(URL base, String target)
-      throws MalformedURLException {
+  public static URL resolveURL(URL base, String target) throws MalformedURLException {
     target = target.trim();
-
-    // handle the case that there is a target that is a pure query,
-    // for example
-    // http://careers3.accenture.com/Careers/ASPX/Search.aspx?co=0&sk=0
-    // It has urls in the page of the form href="?co=0&sk=0&pg=1", and by
-    // default
-    // URL constructs the base+target combo as
-    // http://careers3.accenture.com/Careers/ASPX/?co=0&sk=0&pg=1, incorrectly
-    // dropping the Search.aspx target
-    //
-    // Browsers handle these just fine, they must have an exception similar to
-    // this
     if (target.startsWith("?")) {
       return fixPureQueryTargets(base, target);
     }
-
     return new URL(base, target);
   }
 
@@ -65,26 +33,21 @@ public class URLUtil {
    * @param target string of the reosurce on the site web.
    * @return url to the reosurce web.
    */
-  static URL fixPureQueryTargets(URL base, String target)
-      throws MalformedURLException {
-    if (!target.startsWith("?"))
-      return new URL(base, target);
-
+  static URL fixPureQueryTargets(URL base, String target)throws MalformedURLException {
+    if (!target.startsWith("?")) return new URL(base, target);
     String basePath = base.getPath();
     String baseRightMost = "";
     int baseRightMostIdx = basePath.lastIndexOf("/");
     if (baseRightMostIdx != -1) {
       baseRightMost = basePath.substring(baseRightMostIdx + 1);
     }
-
-    if (target.startsWith("?"))
-      target = baseRightMost + target;
-
+    if (target.startsWith("?")) target = baseRightMost + target;
     return new URL(base, target);
   }
 
-  private static Pattern IP_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}(\\d{1,3})");
+  //private static Pattern IP_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}(\\d{1,3})");
 
+    private static Pattern IP_PATTERN = Patterns.IP_ADDRESS;
   /**
    * Returns the domain name of the url. The domain name of a url is the
    * substring of the url's hostname, w/o subdomain names. As an example <br>
@@ -98,30 +61,24 @@ public class URLUtil {
    * */
 
   public static String getDomainName(URL url) {
-    //org.apache.nutch.util.domain.DomainSuffixes tlds =
-    //        org.apache.nutch.util.domain.DomainSuffixes.getInstance();
+      String host = url.getHost();
+      // it seems that java returns hostnames ending with .
+      if (host.endsWith(".")) host = host.substring(0, host.length() - 1);
+      if (IP_PATTERN.matcher(host).matches()) return host;
 
-    String host = url.getHost();
-    // it seems that java returns hostnames ending with .
-    if (host.endsWith("."))
-      host = host.substring(0, host.length() - 1);
-    if (IP_PATTERN.matcher(host).matches())
-      return host;
-
-    int index = 0;
-    String candidate = host;
-    for (; index >= 0;) {
-      index = candidate.indexOf('.');
-      String subCandidate = candidate.substring(index + 1);
-      if (
-              //tlds.isDomainSuffix(subCandidate)
-              url.getHost().equalsIgnoreCase(subCandidate)
-          ) {
-       return candidate;
+      try {
+          return new URI(url.toString()).getHost();
+      } catch (URISyntaxException e) {
+          int index = 0;
+          String candidate = host;
+          for (; index >= 0;) {
+              index = candidate.indexOf('.');
+              String subCandidate = candidate.substring(index + 1);
+              if (url.getHost().equalsIgnoreCase(subCandidate))return candidate;
+              candidate = subCandidate;
+          }
+          return candidate;
       }
-      candidate = subCandidate;
-    }
-    return candidate;
   }
 
   /**
@@ -152,8 +109,7 @@ public class URLUtil {
    * @return domain name of the resource web.
    * @throws MalformedURLException throw if any MalformedURL error is occured.
    */
-  public static String getTopLevelDomainName(URL url)
-      throws MalformedURLException {
+  public static String getTopLevelDomainName(URL url)throws MalformedURLException {
     //String suffix = getDomainSuffix(url).toString();
     String suffix = url.getAuthority();//??????
     int idx = suffix.lastIndexOf(".");
@@ -177,9 +133,8 @@ public class URLUtil {
    * @return domain name of the resource web.
    * @throws MalformedURLException throw if any MalformedURL error is occured.
    */
-   public static String getTopLevelDomainName(String url)
-      throws MalformedURLException {
-    return getTopLevelDomainName(new URL(url));
+   public static String getTopLevelDomainName(String url)throws MalformedURLException {
+        return getTopLevelDomainName(new URL(url));
    }
  
   /**
@@ -192,15 +147,14 @@ public class URLUtil {
    * @return true if the domain names are equal.
    */
   public static boolean isSameDomainName(URL url1, URL url2) {
-    return getDomainName(url1).equalsIgnoreCase(getDomainName(url2));
+        return getDomainName(url1).equalsIgnoreCase(getDomainName(url2));
   }
 
-  public static boolean isSameDomainName(String url1, String url2)
-      throws MalformedURLException {
-    return isSameDomainName(new URL(url1), new URL(url2));
+  public static boolean isSameDomainName(String url1, String url2)throws MalformedURLException {
+        return isSameDomainName(new URL(url1), new URL(url2));
   }
 
-  /**
+  /*
    * Returns the {@link DomainSuffix} corresponding to the last public part of
    * the hostname
    */
@@ -225,7 +179,7 @@ public class URLUtil {
     return null;
   }
 */
-  /**
+  /*
    * Returns the {@link DomainSuffix} corresponding to the last public part of
    * the hostname
    */
@@ -254,8 +208,7 @@ public class URLUtil {
    * @throws MalformedURLException throw if any MalformedURL error is occured.
    * @return array of string with the stack of the full uri host segment.
    */
-  public static String[] getHostSegments(String url)
-      throws MalformedURLException {
+  public static String[] getHostSegments(String url) throws MalformedURLException {
     return getHostSegments(new URL(url));
   }
 
@@ -272,7 +225,6 @@ public class URLUtil {
    * @return String The representative url.
    */
   public static String chooseRepresentativeUrl(String src, String dst, boolean temp) {
-
     // validate both are well formed urls
     URL srcUrl;
     URL dstUrl;
@@ -282,7 +234,6 @@ public class URLUtil {
     } catch (MalformedURLException e) {
       return dst;
     }
-
     // get the source and destination domain, host, and page
     String srcDomain = URLUtil.getDomainName(srcUrl);
     String dstDomain = URLUtil.getDomainName(dstUrl);
@@ -343,7 +294,7 @@ public class URLUtil {
         return src;
       } else if (!srcRoot && destRoot) { // destination root and source not
         return dst;
-      } else if (!srcRoot && !destRoot && (srcHost.equals(dstHost))) {
+      } else if (!srcRoot && (srcHost.equals(dstHost))) {
 
         // source and destination hosts are the same, check paths, host length
         int numSrcPaths = srcFile.split("/").length;
@@ -464,21 +415,4 @@ public class URLUtil {
     }
   }
 
-  /** For testing */
-  /*
-  public static void main(String[] args) {
-
-    if (args.length != 1) {
-      System.err.println("Usage : URLUtil <url>");
-      return;
-    }
-
-    String url = args[0];
-    try {
-      System.out.println(URLUtil.getDomainName(new URL(url)));
-    } catch (MalformedURLException ex) {
-      ex.printStackTrace();
-    }
-  }
-  */
 }

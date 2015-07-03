@@ -11,7 +11,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -24,6 +23,7 @@ import java.util.regex.Pattern;
  * @version 2015-06-26
  * href: http://stackoverflow.com/questions/9572795/convert-list-to-array-in-java
  * href: http://stackoverflow.com/questions/11404086/how-could-i-initialize-a-generic-array
+ * href: https://github.com/ku-fpg/armatus/blob/master/Armatus%20Android%20App/src/edu/kufpg/armatus/util/StringUtils.java
  * @param <T> generic type.
  */
 @SuppressWarnings("unused")
@@ -31,6 +31,48 @@ public class StringKit<T> {
     private Class<T> cl;
     private String clName;
     private static final Logger logger = LoggerFactory.getLogger(StringKit.class);
+
+    /**
+     * A regular expression that matches several kinds of whitespace characters, including and newlines.
+     */
+    public static final String WHITESPACE = "\\s+";
+
+    /**
+     * A non-breaking space string. Using this instead of a regular space string (" ") will
+     * prevent from applying their normal line-breaking behavior.
+     */
+    public static final String NBSP = "\u00A0";
+
+    /**
+     * A non-breaking space character. Using this instead of a regular space character (' ')
+     * will prevent from applying their normal line-breaking behavior.
+     */
+    public static final char NBSP_CHAR = '\u00A0';
+
+    private static final String LINE_FEED = "\r\n";
+
+
+    public enum special{
+        WHITESPACE(0), NBSP(1),NEWLINE(2),PROJECTDIR(3),LINE_FEED(4);
+        private final Integer value;
+        special(Integer value) {
+            this.value = value;
+        }
+        @Override
+        public String toString() {
+            String value="";
+            switch (this) {
+                case WHITESPACE: value = "\\s+"; break;
+                case NBSP: value ="\u00A0"; break;
+                ///case NBSP_CHAR: value ='\u00A0'; break;
+                case NEWLINE: value = System.lineSeparator(); break;
+                case PROJECTDIR: value = System.getProperty("user.dir");break;
+                case LINE_FEED: value = "\r\n";
+            }
+            return value;
+        }
+    }
+
 
 //    public StringKit(){
 //        java.lang.reflect.Type t = getClass().getGenericSuperclass();
@@ -264,6 +306,21 @@ public class StringKit<T> {
            out[j++] = c;
        }
        return new String(out, 0, j);
+    }
+
+    /**
+     * Read an input stream into a string.
+     * @param in stream of the resource.
+     * @return string of the content of the resource.
+     * @throws IOException resource not found.
+     */
+    static public String convertStreamToString(InputStream in) throws IOException {
+        StringBuilder out = new StringBuilder();
+        byte[] b = new byte[4096];
+        for (int n; (n = in.read(b)) != -1;) {
+            out.append(new String(b, 0, n));
+        }
+        return out.toString();
     }
        
     /**
@@ -633,8 +690,14 @@ public class StringKit<T> {
     }
 
 
-    
-   
+    /**
+     * Method to check if a s tring is a url address web or not.
+     * @param url the string address web.
+     * @return if tru is a url addresss web.
+     */
+    public static boolean isURL(String url){
+        return Patterns.isValidURL(url);
+    }
 
 
 
