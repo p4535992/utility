@@ -699,6 +699,47 @@ public class StringKit<T> {
         return Patterns.isValidURL(url);
     }
 
+    /**
+     * Method to find all the string matches of the expression with regular expression.
+     * @param text string text to check.
+     * @param expression string regular expression.
+     * @param justFirstResult if true get only the first element.
+     * @return a list of string of all matches.
+     */
+    public static List<String> findWithRegex(String text,String expression,boolean justFirstResult){
+        List<String> result =new ArrayList<>();
+        Pattern pattern = Pattern.compile(expression);
+        Matcher matcher = pattern.matcher(text);
+        while(matcher.find()){
+            result.add(matcher.group().replace("x","0"));
+            if(justFirstResult)break;
+
+        }
+        return result;
+    }
+
+    /**
+     * Method to find the string matches of the expression with regular expression.
+     * @param text string text to check.
+     * @param expression string regular expression.
+     * @return
+     */
+    public static String findWithRegex(String text,String expression){
+        final Pattern pat = Pattern.compile(expression);
+        return pat.matcher(text).group();
+    }
+
+    /**
+     * Method to check if  a string contain some match for the regular expression.
+     * @param text string text to check.
+     * @param expression string regular expression.
+     * @return if true the string contains a match for the regular expression.
+     */
+    public static boolean checkWithRegex(String text,String expression){
+        final Pattern pat = Pattern.compile(expression);
+        return text != null && pat.matcher(text).matches();
+    }
+
 
 
 }//end of the class StringKit
