@@ -65,6 +65,9 @@ public class SQLSupport<T>{
     @SuppressWarnings("rawtypes")
     protected <T> SQLSupport(T object){
         //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
+        this.COLUMNS = null;
+        this.VALUES = null;
+        this.TYPES = null;
         SQLSupport support = SQLSupport.insertSupport(object);
         this.COLUMNS= support.getCOLUMNS();
         this.VALUES = support.getVALUES();
@@ -81,6 +84,10 @@ public class SQLSupport<T>{
 
     @SuppressWarnings("rawtypes")
     private static SQLSupport instance = null;
+    public static <T> SQLSupport getInstance(T object,boolean isNull){
+        if(isNull)instance=null;
+        return getInstance(object);
+    }
     @SuppressWarnings({"rawtypes","unchecked"})
     public static <T> SQLSupport getInstance(T object){
         if(instance == null) {

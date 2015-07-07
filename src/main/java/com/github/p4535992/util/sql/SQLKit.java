@@ -8,7 +8,10 @@ import java.util.*;
 
 /**
  * Converts database types to Java class types.
+ * @author 4535992.
+ * @version 2015-07-07.
  */
+@SuppressWarnings("unused")
 public class  SQLKit<T> {
     private static Connection connection;
     private static Statement stmt;

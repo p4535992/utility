@@ -7,6 +7,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -14,8 +16,8 @@ import static java.util.Arrays.*;
 
 /**
  * Class with many utilities mathod for magage the file object.
- * @author 4535992
- * @version 2015-06-25
+ * @author 4535992.
+ * @version 2015-07-07.
  */
 @SuppressWarnings("unused")
 public class FileUtil {
@@ -272,7 +274,7 @@ public class FileUtil {
      * @return list of files in the directory.
      */
     public static List<File> readDirectory(File directory){
-        return readDirectory( directory.getAbsolutePath());
+        return readDirectory(directory.getAbsolutePath());
     }
 
     /**
@@ -512,7 +514,7 @@ public class FileUtil {
         try {
             return new FileInputStream(file);
         }catch(FileNotFoundException e){
-            SystemLog.warning("The file:"+ file.getAbsolutePath() +" not exists!!!");
+            SystemLog.warning("The file:" + file.getAbsolutePath() + " not exists!!!");
             return null;
         }
     }
@@ -640,6 +642,50 @@ public class FileUtil {
             SystemLog.warning("The file:"+file.getAbsolutePath()+" not exists!");
         }
         return false;
+    }
+
+    private static String hashFile(File file, String algorithm){
+        try (FileInputStream inputStream = new FileInputStream(file)) {
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
+            byte[] bytesBuffer = new byte[1024];
+            int bytesRead;//= -1
+            while ((bytesRead = inputStream.read(bytesBuffer)) != -1) {
+                digest.update(bytesBuffer, 0, bytesRead);
+            }
+            byte[] hashedBytes = digest.digest();
+            return StringKit.convertByteArrayToHexString(hashedBytes);
+        } catch (NoSuchAlgorithmException | IOException ex) {
+            SystemLog.error("Could not generate hash from file");
+            SystemLog.exception(ex);
+            return null;
+        }
+    }
+
+    /**
+     * Metho to convet a File to a MD5 hash string.
+     * @param file the input File to codify to hash.
+     * @return the string of the hash.
+     */
+    public static String convertFileToMD5(File file) {
+        return hashFile(file, "MD5");
+    }
+
+    /**
+     * Metho to convet a File to a SHA-1 hash string.
+     * @param file the input File to codify to hash.
+     * @return the string of the hash.
+     */
+    public static String convertFileToSHA1(File file) {
+        return hashFile(file, "SHA-1");
+    }
+
+    /**
+     * Metho to convet a File to a SHA-256 hash string.
+     * @param file the input File to codify to hash.
+     * @return the string of the hash.
+     */
+    public static String convertFileToSHA256(File file)  {
+        return hashFile(file, "SHA-256");
     }
 
 

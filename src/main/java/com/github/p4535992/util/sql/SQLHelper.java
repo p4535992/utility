@@ -164,4 +164,70 @@ public class SQLHelper {
         String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
         return conn = DriverManager.getConnection(url, username, password);
     }
+
+    /**
+     * UPDATE yourTable SET nameColumnToInsert = MD5(nameColumnToCodify) WHERE nameColumnToInsert IS NULL;
+     * @param yourTable
+     * @param nameColumnToCodify
+     * @param nameColumnToInsert
+     * @return
+     */
+    public static String addMD5ColumnToTheTable(String yourTable,String nameColumnToCodify,String nameColumnToInsert,boolean ifNull){
+        String query = "UPDATE "+yourTable+" \n" +
+                "SET "+nameColumnToInsert+" = MD5("+nameColumnToCodify+") \n";
+                if(ifNull) query += "WHERE "+nameColumnToInsert+" IS NULL; \n";
+                 else query += "; \n";
+        return query;
+    }
+
+    /**
+     * SELECT nameColumnToCopy FROM yourTable;
+     * UPDATE yourTable SET nameColumnToInsert = nameColumnToCopy;
+     * UPDATE yourTable SET nameColumnToInsert = CONCAT('prefix',nameColumnToInsert);
+     * @param yourTable
+     * @param nameColumnToCopy
+     * @param nameColumnToInsert
+     * @param prefix
+     * @return
+     */
+    public static String addCopyColumnWithPrefix(String yourTable,String nameColumnToCopy,String nameColumnToInsert,String prefix){
+        String query = "SELECT "+nameColumnToCopy+" FROM " + yourTable + "; \n" +
+                "UPDATE " + yourTable + " SET "+nameColumnToInsert+" = "+nameColumnToCopy+"; \n"+
+                "UPDATE " + yourTable + " SET "+nameColumnToInsert+" = CONCAT('"+prefix+"',"+nameColumnToInsert+");"
+                ;
+        return query;
+    }
+
+    /**
+     * UPDATE yourTable  SET nameColumn = CONCAT('+prefix+',nameColumn);
+     * @param yourTable
+     * @param nameColumn
+     * @param prefix
+     * @return
+     */
+    public static String addPrefixToColumn(String yourTable,String nameColumn,String prefix){
+        return "UPDATE " + yourTable + " SET "+nameColumn+" = CONCAT('"+prefix+"',"+nameColumn+");";
+    }
+
+    /**
+     * SELECT nameColumn FROM yourTable WHERE nameColumn LIKE ='startWith% ;
+     * @param yourTable
+     * @param nameColumn
+     * @param startWith
+     * @return
+     */
+    public static String selecRecordWhereColumnStartWith(String yourTable,String nameColumn,String startWith){
+        return "SELECT " + nameColumn +" FROM "+yourTable+" WHERE "+nameColumn+ " LIKE ='"+startWith+"% ;";
+    }
+
+    /**
+     * UPDATE geodb.infodocument_coord_omogeneo_05052014
+     * SET indirizzo = CONCAT_WS(', ', indirizzoNoCAP, indirizzoHasNumber)
+     * @param nameColumnToUpdate
+     * @param nameColumnConcatenate
+     * @return
+     */
+    public static String etColumnLikeCOncatentationOfOtherColumns(String nameColumnToUpdate,String[] nameColumnConcatenate){
+        return null;
+    }
 }

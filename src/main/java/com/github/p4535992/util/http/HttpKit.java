@@ -8,7 +8,7 @@ import org.jsoup.nodes.Document;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
+
 import java.net.URL;
 import java.util.Map;
 
@@ -48,7 +48,7 @@ public class HttpKit {
                 SystemLog.warning("The " + url + " is not a correct url !!!");
                 return null;
             }
-        }catch (MalformedURLException e) {
+        }catch (MalformedURLException|java.lang.NullPointerException e) {
             SystemLog.warning("The " + url + " is not a correct url !!!");
             return null;
         }
@@ -146,6 +146,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.get(url,headers);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -154,6 +155,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.get(url);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -162,6 +164,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.post(url, body, headers);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -170,6 +173,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.post(url, body);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -178,6 +182,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.postForm(url, params);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -186,6 +191,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.postForm(url, params, headers);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -194,6 +200,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.put(url, body, headers);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -202,6 +209,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.put(url, body);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -210,6 +218,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.delete(url);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -218,6 +227,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.delete(url, headers);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -226,6 +236,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.appendQueryParams(url, params);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -234,6 +245,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.getQueryParams(url);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }
@@ -242,6 +254,7 @@ public class HttpKit {
         try {
             return HttpUtilApache.removeQueryParams(url);
         } catch (IOException e) {
+            SystemLog.warning(e.getMessage());
             return null;
         }
     }

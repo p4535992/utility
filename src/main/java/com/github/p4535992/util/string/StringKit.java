@@ -1,8 +1,6 @@
 package com.github.p4535992.util.string;
 
-import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.reflection.ReflectionKit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +10,8 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -19,8 +19,8 @@ import java.util.regex.Pattern;
 
 /**
  * Class with many utilities on String and Collection.
- * @author 4535992
- * @version 2015-06-26
+ * @author 4535992.
+ * @version 2015-07-07.
  * href: http://stackoverflow.com/questions/9572795/convert-list-to-array-in-java
  * href: http://stackoverflow.com/questions/11404086/how-could-i-initialize-a-generic-array
  * href: https://github.com/ku-fpg/armatus/blob/master/Armatus%20Android%20App/src/edu/kufpg/armatus/util/StringUtils.java
@@ -351,11 +351,11 @@ public class StringKit<T> {
                 result = matcher.group();
                 if(!isNullOrEmpty(result)){break;}
            }
+           return result;
        }else{
-           input = input.replaceAll(expression, replace);
-           result = input;
+           return input.replaceAll(expression, replace);
        }
-       return result;
+
    }
 
     /**
@@ -700,6 +700,17 @@ public class StringKit<T> {
     }
 
     /**
+     * Method to add a protocl to a strin to match a url.
+     * @param url the string of the url.
+     * @return he string of the url with protocol.
+     */
+    public static String addProtocolToURLString(String url) {
+        if (!url.matches("^(https?|ftp)://.*$")) {
+            return "http://" + url;
+        }
+        return url;
+    }
+    /**
      * Method to find all the string matches of the expression with regular expression.
      * @param text string text to check.
      * @param expression string regular expression.
@@ -711,7 +722,7 @@ public class StringKit<T> {
         Pattern pattern = Pattern.compile(expression);
         Matcher matcher = pattern.matcher(text);
         while(matcher.find()){
-            result.add(matcher.group().replace("x","0"));
+            result.add(matcher.group());
             if(justFirstResult)break;
 
         }
@@ -722,7 +733,7 @@ public class StringKit<T> {
      * Method to find the string matches of the expression with regular expression.
      * @param text string text to check.
      * @param expression string regular expression.
-     * @return
+     * @return the first match on the text string.
      */
     public static String findWithRegex(String text,String expression){
         final Pattern pat = Pattern.compile(expression);
@@ -735,10 +746,141 @@ public class StringKit<T> {
      * @param expression string regular expression.
      * @return if true the string contains a match for the regular expression.
      */
-    public static boolean checkWithRegex(String text,String expression){
-        final Pattern pat = Pattern.compile(expression);
-        return text != null && pat.matcher(text).matches();
+    public static boolean isMatch(String text,String expression){
+        return text != null && Pattern.compile(expression).matcher(text).matches();
     }
+
+    /**
+     * Method to convert a string to a  "MD5", "SHA-1", "SHA-256" hash.
+     * suitable for small-sized message
+     * @param message the string to convert.
+     * @param algorithm the type has algorithm "MD5", "SHA-1", "SHA-256".
+     * @return the string of the hash code of the inpu string.
+     */
+    private static String hashString(String message, String algorithm) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
+            byte[] hashedBytes = digest.digest(message.getBytes("UTF-8"));
+            return convertByteArrayToHexString(hashedBytes);
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+            //throw new HashGenerationException("Could not generate hash from String", ex);
+            SystemLog.exception(ex);
+            return null;
+        }
+    }
+
+   /* public static String generateMD5(String message) {
+        return hashString(message, "MD5");
+    }
+
+    public static String generateSHA1(String message) {
+        return hashString(message, "SHA-1");
+    }
+
+    public static String generateSHA256(String message){
+        return hashString(message, "SHA-256");
+    }*/
+
+    /**
+     * Method to convert a string to a  "MD5", "SHA-1", "SHA-256" hash for very large file.
+     * suitable for large-size message, i.e. large file
+     * @param message the string to convert.
+     * @param algorithm the type has algorithm "MD5", "SHA-1", "SHA-256".
+     * @return the string of the hash.
+     */
+    private static String hashStringForLargeFile(String message, String algorithm) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
+            byte[] inputBytes = message.getBytes("UTF-8");
+            digest.update(inputBytes);
+            byte[] hashedBytes = digest.digest();
+            return convertByteArrayToHexString(hashedBytes);// convert hash bytes to string (usually in hexadecimal form)
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+            //throw new HashGenerationException("Could not generate hash from String", ex);
+            SystemLog.exception(ex);
+            return null;
+        }
+    }
+
+    /**
+     * Method to convert a array of bytes to a string.
+     * @param arrayBytes array Collection of bytes.
+     * @return the string of the hash.
+     */
+    public static String convertByteArrayToString(byte[] arrayBytes){
+        StringBuilder sb = new StringBuilder(2*arrayBytes.length);
+        for (byte b : arrayBytes) {
+            sb.append(String.format("%02x", b & 0xff));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Method to convert a array of bytes to a string.
+     * @param arrayBytes array Collection of bytes.
+     * @return the string of the hash.
+     */
+    @SuppressWarnings("")
+    public static String convertByteArrayToHexString(byte[] arrayBytes) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (byte arrayByte : arrayBytes) {
+            stringBuffer.append(Integer.toString((arrayByte & 0xff) + 0x100, 16)
+                    .substring(1));
+        }
+        return stringBuffer.toString();
+    }
+
+    /**
+     * Spring framework also provides overloaded md5 methods. You can pass input
+     * as String or byte array and Spring can return hash or digest either as byte
+     * array or Hex String. Here we are passing String as input and getting
+     * MD5 hash as hex String.
+     * @param arrayBytes array Collection of bytes.
+     * @return the string of the hash.
+     */
+    public static String convertByteArrayToStringWithSpring(byte[] arrayBytes){
+        return org.springframework.util.DigestUtils.md5DigestAsHex(arrayBytes);
+    }
+
+    /*
+     * Apache commons code provides many overloaded methods to generate md5 hash. It contains
+     * md5 method which can accept String, byte[] or InputStream and can return hash as 16 element byte
+     * array or 32 character hex String.
+     */
+  /*  public static String convertByteArrayToStringWithApacheCommonCodec(byte[] digest){
+        return DigestUtils.md5Hex(content);
+
+    }*/
+
+    /**
+     * Method to convert string to MD5 hash.
+     * @param message string to codify to hash.
+     * @return the string of the hash.
+     */
+    public static String convertStringToMD5(String message) {
+        return hashString(message, "MD5");
+    }
+
+    /**
+     * Method to convert string to SHA-1 hash.
+     * @param message string to codify to hash.
+     * @return the string of the hash.
+     */
+    public static String convertStringToSHA1(String message) {
+        return hashString(message, "SHA-1");
+    }
+
+    /**
+     * Method to convert string to SHA-256 hash.
+     * @param message string to codify to hash.
+     * @return the string of the hash.
+     */
+    public static String convertStringToSHA256(String message) {
+        return hashString(message, "SHA-256");
+    }
+
+
+
 
 
 
