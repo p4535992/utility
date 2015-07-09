@@ -313,7 +313,7 @@ public class Jena2Kit {
             org.apache.jena.riot.Lang.TURTLE, org.apache.jena.riot.Lang.TRIG, org.apache.jena.riot.Lang.TTL,
             org.apache.jena.riot.Lang.NQUADS ,
             org.apache.jena.riot.Lang.NQ,
- 		    org.apache.jena.riot.Lang.JSONLD,
+ 		    //org.apache.jena.riot.Lang.JSONLD,
             org.apache.jena.riot.Lang.NT,org.apache.jena.riot.Lang.RDFJSON,
  		    org.apache.jena.riot.Lang.RDFNULL
             //org.apache.jena.riot.Lang.CSV,
@@ -322,16 +322,21 @@ public class Jena2Kit {
 
     /**
      * A list of org.apache.jena.riot.RDFFormat file formats used in jena.
+     * if you are not using the last verions of jena you cna found in build:
+     * "AWT-EventQueue-0" java.lang.NoSuchFieldError: JSONLD_FLAT
      * @return all the RDFFormat supported from jena.
      */
  	private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] { 	
- 		RDFFormat.TURTLE, RDFFormat.TTL,RDFFormat.JSONLD_FLAT,RDFFormat.JSONLD_PRETTY,
- 		RDFFormat.JSONLD,RDFFormat.RDFJSON,RDFFormat.RDFNULL,RDFFormat.NQUADS,RDFFormat.NQ,
- 		RDFFormat.NQUADS_ASCII,RDFFormat.NQUADS_UTF8,RDFFormat.NT,RDFFormat.NTRIPLES,
- 		RDFFormat.NTRIPLES_ASCII,RDFFormat.NTRIPLES_UTF8,RDFFormat.RDFXML,RDFFormat.RDFXML_ABBREV,
- 		RDFFormat.RDFXML_PLAIN,RDFFormat.RDFXML_PRETTY,RDFFormat.TRIG,RDFFormat.TRIG_BLOCKS,
- 		RDFFormat.TRIG_FLAT,RDFFormat.TRIG_PRETTY,RDFFormat.TURTLE_BLOCKS,RDFFormat.TURTLE_FLAT,
- 		RDFFormat.TURTLE_PRETTY};
+        RDFFormat.TURTLE, RDFFormat.TTL,
+        //RDFFormat.JSONLD_FLAT,
+        //RDFFormat.JSONLD_PRETTY,
+        //RDFFormat.JSONLD,
+        RDFFormat.RDFJSON,RDFFormat.RDFNULL,RDFFormat.NQUADS,RDFFormat.NQ,
+        RDFFormat.NQUADS_ASCII,RDFFormat.NQUADS_UTF8,RDFFormat.NT,RDFFormat.NTRIPLES,
+        RDFFormat.NTRIPLES_ASCII,RDFFormat.NTRIPLES_UTF8,RDFFormat.RDFXML,RDFFormat.RDFXML_ABBREV,
+        RDFFormat.RDFXML_PLAIN,RDFFormat.RDFXML_PRETTY,RDFFormat.TRIG,RDFFormat.TRIG_BLOCKS,
+        RDFFormat.TRIG_FLAT,RDFFormat.TRIG_PRETTY,RDFFormat.TURTLE_BLOCKS,RDFFormat.TURTLE_FLAT,
+        RDFFormat.TURTLE_PRETTY};
         //org.apache.jena.riot.RDFFormat.RDF_THRIFT,org.apache.jena.riot.RDFFormat.RDF_THRIFT_VALUES,
 
     /*

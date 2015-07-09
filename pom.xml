@@ -75,7 +75,15 @@
         <joda-time.version>2.3</joda-time.version>
         <org.jadira.usertype.core.version>3.0.0.CR1</org.jadira.usertype.core.version>
         <!-- JENA and Sesame OpenRDF -->
-        <jena.version>2.13.0</jena.version>
+        <org.apache.jena.jena.version>2.13.0</org.apache.jena.jena.version>
+        <org.apache.jena.arq.version>2.13.0</org.apache.jena.arq.version>
+        <org.apache.jena.core.version>2.13.0</org.apache.jena.core.version>
+        <org.apache.jena.jena-tdb.version>1.1.2</org.apache.jena.jena-tdb.version>
+        <org.apache.jena.jena-iri.version>1.1.2</org.apache.jena.jena-iri.version>
+        <!-- Jena Libraries (Core, ARQ, IRI, and TDB) -->
+        <org.apache.jena.apache-jena-libs.version>2.13.0</org.apache.jena.apache-jena-libs.version>
+        <!-- Jena Support -->
+        <org.apache.jena.jena-querybuilder.version>2.13.0</org.apache.jena.jena-querybuilder.version>
         <org.openrdf.sesame.version>2.8.4</org.openrdf.sesame.version>
         <jsonld-java-jena.version>0.4.1</jsonld-java-jena.version>
         <!-- XML -->
@@ -273,25 +281,29 @@
             <groupId>org.apache.jena</groupId>
             <artifactId>apache-jena-libs</artifactId>
             <type>pom</type>
-            <version>${jena.version}</version>
+            <version>${org.apache.jena.apache-jena-libs.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-querybuilder</artifactId>
             <type>jar</type>
-            <version>${jena.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>jena-arq</artifactId>
-            <version>${jena.version}</version>
+            <version>${org.apache.jena.jena-querybuilder.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.jsonld-java</groupId>
-            <artifactId>jsonld-java-jena</artifactId>
-            <version>${jsonld-java-jena.version}</version>
-        </dependency>
 
         <!-- =============== -->
         <!-- OpenRDF Sesame  -->
@@ -375,7 +387,9 @@
             <version>develop7-2015-06-25</version>
         </dependency>
 
+        <!-- =============== -->
         <!-- Apache Support -->
+        <!-- =============== -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
@@ -393,8 +407,9 @@
             <version>${org.apache.commons-lang3.version}</version>
         </dependency>
 
-
+        <!-- ====================== -->
         <!-- MAVEN PLUGIN DEPENDENCY-->
+        <!-- ====================== -->
         <dependency>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
@@ -443,6 +458,7 @@
              <version>${commons-logging.version}</version>
              <scope>provided</scope>
          </dependency>
+
         <!-- ANDROID -->
      <!--   <dependency>
             <groupId>android</groupId>
