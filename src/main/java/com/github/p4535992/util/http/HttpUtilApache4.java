@@ -16,14 +16,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.*;
 import java.net.ProxySelector;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.util.Random;
 
 /**
  * Created by 4535992 on 03/07/2015.
@@ -73,7 +68,7 @@ public class HttpUtilApache4 {
             if (entity != null) {
                 try (InputStream instream = entity.getContent()) {
                     // do something useful
-                    content = HttpUtilApache.streamToString(instream);
+                    content = HttpUtil.streamToString(instream);
                 }
             }
         } finally {
@@ -116,61 +111,14 @@ public class HttpUtilApache4 {
         } catch (Exception e) {
             SystemLog.exception(e);
         }
-        // Release the connection.
-
         return content;
     }
 
-    public static void waiter() throws InterruptedException{
-        Random generator = new Random();
-        long stopRndm = (long) (generator.nextFloat() * 1000);
-        stopExecution(stopRndm);
-        Thread.sleep((generator.nextInt(5)*1000 + generator.nextInt(6)*1000));
-        //Thread.sleep((generator.nextInt(6)+5)*1000);
-    }
-
     /**
-     * Method for set a waiting from a request to another.
-     * @param millisec input in milliseconds.
+     * Method to prepare a HttpClient 4 from apache.http.
+     * @param check if true try to find in the System the configuration of the proxy.
+     * @return HttpClient object.
      */
-    public static void stopExecution(long millisec){
-        long t0,t1;
-        t0 = System.currentTimeMillis();
-        do{
-            t1=System.currentTimeMillis();
-        }
-        while (t1-t0<millisec);
-    }
-
-    /**
-     * Method for read a resource allocated on a Reader object.
-     * @param rd buffer reader where the reosurce is allocated.
-     * @return return string of the response.
-     * @throws IOException resource not found.
-     */
-    private String readAll(Reader rd) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        int cp;
-        while ((cp = rd.read()) != -1) {
-            sb.append((char) cp);
-        }
-        return sb.toString();
-    }
-    /**
-     * Method read the json response from a url resource.
-     * @param url string as url.
-     * @return json resposne from the url resource.
-     * @throws IOException reosurce not found.
-     * @throws JSONException json object error.
-     */
-    private JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
-        try (InputStream is = new URL(url).openStream()) {
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
-            String jsonText = readAll(rd);
-            return new JSONObject(jsonText);
-        }
-    }
-
     public static HttpClient createHttpClientOrProxy(boolean check) {
         HttpClientBuilder hcBuilder = HttpClients.custom();
         if(check) {
@@ -192,4 +140,6 @@ public class HttpUtilApache4 {
                     .build();
         }
     }
+
+
 }

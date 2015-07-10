@@ -84,6 +84,7 @@ public class SQLSupport<T>{
 
     @SuppressWarnings("rawtypes")
     private static SQLSupport instance = null;
+    @SuppressWarnings("rawtypes")
     public static <T> SQLSupport getInstance(T object,boolean isNull){
         if(isNull)instance=null;
         return getInstance(object);

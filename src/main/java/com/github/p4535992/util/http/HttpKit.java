@@ -144,7 +144,7 @@ public class HttpKit {
 
     public String get(String url,Map<String, String> headers){
         try {
-            return HttpUtilApache.get(url,headers);
+            return HttpUtil.get(url, headers);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -153,7 +153,7 @@ public class HttpKit {
 
     public String get(String url){
         try {
-            return HttpUtilApache.get(url);
+            return HttpUtil.get(url);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -162,7 +162,7 @@ public class HttpKit {
 
     public String post(String url, String body,Map<String, String> headers){
         try {
-            return HttpUtilApache.post(url, body, headers);
+            return HttpUtil.post(url, body, headers);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -171,7 +171,7 @@ public class HttpKit {
 
     public String post(String url, String body){
         try {
-            return HttpUtilApache.post(url, body);
+            return HttpUtil.post(url, body);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -180,7 +180,7 @@ public class HttpKit {
 
     public String postForm(String url, Map<String, String> params){
         try {
-            return HttpUtilApache.postForm(url, params);
+            return HttpUtil.postForm(url, params);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -189,7 +189,7 @@ public class HttpKit {
 
     public String postForm(String url, Map<String, String> params,Map<String,String> headers){
         try {
-            return HttpUtilApache.postForm(url, params, headers);
+            return HttpUtil.postForm(url, params, headers);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -198,7 +198,7 @@ public class HttpKit {
 
     public String put(String url, String body,Map<String, String> headers){
         try {
-            return HttpUtilApache.put(url, body, headers);
+            return HttpUtil.put(url, body, headers);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -207,7 +207,7 @@ public class HttpKit {
 
     public String put(String url, String body){
         try {
-            return HttpUtilApache.put(url, body);
+            return HttpUtil.put(url, body);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -216,7 +216,7 @@ public class HttpKit {
 
     public String delete(String url){
         try {
-            return HttpUtilApache.delete(url);
+            return HttpUtil.delete(url);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -225,7 +225,7 @@ public class HttpKit {
 
     public String delete(String url, Map<String, String> headers){
         try {
-            return HttpUtilApache.delete(url, headers);
+            return HttpUtil.delete(url, headers);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -234,7 +234,7 @@ public class HttpKit {
 
     public String appendQueryParams(String url,Map<String, String> params){
         try {
-            return HttpUtilApache.appendQueryParams(url, params);
+            return HttpUtil.appendQueryParams(url, params);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -243,7 +243,7 @@ public class HttpKit {
 
     public Map<String, String> getQueryParams(String url){
         try {
-            return HttpUtilApache.getQueryParams(url);
+            return HttpUtil.getQueryParams(url);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -252,7 +252,7 @@ public class HttpKit {
 
     public String removeQueryParams(String url){
         try {
-            return HttpUtilApache.removeQueryParams(url);
+            return HttpUtil.removeQueryParams(url);
         } catch (IOException e) {
             SystemLog.warning(e.getMessage());
             return null;
@@ -275,14 +275,14 @@ public class HttpKit {
         }catch(Exception e){
             tentativi++;
             try {
-                HttpUtilApache.waiter();
+                HttpUtil.waiter();
             } catch (InterruptedException e1) {
                 if(tentativi < 3) isWebPageExists(url);
             }
             if(tentativi < 3) isWebPageExists(url);
         }
         try{
-            String html = HttpUtilApache.get(url);
+            String html = HttpUtil.get(url);
             doc = Jsoup.parse(html);
             SystemLog.message("HTTP GET HA AVUTO SUCCESSO");
             tentativi = 0;

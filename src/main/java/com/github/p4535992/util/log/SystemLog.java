@@ -299,6 +299,13 @@ public class SystemLog {
             return prefix;
         }
     }
+
+    public static void logException(Logger logger, Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        logger.error(sw.toString());
+    }
         
 }
 

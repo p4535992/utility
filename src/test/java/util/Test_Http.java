@@ -1,7 +1,5 @@
 package util;
 
-import com.github.p4535992.util.http.HttpUtilApache;
-
 import java.net.URISyntaxException;
 
 public class Test_Http {

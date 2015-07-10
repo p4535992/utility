@@ -74,16 +74,17 @@
         <!-- Support Hibernate -->
         <joda-time.version>2.3</joda-time.version>
         <org.jadira.usertype.core.version>3.0.0.CR1</org.jadira.usertype.core.version>
-        <!-- JENA and Sesame OpenRDF -->
-        <org.apache.jena.jena.version>2.13.0</org.apache.jena.jena.version>
-        <org.apache.jena.arq.version>2.13.0</org.apache.jena.arq.version>
-        <org.apache.jena.core.version>2.13.0</org.apache.jena.core.version>
-        <org.apache.jena.jena-tdb.version>1.1.2</org.apache.jena.jena-tdb.version>
-        <org.apache.jena.jena-iri.version>1.1.2</org.apache.jena.jena-iri.version>
+        <!-- JENA and Sesame OpenRDF version used 2.13.0 and 2.10.1 -->
+        <!--<org.apache.jena.jena.version>2.10.1</org.apache.jena.jena.version>-->
+        <!--<org.apache.jena.arq.version>2.13.0</org.apache.jena.arq.version>-->
+        <!--<org.apache.jena.core.version>2.13.0</org.apache.jena.core.version>-->
+        <!--<org.apache.jena.jena-tdb.version>1.1.2</org.apache.jena.jena-tdb.version>-->
+        <!--<org.apache.jena.jena-iri.version>1.1.2</org.apache.jena.jena-iri.version>-->
         <!-- Jena Libraries (Core, ARQ, IRI, and TDB) -->
-        <org.apache.jena.apache-jena-libs.version>2.13.0</org.apache.jena.apache-jena-libs.version>
+        <org.apache.jena.apache-jena-libs.version>2.10.1</org.apache.jena.apache-jena-libs.version>
         <!-- Jena Support -->
         <org.apache.jena.jena-querybuilder.version>2.13.0</org.apache.jena.jena-querybuilder.version>
+        <!-- SESAME - OpenRDF -->
         <org.openrdf.sesame.version>2.8.4</org.openrdf.sesame.version>
         <jsonld-java-jena.version>0.4.1</jsonld-java-jena.version>
         <!-- XML -->
@@ -376,11 +377,23 @@
             <artifactId>virt_jena2</artifactId>
             <version>7.1.0</version>
         </dependency>
+        <!-- The Jena Provider for Jena 2.10 requires the Virtuoso JDBC 4 Driver. -->
         <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjdbc4-1</artifactId>
             <version>7.1.0</version>
         </dependency>
+        <!--  The Jena Provider for Jena 2.6 requires the Virtuoso JDBC 3 Driver. -->
+      <!--  <dependency>
+            <groupId>com.openlink.virtuoso</groupId>
+            <artifactId>virtjdbc3</artifactId>
+            <version>7.1.0</version>
+        </dependency>-->
+       <!-- <dependency>
+            <groupId>com.openlink.virtuoso</groupId>
+            <artifactId>virtjena</artifactId>
+            <version>7.1.0</version>
+        </dependency>-->
         <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjena2</artifactId>

@@ -24,7 +24,7 @@ import java.util.Scanner;
 public class EncodingUtil {
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EncodingUtil.class);
     private static Map<String,String> unicodeCodePoint = new HashMap<>();
-    private static Map<Character,Character> javaCharLiterals = new HashMap<>();
+    //private static Map<Character,Character> javaCharLiterals = new HashMap<>();
     /*private static void set() {
         javaCharLiterals.put('\u0000', '\0');
         javaCharLiterals.put('\u0001', '\0');
@@ -1032,12 +1032,12 @@ public class EncodingUtil {
         }
     }
 
-    /**
+    /*
      * Method to replace all the unicode escape on a UTF8 string
      * @param utf8 string input in utf8 encode.
      * @return strign without the unicode escape.
      */
-    public static String replaceAllEscapeUnicodeOnTheUTF8String(String utf8){
+   /* public static String replaceAllEscapeUnicodeOnTheUTF8String(String utf8){
         char[] array = StringKit.convertStringToChar(utf8);
         for(char aChar:array) {
             for (Map.Entry<Character, Character> entry : javaCharLiterals.entrySet()) {
@@ -1051,7 +1051,7 @@ public class EncodingUtil {
             } //foreach entry
         }
         return new String(array);
-    }
+    }*/
 
     // FEFF because this is the Unicode char represented by the UTF-8 byte order mark (EF BB BF).
     public static final String UTF8_BOM = "\uFEFF";
@@ -1090,6 +1090,72 @@ public class EncodingUtil {
             s = s.substring(1);
         }
         return s;
+    }
+
+    public final static String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();
+
+  /*  public static String detect(InputStream is) throws IOException {
+        byte[] buf = new byte[4096];
+        // (1)
+        org.mozilla.universalchardet.UniversalDetector detector =
+                new org.mozilla.universalchardet.UniversalDetector(null);
+        // (2)
+        int nread;
+        while ((nread = is.read(buf)) > 0 && !detector.isDone()) {
+            detector.handleData(buf, 0, nread);
+        }
+        // (3)
+        detector.dataEnd();
+        // (4)
+        String encoding = detector.getDetectedCharset();
+        if (encoding != null) {
+            logger.debug("Detected encoding = " + encoding);
+        } else {
+            logger.debug("No encoding detected, using default: " + DEFAULT_ENCODING);
+            encoding = DEFAULT_ENCODING;
+        }
+        // (5)
+        detector.reset();
+        return encoding;
+    }*/
+
+   /* public static String detect(File file) {
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            String encoding = EncodingDetector.detect(fis);
+            logger.info("Detected encoding for file: " + file.getName() + ": " + encoding);
+            if (encoding == null) {
+                encoding = DEFAULT_ENCODING;
+            }
+            return encoding;
+        } catch(Exception e) {
+            logger.debug("Exception detecting encoding, using default: " + DEFAULT_ENCODING);
+        }
+        return DEFAULT_ENCODING;
+    }*/
+
+    public static InputStreamReader getInputStreamReader(InputStream is, String encoding) throws IOException {
+        logger.info("Reading stream: using encoding: " + encoding);
+        org.apache.commons.io.input.BOMInputStream bis = new org.apache.commons.io.input.BOMInputStream(is); //So that we can remove the BOM
+        return new InputStreamReader(bis, encoding);
+    }
+
+    public static InputStreamReader getInputStreamReader(File file, String encoding) throws IOException {
+
+        FileInputStream fis = new FileInputStream(file);
+        logger.info("Reading file: " + file + " using encoding: " + encoding);
+        org.apache.commons.io.input.BOMInputStream bis =
+                new org.apache.commons.io.input.BOMInputStream(fis); //So that we can remove the BOM
+        return new InputStreamReader(bis, encoding);
+    }
+
+    public static String getString(File file, String encoding) throws IOException {
+        StringWriter sw = new StringWriter();
+        FileInputStream fis = new FileInputStream(file);
+        logger.info("Reading file: " + file + " using encoding: " + encoding);
+        org.apache.commons.io.IOUtils.copy(fis, sw, encoding);
+
+        return sw.toString();
     }
 
 

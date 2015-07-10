@@ -1,6 +1,8 @@
 package com.github.p4535992.util.collection;
 
 import com.github.p4535992.util.reflection.ReflectionKit;
+import com.github.p4535992.util.string.StringKit;
+
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -438,6 +440,109 @@ public class CollectionKit {
         }
         return parts;
     }
+
+    /**
+     * Sorts a HashMap based on the values with Double data type
+     * @param input hashMAp where order.
+     * @return the hashmap sorted.
+     */
+    public static HashMap<String, Double> sortHashMap(
+            HashMap<String, Double> input) {
+        Map<String, Double> tempMap = new HashMap<String, Double>();
+        for (String wsState : input.keySet()) {
+            tempMap.put(wsState, input.get(wsState));
+        }
+        List<String> mapKeys = new ArrayList<String>(tempMap.keySet());
+        List<Double> mapValues = new ArrayList<Double>(tempMap.values());
+        HashMap<String, Double> sortedMap = new LinkedHashMap<String, Double>();
+        TreeSet<Double> sortedSet = new TreeSet<Double>(mapValues);
+        Object[] sortedArray = sortedSet.toArray();
+        int size = sortedArray.length;
+        for (int i = size - 1; i >= 0; i--) {
+            sortedMap.put(mapKeys.get(mapValues.indexOf(sortedArray[i])),
+                    (Double) sortedArray[i]);
+        }
+        return sortedMap;
+    }
+
+    /**
+     * Method to convert a HashTable Collection of Integer to a TreeMap Collection of int.
+     * @param hashTable the HashTable Collection.
+     * @param <K> generic type.
+     * @param <V> generic type.
+     * @return TreeMap Collection.
+     */
+    public static <K,V> TreeMap<K,V> convertHashTableToTreeMap(Hashtable<K,V> hashTable){
+        return new TreeMap<>(hashTable);
+    }
+
+    /**
+     * Method to convert a HashTable Collection of Integer to a TreeMap Collection of int.
+     * @param hMap the Map Collection.
+     * @param <K> generic type.
+     * @param <V> generic type.
+     * @return Hashtable Collection.
+     */
+    public static <K,V> Hashtable<K,V> convertMapToHashTable(Map<K,V> hMap){
+        Hashtable<K,V> ht = new Hashtable<>();
+        ht.putAll(hMap);
+        return ht;
+    }
+
+    /**
+     * Method to convert a HashTable Collection of Integer to a TreeMap Collection of int.
+     * @param hashTable the HashTable Collection.
+     * @param <K> generic type.
+     * @param <V> generic type.
+     * @return Map Collection.
+     */
+    public static <K,V> Map<K,V> convertHashTableToHashMap(Hashtable<K,V> hashTable){
+        return new HashMap<>(hashTable);
+    }
+
+    /**
+     * Method to convert a HashTable Collection of Integer to a TreeMap Collection of int.
+     * @param hashTable the HashTable Collection.
+     * @param <K> generic type.
+     * @param <V> generic type.
+     * @return LinkedHashMap Collection.
+     */
+    public static <K,V> LinkedHashMap<K,V> convertHashTableToLinkedHashMap(Hashtable<K,V> hashTable){
+        return new LinkedHashMap<>(hashTable);
+    }
+
+
+    /**
+     * Metodo che assegna attraverso un meccanismo di "mapping" ad ogni valore
+     * distinto del parametro in questione un numero (la frequenza) prendeno il
+     * valore con la massima frequenza abbiamo ricavato il valore più diffuso
+     * per tale parametro
+     * @param al lista dei valori per il determianto parametro del GeoDocument
+     * @return  il valore più diffuso per tale parametro
+     */
+    private String getMoreCommonParameter(List<String> al){
+        Map<String,Integer> map = new HashMap<>();
+        for (String anAl : al) {
+            Integer count = map.get(anAl);
+            map.put(anAl, count == null ? 1 : count + 1);   //auto boxing and count
+        }
+        //System.out.println(map);
+        //ADESSO PER OGNI VALORE POSSIBILE DEL PARAMETRO ABBIAMO INSERITO IL
+        //NUMERO DI VOLTE IN CUI SONO STATI "TROVATI" NEI VARI RECORD ANALIZZATI
+        String keyParameter=null;
+        Integer keyValue =0;
+        for ( Map.Entry<String, Integer> entry : map.entrySet()) {
+            String key = entry.getKey();
+            //System.out.println(key);
+            Integer value = entry.getValue();
+            if(value >= keyValue && StringKit.setNullForEmptyString(key)!=null && !key.equals("null") && !key.equals("NULL")){
+                keyValue = value;
+                keyParameter = key;
+            }
+        }
+        return keyParameter;
+    }//getMoreCommonParameter
+
 
 
 

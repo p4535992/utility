@@ -4,6 +4,7 @@ import com.github.p4535992.util.log.SystemLog;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
@@ -133,33 +134,68 @@ public class SQLHelper {
         return result;
     }
 
+    /**
+     * Method to get the current timestamp.
+     * @return timestamp object.
+     */
     public static java.sql.Timestamp getCurrentTimeStamp() {
         java.util.Date today = new java.util.Date();
         return new java.sql.Timestamp(today.getTime());
 
     }
 
+    /**
+     * Method to get the current date.
+     * @return date object.
+     */
     public static java.sql.Date getCurrentDate() {
         java.util.Date today = new java.util.Date();
         return new java.sql.Date(today.getTime());
     }
 
-
-
-
-    public static Connection getHSQLConnection(String database,String username,String password) throws Exception {
+    /**
+     * Method to get a HSQL connection.
+     * @param database string name of the database.
+     * @param username string username.
+     * @param password string password.
+     * @return the connection.
+     * @throws ClassNotFoundException if any error class is occurred.
+     * @throws SQLException if any error SQL is occurred.
+     */
+    public static Connection getHSQLConnection(String database,String username,String password)
+            throws ClassNotFoundException, SQLException {
         Class.forName("org.hsqldb.jdbcDriver");
         String url = "jdbc:hsqldb:data/"+database;
         return  conn = DriverManager.getConnection(url, username, password);
     }
 
-    public static Connection getMySqlConnection(String database,String username,String password) throws Exception {
+    /**
+     * Method to get a MySQL connection.
+     * @param database string name of the database.
+     * @param username string username.
+     * @param password string password.
+     * @return the connection.
+     * @throws ClassNotFoundException if any error class is occurred.
+     * @throws SQLException if any error SQL is occurred.
+     */
+    public static Connection getMySqlConnection(String database,String username,String password)
+            throws ClassNotFoundException, SQLException {
         Class.forName("org.gjt.mm.mysql.Driver");
         String url = "jdbc:mysql://localhost/"+database;
         return conn = DriverManager.getConnection(url, username, password);
     }
 
-    public static Connection getOracleConnection(String database,String username,String password) throws Exception {
+    /**
+     * Method to get a Oracle connection.
+     * @param database string name of the database.
+     * @param username string username.
+     * @param password string password.
+     * @return the connection.
+     * @throws ClassNotFoundException if any error class is occurred.
+     * @throws SQLException if any error SQL is occurred.
+     */
+    public static Connection getOracleConnection(String database,String username,String password)
+            throws ClassNotFoundException, SQLException {
         Class.forName("oracle.jdbc.driver.OracleDriver");
         String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
         return conn = DriverManager.getConnection(url, username, password);
@@ -167,12 +203,13 @@ public class SQLHelper {
 
     /**
      * UPDATE yourTable SET nameColumnToInsert = MD5(nameColumnToCodify) WHERE nameColumnToInsert IS NULL;
-     * @param yourTable
-     * @param nameColumnToCodify
-     * @param nameColumnToInsert
-     * @return
+     * @param yourTable string name of the table.
+     * @param nameColumnToCodify string name of the column to codify.
+     * @param nameColumnToInsert string name of the column to insert.
+     * @return string query.
      */
-    public static String addMD5ColumnToTheTable(String yourTable,String nameColumnToCodify,String nameColumnToInsert,boolean ifNull){
+    public static String addMD5ColumnToTheTable(
+            String yourTable,String nameColumnToCodify,String nameColumnToInsert,boolean ifNull){
         String query = "UPDATE "+yourTable+" \n" +
                 "SET "+nameColumnToInsert+" = MD5("+nameColumnToCodify+") \n";
                 if(ifNull) query += "WHERE "+nameColumnToInsert+" IS NULL; \n";
@@ -184,50 +221,101 @@ public class SQLHelper {
      * SELECT nameColumnToCopy FROM yourTable;
      * UPDATE yourTable SET nameColumnToInsert = nameColumnToCopy;
      * UPDATE yourTable SET nameColumnToInsert = CONCAT('prefix',nameColumnToInsert);
-     * @param yourTable
-     * @param nameColumnToCopy
-     * @param nameColumnToInsert
-     * @param prefix
-     * @return
+     * @param yourTable string name of the table.
+     * @param nameColumnToCopy string name of the column to copy.
+     * @param nameColumnToInsert string name of the column to insert.
+     * @param prefix string prefix on the new copied column.
+     * @return string query.
      */
     public static String addCopyColumnWithPrefix(String yourTable,String nameColumnToCopy,String nameColumnToInsert,String prefix){
-        String query = "SELECT "+nameColumnToCopy+" FROM " + yourTable + "; \n" +
+        return "SELECT "+nameColumnToCopy+" FROM " + yourTable + "; \n" +
                 "UPDATE " + yourTable + " SET "+nameColumnToInsert+" = "+nameColumnToCopy+"; \n"+
                 "UPDATE " + yourTable + " SET "+nameColumnToInsert+" = CONCAT('"+prefix+"',"+nameColumnToInsert+");"
                 ;
-        return query;
     }
 
     /**
-     * UPDATE yourTable  SET nameColumn = CONCAT('+prefix+',nameColumn);
-     * @param yourTable
-     * @param nameColumn
-     * @param prefix
-     * @return
+     * UPDATE yourTable  SET nameColumnToUpdate = CONCAT('+prefix+',nameColumnToUpdate);
+     * @param yourTable string name of the table.
+     * @param nameColumnToUpdate string name of the column to update.
+     * @param prefix string of the prefix to add at the column to update.
+     * @return string query.
      */
-    public static String addPrefixToColumn(String yourTable,String nameColumn,String prefix){
-        return "UPDATE " + yourTable + " SET "+nameColumn+" = CONCAT('"+prefix+"',"+nameColumn+");";
+    public static String addPrefixToColumn(String yourTable,String nameColumnToUpdate,String prefix){
+        return "UPDATE " + yourTable + " SET "+nameColumnToUpdate+" = CONCAT('"+prefix+"',"+nameColumnToUpdate+");";
     }
 
     /**
-     * SELECT nameColumn FROM yourTable WHERE nameColumn LIKE ='startWith% ;
-     * @param yourTable
-     * @param nameColumn
-     * @param startWith
-     * @return
+     * SELECT nameColumnToSelect FROM yourTable WHERE nameColumnToSelect LIKE ='startWith% ;
+     * @param yourTable string name of the table.
+     * @param nameColumnToSelect string name of the column to select;
+     * @param startWith string prefix of the value of the record.
+     * @return string query.
      */
-    public static String selecRecordWhereColumnStartWith(String yourTable,String nameColumn,String startWith){
-        return "SELECT " + nameColumn +" FROM "+yourTable+" WHERE "+nameColumn+ " LIKE ='"+startWith+"% ;";
+    public static String selectWhereColumnStartWith(String yourTable,String nameColumnToSelect,String startWith){
+        return "SELECT " + nameColumnToSelect +" FROM "+yourTable+" WHERE "+nameColumnToSelect+ " LIKE ='"+startWith+"% ;";
     }
 
     /**
      * UPDATE geodb.infodocument_coord_omogeneo_05052014
      * SET indirizzo = CONCAT_WS(', ', indirizzoNoCAP, indirizzoHasNumber)
-     * @param nameColumnToUpdate
-     * @param nameColumnConcatenate
-     * @return
+     * @param yourTable string name of the table.
+     * @param nameColumnToUpdate string name of the column to update.
+     * @param nameFirstColumnConcatenate string name of the first column.
+     * @param nameSecondColumnConcatenate string name of the second column.
+     * @param separator string of the separator.
+     * @return string query.
      */
-    public static String etColumnLikeCOncatentationOfOtherColumns(String nameColumnToUpdate,String[] nameColumnConcatenate){
-        return null;
+    public static String setColumnConcatenationFromTwoColumns(
+            String yourTable,String nameColumnToUpdate,
+            String nameFirstColumnConcatenate,String nameSecondColumnConcatenate,
+            String separator){
+        return "UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = CONCAT_WS('"+separator+"',"
+                 + nameFirstColumnConcatenate+", "+nameSecondColumnConcatenate+");";
+    }
+
+    //update t set data=concat(data, 'a');
+
+    /**
+     * UPDATE yourTable SET nameColumnToUpdate = CONCAT(nameColumnToUpdate,'content');"
+     * @param yourTable string name of the table.
+     * @param nameColumnToUpdate string name of the column to update.
+     * @param content string to append to the column.
+     * @return string query.
+     */
+    public static String setColumnConcatenationContent(
+            String yourTable,String nameColumnToUpdate,String content){
+        return "UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = CONCAT("+nameColumnToUpdate+",'"+content+"');";
+    }
+
+    /**
+     * UPDATE yourTable SET nameColumnToUpdate = CONCAT(nameColumnToUpdate,nameFirstColumn);;
+     * @param yourTable string name of the table.
+     * @param nameColumnToUpdate string name of the column to update.
+     * @param nameFirstColumn string name of the column.
+     * @return string query.
+     */
+    public static String etColumnConcatenationSingleColumn(
+            String yourTable,String nameColumnToUpdate,String nameFirstColumn){
+        return "UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = CONCAT("+nameColumnToUpdate+","+nameFirstColumn+");";
+    }
+
+    /**
+     * CONCAT(Title,' ',FirstName,' ',MiddleName,' ',LastName)
+     * @param yourTable string name of the table.
+     * @param nameColumnToUpdate string name of the column to update.
+     * @param arrayColumns array of the strings names of the columns to concatenate.
+     * @return string query.
+     */
+    public static String setColumnConcatenationMultipleColumns(String yourTable,String nameColumnToUpdate,String[] arrayColumns){
+        StringBuilder builder = new StringBuilder("UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = CONCAT(");
+        for(int i=0; i < arrayColumns.length; i++){
+            builder.append(arrayColumns[i]);
+            if(i < arrayColumns.length-1){
+                builder.append(",' ',");
+            }
+        }
+        builder.append(");");
+        return builder.toString();
     }
 }

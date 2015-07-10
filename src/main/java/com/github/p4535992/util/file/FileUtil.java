@@ -1,5 +1,6 @@
 package com.github.p4535992.util.file;
 
+import com.github.p4535992.util.encoding.EncodingUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringKit;
 
@@ -502,6 +503,84 @@ public class FileUtil {
         return map;
     }
 
+    /*static public File downloadFileFromHTTPRequest(HttpServletRequest request,File destinationDir) {
+        // Download the file to the upload file folder
+
+        *//*File destinationDir = new File(
+                ServletContextParameterMap.getParameterValue(ContextParameter.USER_DIRECTORY_PATH) + USER_UPLOAD_DIR);*//*
+        //logger.debug("File upload destination directory: " + destinationDir.getAbsolutePath());
+        if (!destinationDir.isDirectory()) {
+            destinationDir.mkdir();
+        }
+
+        org.apache.commons.fileupload.disk.DiskFileItemFactory fileItemFactory =
+                new org.apache.commons.fileupload.disk.DiskFileItemFactory();
+
+        // Set the size threshold, above which content will be stored on disk.
+        fileItemFactory.setSizeThreshold(1 * 1024 * 1024); //1 MB
+
+        //Set the temporary directory to store the uploaded files of size above threshold.
+        fileItemFactory.setRepository(destinationDir);
+
+        ServletFileUpload uploadHandler = new ServletFileUpload(fileItemFactory);
+
+        File uploadedFile = null;
+        try {
+            // Parse the request
+            @SuppressWarnings("rawtypes")
+            List items = uploadHandler.parseRequest(request);
+            @SuppressWarnings("rawtypes")
+            Iterator itr = items.iterator();
+            while (itr.hasNext()) {
+                org.apache.commons.fileupload.FileItem item =
+                        (org.apache.commons.fileupload.FileItem) itr.next();
+
+                // Ignore Form Fields.
+                if (item.isFormField()) {
+                    // Do nothing
+                } else {
+                    //Handle Uploaded files. Write file to the ultimate location.
+                    uploadedFile = new File(destinationDir, item.getName());
+                    if (item instanceof DiskFileItem) {
+                        org.apache.commons.fileupload.disk.DiskFileItem t =
+                                (org.apache.commons.fileupload.disk.DiskFileItem)item;
+                        if (!t.getStoreLocation().renameTo(uploadedFile))
+                            item.write(uploadedFile);
+                    }
+                    else
+                        item.write(uploadedFile);
+                }
+            }
+        } catch (org.apache.commons.fileupload.FileUploadException ex) {
+            logger.error("Error encountered while parsing the request", ex);
+        } catch (Exception ex) {
+            logger.error("Error encountered while uploading file", ex);
+        }
+        return uploadedFile;
+    }*/
+
+    public static void copyFiles(File destination, File source) throws IOException {
+        if (!destination.exists()) {
+            destination.createNewFile();
+        }
+        InputStream in = new FileInputStream(source);
+        OutputStream out = new FileOutputStream(destination);
+
+        byte[] buf = new byte[1024];
+        int len;
+
+        while ((len = in.read(buf)) > 0) {
+            out.write(buf, 0, len);
+        }
+        in.close();
+        out.close();
+        logger.debug("Done copying contents of " + source.getName() + " to " + destination.getName());
+    }
+
+    public static String readFileContentsToString(File file, String encoding) throws IOException {
+        return EncodingUtil.getString(file, encoding);
+    }
+
     public static  InputStream convertResourceFileToStream(String pathToFile) throws IOException{
         // JDK7 try-with-resources ensures to close stream automatically
         try (InputStream is = FileUtil.class.getResourceAsStream(pathToFile)) {
@@ -705,6 +784,35 @@ public class FileUtil {
     }
 
 
+    public static File convertStringToFile(String stringText,String fullPathfile){
+        return convertStringToFile(stringText,new File(fullPathfile));
+
+    }
+
+    public static File convertStringToFile(String stringText,File file){
+        return writeStringToFile(stringText,file);
+
+    }
+
+    /**
+     * Saves a string to a file.
+     * @param str string to write on the file.
+     * @param fileName string name of the file.
+     */
+    private static File writeStringToFile(String str, File fileName) {
+        try {
+            OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8");
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter outWriter = new PrintWriter(bw);
+            outWriter.println(str);
+            outWriter.close();
+        } catch (UnsupportedEncodingException|FileNotFoundException e) {
+            SystemLog.exception(e);
+        }
+        return fileName;
+    }
+
+
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -786,8 +894,9 @@ public class FileUtil {
 
 
     /////////////////////////////////////////
-    //OTHER METHODS WITH COMMONS UTIL APACHE
+    //OTHER METHODS WITH COMMONS UTIL APACHE COMMONS
     /////////////////////////////////////////
+
 
 
     /*public static File stream2fileWithUtil (InputStream in,String filename,String extension) throws IOException {
@@ -818,7 +927,7 @@ public class FileUtil {
     //OTHER METHODS DERPECATED
     ///////////////////////////////
 
-    /**
+    /*
      * Get current working directory as a URI.
      */
     /*public static String uriFromCwd() {
@@ -826,14 +935,14 @@ public class FileUtil {
         return uriFromFilename( cwd ) + "/" ;
     }*/
 
-    /**
+    /*
      * Convert File descriptor string to a URI.
      */
    /* public static String uriFromFile(File filespec){
         return uriFromFilename( filespec.getAbsolutePath() ) ;
     }*/
 
-    /**
+    /*
      * Convert filename string to a URI.
      * Map '\' characters to '/' (this might break if '\' is used in
      * a Unix filename, but this is assumed to be a very rare occurrence

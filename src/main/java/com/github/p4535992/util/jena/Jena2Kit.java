@@ -83,7 +83,7 @@ public class Jena2Kit {
      * @param outputFormat the output format you want to write the model.
      * @throws IOException throw if any I/O error is occured.
      */
-    public static void writeModelToFile(String fullPath, com.hp.hpl.jena.rdf.model.Model model, String outputFormat) throws IOException {
+    public static void writeModelToFile(String fullPath,Model model, String outputFormat) throws IOException {
         fullPath =  FileUtil.path(fullPath) + File.separator + FileUtil.filenameNoExt(fullPath)+"."+outputFormat.toLowerCase();
         SystemLog.message("Try to write the new file of triple from:" + fullPath + "...");
         OUTLANGFORMAT = stringToRiotLang(outputFormat);
@@ -180,11 +180,11 @@ public class Jena2Kit {
     public static Model execSparqlConstructorOnModel(String sparql,Model model) {
         Query query = QueryFactory.create(sparql) ;
         Model resultModel ;
-        try ( //QueryExecutionFactory.create(query, model) ;
-                QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+        QueryExecution qexec = QueryExecutionFactory.create(query, model);
+        //try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             resultModel = qexec.execConstruct();
             SystemLog.sparql(sparql);
-        }
+        //}
         return  resultModel;
     }
     
@@ -196,12 +196,12 @@ public class Jena2Kit {
      */
     public static Model execSparqlDescribeOnModel(String sparql,Model model) {
         Query query = QueryFactory.create(sparql) ;
-        //QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
         Model resultModel ;
-        try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+        //try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             resultModel = qexec.execDescribe();
             SystemLog.sparql(sparql);
-        }
+        //}
         return resultModel;
     }
 
@@ -213,13 +213,13 @@ public class Jena2Kit {
      */
     public static ResultSet execSparqlSelectOnModel(String sparql,Model model) {
         ResultSet results;
-        try ( //QueryExecution qexec = QueryExecutionFactory.create(sparql, model);
-                QueryExecution qexec = QueryExecutionFactory.create(sparql, model)) {
+        QueryExecution qexec = QueryExecutionFactory.create(sparql, model);
+        //try (QueryExecution qexec = QueryExecutionFactory.create(sparql, model)) {
             results = qexec.execSelect();
             //... make exit from the thread the result of query
             results = ResultSetFactory.copyResults(results) ;
             SystemLog.sparql(sparql);
-        }
+        //}
         return results;
     }
 
@@ -232,11 +232,11 @@ public class Jena2Kit {
     public static boolean execSparqlAskOnModel(String sparql,Model model) {
         Query query = QueryFactory.create(sparql) ;
         boolean result ;
-        //QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
-        try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
+        QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+        //try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             result = qexec.execAsk();
             SystemLog.sparql(sparql);
-        }
+        //}
         return result;
     }
     
@@ -332,8 +332,10 @@ public class Jena2Kit {
         //RDFFormat.JSONLD_PRETTY,
         //RDFFormat.JSONLD,
         RDFFormat.RDFJSON,RDFFormat.RDFNULL,RDFFormat.NQUADS,RDFFormat.NQ,
-        RDFFormat.NQUADS_ASCII,RDFFormat.NQUADS_UTF8,RDFFormat.NT,RDFFormat.NTRIPLES,
-        RDFFormat.NTRIPLES_ASCII,RDFFormat.NTRIPLES_UTF8,RDFFormat.RDFXML,RDFFormat.RDFXML_ABBREV,
+       // RDFFormat.NQUADS_ASCII,RDFFormat.NQUADS_UTF8,
+            RDFFormat.NT,RDFFormat.NTRIPLES,
+       // RDFFormat.NTRIPLES_ASCII,RDFFormat.NTRIPLES_UTF8,
+            RDFFormat.RDFXML,RDFFormat.RDFXML_ABBREV,
         RDFFormat.RDFXML_PLAIN,RDFFormat.RDFXML_PRETTY,RDFFormat.TRIG,RDFFormat.TRIG_BLOCKS,
         RDFFormat.TRIG_FLAT,RDFFormat.TRIG_PRETTY,RDFFormat.TURTLE_BLOCKS,RDFFormat.TURTLE_FLAT,
         RDFFormat.TURTLE_PRETTY};
@@ -369,7 +371,7 @@ public class Jena2Kit {
      * @param uri string uri of the XSDDatatype.
      * @return xsdDatatype of the string uri if exists.
      */
-    public static XSDDatatype stringToXSDDatatypeToString(String uri) {
+    public static XSDDatatype stringToXSDDatatype(String uri) {
             for (XSDDatatype xsdDatatype : allFormatsOfXSDDataTypes) {
                    if(xsdDatatype.getURI().equalsIgnoreCase("http://www.w3.org/2001/XMLSchema#"+uri)){
                        return xsdDatatype;

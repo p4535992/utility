@@ -48,12 +48,23 @@ public class StringKit<T> {
      * will prevent from applying their normal line-breaking behavior.
      */
     public static final char NBSP_CHAR = '\u00A0';
-
     private static final String LINE_FEED = "\r\n";
+    private static final String LINE_SEP = System.getProperty("line.separator");
+    private static final String EMPTY_STR = "";
+    private static final String LT = "<";
+    private static final String GT = ">";
+    private static final String AMP = "&";
+    private static final String QUAT = "\"";
+    private static final String SINGLE_QUAT = "'";
+    private static final String ESC_LT = "&lt;";
+    private static final String ESC_GT = "&gt;";
+    private static final String ESC_AMP = "&amp;";
+    private static final String CRLF = "\r\n";
 
 
     public enum special{
-        WHITESPACE(0), NBSP(1),NEWLINE(2),PROJECTDIR(3),LINE_FEED(4);
+        WHITESPACE(0), NBSP(1),NEWLINE(2),PROJECTDIR(3),LINE_FEED(4),LINE_SEP(5),EMPTY_STR(6),
+        LT(7),GT(8),AMP(9),QUAT(10),SINGLE_QUAT(11),ESC_LT(12),ESC_GT(13),ESC_AMP(14),CRLF(15);
         private final Integer value;
         special(Integer value) {
             this.value = value;
@@ -67,7 +78,18 @@ public class StringKit<T> {
                 ///case NBSP_CHAR: value ='\u00A0'; break;
                 case NEWLINE: value = System.lineSeparator(); break;
                 case PROJECTDIR: value = System.getProperty("user.dir");break;
-                case LINE_FEED: value = "\r\n";
+                case LINE_FEED: value = "\r\n";break;
+                case LINE_SEP: System.getProperty("line.separator");break;
+                case EMPTY_STR:  value ="";break;
+                case LT:  value ="<";break;
+                case GT:  value =">";break;
+                case AMP:  value ="&";break;
+                case QUAT:  value ="\"";break;
+                case SINGLE_QUAT: value = "'";break;
+                case ESC_LT:  value ="&lt;";break;
+                case ESC_GT:  value ="&gt;";break;
+                case ESC_AMP:  value ="&amp;";break;
+                case CRLF: value = "\r\n"; break;
             }
             return value;
         }
@@ -421,7 +443,7 @@ public class StringKit<T> {
      * @param symbol simbolo del tokenizer.
      * @return la stringa tokenizzata.
      */
-    private String getTheFirstTokenOfATokenizer(String content,String symbol){
+    public static String getTheFirstTokenOfATokenizer(String content,String symbol){
         StringTokenizer st = new StringTokenizer(content, symbol);
         while (st.hasMoreTokens()) {
             content = st.nextToken();
@@ -822,7 +844,7 @@ public class StringKit<T> {
      */
     @SuppressWarnings("")
     public static String convertByteArrayToHexString(byte[] arrayBytes) {
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder stringBuffer = new StringBuilder();
         for (byte arrayByte : arrayBytes) {
             stringBuffer.append(Integer.toString((arrayByte & 0xff) + 0x100, 16)
                     .substring(1));
