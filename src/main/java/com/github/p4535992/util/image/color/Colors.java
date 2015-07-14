@@ -1,4 +1,4 @@
-package com.github.p4535992.util.color;
+package com.github.p4535992.util.image.color;
 //Revised from com.greef.ui;
 
 import java.util.Map;

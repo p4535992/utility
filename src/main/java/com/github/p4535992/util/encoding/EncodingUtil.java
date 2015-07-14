@@ -1032,27 +1032,6 @@ public class EncodingUtil {
         }
     }
 
-    /*
-     * Method to replace all the unicode escape on a UTF8 string
-     * @param utf8 string input in utf8 encode.
-     * @return strign without the unicode escape.
-     */
-   /* public static String replaceAllEscapeUnicodeOnTheUTF8String(String utf8){
-        char[] array = StringKit.convertStringToChar(utf8);
-        for(char aChar:array) {
-            for (Map.Entry<Character, Character> entry : javaCharLiterals.entrySet()) {
-                try {
-                    if (aChar == entry.getKey()) {
-                        aChar = entry.getValue();
-                    }
-                } catch (java.lang.NullPointerException ne) {
-                    break;
-                }
-            } //foreach entry
-        }
-        return new String(array);
-    }*/
-
     // FEFF because this is the Unicode char represented by the UTF-8 byte order mark (EF BB BF).
     public static final String UTF8_BOM = "\uFEFF";
 

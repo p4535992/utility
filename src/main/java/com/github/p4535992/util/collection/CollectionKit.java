@@ -448,14 +448,14 @@ public class CollectionKit {
      */
     public static HashMap<String, Double> sortHashMap(
             HashMap<String, Double> input) {
-        Map<String, Double> tempMap = new HashMap<String, Double>();
+        Map<String, Double> tempMap = new HashMap<>();
         for (String wsState : input.keySet()) {
             tempMap.put(wsState, input.get(wsState));
         }
-        List<String> mapKeys = new ArrayList<String>(tempMap.keySet());
-        List<Double> mapValues = new ArrayList<Double>(tempMap.values());
-        HashMap<String, Double> sortedMap = new LinkedHashMap<String, Double>();
-        TreeSet<Double> sortedSet = new TreeSet<Double>(mapValues);
+        List<String> mapKeys = new ArrayList<>(tempMap.keySet());
+        List<Double> mapValues = new ArrayList<>(tempMap.values());
+        HashMap<String, Double> sortedMap = new LinkedHashMap<>();
+        TreeSet<Double> sortedSet = new TreeSet<>(mapValues);
         Object[] sortedArray = sortedSet.toArray();
         int size = sortedArray.length;
         for (int i = size - 1; i >= 0; i--) {
@@ -526,14 +526,10 @@ public class CollectionKit {
             Integer count = map.get(anAl);
             map.put(anAl, count == null ? 1 : count + 1);   //auto boxing and count
         }
-        //System.out.println(map);
-        //ADESSO PER OGNI VALORE POSSIBILE DEL PARAMETRO ABBIAMO INSERITO IL
-        //NUMERO DI VOLTE IN CUI SONO STATI "TROVATI" NEI VARI RECORD ANALIZZATI
         String keyParameter=null;
         Integer keyValue =0;
         for ( Map.Entry<String, Integer> entry : map.entrySet()) {
             String key = entry.getKey();
-            //System.out.println(key);
             Integer value = entry.getValue();
             if(value >= keyValue && StringKit.setNullForEmptyString(key)!=null && !key.equals("null") && !key.equals("NULL")){
                 keyValue = value;
@@ -542,6 +538,58 @@ public class CollectionKit {
         }
         return keyParameter;
     }//getMoreCommonParameter
+
+    /**
+     * Method to order a int array with a BubbleSort.
+     * @param data Array Collection of int.
+     */
+    public static void bubbleSortArray(int[] data){
+        boolean swapDone;
+        do {
+            swapDone = false;
+            for (int i=0; i<data.length-1; i++) {
+                if (data[i]>data[i+1]) {
+                    swapDone = true;
+                    int tmp = data[i];
+                    data[i] = data[i+1];
+                    data[i+1] = tmp;
+                }
+            }
+        } while (swapDone);
+
+    }
+
+    /**
+     * Method to convert a array to a string with a specific separator
+     * @param array the Array Collection.
+     * @param separator the char separator.
+     * @param <T> generic type.
+     * @return the String of the content of the array.
+     */
+    public static <T> String convertArrayContentToSingleString(T[] array,char separator){
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            strBuilder.append( array[i].toString() );
+            if(!StringKit.isNullOrEmpty(Character.toString(separator))&& i < array.length-1){
+                strBuilder.append(separator);
+            }else{
+                strBuilder.append(',');
+            }
+        }
+        return strBuilder.toString();
+    }
+
+    /**
+     * Method to convert a array to a string.
+     * @param array the Array Collection.
+     * @param <T> generic type.
+     * @return the String of the content of the array.
+     */
+    public static <T> String convertArrayContentToSingleString(T[] array){
+        String s = Arrays.toString(array);
+        s = s.substring(1,s.length()-1);
+        return s;
+    }
 
 
 

@@ -1,5 +1,7 @@
 package com.github.p4535992.util.archive;
 
+import com.github.p4535992.util.log.SystemLog;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Date;
@@ -8,7 +10,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-
+@SuppressWarnings("unused")
 public class ZipStreamer implements Runnable {
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -51,6 +53,37 @@ public class ZipStreamer implements Runnable {
         return sb.toString();
     }
 
+    /**
+     * Method to create a ZIP file.
+     * @param filePathText String path to the file you want to compress
+     * @param filePathZip String to the path of the ZIP file.
+     */
+    public void createZipFile(String filePathText, String filePathZip) {
+        try {
+            if(!new File(filePathText).exists()) throw new IOException("The file:"+ filePathText+" not exists!!!");
+            String inputFileName = filePathText;//fileName.txt
+            if(!filePathZip.toLowerCase().endsWith(".zip"))filePathZip = filePathZip + ".zip";
+            String zipFileName = filePathZip;
+            //Creare gli stream d’input e output
+            FileInputStream inStream = new FileInputStream(inputFileName);
+            ZipOutputStream outStream = new ZipOutputStream(new FileOutputStream(zipFileName));
+            // Aggiungere un oggetto ZipEntry allo stream d’output
+            outStream.putNextEntry(new ZipEntry(inputFileName));
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            //Ciascuna porzione di dati letti dallo stream di input
+            //viene scritta nello stream di output
+            while ((bytesRead = inStream.read(buffer)) > 0) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+            outStream.closeEntry();
+            outStream.close();
+            inStream.close();
+        } catch (IOException ex) {
+            SystemLog.exception(ex);
+        }
+    }
+
     public InputStream getInputStream() throws IOException {
         return new PipedInputStream(out);
     }
@@ -63,14 +96,14 @@ public class ZipStreamer implements Runnable {
                 System.out.println("Writing " + counter.get());
                 ZipEntry e = new ZipEntry("folder/file" + counter.incrementAndGet());
                 zipOut.putNextEntry(e);
-                zipOut.write(("This is file " + counter.get() + "\n\n")
-                        .getBytes(UTF8));
+                zipOut.write(("This is file " + counter.get() + "\n\n").getBytes(UTF8));
                 zipOut.closeEntry();
                 System.out.println("Wrote " + counter.get());
             } catch (Exception e) {
                 try {
                     zipOut.close();
                 } catch (IOException e1) {
+                    SystemLog.exception(e1);
                 }
                 break;
             }

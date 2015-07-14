@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package com.github.p4535992.util.encrypt;
+package com.github.p4535992.util.security.encrypt;
 
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;

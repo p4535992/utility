@@ -785,13 +785,33 @@ public class FileUtil {
 
 
     public static File convertStringToFile(String stringText,String fullPathfile){
-        return convertStringToFile(stringText,new File(fullPathfile));
+        return convertStringToFile(stringText, new File(fullPathfile));
 
     }
 
     public static File convertStringToFile(String stringText,File file){
-        return writeStringToFile(stringText,file);
+        return writeStringToFile(stringText, file);
 
+    }
+
+    public static Writer convertFileToWriter(File file){
+        Writer writer = null;
+        try {
+            writer = new FileWriter(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return writer;
+    }
+
+    public static Reader convertFileToReader(File file){
+        Reader reader = null;
+        try {
+            reader = new FileReader(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return reader;
     }
 
     /**

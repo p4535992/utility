@@ -256,4 +256,8 @@ public class Patterns {
     public  static boolean isValidURL(String url) {
         return url != null && Patterns.WEB_URL.matcher(url).matches();
     }
+
+    public  static boolean isValidURLSimple(String url) {
+        return url != null && url.matches("^(https?|ftp)://.*$");
+    }
 }

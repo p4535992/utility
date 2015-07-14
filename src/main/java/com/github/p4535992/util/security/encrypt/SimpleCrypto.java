@@ -3,7 +3,7 @@
  * http://www.androidsnippets.org/snippets/39/index.html
  */
 
-package com.github.p4535992.util.encrypt;
+package com.github.p4535992.util.security.encrypt;
 
 import java.security.SecureRandom;
 

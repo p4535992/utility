@@ -671,35 +671,7 @@ public class StringKit<T> {
         return map;
     }
 
-    /**
-     * Method to convert a array to a string with a specific separator
-     * @param array the Array Collection.
-     * @param separator the char separator.
-     * @param <T> generic type.
-     * @return the String of the content of the array.
-     */
-    public static <T> String convertArrayContentToSingleString(T[] array,char separator){
-        StringBuilder strBuilder = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            strBuilder.append( array[i].toString() );
-            if(isNullOrEmpty(Character.toString(separator))&& i < array.length-1){
-                strBuilder.append(separator);
-            }
-        }
-        return strBuilder.toString();
-    }
 
-    /**
-     * Method to convert a array to a string.
-     * @param array the Array Collection.
-     * @param <T> generic type.
-     * @return the String of the content of the array.
-     */
-    public static <T> String convertArrayContentToSingleString(T[] array){
-        String s = Arrays.toString(array);
-        s = s.substring(1,s.length()-1);
-        return s;
-    }
 
 
     /**
@@ -715,12 +687,24 @@ public class StringKit<T> {
     /**
      * Method to check if a s tring is a url address web or not.
      * @param url the string address web.
-     * @return if tru is a url addresss web.
+     * @return if tru is a url address web.
      */
     public static boolean isURL(String url){
         return Patterns.isValidURL(url);
     }
 
+    /**
+     * Method to check if a s tring is a url address web or not.
+     * @param url the string address web.
+     * @return if tru is a url address web.
+     */
+    public static boolean isURLSimple(String url){
+        if (url.matches("^(https?|ftp)://.*$")) {
+            return true;
+        } else{
+            return false;
+        }
+    }
     /**
      * Method to add a protocl to a strin to match a url.
      * @param url the string of the url.
@@ -869,8 +853,8 @@ public class StringKit<T> {
      * md5 method which can accept String, byte[] or InputStream and can return hash as 16 element byte
      * array or 32 character hex String.
      */
-  /*  public static String convertByteArrayToStringWithApacheCommonCodec(byte[] digest){
-        return DigestUtils.md5Hex(content);
+  /*  public static String convertByteArrayToStringWithApacheCommonCodec(byte[] arrayBytes){
+        return DigestUtils.md5Hex(arrayBytes);
 
     }*/
 
@@ -902,7 +886,53 @@ public class StringKit<T> {
     }
 
 
+    /**
+     * Method to convert a Integer to a int primitive.
+     * @param integer the integer to convert.
+     * @return the int primitive of the integer object.
+     */
+    @SuppressWarnings("UnnecessaryUnboxing")
+    public static int convertIntegerToInt(Integer integer){
+        return integer.intValue();
+    }
 
+    /**
+     * Method to convert a int primitive to the Integer object .
+     * @param numInt the int primitive.
+     * @return the the integer object of the int primitive .
+     */
+    @SuppressWarnings("UnnecessaryBoxing")
+    public static Integer convertIntToInteger(int numInt){
+        return Integer.valueOf(numInt);
+    }
+
+    /**
+     * Method to convert a String to a Integer.
+     * @param numericText the numeric text string.
+     * @return the integer object.
+     */
+    public static Integer convertStringToInteger(String numericText){
+        if(isNumeric(numericText)){
+            return Integer.parseInt(numericText);
+        }else{
+            SystemLog.warning("The string text:"+numericText+" is not a number!!!");
+            return null;
+        }
+    }
+
+    /**
+     * Method to convert a String to a int.
+     * @param numericText the numeric text string.
+     * @return the int primitive.
+     */
+    public static int convertStringToInt(String numericText){
+        if(isNumeric(numericText)){
+            return convertIntegerToInt(Integer.parseInt(numericText));
+        }else{
+            SystemLog.warning("The string text:"+numericText+" is not a number!!!");
+            return 0;
+        }
+    }
 
 
 
