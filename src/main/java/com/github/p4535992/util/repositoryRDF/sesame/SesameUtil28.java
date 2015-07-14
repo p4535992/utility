@@ -1,4 +1,4 @@
-package com.github.p4535992.util.sesame;
+package com.github.p4535992.util.repositoryRDF.sesame;
 
 import com.github.p4535992.util.file.FileUtil;
 import com.github.p4535992.util.log.SystemLog;

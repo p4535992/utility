@@ -1,4 +1,4 @@
-package com.github.p4535992.util.jena;
+package com.github.p4535992.util.repositoryRDF.jena;
 
 import com.github.p4535992.util.collection.CollectionKit;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
@@ -44,7 +44,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFFormat;
-import org.apache.jena.riot.RDFWriterRegistry;
 
 /**
  * Class utility for Jena

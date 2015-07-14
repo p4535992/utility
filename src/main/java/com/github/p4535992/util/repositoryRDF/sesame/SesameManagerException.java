@@ -1,4 +1,4 @@
-package com.github.p4535992.util.sesame;
+package com.github.p4535992.util.repositoryRDF.sesame;
 
 /**
  * Created by 4535992 on 13/06/2015.

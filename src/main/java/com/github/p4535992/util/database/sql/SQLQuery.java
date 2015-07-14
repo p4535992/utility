@@ -1,4 +1,4 @@
-package com.github.p4535992.util.sql;
+package com.github.p4535992.util.database.sql;
 
 /**
  * Created by 4535992 on 14/07/2015.

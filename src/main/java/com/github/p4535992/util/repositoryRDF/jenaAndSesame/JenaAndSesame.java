@@ -1,4 +1,4 @@
-package com.github.p4535992.util.jenaAndSesame;
+package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 
 import org.openrdf.model.impl.TreeModel;
 import org.openrdf.model.impl.ValueFactoryImpl;

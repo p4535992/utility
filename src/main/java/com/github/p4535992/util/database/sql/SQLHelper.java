@@ -1,4 +1,4 @@
-package com.github.p4535992.util.sql;
+package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.log.SystemLog;
 import java.lang.reflect.Field;

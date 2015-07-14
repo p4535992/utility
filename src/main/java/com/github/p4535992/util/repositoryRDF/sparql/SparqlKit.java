@@ -1,4 +1,4 @@
-package com.github.p4535992.util.sparql;
+package com.github.p4535992.util.repositoryRDF.sparql;
 
 /**
  * Created by 4535992 on 07/07/2015.

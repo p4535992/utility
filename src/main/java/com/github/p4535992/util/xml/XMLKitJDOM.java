@@ -168,12 +168,12 @@ public class XMLKitJDOM {
         try {
             document = builder.build(new ByteArrayInputStream(xmlText.getBytes()));
             Element root = document.getRootElement();
-            List rows = root.getChildren("row");
-            for (int i = 0; i < rows.size(); i++) {
-                Element row = (Element) rows.get(i);
-                List columns = row.getChildren("column");
-                for (int j = 0; j < columns.size(); j++) {
-                    Element column = (Element) columns.get(j);
+            List<Element> rows = root.getChildren("row");
+            for (Object row1 : rows) {
+                Element row = (Element) row1;
+                List<Element> columns = row.getChildren("column");
+                for (Object column1 : columns) {
+                    Element column = (Element) column1;
                     String name = column.getAttribute("name").getValue();
                     String value = column.getText();
                     int length = column.getAttribute("length").getIntValue();

@@ -1,5 +1,5 @@
 /* CVS $Id: $ */
-package com.github.p4535992.util.jena.jena_vocabulary;
+package com.github.p4535992.util.repositoryRDF.jena.jena_vocabulary;
 import com.hp.hpl.jena.rdf.model.*;
 import com.hp.hpl.jena.ontology.*;
  
