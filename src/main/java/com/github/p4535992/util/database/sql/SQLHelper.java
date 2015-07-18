@@ -1,6 +1,9 @@
 package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringKit;
+import org.jooq.SQLDialect;
+
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -55,163 +58,134 @@ public class SQLHelper {
      * @return the corespondetn java class.
      */
     public static Class<?> convertSQLTypes2JavaClass(int type) {
-        Class<?> result = Object.class;
         switch (type) {
             case Types.CHAR:
             case Types.VARCHAR:
             case Types.LONGVARCHAR:
-                result = String.class;
-                break;
+                return  String.class;
             case Types.NUMERIC:
             case Types.DECIMAL:
-                result = java.math.BigDecimal.class;
-                break;
+                return  java.math.BigDecimal.class;
             case Types.BIT:
-                result = Boolean.class;
-                break;
+                return  Boolean.class;
             case Types.TINYINT:
-                result = Byte.class;
-                break;
+                return  Byte.class;
             case Types.SMALLINT:
-                result = Short.class;
-                break;
+                return  Short.class;
             case Types.INTEGER:
-                result = Integer.class;
-                break;
+                return  Integer.class;
             case Types.BIGINT:
-                result = Long.class;
-                break;
+                return  Long.class;
             case Types.REAL:
             case Types.FLOAT:
-                result = Float.class;
-                break;
+                return  Float.class;
             case Types.DOUBLE:
-                result = Double.class;
-                break;
+                return  Double.class;
             case Types.BINARY:
             case Types.VARBINARY:
             case Types.LONGVARBINARY:
-                result = Byte[].class;
-                break;
+                return  Byte[].class;
             case Types.DATE:
-                result = java.sql.Date.class;
-                break;
+                return  java.sql.Date.class;
             case Types.TIME:
-                result = java.sql.Time.class;
-                break;
+                return  java.sql.Time.class;
             case Types.TIMESTAMP:
-                result = java.sql.Timestamp.class;
-                break;
+                return  java.sql.Timestamp.class;
             case Types.NULL:
-                result = Object.class.getSuperclass();
+                return  Object.class.getSuperclass();
+            default:
+                return Object.class;
         }
-        return result;
     }
 
     /**
      * Method for convert a java class to a SQLTypes.
-     * @param aClass the corespondetn java class.
+     * @param aClass the correspondent java class.
      * @return the identificator for the SQL java types.
      */
     public static int convertClass2SQLTypes(Class<?> aClass) {
-        int result;
-        if(aClass.getName().equals(String.class.getName()))result = Types.VARCHAR;
-        else if(aClass.getName().equals(java.math.BigDecimal.class.getName()))result = Types.NUMERIC;
-        else if(aClass.getName().equals(Boolean.class.getName()))result = Types.BIT;
-        else if(aClass.getName().equals(int.class.getName()))result = Types.INTEGER;
-        else if(aClass.getName().equals(Byte.class.getName()))result = Types.TINYINT;
-        else if(aClass.getName().equals(Short.class.getName()))result = Types.SMALLINT;
-        else if(aClass.getName().equals(Integer.class.getName()))result = Types.INTEGER;
-        else if(aClass.getName().equals(Long.class.getName())) result = Types.BIGINT;
-        else if(aClass.getName().equals(Float.class.getName()))result = Types.REAL;
-        else if(aClass.getName().equals(Double.class.getName()))result = Types.DOUBLE;
-        else if(aClass.getName().equals(Byte[].class.getName()))result = Types.VARBINARY;
-        else if(aClass.getName().equals(java.sql.Date.class.getName())) result = Types.DATE;
-        else if(aClass.getName().equals(java.sql.Time.class.getName()))result = Types.TIME;
-        else if(aClass.getName().equals(java.sql.Timestamp.class.getName()))result = Types.TIMESTAMP;
-        else if(aClass.getName().equals(java.net.URL.class.getName()))result = Types.VARCHAR;
-        else result = Types.NULL;
-        return result;
+        if(aClass.getName().equals(String.class.getName()))return  Types.VARCHAR;
+        else if(aClass.getName().equals(java.math.BigDecimal.class.getName()))return  Types.NUMERIC;
+        else if(aClass.getName().equals(Boolean.class.getName()))return  Types.BIT;
+        else if(aClass.getName().equals(int.class.getName()))return  Types.INTEGER;
+        else if(aClass.getName().equals(Byte.class.getName()))return  Types.TINYINT;
+        else if(aClass.getName().equals(Short.class.getName()))return  Types.SMALLINT;
+        else if(aClass.getName().equals(Integer.class.getName()))return  Types.INTEGER;
+        else if(aClass.getName().equals(Long.class.getName())) return  Types.BIGINT;
+        else if(aClass.getName().equals(Float.class.getName()))return  Types.REAL;
+        else if(aClass.getName().equals(Double.class.getName()))return  Types.DOUBLE;
+        else if(aClass.getName().equals(Byte[].class.getName()))return  Types.VARBINARY;
+        else if(aClass.getName().equals(java.sql.Date.class.getName())) return  Types.DATE;
+        else if(aClass.getName().equals(java.sql.Time.class.getName()))return  Types.TIME;
+        else if(aClass.getName().equals(java.sql.Timestamp.class.getName()))return  Types.TIMESTAMP;
+        else if(aClass.getName().equals(java.net.URL.class.getName()))return  Types.VARCHAR;
+        return Types.NULL;
     }
 
+    /**
+     * Method for convert a SQLTypes to a Stirng name of the types.
+     * @param type SQL types.
+     * @return the string name of the SQL types.
+     */
     public static String convertSQLTypes2String(int type) {
         switch (type) {
-            case Types.BIT:
-                return "BIT";
-            case Types.TINYINT:
-                return "TINYINT";
-            case Types.SMALLINT:
-                return "SMALLINT";
-            case Types.INTEGER:
-                return "INTEGER";
-            case Types.BIGINT:
-                return "BIGINT";
-            case Types.FLOAT:
-                return "FLOAT";
-            case Types.REAL:
-                return "REAL";
-            case Types.DOUBLE:
-                return "DOUBLE";
-            case Types.NUMERIC:
-                return "NUMERIC";
-            case Types.DECIMAL:
-                return "DECIMAL";
-            case Types.CHAR:
-                return "CHAR";
-            case Types.VARCHAR:
-                return "VARCHAR";
-            case Types.LONGVARCHAR:
-                return "LONGVARCHAR";
-            case Types.DATE:
-                return "DATE";
-            case Types.TIME:
-                return "TIME";
-            case Types.TIMESTAMP:
-                return "TIMESTAMP";
-            case Types.BINARY:
-                return "BINARY";
-            case Types.VARBINARY:
-                return "VARBINARY";
-            case Types.LONGVARBINARY:
-                return "LONGVARBINARY";
-            case Types.NULL:
-                return "NULL";
-            case Types.OTHER:
-                return "OTHER";
-            case Types.JAVA_OBJECT:
-                return "JAVA_OBJECT";
-            case Types.DISTINCT:
-                return "DISTINCT";
-            case Types.STRUCT:
-                return "STRUCT";
-            case Types.ARRAY:
-                return "ARRAY";
-            case Types.BLOB:
-                return "BLOB";
-            case Types.CLOB:
-                return "CLOB";
-            case Types.REF:
-                return "REF";
-            case Types.DATALINK:
-                return "DATALINK";
-            case Types.BOOLEAN:
-                return "BOOLEAN";
-            case Types.ROWID:
-                return "ROWID";
-            case Types.NCHAR:
-                return "NCHAR";
-            case Types.NVARCHAR:
-                return "NVARCHAR";
-            case Types.LONGNVARCHAR:
-                return "LONGNVARCHAR";
-            case Types.NCLOB:
-                return "NCLOB";
-            case Types.SQLXML:
-                return "SQLXML";
+            case Types.BIT: return "BIT";
+            case Types.TINYINT: return "TINYINT";
+            case Types.SMALLINT: return "SMALLINT";
+            case Types.INTEGER: return "INTEGER";
+            case Types.BIGINT: return "BIGINT";
+            case Types.FLOAT: return "FLOAT";
+            case Types.REAL:return "REAL";
+            case Types.DOUBLE:return "DOUBLE";
+            case Types.NUMERIC:return "NUMERIC";
+            case Types.DECIMAL:return "DECIMAL";
+            case Types.CHAR:return "CHAR";
+            case Types.VARCHAR:return "VARCHAR";
+            case Types.LONGVARCHAR:return "LONGVARCHAR";
+            case Types.DATE:return "DATE";
+            case Types.TIME: return "TIME";
+            case Types.TIMESTAMP:return "TIMESTAMP";
+            case Types.BINARY:return "BINARY";
+            case Types.VARBINARY:return "VARBINARY";
+            case Types.LONGVARBINARY:return "LONGVARBINARY";
+            case Types.NULL:return "NULL";
+            case Types.OTHER:return "OTHER";
+            case Types.JAVA_OBJECT:return "JAVA_OBJECT";
+            case Types.DISTINCT:return "DISTINCT";
+            case Types.STRUCT:return "STRUCT";
+            case Types.ARRAY:return "ARRAY";
+            case Types.BLOB:return "BLOB";
+            case Types.CLOB:return "CLOB";
+            case Types.REF:return "REF";
+            case Types.DATALINK:return "DATALINK";
+            case Types.BOOLEAN:return "BOOLEAN";
+            case Types.ROWID:return "ROWID";
+            case Types.NCHAR:return "NCHAR";
+            case Types.NVARCHAR:return "NVARCHAR";
+            case Types.LONGNVARCHAR:return "LONGNVARCHAR";
+            case Types.NCLOB:return "NCLOB";
+            case Types.SQLXML:return "SQLXML";
+            default: return "NULL";
         }
-
-        return "?";
     }
+
+    public static SQLDialect convertStringToDialectSQL(String sqlDialect) {
+        switch (sqlDialect.toLowerCase()) {
+            case "cubrid":return SQLDialect.CUBRID;
+            case "derby": return SQLDialect.DERBY;
+            case "firebird": return SQLDialect.FIREBIRD;
+            case "h2": return SQLDialect.H2;
+            case "hsqldb": return SQLDialect.HSQLDB;
+            case "mariadb": return SQLDialect.MARIADB;
+            case "mysql": return SQLDialect.MYSQL;
+            case "postgres": return SQLDialect.POSTGRES;
+            case "postgres93": return SQLDialect.POSTGRES_9_3;
+            case "postgres94": return SQLDialect.POSTGRES_9_4;
+            case "sqlite": return SQLDialect.SQLITE;
+            default: return SQLDialect.DEFAULT;
+        }
+    }
+
     /**
      * Method to get the current timestamp.
      * @return timestamp object.
@@ -249,6 +223,8 @@ public class SQLHelper {
 
     /**
      * Method to get a MySQL connection.
+     * @param host host where the server is.
+     * @param port number of the port of the server.
      * @param database string name of the database.
      * @param username string username.
      * @param password string password.
@@ -256,11 +232,27 @@ public class SQLHelper {
      * @throws ClassNotFoundException if any error class is occurred.
      * @throws SQLException if any error SQL is occurred.
      */
-    public static Connection getMySqlConnection(String database,String username,String password)
-            throws ClassNotFoundException, SQLException {
-        Class.forName("org.gjt.mm.mysql.Driver");
-        String url = "jdbc:mysql://localhost/"+database;
+    public static Connection getMySqlConnection(
+                    String host,String port,String database,String username,String password)
+            throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
+        // The newInstance() call is a work around for some broken Java implementations
+        try {
+            Class.forName("com.mysql.jdbc.Driver").newInstance(); //load driver//"com.sql.jdbc.Driver"
+        }catch(ClassNotFoundException e){
+            Class.forName("org.gjt.mm.mysql.Driver").newInstance();
+        }
+        String url = "jdbc:mysql" + "://" + host;
+        if(port != null && StringKit.isNumeric(port)){
+            url +=  ":"+port;
+        }
+        url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
         return conn = DriverManager.getConnection(url, username, password);
+    }
+
+    public static Connection getMySqlConnection(
+            String host,String database,String username,String password)
+            throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
+        return getMySqlConnection(host,null,database,username,password);
     }
 
     /**

@@ -1,8 +1,4 @@
 package com.github.p4535992.util.database.sql;
-
-import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.log.SystemLog;
-
 import java.sql.*;
 import java.util.*;
 
@@ -12,21 +8,13 @@ import java.util.*;
  * @version 2015-07-07.
  */
 @SuppressWarnings("unused")
-public class  SQLKit<T> {
+public class  SQLKit {
     private static Connection connection;
     private static Statement stmt;
-
-    private static Class<?> cl;
-    private static String clName;
     private static String query;
 
     @SuppressWarnings("unchecked")
-    public SQLKit() {
-        java.lang.reflect.Type t = getClass().getGenericSuperclass();
-        java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) t;
-        SQLKit.cl = (Class) pt.getActualTypeArguments()[0];
-        SQLKit.clName = cl.getSimpleName();
-    }
+    public SQLKit() {}
 
     public static Map<String,Integer> getColumns(String database,String table,String column) throws SQLException {
         DatabaseMetaData metaData = connection.getMetaData();
@@ -87,115 +75,5 @@ public class  SQLKit<T> {
             System.out.println("");
         }
     }
-
-    public static String prepareInsertIntoQuery(String nameOfTable,String[] columns,Object[] values){
-        try {
-            boolean statement = false;
-            query = "INSERT INTO " +  nameOfTable + "  (";
-            for (int i = 0; i < columns.length; i++) {
-                query += columns[i];
-                if (i < columns.length - 1) {
-                    query += ",";
-                }
-            }
-            query += " ) VALUES ( ";
-            if (values == null) {
-                statement = true;
-            }
-            for (int i = 0; i < columns.length; i++) {
-                if (statement) {
-                    query += "?";
-                } else {
-                    if(values[i]== null){
-                        values[i]= " NULL ";
-                    }else if (values[i]!=null && values[i] instanceof String) {
-                        values[i] = "'" + values[i].toString().replace("'", "''") + "'";
-                    }else if (values[i]!=null && values[i] instanceof java.net.URL) {
-                        values[i] = "'" + values[i].toString().replace("'", "''") + "'";
-                    }else{
-                        values[i] = " " + values[i] + " ";
-                    }
-                    query += "" + values[i] + "";
-                }
-                if (i < columns.length - 1) {
-                    query += ",";
-                }
-            }
-            query += ");";
-        }catch (NullPointerException e){
-            SystemLog.warning("Attention: you problably have forgotten  to put some column for the SQL query");
-            SystemLog.exception(e);
-        }
-        return query;
-    }
-
-
-    public static String prepareSelectQuery(String nameOfTable,String[] columns,String[] columns_where,Object[] values_where,Integer limit,Integer offset,String condition){
-        boolean statement = false;
-        //PREPARE THE QUERY STRING
-        query = "SELECT ";
-        if(columns.length==0 || (columns.length==1 && columns[0]=="*")){
-            query += " * ";
-        }else{
-            for(int i = 0; i < columns.length; i++){
-                query += " "+columns[i]+"";
-                if(i < columns.length-1){
-                    query += ", ";
-                }
-            }
-        }
-        query +=" FROM "+ nameOfTable +" ";
-        if(!CollectionKit.isArrayEmpty(columns_where)) {
-            if(values_where==null){
-                statement = true;
-                //values_where = new Object[columns_where.length];
-                //for(int i = 0; i < columns_where.length; i++){values_where[i]="?";}
-            }
-            query += " WHERE ";
-            for (int k = 0; k < columns_where.length; k++) {
-                query += columns_where[k] + " ";
-                if(statement){
-                    query += " = ? ";
-                }else {
-                    if (values_where[k] == null) {
-                        query += " IS NULL ";
-                    } else {
-                        query += " = '" + values_where[k] + "'";
-                    }
-                }
-                if (condition != null && k < columns_where.length - 1) {
-                    query += " " + condition.toUpperCase() + " ";
-                } else {
-                    query += " ";
-                }
-            }
-        }
-        if(limit != null && offset!= null) {
-            query += " LIMIT " + limit + " OFFSET " + offset + "";
-        }
-        return query;
-    }
-
-
-//    public String getJavaType( String schema, String object, String column )throws Exception {
-//        Connection con = null;
-//        String fullName = schema + '.' + object + '.' + column;
-//        String javaType = null;
-//        if(columnMeta.first() ) {
-//          int dataType = columnMeta.getInt( "DATA_TYPE" );
-//          javaType = SQLTypeMap.convert( dataType );
-//        }
-//        else {
-//          throw new Exception( "Unknown database column " + fullName + '.' );
-//        }
-//
-//    return javaType;
-//  }
-
-
-
-
-
-
 }
 

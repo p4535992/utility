@@ -188,18 +188,7 @@ public class StringKit<T> {
     }
 
 
-    /**
-     * Get the current GMT time for user notification.
-     *
-     * @return timestamp value as string.
-     */
-    public static String getGMTime()
-    {
-        SimpleDateFormat gmtDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        gmtDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        //Current Date Time in GMT
-        return gmtDateFormat.format(new java.util.Date());
-    }
+
     
      /**
         * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
@@ -210,7 +199,7 @@ public class StringKit<T> {
         * @throws UnsupportedEncodingException throw if any error is occurrred.  
         * @throws IOException throw if any error is occurrred.
         */
-     public static List<String> UTF82UnicodeEscape(File UTF8) throws IOException{
+     public static List<String> convertUTF82UnicodeEscape(File UTF8) throws IOException{
          List<String> list = new ArrayList<>();
          if (UTF8==null) {
              System.out.println("Usage: java UTF8ToAscii <filename>");
@@ -253,7 +242,7 @@ public class StringKit<T> {
      * @return UTF8 string encoding utf8.
      * @throws IOException thorw if any error is occurrred.
       */
-    public static List<String> UnicodeEscape2UTF8(File ASCII) throws IOException {
+    public static List<String> convertUnicodeEscapeToUTF8(File ASCII) throws IOException {
         List<String> list = new ArrayList<>();
           if (ASCII == null) {
               //System.out.println("Usage: java UnicodeEscape2UTF8 <filename>");
@@ -349,7 +338,7 @@ public class StringKit<T> {
      *Creating a random UUID (Universally unique identifier).
      * @return string asuuid.
      */
-    public static String RandomUUID(){ return  java.util.UUID.randomUUID().toString(); }
+    public static String randomUUID(){ return  java.util.UUID.randomUUID().toString(); }
    /**
     * Metodo che converte una stringa a un'oggetto UUID.
     * @param uuid string uuid.

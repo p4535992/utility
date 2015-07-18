@@ -3,15 +3,21 @@ package com.github.p4535992.util.database.sql;
 import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.reflection.ReflectionKit;
 import com.github.p4535992.util.log.SystemLog;
+import org.jooq.DataType;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
+import org.jooq.impl.DefaultDataType;
 
 import javax.persistence.Column;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by 4535992 on 06/05/2015.
@@ -250,5 +256,30 @@ public class SQLSupport<T>{
             SystemLog.exception(e);
         }
         return null;
+    }
+
+    public static Map<org.jooq.Field,org.jooq.Field> convertSQLSupportToMapJOOQField(
+            String[] columns,Object[] values,int[] types,SQLDialect sqlDialect){
+        org.jooq.Field[] fields = new org.jooq.Field[columns.length];
+        org.jooq.Field[] fv = new org.jooq.Field[columns.length];
+        //DataType[] dataTypes = new DataType[types.length];
+        for(int i=0; i < columns.length; i++){
+            org.jooq.Field<String> field = DSL.val(columns[i]);
+            fields[i] = field;
+            if(types[i]== Types.NULL && values[i]==null) {
+                fv[i] = null;
+            }else if(values[i]==null){
+                fv[i] = null;
+            }else {
+                DataType dataType = new DefaultDataType(
+                        sqlDialect,
+                        SQLHelper.convertSQLTypes2JavaClass(types[i]),
+                        SQLHelper.convertSQLTypes2String(types[i])
+                );
+                fv[i] = DSL.val(values[i], dataType);
+            }
+        }
+        Map<org.jooq.Field, org.jooq.Field> map = CollectionKit.convertTwoArrayToMap(fields,fv);
+        return map;
     }
 }

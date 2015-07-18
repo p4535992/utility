@@ -591,6 +591,30 @@ public class CollectionKit {
         return s;
     }
 
+    /**
+     * Method to convert two array keys and values tp a HashMap.
+     * @param keys array of keys.
+     * @param values array of values.
+     * @return the hasmap fulled with array.
+     */
+    public static <K,V> HashMap<K,V> convertTwoArrayToMap(K[] keys, V[] values) {
+        int keysSize = (keys != null) ? keys.length : 0;
+        int valuesSize = (values != null) ? values.length : 0;
+        if (keysSize == 0 && valuesSize == 0) {
+            // return mutable map
+            return new HashMap<>();
+        }
+        if (keysSize != valuesSize) {
+            throw new IllegalArgumentException(
+                    "The number of keys doesn't match the number of values.");
+        }
+        HashMap<K, V> map = new HashMap<K, V>();
+        for (int i = 0; i < keysSize; i++) {
+            map.put(keys[i], values[i]);
+        }
+        return map;
+    }
+
 
 
 
