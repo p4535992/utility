@@ -258,7 +258,7 @@ public class SQLSupport<T>{
         return null;
     }
 
-    public static Map<org.jooq.Field,org.jooq.Field> convertSQLSupportToMapJOOQField(
+    /*public static Map<org.jooq.Field,org.jooq.Field> convertSQLSupportToMapJOOQField(
             String[] columns,Object[] values,int[] types,SQLDialect sqlDialect){
         org.jooq.Field[] fields = new org.jooq.Field[columns.length];
         org.jooq.Field[] fv = new org.jooq.Field[columns.length];
@@ -281,5 +281,5 @@ public class SQLSupport<T>{
         }
         Map<org.jooq.Field, org.jooq.Field> map = CollectionKit.convertTwoArrayToMap(fields,fv);
         return map;
-    }
+    }*/
 }

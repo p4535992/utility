@@ -1,5 +1,6 @@
 package com.github.p4535992.util.collection;
 
+import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionKit;
 import com.github.p4535992.util.string.StringKit;
 
@@ -9,7 +10,7 @@ import java.util.*;
 /**
  * Created by 4535992 on 29/06/2015.
  * @author 4535992.
- * @version 2015-06-29.
+ * @version 2015-09-14.
  */
 @SuppressWarnings("unused")
 public class CollectionKit {
@@ -36,6 +37,17 @@ public class CollectionKit {
         return Collections.singleton(object);
     }
 
+    /**
+     * Method to create a Array collection with a single element.
+     * @param object the single element.
+     * @param <T> generic type.
+     * @return array with a single element.
+     */
+    public static <T> T[] createArrayWithSingleElement(T object,int size){
+        T[] newArray = (T[]) Array.newInstance(object.getClass(), size);
+        Arrays.fill(newArray,object);
+        return newArray;
+    }
     /**
      * Method for chek if a specific key on the map is absent or not existsa value for that key.
      * @param <K> generic key.
@@ -242,6 +254,24 @@ public class CollectionKit {
 
 
     /**
+     * Method to convert a aarray to a Object array.
+     * @param primitiveArray the primitive array to convert.
+     * @param <T> generic type.
+     * @return a Object array.
+     */
+    public static <T> Object[] convertArrayToObjectArray(T[] primitiveArray){
+        List<Object> objectList = new ArrayList<>();
+        objectList.addAll(Arrays.asList(primitiveArray));
+        return convertListToArray(objectList);
+    }
+
+    public static <T> Object[] convertArrayToObjectArray(List<T> primitiveList){
+        List<Object> objectList = new ArrayList<>();
+        objectList.addAll(primitiveList);
+        return convertListToArray(objectList);
+    }
+
+    /**
      * Method for concatenate the content of two arrays in a single array.
      * @param a first array.
      * @param b second array.
@@ -253,8 +283,33 @@ public class CollectionKit {
         int aLen = a.length;
         int bLen = b.length;
         T[] c = (T[]) Array.newInstance(a.getClass().getComponentType(), aLen + bLen);
-        System.arraycopy(a, 0, c, 0, aLen);
-        System.arraycopy(b, 0, c, aLen, bLen);
+        try {
+            System.arraycopy(a, 0, c, 0, aLen);
+            System.arraycopy(b, 0, c, aLen, bLen);
+        }catch(java.lang.ArrayStoreException e){
+            List<T> list = new ArrayList<>();
+            for(int i=0; i < a.length; i++){
+                list.add(a[i]);
+            }
+            for(int i=0; i < b.length; i++){
+                list.add(b[i]);
+            }
+            c = convertListToArray(list);
+        }
+        return c;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T,E> Object[] concatenateArraysDifferent(T[] a,E[] b) {
+        int aLen = a.length;
+        int bLen = b.length;
+        Object[] c = (Object[]) Array.newInstance(b.getClass().getComponentType(), aLen + bLen);
+        List<Object> objectList = new ArrayList<>();
+        objectList.addAll(Arrays.asList(a));
+        System.arraycopy(convertListToArray(objectList), 0, c, 0, aLen);
+        objectList.clear();
+        objectList.addAll(Arrays.asList(b));
+        System.arraycopy(convertListToArray(objectList), 0, c, aLen, bLen);
         return c;
     }
 
@@ -339,12 +394,12 @@ public class CollectionKit {
      * @throws Exception error.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T[] mergeArraysForCommandInput(T[] param, T[] value) throws Exception {
-        T[] array;
+    public static <T> T[] mergeArraysForCommandInput(T[] param, T[] value) {
+        T[] array = (T[]) Array.newInstance(param[0].getClass(),param.length+value.length);
         int j = 0;
         if(param.length==value.length) {
             //array = new T[param.length+value.length];
-            array = (T[]) Array.newInstance(param[0].getClass(),param.length+value.length);
+            //array = (T[]) Array.newInstance(param[0].getClass(),param.length+value.length);
             for (int i = 0; i < param.length; i++) {
                 if (i == 0)
                     j = j + i;
@@ -357,7 +412,41 @@ public class CollectionKit {
             }
         }else{
             //logger.org.p4535992.mvc.error("WARNING: Check your array size");
-            throw new Exception("WARNING: Check your array size");
+            SystemLog.warning("WARNING: Check your array size");
+        }
+        return array;
+    }
+
+    /**
+     * Merge the content of two arrays of string with same size for
+     * make the args for a main method java class with option e home.
+     * @param param array of parameter.
+     * @param value array of values.
+     * @param <T> generic type.
+     * @param <E> generic type.
+     * @return merged array.
+     * @throws Exception error.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T,E> Object[] concatenateArraysForCommandInput(T[] param, E[] value) {
+        Object[] array = (Object[]) Array.newInstance(value[0].getClass(),param.length+value.length);
+        int j = 0;
+        if(param.length==value.length) {
+            //array = new T[param.length+value.length];
+            //array = (T[]) Array.newInstance(param[0].getClass(),param.length+value.length);
+            for (int i = 0; i < param.length; i++) {
+                if (i == 0)
+                    j = j + i;
+                else
+                    j = j + 1;
+
+                array[j] = param[i];
+                j = j + 1;
+                array[j] = value[i];
+            }
+        }else{
+            //logger.org.p4535992.mvc.error("WARNING: Check your array size");
+            SystemLog.error("WARNING: Check your array size");
         }
         return array;
     }
@@ -608,12 +697,14 @@ public class CollectionKit {
             throw new IllegalArgumentException(
                     "The number of keys doesn't match the number of values.");
         }
-        HashMap<K, V> map = new HashMap<K, V>();
+        HashMap<K, V> map = new HashMap<>();
         for (int i = 0; i < keysSize; i++) {
             map.put(keys[i], values[i]);
         }
         return map;
     }
+
+
 
 
 

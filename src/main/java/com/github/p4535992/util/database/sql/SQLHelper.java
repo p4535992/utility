@@ -169,7 +169,18 @@ public class SQLHelper {
         }
     }
 
-    public static SQLDialect convertStringToDialectSQL(String sqlDialect) {
+    public static String convertDialectDatabaseToTypeNameId(String dialectDb){
+        if(dialectDb.toLowerCase().contains("mysql"))return "mysql";
+        SystemLog.warning("There is not database type for the specific database dialect used.");
+        return "?";
+    }
+
+    public static SQLDialect convertDialectDBToSQLDialectJOOQ(String dialectDb){
+        return convertStringToSQLDialectJOOQ(convertDialectDatabaseToTypeNameId(dialectDb));
+
+    }
+
+    public static SQLDialect convertStringToSQLDialectJOOQ(String sqlDialect) {
         switch (sqlDialect.toLowerCase()) {
             case "cubrid":return SQLDialect.CUBRID;
             case "derby": return SQLDialect.DERBY;
@@ -186,23 +197,13 @@ public class SQLHelper {
         }
     }
 
-    /**
-     * Method to get the current timestamp.
-     * @return timestamp object.
-     */
-    public static java.sql.Timestamp getCurrentTimeStamp() {
-        java.util.Date today = new java.util.Date();
-        return new java.sql.Timestamp(today.getTime());
-
-    }
-
-    /**
-     * Method to get the current date.
-     * @return date object.
-     */
-    public static java.sql.Date getCurrentDate() {
-        java.util.Date today = new java.util.Date();
-        return new java.sql.Date(today.getTime());
+    public static Connection chooseAndGetConnection(String dialectDB,
+                                String host,String port,String database,String username,String password) throws ClassNotFoundException, SQLException, InstantiationException, IllegalAccessException {
+        if(convertDialectDatabaseToTypeNameId(dialectDB).equals("mysql")){
+            return getMySqlConnection(host,port,database,username,password);
+        }
+        SystemLog.warning("No connection database type detected fro this type.");
+        return null;
     }
 
     /**
@@ -214,11 +215,17 @@ public class SQLHelper {
      * @throws ClassNotFoundException if any error class is occurred.
      * @throws SQLException if any error SQL is occurred.
      */
-    public static Connection getHSQLConnection(String database,String username,String password)
-            throws ClassNotFoundException, SQLException {
-        Class.forName("org.hsqldb.jdbcDriver");
-        String url = "jdbc:hsqldb:data/"+database;
-        return  conn = DriverManager.getConnection(url, username, password);
+    public static Connection getHSQLConnection(String host,String port,String database,String username,String password)
+            throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
+        // The newInstance() call is a work around for some broken Java implementations
+        Class.forName("org.hsqldb.jdbcDriver").newInstance();
+        //String url = "jdbc:hsqldb:data/"+database;
+        String url = "jdbc:hsqldb:hsql" + "://" + host;
+        if(port != null && StringKit.isNumeric(port)){
+            url +=  ":"+port;
+        }
+        url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
+        return conn = DriverManager.getConnection(url, username, password);
     }
 
     /**
@@ -246,7 +253,13 @@ public class SQLHelper {
             url +=  ":"+port;
         }
         url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
-        return conn = DriverManager.getConnection(url, username, password);
+        try {
+            conn = DriverManager.getConnection(url, username, password);
+        }catch(com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e){
+            SystemLog.error("You forgot to turn on your MySQL Server!!!");
+            SystemLog.abort(0);
+        }
+        return conn;
     }
 
     public static Connection getMySqlConnection(
@@ -264,10 +277,15 @@ public class SQLHelper {
      * @throws ClassNotFoundException if any error class is occurred.
      * @throws SQLException if any error SQL is occurred.
      */
-    public static Connection getOracleConnection(String database,String username,String password)
+    public static Connection getOracleConnection(String host,String port,String database,String username,String password)
             throws ClassNotFoundException, SQLException {
         Class.forName("oracle.jdbc.driver.OracleDriver");
-        String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
+        //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
+        String url = "jdbc:oracle:thin:@" + host;
+        if(port != null && StringKit.isNumeric(port)){
+            url +=  ":"+port;
+        }
+        url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
         return conn = DriverManager.getConnection(url, username, password);
     }
 

@@ -108,6 +108,33 @@ public class StringKit<T> {
                 //.replace("\\n\\r", "").replace("\\n","").replace("\\r","").trim())
     }
 
+    public static String toStringInline(String stringText){
+        return stringText.replaceAll("\\r\\n|\\r|\\n", " ").replaceAll("\\s+", " ").trim();
+        //return stringText.replaceAll("(?m)(^ *| +(?= |$))", "").replaceAll("(?m)^$([\r\n]+?)(^$[\r\n]+?^)+", "$1");
+    }
+
+    /**
+     * Remove/collapse multiple spaces.
+     * @param argStr string to remove multiple spaces from.
+     * @return String
+     */
+    public static String collapseSpaces(String argStr)
+    {
+        char last = argStr.charAt(0);
+        StringBuilder argBuf = new StringBuilder();
+
+        for (int cIdx = 0 ; cIdx < argStr.length(); cIdx++)
+        {
+            char ch = argStr.charAt(cIdx);
+            if (ch != ' ' || last != ' ')
+            {
+                argBuf.append(ch);
+                last = ch;
+            }
+        }
+        return argBuf.toString();
+    }
+
     /**
      * Method Read String from InputStream and closes it.
      * @param is input stream.
@@ -688,11 +715,7 @@ public class StringKit<T> {
      * @return if tru is a url address web.
      */
     public static boolean isURLSimple(String url){
-        if (url.matches("^(https?|ftp)://.*$")) {
-            return true;
-        } else{
-            return false;
-        }
+        return url.matches("^(https?|ftp)://.*$");
     }
     /**
      * Method to add a protocl to a strin to match a url.
@@ -705,6 +728,7 @@ public class StringKit<T> {
         }
         return url;
     }
+
     /**
      * Method to find all the string matches of the expression with regular expression.
      * @param text string text to check.
@@ -715,6 +739,18 @@ public class StringKit<T> {
     public static List<String> findWithRegex(String text,String expression,boolean justFirstResult){
         List<String> result =new ArrayList<>();
         Pattern pattern = Pattern.compile(expression);
+        return findWithRegex(text,pattern,justFirstResult);
+    }
+
+    /**
+     * Method to find all the string matches of the expression with regular expression.
+     * @param text string text to check.
+     * @param expression string regular expression.
+     * @param justFirstResult if true get only the first element.
+     * @return a list of string of all matches.
+     */
+    public static List<String> findWithRegex(String text,Pattern pattern,boolean justFirstResult){
+        List<String> result =new ArrayList<>();
         Matcher matcher = pattern.matcher(text);
         while(matcher.find()){
             result.add(matcher.group());
@@ -731,8 +767,22 @@ public class StringKit<T> {
      * @return the first match on the text string.
      */
     public static String findWithRegex(String text,String expression){
-        final Pattern pat = Pattern.compile(expression);
-        return pat.matcher(text).group();
+        Pattern pat = Pattern.compile(expression);
+        return findWithRegex(text,pat);
+    }
+
+    /**
+     * Method to find the string matches of the expression with regular expression.
+     * @param text string text to check.
+     * @param pattern pattern regular expression.
+     * @return the first match on the text string.
+     */
+    public static String findWithRegex(String text,Pattern pattern){
+        Matcher matcher = pattern.matcher(text);
+        if(matcher.find()){
+            return matcher.group(0);
+        }
+        return "?";
     }
 
     /**
@@ -923,6 +973,23 @@ public class StringKit<T> {
         }
     }
 
+    /**
+     * Method to convert a object to a String.
+     * @param object the Object to convert.
+     * @return the String of the object.
+     */
+    public static String convertObjectToString(Object object){
+        return (String)object;
+    }
+
+    /**
+     * Method to cnvert a OBject to a Integer.
+     * @param object the Object to convert.
+     * @return the Int of the object.
+     */
+    public static int convertObjectToInt(Object object){
+        return Integer.parseInt((String)object);
+    }
 
 
 }//end of the class StringKit

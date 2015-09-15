@@ -122,6 +122,7 @@ public class SystemLog {
      */
     protected static void write(String logEntry) {
         try{
+            if(LOGFILE==null) new SystemLog();
             //if(!logging){ log = new SystemLog();}
             StringBuilder sb = new StringBuilder();
             if (logTimestamp != null)
@@ -166,6 +167,7 @@ public class SystemLog {
     public static void sparql(String logEntry) { level = Level.SPARQL; write(logEntry);}
     public static void query(String logEntry) { level = Level.QUERY; write(logEntry);}
     public static void attention(String logEntry) {level = Level.ATTENTION; write(logEntry);}
+    public static void abort(int rc){System.exit(rc);}
     public static void abort(int rc, String logEntry) {level = Level.ABORT;  isERROR=true; write(logEntry); System.exit(rc);}
     public static void throwException(Throwable throwable){ level = Level.THROW;  isERROR=true; write(throwable.getMessage());}
     public static void exception(Exception e){ level = Level.EXCEP; isERROR=true;e.printStackTrace();}

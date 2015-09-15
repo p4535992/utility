@@ -64,4 +64,23 @@ public class DateAndTimeKit {
         return new Timestamp(gregorianCalendar.getTime().getTime());
     }
 
+    /**
+     * Method to get the current timestamp.
+     * @return timestamp object.
+     */
+    public static java.sql.Timestamp getCurrentDayTimeStamp() {
+        java.util.Date today = new java.util.Date();
+        return new java.sql.Timestamp(today.getTime());
+
+    }
+
+    /**
+     * Method to get the current date.
+     * @return date object.
+     */
+    public static java.sql.Date getCurrentDate() {
+        java.util.Date today = new java.util.Date();
+        return new java.sql.Date(today.getTime());
+    }
+
 }

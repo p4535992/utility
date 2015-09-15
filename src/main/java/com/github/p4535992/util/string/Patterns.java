@@ -1,11 +1,14 @@
 package com.github.p4535992.util.string;
 
+import com.github.p4535992.util.collection.CollectionKit;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Commonly used regular expression patterns.
  * I don't own any right on this class of code is belong to android.util.Patterns and android.telephony.PhoneNumberUtils.
+ * @version 2015-09-14.
  */
 @SuppressWarnings("unused")
 public class Patterns {
@@ -221,6 +224,19 @@ public class Patterns {
         return buffer.toString();
     }
 
+    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_1
+            = Pattern.compile("(values)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_1v2
+            = Pattern.compile("(insert into)(\\s*(.*?)\\s*)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_2
+            = Pattern.compile("(values)\\s*\\(",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_2v2
+            = Pattern.compile("(insert into)\\s*(.*?)\\(\\s*",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_GET_WHERE_PARAM_1
+            = Pattern.compile("(where)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_GET_WHERE_PARAM_2
+            = Pattern.compile("(where)\\s*\\(",Pattern.CASE_INSENSITIVE);
+
     /**
      * Do not create this static utility class.
      */
@@ -259,5 +275,48 @@ public class Patterns {
 
     public  static boolean isValidURLSimple(String url) {
         return url != null && url.matches("^(https?|ftp)://.*$");
+    }
+
+    public static String getQueryValuesParam(String queryString,String[] columns){
+        String preQuery = StringKit.findWithRegex(queryString,MANAGE_SQL_QUERY_GET_VALUES_PARAM_1v2);
+        String postQuery = queryString.replace(preQuery, "");
+        if (postQuery.toLowerCase().contains(" where ")){
+            String[] val = queryString.split(preQuery);
+            queryString = val[0];
+            postQuery = val[1];
+        }else {
+            queryString = queryString.replace(preQuery, "");
+            postQuery = "";
+        }
+        preQuery = StringKit.findWithRegex(preQuery,MANAGE_SQL_QUERY_GET_VALUES_PARAM_2v2).trim();
+        //values = values.substring(0, values.length() - 1);
+        //String[] param = values.split(",");
+        //for(String s: param)values = values.replace(s.trim(),"?");
+        String[] array = CollectionKit.createArrayWithSingleElement("?",columns.length);
+        String values = CollectionKit.convertArrayContentToSingleString(array);
+        //return queryString + " values (" + values +")" + supportQuery;
+        return preQuery + CollectionKit.convertArrayContentToSingleString(columns)
+                + ") values (" + values +")" + postQuery;
+    }
+
+    public static String getQueryWhereParam(String queryString){
+        String values = StringKit.findWithRegex(queryString,MANAGE_SQL_QUERY_GET_WHERE_PARAM_1);
+        String supportQuery = queryString.replace(values, "");
+        if (supportQuery.toLowerCase().contains(" order by ")){
+            String[] val = queryString.split(values);
+            queryString = val[0];
+            supportQuery = val[1];
+        }else {
+            queryString = queryString.replace(values, "");
+            supportQuery = "";
+        }
+        values = values.replace(StringKit.findWithRegex(values,MANAGE_SQL_QUERY_GET_WHERE_PARAM_2),"");
+        values = values.substring(0,values.length()-1);
+        String[] paramCond = values.split("(and|or)");
+        for(String s: paramCond){
+            String[] paramWhere = s.split("(is|=|>=)");
+            values = values.replace(paramWhere[1].trim(), "?");
+        }
+        return queryString + " where (" + values +")" + supportQuery;
     }
 }
