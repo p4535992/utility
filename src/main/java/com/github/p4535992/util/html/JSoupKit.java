@@ -1,27 +1,22 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.github.p4535992.util.html;
+import com.github.p4535992.util.log.SystemLog;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- *
- * @author esd91martent
+ * Class utility for work with JsoupKit
+ * @author 4535992.
+ * @version 2015-09-24.
  */
+@SuppressWarnings("unused")
 public class JSoupKit {
     
     //Variable to filter the attributes
-        private static boolean filterAttr = false;
+    private static boolean filterAttr = false;
 
     public static boolean isFilterAttr() {
         return filterAttr;
@@ -97,7 +92,7 @@ public class JSoupKit {
         /// <returns></returns>
         public static List<List<List<String>>> UniversalExtractor(org.jsoup.nodes.Document HTMLDocument,boolean HTML, String tagName) throws Exception
         {           
-            String rootTag ="table";
+            String rootTag;
             if (tagName.toLowerCase().equals("ul") || tagName.toLowerCase().contains("//ul")) { rootTag = "ul"; }
             else if (tagName.toLowerCase().equals("ol")|| tagName.toLowerCase().contains("//ol")) { rootTag = "ol"; }
             else if (tagName.toLowerCase().equals("li") || tagName.toLowerCase().contains("//li")) { rootTag = "li"; }
@@ -180,7 +175,7 @@ public class JSoupKit {
         /// <param name="ResultCollection"></param>
         private static List<List<List<String>>> subExtractor6(org.jsoup.select.Elements TableColl, boolean HTML)
         {
-            List<List<List<String>>> ResultCollection = new ArrayList<List<List<String>>>();
+            List<List<List<String>>> ResultCollection = new ArrayList<>();
             //Nuova tabella
             for(org.jsoup.nodes.Element TableElem : TableColl)
             {
@@ -191,18 +186,18 @@ public class JSoupKit {
                     case "OL":
                         {
                             int iMaxCol = 0;
-                            List<List<String>> dtTableList = new ArrayList<List<String>>();
+                            List<List<String>> dtTableList = new ArrayList<>();
                             for(org.jsoup.nodes.Element _CurrentElement : TableElem.children())
                             {
                                 switch (_CurrentElement.tagName().toUpperCase())
                                 {
                                     case "TR":                                         
                                         {
-                                            List<String> Cols = new ArrayList<String>();                                        
+                                            List<String> Cols = new ArrayList<>();
                                             for (int iElem = 0; iElem < _CurrentElement.children().size(); iElem++)
                                             {
-                                                if (_CurrentElement.child(iElem).tagName().toUpperCase() == "TD"
-                                                    || _CurrentElement.child(iElem).tagName().toUpperCase() == "TH")
+                                                if (Objects.equals(_CurrentElement.child(iElem).tagName().toUpperCase(), "TD")
+                                                    || Objects.equals(_CurrentElement.child(iElem).tagName().toUpperCase(), "TH"))
                                                 {
                                                     if (_CurrentElement.child(iElem).children().size() == 0) Cols = Extractor6(_CurrentElement.child(iElem), HTML, Cols);                                                 
                                                     else
@@ -228,12 +223,13 @@ public class JSoupKit {
                                             //Cols = ExtractorRomis(_CurrentElement, HTML, Cols);
                                             for(org.jsoup.nodes.Element _rows : _CurrentElement.children())
                                             {                                              
-                                                if (_rows.tagName().toUpperCase() == "TR")
+                                                if (Objects.equals(_rows.tagName().toUpperCase(), "TR"))
                                                 {
-                                                    List<String> Cols = new ArrayList<String>();                                                  
+                                                    List<String> Cols = new ArrayList<>();
                                                     for (int iElem = 0; iElem < _rows.children().size(); iElem++)
                                                     {                                                      
-                                                        if (_rows.child(iElem).tagName().toUpperCase() == "TD" || _rows.child(iElem).tagName().toUpperCase() == "TH")
+                                                        if (Objects.equals(_rows.child(iElem).tagName().toUpperCase(), "TD")
+                                                                || Objects.equals(_rows.child(iElem).tagName().toUpperCase(), "TH"))
                                                         {
                                                             if (_rows.child(iElem).children().size() == 0) Cols = Extractor6(_rows.child(iElem), HTML, Cols);                                                          
                                                             else 
@@ -254,7 +250,7 @@ public class JSoupKit {
                                     case "H2":
                                     case "LI":
                                         {
-                                            List<String> Cols = new ArrayList<String>();
+                                            List<String> Cols = new ArrayList<>();
                                             Cols = Extractor6(_CurrentElement, HTML, Cols);
                                             if (Cols.size() > iMaxCol) iMaxCol = Cols.size();
                                             if (Cols.size() > 0) dtTableList.add(Cols);
@@ -267,11 +263,11 @@ public class JSoupKit {
                         break;
                     case "LI":
                         {
-                            int iMaxCol = 0;
-                            List<List<String>> dtTableList = new ArrayList<List<String>>();
-                            List<String> Cols = new ArrayList<String>();
+                            //int iMaxCol = 0;
+                            List<List<String>> dtTableList = new ArrayList<>();
+                            List<String> Cols = new ArrayList<>();
                             Cols = Extractor6(TableElem, HTML, Cols);
-                            if (Cols.size() > iMaxCol) iMaxCol = Cols.size();
+                            //if (Cols.size() > iMaxCol) iMaxCol = Cols.size();
                             if (Cols.size() > 0) dtTableList.add(Cols);
                             ResultCollection.add(dtTableList);
                         }
@@ -282,22 +278,22 @@ public class JSoupKit {
                             //iCurCol = 0; iCurRow = 0;
                             int iMaxCol = 0;
                             //int iCurCol = 0;
-                            List<List<String>> dtTable = new ArrayList<List<String>>();
-                            List<String> Cols = new ArrayList<String>();
+                            List<List<String>> dtTable = new ArrayList<>();
+                            List<String> Cols = new ArrayList<>();
                             for (int iRow = 0; iRow < _CurrentElement.children().size(); iRow++)
                             {
-                                if (_CurrentElement.child(iRow).tagName().toUpperCase() == "DT")
+                                if (Objects.equals(_CurrentElement.child(iRow).tagName().toUpperCase(), "DT"))
                                 {
                                     Cols = Extractor6(_CurrentElement.child(iRow), HTML, Cols);
                                     if (Cols.size() > iMaxCol) iMaxCol = Cols.size();
                                     if (Cols.size() > 0) dtTable.add(Cols);
-                                    Cols = new ArrayList<String>();
+                                    Cols = new ArrayList<>();
                                     //iCurCol = 0;                                
                                     //CurTabella[iCurRow - 1, iCurCol] = (Testo == null) ? "" : Testo;
                                     //iCurCol = 1;
                                 }
 
-                                if (_CurrentElement.child(iRow).tagName().toUpperCase() == "DD" 
+                                if (Objects.equals(_CurrentElement.child(iRow).tagName().toUpperCase(), "DD")
                                     //&& iCurCol == 1
                                     )
                                 {
@@ -325,12 +321,12 @@ public class JSoupKit {
             String[] goodTag = new String[] { "A", "IMG", "P", "SPAN", "CAPTION", "DIV", "DD", "DT", "DL", "LI", "DIV", "BR", "STRONG"};//...possible new entry -> STRONG,#TEXT
             String[] goodAttr = new String[] { "SRC", "HREF", "ID", "NAME", "VALUE", "TITLE", "ALT","ONCLICK" }; //... aggiungere via via gli attributi che si reputano interessanti
             String Testo;                      
-            org.jsoup.nodes.Element child = null;                
+            org.jsoup.nodes.Element child;
             if (node.children().size() == 1 && Arrays.asList(goodTag).contains(node.children().first().tagName().toUpperCase())) //Se è una tag in cui non si deve estarre informazioni a questo giro
             { 
                 return Cols; //..do nothing
             }
-            else if (node.children().size() == 1 && node.children().first().tagName().toUpperCase() != "#TEXT")
+            else if (node.children().size() == 1 && !Objects.equals(node.children().first().tagName().toUpperCase(), "#TEXT"))
             {  //...o il figlio è unico e di tipo testo...               
                 child = node.child(0);
             }
@@ -339,7 +335,7 @@ public class JSoupKit {
                 child = node; //...non ho a figli
             }
 
-            if (HTML == false)
+            if (!HTML)//html == false
             {
                 Testo = clean(child.ownText());
                 if (Testo != null) Cols.add(Testo); 
@@ -359,7 +355,7 @@ public class JSoupKit {
                         }
                     }
                     Testo = clean(Testo);
-                    if (check == true && clean(Testo)==null) Cols.add((Testo == null) ? "" : Testo); //Testo = ""; 
+                    if (check && clean(Testo)==null) Cols.add((Testo == null) ? "" : Testo); //Testo = "";
                     else if (Testo != null)  Cols.add(Testo); 
                 }
                 else if ("IMG".contains(child.tagName().toUpperCase()))//.Equals("IMG")...Se il filtro degli attrbituti è true ma sappiamo che vi è un qualcosa di utile l'unico caso trovato sono le immagini
@@ -378,24 +374,22 @@ public class JSoupKit {
         
         public static org.jsoup.nodes.Document convertHTMLFileToJsoupDocument(File file,String baseUrl) throws IOException{
             //File input = new File("/tmp/input.html");
-            org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(file, "UTF-8", baseUrl);
-            return doc;
+            return org.jsoup.Jsoup.parse(file, "UTF-8", baseUrl);
         }
         
         public static org.jsoup.nodes.Document convertHTMLStringToJsoupDocument(String html) throws IOException{
             //File input = new File("/tmp/input.html");
-            org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(html);
-            return doc;
+            return org.jsoup.Jsoup.parse(html);
         }
         
         private List<Map<String,String>> parseDataSet(String xml){
-            List<Map<String,String>> maps=new ArrayList<Map<String,String>>();
+            List<Map<String,String>> maps=new ArrayList<>();
             Map<String,String> map;
             org.jsoup.nodes.Document doc=org.jsoup.Jsoup.parse(xml);
             org.jsoup.select.Elements rows=doc.getElementsByTag("Table");
             for (org.jsoup.nodes.Element row : rows) {
               org.jsoup.select.Elements cells=row.children();
-              map=new HashMap<String,String>();
+              map=new HashMap<>();
               for (org.jsoup.nodes.Element cell : cells) {
                 map.put(cell.tagName(),cell.html());
               }
@@ -449,7 +443,7 @@ public class JSoupKit {
             while(i < special.length){
                 sFooter = doc.select(special[i]);//div id ending with footer
                 while(j < sFooter.size()){
-                    sb.append(sFooter.get(j).outerHtml()+System.getProperty("line.separator"));
+                    sb.append(sFooter.get(j).outerHtml()).append(System.getProperty("line.separator"));
                     if(first) break;
                     else j++;
                 }
@@ -459,13 +453,41 @@ public class JSoupKit {
             return sb.toString();
         }
 
-        public static org.jsoup.nodes.Document getResourceAsStream(File file) throws IOException{
+        public static org.jsoup.nodes.Document convertFileResourceToJsoupDocument(File file) throws IOException{
               InputStream ins = JSoupKit.class.getClassLoader().getResourceAsStream(file.getAbsolutePath());
-              org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(ins, "UTF-8", file.getName());
-              return doc;
+              return org.jsoup.Jsoup.parse(ins, "UTF-8", file.getName());
+
         }
+
+        public static String convertUrlToStringHTML(String url){
+            String htmlContent;
+            org.jsoup.nodes.Document doc;
+            try {
+                doc = org.jsoup.Jsoup.connect(url).get();
+                htmlContent = doc.outerHtml();
+            } catch (IOException e) {
+                try {
+                    doc =org.jsoup.Jsoup.connect(url)
+                            .data("query", "Java")
+                            .userAgent("Mozilla")
+                            .cookie("auth", "token")
+                            .timeout(3000)
+                            .post();
+                    htmlContent = doc.outerHtml();
+                } catch (IOException e1) {
+                    SystemLog.error("JSOUP can't convert the url to a string maybe the " +
+                            "web page not exists anymore or can't be reach");
+                    return null;
+                }
+            }
+            return htmlContent;
+        }
+
+//    public static void convertJouspDocumentToW3cDocument(org.jsoup.nodes.Document jsoupDoc){
+//        org.w3c.dom.Document w3cDoc = org.jdom2.input.DOMBuilder.jsoup2DOM(jsoupDoc);
+//    }
         
-    }
+}
     
 
  
