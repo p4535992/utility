@@ -16,13 +16,12 @@ public class SQLQuery {
 
     /**
      * CREATE TABLE  nameTableCopied LIKE  nameTableToCopy;
-     * @param nameTableToCopy
-     * @param nameTableCopied
-     * @return
+     * @param nameTableToCopy string name of the table to copy.
+     * @param nameTableCopied string name of the table copied.
+     * @return string content of the query.
      */
     public static String copyTable(String nameTableToCopy,String nameTableCopied){
-        String query = "CREATE TABLE " + nameTableCopied + " LIKE " + nameTableToCopy + ";";
-        return query;
+        return "CREATE TABLE " + nameTableCopied + " LIKE " + nameTableToCopy + ";";
     }
 
     /**
@@ -34,8 +33,7 @@ public class SQLQuery {
      * @return string query.
      */
     public static String addColumnToTable(String yourTable,String nameNewColumn,int SQLTypes,Integer size){
-        String query = "ALTER TABLE " + yourTable + " ADD nameNewColumn "+SQLHelper.convertSQLTypes2String(SQLTypes)+"("+size+");";
-        return query;
+        return "ALTER TABLE " + yourTable + " ADD nameNewColumn "+SQLHelper.convertSQLTypes2String(SQLTypes)+"("+size+");";
     }
 
     /**
@@ -158,16 +156,18 @@ public class SQLQuery {
 
 
     public static String deleteDuplicateRecord(String yourTable,String nameKeyColumn,String[] cols){
-        return "WHILE EXISTS (SELECT COUNT(*) FROM "+yourTable+" GROUP BY "+cols+" HAVING COUNT(*) > 1)\n" +
-                "BEGIN\n" +
-                "    DELETE FROM "+yourTable+" WHERE "+nameKeyColumn+" IN \n" +
-                "    (\n" +
-                "        SELECT MIN("+nameKeyColumn+") as [DeleteID]\n" +
-                "        FROM "+yourTable+"\n" +
-                "        GROUP BY "+cols+"\n" +
-                "        HAVING COUNT(*) > 1\n" +
-                "    )\n" +
-                "END";
+        return
+        "WHILE EXISTS (SELECT COUNT(*) FROM "+yourTable+" GROUP BY "+
+                CollectionKit.convertArrayContentToSingleString(cols)+" HAVING COUNT(*) > 1)\n" +
+        "BEGIN\n" +
+        "    DELETE FROM "+yourTable+" WHERE "+nameKeyColumn+" IN \n" +
+        "    (\n" +
+        "        SELECT MIN("+nameKeyColumn+") as [DeleteID]\n" +
+        "        FROM "+yourTable+"\n" +
+        "        GROUP BY "+CollectionKit.convertArrayContentToSingleString(cols)+"\n" +
+        "        HAVING COUNT(*) > 1\n" +
+        "    )\n" +
+        "END";
     }
 
     public static String prepareSelectQuery(String mySelectTable,

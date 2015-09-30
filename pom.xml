@@ -107,10 +107,12 @@
         <spring-boot-starter-logging.version>1.2.4.RELEASE</spring-boot-starter-logging.version>
         <org.apache.logging.log4j.core.version>2.3</org.apache.logging.log4j.core.version>
         <!-- Apache -->
-        <org.apache.httpcomponents.httpclient.version>4.4.1</org.apache.httpcomponents.httpclient.version>
+        <!--<org.apache.httpcomponents.httpclient.version>4.4.1</org.apache.httpcomponents.httpclient.version>-->
+        <org.apache.httpcomponents.httpclient.version>4.5.1</org.apache.httpcomponents.httpclient.version>
         <org.apache.commons.commons-dbcp2.version>2.0</org.apache.commons.commons-dbcp2.version>
         <org.apache.commons.commons-lang3.version>3.4</org.apache.commons.commons-lang3.version>
         <org.apache.commons.commons-codec.version>1.10</org.apache.commons.commons-codec.version>
+        <!-- javax -->
         <javax.interceptor-api.version>1.2</javax.interceptor-api.version>
     </properties>
 
@@ -157,6 +159,12 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Added 2015-09-25 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
             <optional>true</optional>
         </dependency>
         <!-- ============= -->
@@ -365,10 +373,11 @@
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-repository-manager</artifactId>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.openrdf.sesame</groupId>
             <artifactId>sesame-http-server-spring</artifactId>
-        </dependency>
+            <version>2.8.4</version>
+        </dependency>-->
 
         <!-- optional Sesame dependency -->
         <dependency>

@@ -5,22 +5,23 @@ import com.github.p4535992.util.string.StringKit;
 import org.jooq.SQLDialect;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by 4535992 on 14/05/2015.
  * @author 4535992
- * @version 2015-06-26
+ * @version 2015-09-30.
  */
 @SuppressWarnings("unused")
 public class SQLHelper {
 
     private static Connection conn;
+    private static Statement stmt;
+    private static String query;
 
     public static Map<Integer, String> getAllJdbcTypeNames() throws IllegalArgumentException, IllegalAccessException {
         Map<Integer, String> result = new HashMap<>();
@@ -199,9 +200,17 @@ public class SQLHelper {
 
     public static Connection chooseAndGetConnection(String dialectDB,
                                 String host,String port,String database,String username,String password) throws ClassNotFoundException, SQLException, InstantiationException, IllegalAccessException {
-        if(convertDialectDatabaseToTypeNameId(dialectDB).equals("mysql")){
+        if(StringKit.isNullOrEmpty(username) || StringKit.isNullOrEmpty(password)){
+            username = "root";
+            password = "";
+        }
+        if(!StringKit.isNullOrEmpty(port) || !StringKit.isNumeric(port)) port = "";
+        if(StringKit.isNullOrEmpty(dialectDB)) dialectDB = "mysql";
+
+        if(convertDialectDatabaseToTypeNameId(dialectDB).equalsIgnoreCase("mysql")){
             return getMySqlConnection(host,port,database,username,password);
         }
+        //other connection to implement.....
         SystemLog.warning("No connection database type detected fro this type.");
         return null;
     }
@@ -262,6 +271,18 @@ public class SQLHelper {
         return conn;
     }
 
+    /**
+     * Method to get a MySQL connection.
+     * @param host string name of the host where is it the database
+     * @param database string name of the database.
+     * @param username string username.
+     * @param password string password.
+     * @return the connection.
+     * @throws ClassNotFoundException if any error class is occurred.
+     * @throws SQLException if any error SQL is occurred.
+     * @throws IllegalAccessException if any error SQL is occurred.
+     * @throws InstantiationException if any error SQL is occurred.
+     */
     public static Connection getMySqlConnection(
             String host,String database,String username,String password)
             throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
@@ -287,6 +308,81 @@ public class SQLHelper {
         }
         url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
         return conn = DriverManager.getConnection(url, username, password);
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Map<String,Integer> getColumns(String host,String database,String table,String column)
+            throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+        DatabaseMetaData metaData;
+        if(conn!=null)metaData = conn.getMetaData();
+        else metaData = chooseAndGetConnection(null,host,null,database,null,null).getMetaData();
+
+        ResultSet result = metaData.getColumns( null, database, table, column );
+        Map<String,Integer> map = new HashMap<>();
+        while(result.next()){
+            String columnName = result.getString(4);
+            Integer columnType = result.getInt(5);
+            map.put(columnName,columnType);
+        }
+        return map;
+    }
+
+    public static List<String> getTablesFromConnection(Connection connection) throws SQLException {
+        List<String> tableNames = new ArrayList<>();
+        DatabaseMetaData md = connection.getMetaData();
+        ResultSet rs = md.getTables(null, null, "%", null);
+        while (rs.next()) {
+            tableNames.add(rs.getString(3)); //column 3 is TABLE_NAME
+        }
+        return tableNames;
+    }
+
+
+
+    public static void openConnection(String url,String user,String pass) throws SQLException, ClassNotFoundException{
+        //Class.forName("org.h2.Driver"); //Loading driver connection
+        conn = DriverManager.getConnection(url, user, pass);
+    }
+
+    public static void closeConnection() throws SQLException{ conn.close();}
+
+    public static Connection setConnection(String classDriverName,String dialectDB,
+                                           String host,String port,String database,String user,String pass) throws ClassNotFoundException, SQLException {
+        //"org.hsqldb.jdbcDriver","jdbc:hsqldb:data/tutorial"
+        Class.forName(classDriverName); //load driver//"com.sql.jdbc.Driver"
+        String url = ("" + dialectDB + "://" + host + ":" + port + "/" + database); //"jdbc:sql://localhost:3306/jdbctest"
+        conn = DriverManager.getConnection(url, user, pass);
+        System.out.println("Got Connection.");
+        return conn;
+    }
+
+    public static Connection getConnection(){
+        return conn;
+    }
+
+    public static void executeSQLCommand(String sql) throws Exception {
+        stmt.executeUpdate(sql);
+    }
+
+    public static void checkData(String sql) throws Exception {
+        java.sql.ResultSet rs = stmt.executeQuery(sql);
+        java.sql.ResultSetMetaData metadata = rs.getMetaData();
+        for (int i = 0; i < metadata.getColumnCount(); i++) {
+            System.out.print("\t"+ metadata.getColumnLabel(i + 1));
+        }
+        System.out.println("\n----------------------------------");
+        while (rs.next()) {
+            for (int i = 0; i < metadata.getColumnCount(); i++) {
+                Object value = rs.getObject(i + 1);
+                if (value == null) {
+                    System.out.print("\t       ");
+                } else {
+                    System.out.print("\t"+value.toString().trim());
+                }
+            }
+            System.out.println("");
+        }
     }
 
 

@@ -22,10 +22,14 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
-    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.springframework:spring-core:4.1.6.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-beans:4.1.6.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-context:4.1.6.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-aop:4.1.6.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: aopalliance:aopalliance:1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-expression:4.1.6.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:4.3.10.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging:3.1.3.GA" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging-annotations:1.2.0.Beta1" level="project" />
@@ -85,6 +89,7 @@
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-model:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-util:2.8.4" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-sail-memory:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-sail-base:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-sail-inferencer:2.8.4" level="project" />
@@ -92,6 +97,7 @@
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-sail-model:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-queryalgebra-evaluation:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-repository-sparql:2.8.4" level="project" />
+    <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-queryresultio-sparqlxml:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.mapdb:mapdb:1.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-queryalgebra-model:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-repository-sail:2.8.4" level="project" />
@@ -113,46 +119,6 @@
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-queryresultio-sparqljson:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-repository-manager:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-repository-event:2.8.4" level="project" />
-    <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-http-server-spring:2.8.4" level="project" />
-    <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-runtime:2.8.4" level="project" />
-    <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-repository-contextaware:2.8.4" level="project" />
-    <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-sail-federation:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-queryresultio-binary:2.8.4" level="project" />
-    <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-queryresultio-sparqlxml:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-repository-dataset:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-rio-jsonld:2.8.4" level="project" />
-    <orderEntry type="library" name="Maven: com.github.jsonld-java:jsonld-java:0.5.1" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient-cache:4.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-rio-nquads:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-rio-n3:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-rio-rdfjson:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-rio-rdfxml:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-rio-trix:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-sail-lucene:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-sail-lucene-api:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-core:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-queries:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-highlighter:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-join:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-memory:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-analyzers-common:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-queryparser:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.lucene:lucene-sandbox:5.1.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: org.openrdf.sesame:sesame-sail-rdbms:2.8.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: commons-dbcp:commons-dbcp:1.4" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: commons-pool:commons-pool:1.5.4" level="project" />
-    <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-config:2.8.4" level="project" />
-    <orderEntry type="library" name="Maven: javax.servlet:jstl:1.1.2" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: taglibs:standard:1.1.2" level="project" />
-    <orderEntry type="library" name="Maven: org.springframework:spring-aop:4.1.6.RELEASE" level="project" />
-    <orderEntry type="library" name="Maven: aopalliance:aopalliance:1.0" level="project" />
-    <orderEntry type="library" name="Maven: org.springframework:spring-webmvc:4.1.6.RELEASE" level="project" />
-    <orderEntry type="library" name="Maven: org.springframework:spring-context:4.1.6.RELEASE" level="project" />
-    <orderEntry type="library" name="Maven: org.springframework:spring-expression:4.1.6.RELEASE" level="project" />
-    <orderEntry type="library" name="Maven: org.springframework:spring-web:4.1.6.RELEASE" level="project" />
-    <orderEntry type="library" name="Maven: cglib:cglib:3.1" level="project" />
-    <orderEntry type="library" name="Maven: org.ow2.asm:asm:4.2" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-rio-api:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-repository-api:2.8.4" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-sail-api:2.8.4" level="project" />
@@ -161,8 +127,8 @@
     <orderEntry type="library" name="Maven: com.openlink.virtuoso:virt_jena2:7.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.openlink.virtuoso:virtjdbc4-1:7.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.openlink.virtuoso:virtjena2:develop7-2015-06-25" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.4.1" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.5.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-dbcp2:2.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-pool2:2.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.4" level="project" />

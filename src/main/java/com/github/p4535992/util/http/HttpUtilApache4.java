@@ -30,9 +30,9 @@ public class HttpUtilApache4 {
 
     public static String GETWithRetry(String URL) throws IOException {
         String content ="";
-
         // HttpClient httpclient;
-        org.apache.http.impl.client.CloseableHttpClient httpclient = org.apache.http.impl.client.HttpClients.createDefault();
+        org.apache.http.impl.client.CloseableHttpClient httpclient =
+                org.apache.http.impl.client.HttpClients.createDefault();
         DefaultHttpRequestRetryHandler def = new DefaultHttpRequestRetryHandler();
         org.apache.http.client.methods.HttpGet httpget = new org.apache.http.client.methods.HttpGet(URL);
         //httpget.getParams().setParameter("RETRY_HANDLER", def);

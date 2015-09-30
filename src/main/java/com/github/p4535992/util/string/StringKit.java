@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 /**
  * Class with many utilities on String and Collection.
  * @author 4535992.
- * @version 2015-07-07.
+ * @version 2015-09-29.
  * href: http://stackoverflow.com/questions/9572795/convert-list-to-array-in-java
  * href: http://stackoverflow.com/questions/11404086/how-could-i-initialize-a-generic-array
  * href: https://github.com/ku-fpg/armatus/blob/master/Armatus%20Android%20App/src/edu/kufpg/armatus/util/StringUtils.java
@@ -103,11 +103,21 @@ public class StringKit<T> {
 //        this.clName = cl.getSimpleName();
 //    }
 
+    /**
+     * Method to clean a html text to a string text.
+     * @param stringHtml html string of text.
+     * @return string text.
+     */
     public static String cleanStringHTML(String stringHtml){
         return stringHtml.replaceAll("\\r\\n|\\r|\\n"," ").trim();
                 //.replace("\\n\\r", "").replace("\\n","").replace("\\r","").trim())
     }
 
+    /**
+     * Method to simplify the content of a string for a better vison of the content.
+     * @param stringText string of the text.
+     * @return string of text simplify.
+     */
     public static String toStringInline(String stringText){
         return stringText.replaceAll("\\r\\n|\\r|\\n", " ").replaceAll("\\s+", " ").trim();
         //return stringText.replaceAll("(?m)(^ *| +(?= |$))", "").replaceAll("(?m)^$([\r\n]+?)(^$[\r\n]+?^)+", "$1");
@@ -601,7 +611,7 @@ public class StringKit<T> {
     }
 
     /**
-     * Method to cconvert a object by the clazz is equivalent to public T cast(Object o)
+     * Method to convert a object by the clazz is equivalent to public T cast(Object o)
      * but more powerful.
      * @param objectToCast object to cast.
      * @param clazz a generic class
@@ -745,7 +755,7 @@ public class StringKit<T> {
     /**
      * Method to find all the string matches of the expression with regular expression.
      * @param text string text to check.
-     * @param expression string regular expression.
+     * @param pattern pattern of regular expression.
      * @param justFirstResult if true get only the first element.
      * @return a list of string of all matches.
      */
@@ -793,6 +803,16 @@ public class StringKit<T> {
      */
     public static boolean isMatch(String text,String expression){
         return text != null && Pattern.compile(expression).matcher(text).matches();
+    }
+
+    /**
+     * Method to check if  a string contain some match for the regular expression.
+     * @param text string text to check.
+     * @param pattern the pattern of the regular expression.
+     * @return if true the string contains a match for the regular expression.
+     */
+    public static boolean isMatch(String text,Pattern pattern){
+        return text != null && pattern.matcher(text).matches();
     }
 
     /**
@@ -944,6 +964,22 @@ public class StringKit<T> {
     public static Integer convertIntToInteger(int numInt){
         return Integer.valueOf(numInt);
     }
+
+    /**
+     * Method to convert a int primitive to the Integer object .
+     * @param numInt the int primitive.
+     * @return the the double object of the int primitive .
+     */
+    public static Double convertIntToDouble(int numInt){ return (double) numInt;}
+
+    /**
+     * Method to convert a int primitive to the Integer object .
+     * @param numInt the int primitive.
+     * @return the the double object of the int primitive .
+     */
+    public static Double convertIntegerToDouble(Integer numInt){ return (double) numInt;}
+
+
 
     /**
      * Method to convert a String to a Integer.

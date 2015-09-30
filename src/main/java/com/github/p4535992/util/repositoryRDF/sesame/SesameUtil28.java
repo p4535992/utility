@@ -389,6 +389,10 @@ public class SesameUtil28 {
         return null;
     }
 
+    public void executeQuerySPARQLFromFile(File queryFile){
+         evaluateQueries(queryFile);
+    }
+
     /**
      * Demonstrates query evaluation. First parse the query file. Each of the queries is executed against the
      * prepared repository. If the printResults is set to true the actual values of the bindings are output to
@@ -396,7 +400,7 @@ public class SesameUtil28 {
      * information.
      * @param queryFile file with multiple SPARQL queries.
      */
-    public void evaluateQueries(File queryFile){
+    private void evaluateQueries(File queryFile){
         SystemLog.message("===== Query Evaluation ======================");
         if (queryFile == null) {
             SystemLog.warning("No query file given in parameter 'null'.");
@@ -503,7 +507,11 @@ public class SesameUtil28 {
     private static final QueryLanguage[] queryLanguages = new QueryLanguage[] {
             QueryLanguage.SPARQL,QueryLanguage.SERQL, QueryLanguage.SERQO };
 
-    public void executeSingleQuery(String query) {
+    public void executeQuerySPARQLFromString(String query){
+        executeSingleQuery(query);
+    }
+
+    private void executeSingleQuery(String query) {
         try {
             Operation preparedOperation = prepareOperation(query);
             if (preparedOperation == null) {
@@ -1225,13 +1233,14 @@ public class SesameUtil28 {
      * @param inputFormat string check the input format null.
      * @param outputFormat string of the output format.
      */
-     public void convertTo(String urlFile,String inputFormat,String outputFormat) {
+     public void convertFileNameToRDFFormat(String urlFile,String inputFormat,String outputFormat) {
         try {
+            if(StringKit.isNullOrEmpty(inputFormat)) inputFormat ="n3";
             // open our input document
              URL documentUrl;
              RDFFormat format;
              InputStream inputStream;
-            if(urlFile.startsWith("http://")){
+            if(StringKit.isURL(urlFile)){
                 documentUrl = new URL(urlFile);
                 //AutoDetecting the file format
                 format = convertFileNameToRDFFormat(documentUrl.toString());
@@ -2230,7 +2239,7 @@ public class SesameUtil28 {
      * @param query query a string query SPARQL or SERQL.
      * @return the result of the  ASK query.
      */
-    public BooleanQuery createAskQuery(String query) {
+    public BooleanQuery createAskSPARQLQuery(String query) {
         if(mRepositoryConnection != null) {
             try {
                 QueryLanguage lang = checkLanguageOfQuery(query);
@@ -2248,7 +2257,7 @@ public class SesameUtil28 {
      * @param query a string query SPARQL or SERQL.
      * @return the result of update and the reposiotry updated.
      */
-    public Update createUpdate(String query) {
+    public Update createUpdateSPARQLQuery(String query) {
         if(mRepositoryConnection != null) {
             try {
                 QueryLanguage lang = checkLanguageOfQuery(query);

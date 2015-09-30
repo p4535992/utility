@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 /**
  * Commonly used regular expression patterns.
  * I don't own any right on this class of code is belong to android.util.Patterns and android.telephony.PhoneNumberUtils.
- * @version 2015-09-14.
+ * @version 2015-09-28.
  */
 @SuppressWarnings("unused")
 public class Patterns {
@@ -226,16 +226,20 @@ public class Patterns {
 
     public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_1
             = Pattern.compile("(values)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_1v2
+    public static final Pattern MANAGE_SQL_PREQUERY_INSERT
             = Pattern.compile("(insert into)(\\s*(.*?)\\s*)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_2
-            = Pattern.compile("(values)\\s*\\(",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_2v2
+    /*public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2
+            = Pattern.compile("(values)\\s*\\(",Pattern.CASE_INSENSITIVE);*/
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2
             = Pattern.compile("(insert into)\\s*(.*?)\\(\\s*",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_GET_WHERE_PARAM_1
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1
             = Pattern.compile("(where)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_GET_WHERE_PARAM_2
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2
             = Pattern.compile("(where)\\s*\\(",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_CHECK_WHERE
+            = Pattern.compile("(values)(\\s*[(])((.*?)|\\s*)(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3 =
+            Pattern.compile("(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
 
     /**
      * Do not create this static utility class.
@@ -277,18 +281,20 @@ public class Patterns {
         return url != null && url.matches("^(https?|ftp)://.*$");
     }
 
-    public static String getQueryValuesParam(String queryString,String[] columns){
-        String preQuery = StringKit.findWithRegex(queryString,MANAGE_SQL_QUERY_GET_VALUES_PARAM_1v2);
+    public static String getQueryInsertValuesParam(String queryString, String[] columns){
+        String preQuery = StringKit.findWithRegex(queryString,MANAGE_SQL_PREQUERY_INSERT);
         String postQuery = queryString.replace(preQuery, "");
-        if (postQuery.toLowerCase().contains(" where ")){
-            String[] val = queryString.split(preQuery);
-            queryString = val[0];
-            postQuery = val[1];
+        if (StringKit.isMatch(postQuery,MANAGE_SQL_QUERY_INSERT_CHECK_WHERE )){
+            String[] val = postQuery.split(MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3.pattern());
+            if(val.length > 2) {
+                String postQuery0 = val[0].replace("(","").replace(")", "");
+                String postQuery1 = val[1].replace("(","").replace(")","");
+            }
         }else {
-            queryString = queryString.replace(preQuery, "");
+            //queryString = queryString.replace(preQuery, "");
             postQuery = "";
         }
-        preQuery = StringKit.findWithRegex(preQuery,MANAGE_SQL_QUERY_GET_VALUES_PARAM_2v2).trim();
+        preQuery = StringKit.findWithRegex(preQuery,MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
         //values = values.substring(0, values.length() - 1);
         //String[] param = values.split(",");
         //for(String s: param)values = values.replace(s.trim(),"?");
@@ -299,8 +305,8 @@ public class Patterns {
                 + ") values (" + values +")" + postQuery;
     }
 
-    public static String getQueryWhereParam(String queryString){
-        String values = StringKit.findWithRegex(queryString,MANAGE_SQL_QUERY_GET_WHERE_PARAM_1);
+    public static String getQueryInsertWhereParam(String queryString){
+        String values = StringKit.findWithRegex(queryString,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1);
         String supportQuery = queryString.replace(values, "");
         if (supportQuery.toLowerCase().contains(" order by ")){
             String[] val = queryString.split(values);
@@ -310,7 +316,7 @@ public class Patterns {
             queryString = queryString.replace(values, "");
             supportQuery = "";
         }
-        values = values.replace(StringKit.findWithRegex(values,MANAGE_SQL_QUERY_GET_WHERE_PARAM_2),"");
+        values = values.replace(StringKit.findWithRegex(values,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2),"");
         values = values.substring(0,values.length()-1);
         String[] paramCond = values.split("(and|or)");
         for(String s: paramCond){
