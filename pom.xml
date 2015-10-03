@@ -401,6 +401,11 @@
             <artifactId>sesame-queryparser-sparql</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--<dependency>
+            <groupId>org.openrdf.sesame</groupId>
+            <artifactId>sesame-sail-rdbms</artifactId>
+        </dependency>-->
+
 
         <!-- =============== -->
         <!-- VIRTUOSO-JENA   -->

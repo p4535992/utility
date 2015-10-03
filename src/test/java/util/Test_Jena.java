@@ -31,7 +31,7 @@ public class Test_Jena {
          if(file.exists()) {
              //List<String> lines = EncodingUtil.convertUnicodeEscapeToUTF8(new File(outputN3Knime));
              //EncodingUtil.writeLargerTextFileWithReplace2(outputN3Knime, lines);
-             Jena2Kit.convertTo(new File(outputN3Knime), "csv");
+             Jena2Kit.convertFileTripleToAnotherFormat(new File(outputN3Knime), "csv");
              //JenaKit.convertTo(file, "turtle");
          }
 

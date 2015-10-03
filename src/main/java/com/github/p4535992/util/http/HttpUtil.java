@@ -360,8 +360,12 @@ public class HttpUtil {
 	   }
    }
 
-        
-       
+	/**
+	 * Method to get the authority name of a web page.
+	 * @param url the web adrress to the web page.
+	 * @return the string name of the authority of the web page.
+	 * @throws URISyntaxException throw exception if the web page is not reachable.
+	 */
     public static String getAuthorityName(String url) throws URISyntaxException{
 		String provider = new URI(url).getHost();
 		StringTokenizer split2 =  new StringTokenizer(provider,".");

@@ -37,7 +37,7 @@ public class SQLHelper {
      * @param jdbcType code int of the type sql.
      * @return map of SQL Types with name
      */
-    public static Map<Integer,String> getJdbcTypeName(int jdbcType) {
+    public static Map<Integer,String> convertIntToJdbcTypeName(int jdbcType) {
         Map<Integer,String> map = new HashMap<>();
         // Get all field in java.sql.Types
         Field[] fields = java.sql.Types.class.getFields();

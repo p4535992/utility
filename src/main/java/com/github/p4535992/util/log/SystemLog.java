@@ -170,6 +170,7 @@ public class SystemLog {
     public static void console(String logEntry){level = Level.VOID; System.out.println(logEntry);}
     public static void message(String logEntry){level = Level.OUT; write(logEntry);}
     public static void error(String logEntry){level = Level.ERR; isERROR=true; write(logEntry);}
+    public static void error(String logEntry,Exception ex){level = Level.ERR; isERROR=true; write(logEntry+"->"+ex.getMessage());}
     public static void warning(String logEntry){level = Level.WARN; isERROR=true; write(logEntry);}
     public static void warning(Exception e){level = Level.WARN; isERROR=true; write(e.getMessage() + "," + e.getLocalizedMessage());}
     public static void hibernate(String logEntry) { level = Level.HIBERNATE; write(logEntry);}

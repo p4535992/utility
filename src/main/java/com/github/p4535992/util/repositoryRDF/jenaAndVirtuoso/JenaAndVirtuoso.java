@@ -1,6 +1,6 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndVirtuoso;
+import com.github.p4535992.util.log.SystemLog;
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.*;
@@ -9,18 +9,17 @@ import com.hp.hpl.jena.shared.Command;
 import com.hp.hpl.jena.sparql.util.NodeUtils;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.vocabulary.RDFS;
-import virtuoso.jena.driver.*;
+
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 /**
  * Created by 4535992 on 02/07/2015.
- * for work with this class you need the Jena FrameWOrk version 2.10.X
+ * Important: for work with this class you need the Jena FrameWork version 2.10.X
  * http://virtuoso.openlinksw.com/dataspace/doc/dav/wiki/Main/VirtJenaProvider
  * @author 4535992.
- * @version 2015-07-02.
+ * @version 2015-09-30.
  */
 @SuppressWarnings("unused")
 public class JenaAndVirtuoso {
@@ -30,7 +29,7 @@ public class JenaAndVirtuoso {
     private static final String DEFAUL_PASSWORD= "dba";
     private static final String SPARQL_SELECT_ALL ="SELECT * WHERE { GRAPH ?graph { ?s ?p ?o } } limit 100";
 
-    public static VirtGraph graph;
+    public static virtuoso.jena.driver.VirtGraph graph;
 
     private static JenaAndVirtuoso instance = null;
     public JenaAndVirtuoso(){}
@@ -41,15 +40,24 @@ public class JenaAndVirtuoso {
         return instance;
     }
 
-    public VirtGraph connectToVirtuoso(){
-        graph = new VirtGraph (DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
-        return graph;
-
+    /**
+     * Method to connect to a virtuoso repository like a Jena Model.
+     * @return the VirtGraph of the repository.
+     */
+    public void connectToVirtuoso(){
+        graph = new virtuoso.jena.driver.VirtGraph (DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
+        SystemLog.message("Connection to the Virtuoso Repository Successed!");
     }
 
+    /**
+     * Method to execute a SPARQL query on the virtuoso graph VirtGraph.
+     * @param sparql string of the content of the SPARQL Query.
+     * @return the Jena Model result of the SPARQL query.
+     */
     public Model execSparqlToRepository(String sparql){
         Query query = QueryFactory.create(sparql);
-        VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(sparql, graph);
+        virtuoso.jena.driver.VirtuosoQueryExecution vqe =
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
         ResultSet results = vqe.execSelect();
         /*while (results.hasNext()) {
             QuerySolution result = results.nextSolution();
@@ -62,10 +70,17 @@ public class JenaAndVirtuoso {
         return results.getResourceModel();
     }
 
-    public Model execSparqlSelectAllToRepository(String urlResourceGraph,String rdfFormat){
-        graph.read(urlResourceGraph, rdfFormat);
+    /**
+     * Method to execute a Select SPARQL query on the virtuoso graph VirtGraph.
+     * @param urlResourceGraph uri web address where is the endpoint SPARQL of the virtuoso repository.
+     * @return the Jena Model result of the SPARQL query.
+     */
+    public Model execSparqlSelectAllFromRepository(String urlResourceGraph){
+        String rdfFormat = "";
+        graph.read(urlResourceGraph, null);
         Query sparql = QueryFactory.create("SELECT ?s ?p ?o WHERE { ?s ?p ?o }");
-        VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create (sparql, graph);
+        virtuoso.jena.driver.VirtuosoQueryExecution vqe =
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create (sparql, graph);
         ResultSet results = vqe.execSelect();
         /*while (results.hasNext()) {
             QuerySolution result = results.nextSolution();
@@ -78,43 +93,57 @@ public class JenaAndVirtuoso {
         return results.getResourceModel();
     }
 
-    public Triple createTriple(Node subject,Node predicate,Node object){
+
+    /*public Triple createTriple(Node subject,Node predicate,Node object){
         return new Triple(subject,predicate,object);
     }
 
     public Node createNode(String uriResource){
         return NodeFactory.createURI(uriResource);
-    }
+    }*/
 
+    /**
+     * Method to add a List of jena Graph triple to a Virtuoso Graph Object.
+     * @param triples the List of jena Graph triples.
+     */
     @SuppressWarnings("deprecation")
-    public void addTriplesToGraph(List<Triple> triples){
+    public void addTriplesToVirtuosoGraph(List<Triple> triples){
         graph.getBulkUpdateHandler().add(triples);
-       /* for(Triple triple: triples){
+        for(Triple triple: triples){
             graph.add(triple);
-        }*/
+        }
     }
 
+    /**
+     * Method to check if a Virtuoso Graph is empty.
+     * @return if true the Virtuoso Graph is empty.
+     */
+    public boolean isEmpty(){ return graph.isEmpty();}
 
+    /**
+     * Method to check if a Virtuoso Graph contains a specific Jena Triple Object.
+     * @param triple the Jena Triple Object.
+     * @return if true the Virtuoso HGraph contains the specific Triple Object.
+     */
+    public boolean isContains(Triple triple){return graph.contains(triple);}
 
+    /**
+     * Method for count the number of triple in the Virtuoso graph.
+     * @return the count of the triple in the virtuoso Graph.
+     */
+    public int getCount(){return graph.getCount();}
 
-    public boolean isEmpty(){
-        return graph.isEmpty();
-    }
+    /**
+     * Method to clear a Virtuoso graph.
+     */
+    public void clear(){graph.clear();}
 
-    public boolean isContains(Triple triple){
-        return graph.contains(triple);
-    }
-
-    public int getCount(){
-        return graph.getCount();
-    }
-
-    public void clear(){
-        graph.clear();
-    }
-
+    /**
+     * Method to delete Triples from Virtuoso graph.
+     * @param triples List of Triple to delete.
+     */
     @SuppressWarnings("deprecation")
-    public void deleteTriplesFromRepository(List<Triple> triples){
+    public void deleteTriplesFromVirtuosoGraph(List<Triple> triples){
        /* for(Triple triple: triples){
             graph.remove(triple);
         }*/
@@ -122,7 +151,12 @@ public class JenaAndVirtuoso {
 
     }
 
-    public List<Triple> readTriplesFromRepository(List<Triple> triples) {
+    /**
+     * Method to check what Triple of a List are present in the Virtuoso Graph.
+     * @param triples list of Jena Triple you want to found and read.
+     * @return the List of Jena Triple you have founded.
+     */
+    public List<Triple> findTriplesFromVirtuosoGraph(List<Triple> triples) {
         List<Triple> found = new ArrayList<>();
         for(Triple triple: triples){
             if(isContains(triple)){
@@ -132,24 +166,51 @@ public class JenaAndVirtuoso {
         return found;
     }
 
-    public List<Triple> findTriplesFromRepository(Node subject){
-        return findTriplesFromRepository(new Triple(subject, Node.ANY, Node.ANY));
+    /**
+     * Method to check what Triple with a specific subject are present in the Virtuoso Graph.
+     * @param subject the Jena Node subject for the research.
+     * @return the List of Jena Triple you have founded.
+     */
+    public List<Triple> findTriplesFromVirtuosoGraph(Node subject){
+        return findTriplesFromVirtuosoGraph(new Triple(subject, Node.ANY, Node.ANY));
     }
 
-    public List<Triple> findTriplesFromRepository(Node subject,Node predicate,boolean isPredicate){
+    /**
+     * Method to check what Triple with a specific subject and predictae or Object
+     * are present in the Virtuoso Graph.
+     * @param subject the Jena Node subject for the research.
+     * @param predicateOrObject the Jena Node predicate or Object of the Triple for the research.
+     * @param isPredicate if true the predicateOrObject is a predicate of the Triple else is a Object..
+     * @return the List of Jena Triple you have founded.
+     */
+    public List<Triple> findTriplesFromVirtuosoGraph(Node subject,Node predicateOrObject,boolean isPredicate){
         if(isPredicate) {
-            return findTriplesFromRepository(new Triple(subject, predicate, Node.ANY));
+            return findTriplesFromVirtuosoGraph(new Triple(subject, predicateOrObject, Node.ANY));
         }else{
-            return findTriplesFromRepository(new Triple(subject,Node.ANY,predicate));
+            return findTriplesFromVirtuosoGraph(new Triple(subject, Node.ANY, predicateOrObject));
         }
     }
 
-    public List<Triple> findTriplesFromRepository(Node subject,Node predicate,Node object){
-        return findTriplesFromRepository(new Triple(subject,predicate,object));
+    /**
+     /**
+     * Method to check what Triple with a specific subject and predictae and Object
+     * are present in the Virtuoso Graph.
+     * @param subject the Jena Node subject for the research.
+     * @param predicate the Jena Node predicate for the research.
+     * @param object the Jena Node object for the research.
+     * @return the List of Jena Triple you have founded.
+     */
+    public List<Triple> findTriplesFromVirtuosoGraph(Node subject,Node predicate,Node object){
+        return findTriplesFromVirtuosoGraph(new Triple(subject, predicate, object));
     }
 
 
-    public List<Triple> findTriplesFromRepository(Triple triple){
+    /**
+     * Method to check what Triple with a specific Triple are present in the Virtuoso Graph.
+     * @param triple the Jena Triple for the research.
+     * @return the List of Jena Triple you have founded.
+     */
+    public List<Triple> findTriplesFromVirtuosoGraph(Triple triple){
         List<Triple> found = new ArrayList<>();
         ExtendedIterator<Triple> iter = graph.find(
                 triple.getSubject(),triple.getPredicate(),triple.getObject());
@@ -159,54 +220,92 @@ public class JenaAndVirtuoso {
         return found;
     }
 
-    public void beginTransaction(){
-        graph.getTransactionHandler().begin();
+    /**
+     * Method to begin a transaction in a Virtuoso Graph.
+     */
+    public void beginTransaction(){ graph.getTransactionHandler().begin(); }
+
+    /**
+     * Method to commit a transaction in a Virtuoso Graph.
+     */
+    public void commitTransaction(){graph.getTransactionHandler().commit();}
+
+    /**
+     * Method to abort a transaction in a Virtuoso Graph.
+     */
+    public void abortTransaction(){ graph.getTransactionHandler().abort();}
+
+    /**
+     * Method to check a if a Virtuoso Graph is in transaction.
+     * @return if true the Virtuoso Graph is in transaction.
+     */
+    public boolean isInTransaction(){ return graph.getTransactionHandler().transactionsSupported();}
+
+    /**
+     * Method to execute a command on a Virtuoso Graph.
+     * @param command the jena Command to execute.
+     * @return the result of the command executed.
+     */
+    public Object executeInTransaction(Command command){
+        return graph.getTransactionHandler().executeInTransaction(command);
     }
 
-    public void commitTransaction(){
-        graph.getTransactionHandler().commit();
-    }
-
-    public void abortTransaction(){
-        graph.getTransactionHandler().abort();
-    }
-
-    public void isInTransaction(){
-        graph.getTransactionHandler().transactionsSupported();
-    }
-
-    public void executeInTransaction(Command command){
-        graph.getTransactionHandler().executeInTransaction(command);
-    }
-
-    public void clearGraphWithSPARQL(String uriGraph){
+    /**
+     * Method to exec a clear SPARQL query on a Virtuoso Graph.
+     * @param uriGraph the uri location of the graph.
+     */
+    public void execSparqlClearOnVirtuosoGraph(String uriGraph){
         String str = "CLEAR GRAPH <"+uriGraph+">";
-        VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(str, graph);
+        virtuoso.jena.driver.VirtuosoUpdateRequest vur =
+                virtuoso.jena.driver.VirtuosoUpdateFactory.create(str, graph);
         vur.exec();
 
     }
 
-    public void insertGraphWithSPARQL(String uriGraph,String uriResource,String uriPredicate,String object,boolean isLiteral){
+    /**
+     * Method to exec insert SPARQL query on a Virtuoso Graph.
+     * @param uriGraph the uri location of the graph.
+     * @param subject the uri location of the specific subject.
+     * @param predicate  the uri location of the specific predicate.
+     * @param object the uri/literal location of the specific object.
+     * @param isLiteral if true the object param is a literal and not a uri
+     */
+    public void execSparqlInsertOnVirtuosoGraph(
+            String uriGraph,String subject,String predicate,String object,boolean isLiteral){
         String str = "INSERT INTO GRAPH <http://test1> { " ;
         if(isLiteral) {
-            str += "<" + uriResource + "> <" + uriPredicate + "> '" + object + "' . }";
+            str += "<" + subject + "> <" + predicate + "> '" + object + "' . }";
         }else{
-            str += "<" + uriResource + "> <" + uriPredicate + "> <" + object + "> . }";
+            str += "<" + subject + "> <" + predicate + "> <" + object + "> . }";
         }
-        VirtuosoUpdateRequest vur = VirtuosoUpdateFactory.create(str, graph);
+        virtuoso.jena.driver.VirtuosoUpdateRequest vur =
+                virtuoso.jena.driver.VirtuosoUpdateFactory.create(str, graph);
         vur.exec();
     }
 
-    public Model execSparqlSelectOnGraph(String uriGraph){
+    /**
+     * Method to exec a select SPARQL query on a Virtuoso Graph.
+     * @param uriGraph the uri location of the graph.
+     * @return the Jena Model with the result of the query SPARQL.
+     */
+    public Model execSparqlSelectOnVirtuosoGraph(String uriGraph){
         Query sparql = QueryFactory.create("SELECT * FROM <"+uriGraph+"> WHERE { ?s ?p ?o }");
-        VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create (sparql, graph);
+        virtuoso.jena.driver.VirtuosoQueryExecution vqe =
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create (sparql, graph);
         ResultSet results = vqe.execSelect();
         return results.getResourceModel();
     }
 
-    public Model execSparqlDescribeOnGraph(String uriGraph,String uriResource) {
+    /**
+     * Method to exec a describe SPARQL query on a Virtuoso Graph.
+     * @param uriGraph the uri location of the graph.
+     * @param uriResource the uri location of the resource.
+     * @return the Jena Model with the result of the query SPARQL.
+     */
+    public Model execSparqlDescribeOnVirtuosoGraph(String uriGraph,String uriResource) {
         Query sparql = QueryFactory.create("DESCRIBE <"+uriResource+"> FROM <"+uriGraph+">");
-        VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(sparql, graph);
+        virtuoso.jena.driver.VirtuosoQueryExecution vqe =
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
         return vqe.execDescribe();
         /*Graph g = model.getGraph();
         for (Iterator i = g.find(Node.ANY, Node.ANY, Node.ANY); i.hasNext(); ) {
@@ -215,10 +314,17 @@ public class JenaAndVirtuoso {
     }
 
 
-    public Model execSparqlConstructOnGraph(String uriGraph,String uripredicate) {
+    /**
+     * Method to exec a construct SPARQL query on a Virtuoso Graph.
+     * @param uriGraph the uri location of the graph.
+     * @param uripredicate the uri of the predicate you iuse for search a specific type of triple..
+     * @return the Jena Model with the result of the query SPARQL.
+     */
+    public Model execSparqlConstructOnVirtuosoGraph(String uriGraph,String uripredicate) {
         Query sparql = QueryFactory.create("CONSTRUCT { ?x <"+uripredicate+"> ?y } FROM <"+uriGraph+"> ");
                 //"WHERE { ?x <"+uriWherePredicate+"> ?y }");
-        VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(sparql, graph);
+        virtuoso.jena.driver.VirtuosoQueryExecution vqe =
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
         return vqe.execConstruct();
         /*Graph g = model.getGraph();
         for (Iterator i = g.find(Node.ANY, Node.ANY, Node.ANY); i.hasNext(); ) {
@@ -226,20 +332,32 @@ public class JenaAndVirtuoso {
         }*/
     }
 
-    public boolean execSparqlAskOnGraph(String uriGraph,Triple triple) {
+    /**
+     * Method to exec a ask SPARQL query on a Virtuoso Graph.
+     * @param uriGraph the uri location of the graph.
+     * @param triple the Jena Triple to search on the Virtuoso graph.
+     * @return if true the Triple is present on the Virtuoso Graph.
+     */
+    public boolean execSparqlAskOnVirtuosoGraph(String uriGraph,Triple triple) {
         Query sparql = QueryFactory.create("ASK FROM <"+uriGraph+"> " +
                 "WHERE { <"+triple.getSubject()+"> <"+triple.getPredicate()+"> <"+triple.getObject()+"> }");
-        VirtuosoQueryExecution vqe = VirtuosoQueryExecutionFactory.create(sparql, graph);
+        virtuoso.jena.driver.VirtuosoQueryExecution vqe = virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
         return vqe.execAsk();
     }
 
+    /**
+     * Method to import a List of Jena Statement on a Virtuoso Graph.
+     * @param uriResourceGraph the uri location of the graph.
+     * @param listStatement the Jena List of Statement to import tot the Virtuoso Graph.
+     * @return the Jena Model of the new Virtuoso Grapg after the addition.
+     */
     public Model importDataToRepository(String uriResourceGraph,List<Statement> listStatement){
         Model model = ModelFactory.createDefaultModel();
-        VirtModel mdata = VirtModel.openDatabaseModel(
+        virtuoso.jena.driver.VirtModel mdata = virtuoso.jena.driver.VirtModel.openDatabaseModel(
                 uriResourceGraph, DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
         mdata.add(listStatement);
         String queryString = "SELECT * WHERE {?s ?p ?o}" ;
-        QueryExecution qexec = VirtuosoQueryExecutionFactory.create(queryString, mdata) ;
+        QueryExecution qexec = virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(queryString, mdata) ;
         try {
             ResultSet rs = qexec.execSelect() ;
             for ( ; rs.hasNext() ; ) {
@@ -257,15 +375,21 @@ public class JenaAndVirtuoso {
         return model;
     }
 
+    /**
+     * Method to import a List of Jena Statement but like new rule on a Virtuoso Graph.
+     * @param uriResourceGraph the uri location of the graph.
+     * @param listStatement the Jena List of Statement to import tot the Virtuoso Graph.
+     * @return the Jena Model of the new Virtuoso Grapg after the addition.
+     */
     public Model importRuleToRepository(String uriResourceGraph,List<Statement> listStatement){
         Model model = ModelFactory.createDefaultModel();
-        VirtModel mdata = VirtModel.openDatabaseModel(
+        virtuoso.jena.driver.VirtModel mdata = virtuoso.jena.driver.VirtModel.openDatabaseModel(
                 uriResourceGraph, DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
-        VirtModel mrule  = VirtModel.openDatabaseModel(
+        virtuoso.jena.driver.VirtModel mrule  = virtuoso.jena.driver.VirtModel.openDatabaseModel(
                 uriResourceGraph, DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
         mrule .add(listStatement);
         String queryString = "SELECT * WHERE {?s ?p ?o}" ;
-        QueryExecution qexec = VirtuosoQueryExecutionFactory.create(queryString,  mrule) ;
+        QueryExecution qexec = virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(queryString,  mrule) ;
         try {
             Resource r1 = mrule.createResource("http://rdfs.org/sioc/ns#Space") ;
             r1.addProperty(RDFS.subClassOf, rdfNode(mrule, "http://www.w3.org/2000/01/rdf-schema#Resource"));
@@ -288,7 +412,7 @@ public class JenaAndVirtuoso {
             mrule.close();
             mdata.createRuleSet(uriResourceGraph.replace("http://",""),uriResourceGraph);
 
-            VirtInfGraph infGraph = new VirtInfGraph(uriResourceGraph.replace("http://",""), false,
+            virtuoso.jena.driver.VirtInfGraph infGraph = new virtuoso.jena.driver.VirtInfGraph(uriResourceGraph.replace("http://",""), false,
                     uriResourceGraph, DEFAULT_URL_VIRTUOSO,DEFAUL_USERNAME, DEFAUL_PASSWORD);
             InfModel infModel = ModelFactory.createInfModel(infGraph);
         } finally {
@@ -298,7 +422,7 @@ public class JenaAndVirtuoso {
         return model;
     }
 
-    public static Statement statement( Model m, String fact ) {
+    /*public static Statement statement( Model m, String fact ) {
         StringTokenizer st = new StringTokenizer( fact );
         Resource sub = resource( m, st.nextToken() );
         Property pred = property(m, st.nextToken());
@@ -312,7 +436,7 @@ public class JenaAndVirtuoso {
 
     public static Property property( Model m, String s ){
         return rdfNode( m, s ).as( Property.class );
-    }
+    }*/
 
     public static RDFNode rdfNode( Model m, String s ){
         return m.asRDFNode(NodeUtils.asNode(s));

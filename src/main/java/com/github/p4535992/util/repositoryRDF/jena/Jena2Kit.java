@@ -23,6 +23,7 @@ import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.rdf.model.impl.PropertyImpl;
 import com.hp.hpl.jena.rdf.model.impl.SelectorImpl;
+import com.hp.hpl.jena.sparql.util.NodeUtils;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
 
@@ -39,17 +40,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFFormat;
 
 /**
  * Class utility for Jena
- * Created by 4535992 in 2015-04-28
- * @author 4535992
- * @version 2015-06-26
+ * Created by 4535992 in 2015-04-28.
+ * @author 4535992.
+ * @version 2015-09-30.
  */
 @SuppressWarnings("unused")
 public class Jena2Kit {
@@ -73,7 +72,6 @@ public class Jena2Kit {
     private static Model model;
     private static final Map<String,String> namespaces = new HashMap<>();
     public static final String RDF_FORMAT ="RDF/XML-ABBREV";
-    public static SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz");
 
     /**
      * Method  to Write large model jena to file of text.
@@ -247,7 +245,7 @@ public class Jena2Kit {
      * @return the jena model of the file.
      * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
-    public static Model loadFileTriple(String filename,String filepath,String inputFormat) throws FileNotFoundException {
+    public static Model loadFileTripleToModel(String filename,String filepath,String inputFormat) throws FileNotFoundException {
         Model m = ModelFactory.createDefaultModel();
         INLANGFORMAT = stringToRiotLang(inputFormat);
         INRDFFORMAT = stringToRDFFormat(inputFormat);
@@ -295,11 +293,11 @@ public class Jena2Kit {
      * @return the jena model of the file.
      * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
-     public static Model loadFileTriple(File file) throws FileNotFoundException {
+     public static Model loadFileTripleToModel(File file) throws FileNotFoundException {
          String filename = FileUtil.filenameNoExt(file);
          String filepath = FileUtil.path(file);
          String inputFormat = FileUtil.extension(file);
-         return loadFileTriple(filename,filepath,inputFormat);
+         return loadFileTripleToModel(filename,filepath,inputFormat);
      }
 
     /**
@@ -483,13 +481,23 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to convert to RDF to a specific format.
+     * Method to convert a RDF fikle of triples to a another specific format.
      * @param file file to convert.
      * @param outputFormat string of the output format.
      * @throws IOException throw if any I/O is occurred.
      */
-    public static void convertTo(File file, String outputFormat) throws IOException{
-         Model m = loadFileTriple(file);
+    public static void convertFileTripleToAnotherFormat(File file, String outputFormat) throws IOException {
+        convertTo(file,outputFormat);
+    }
+
+    /**
+     * Method to convert a RDF fikle of triples to a another specific format.
+     * @param file file to convert.
+     * @param outputFormat string of the output format.
+     * @throws IOException throw if any I/O is occurred.
+     */
+    private static void convertTo(File file, String outputFormat) throws IOException{
+         Model m = loadFileTripleToModel(file);
          String newName = FileUtil.filenameNoExt(file)+"."+outputFormat.toLowerCase();
          String newPath = FileUtil.path(file);
          String sparql;
@@ -626,11 +634,11 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to load a a file to a Jena Model.
+     * Method to load a a file of triple to a Jena Model.
      * @param filePath string path to the file.
      * @return model model loaded with the file.
      */
-    public static Model loadFileToModel(String filePath) {
+    public static Model loadFileTripleToModel(String filePath) {
         // I used to pass encoding in here, but that's dumb. I'm reading XML
         // which is self-describing.
         Model m = ModelFactory.createDefaultModel();
@@ -1392,16 +1400,18 @@ public class Jena2Kit {
      * @param date date to convert.
      * @return the dat in format iso.
      */
+    /*
     public static String convertDateToIsoDate(Date date) {
         return isoDate.format(date);
     }
-
+    */
     /**
      * Method to convert a string date to a  ISO Date.
      * e.g. 2003-10-29T10:05:35-05:00.
      * @param string sting of a date eg 2003-10-29.
      * @return sring of a date in iso date format.
      */
+    /*
     public static Date convertStringDateToIsoDate(String string) {
         Date date = null;
         string =string.substring(0, 19)+ "GMT"+ string.substring(19);
@@ -1411,8 +1421,17 @@ public class Jena2Kit {
            SystemLog.exception(e);
         }
         return date;
-    }
+    }*/
 
+    /**
+     * Method utility: create new property for a Model.
+     * @param model the Jena Model where search the property.
+     * @param subject string of the subject.
+     * @return RDFNode.
+     */
+    public static RDFNode createRDFNode( Model model, String subject ){
+        return model.asRDFNode(NodeUtils.asNode(subject));
+    }
 
     /**
      * Method utility: create new resource from uri.
@@ -1420,8 +1439,18 @@ public class Jena2Kit {
      * @param localname local name resource uri.
      * @return resource uri.
      */
-    public static Resource r (String BASE, String localname ) {
+    public static Resource createResource(String BASE, String localname ) {
         return ResourceFactory.createResource ( BASE + localname );
+    }
+
+    /**
+     * Method utility: create new resource from Jena Model.
+     * @param model base uri.
+     * @param subject local name resource uri.
+     * @return resource uri.
+     */
+    public static Resource createResource( Model model, String subject ){
+        return (Resource) createRDFNode(model, subject);
     }
 
     /**
@@ -1430,7 +1459,7 @@ public class Jena2Kit {
      * @param localname local name resource uri.
      * @return property.
      */
-    public static Property p (String BASE, String localname ) {
+    public static Property createProperty(String BASE, String localname ) {
         return ResourceFactory.createProperty(BASE, localname);
     }
 
@@ -1439,16 +1468,27 @@ public class Jena2Kit {
      * @param uriref resource uri.
      * @return property.
      */
-    public static Property p (String uriref) {
+    public static Property createProperty(String uriref) {
         return ResourceFactory.createProperty(uriref);
     }
+
+    /**
+     * Method utility: create new property for a Model.
+     * @param model the Jena Model where search the property.
+     * @param subject string of the subject.
+     * @return property.
+     */
+    public static Property createProperty( Model model, String subject ){
+        return createRDFNode(model, subject).as( Property.class );
+    }
+
 
     /**
      * Method utility: create new property impl from uri.
      * @param uriref resource uri.
      * @return property.
      */
-    public static Property pi (String uriref) {
+    public static Property createPropertyImpl(String uriref) {
         return new PropertyImpl(uriref);
     }
 
@@ -1458,7 +1498,7 @@ public class Jena2Kit {
      * @param localname local name resource uri.
      * @return property.
      */
-    public static Property pi (String BASE, String localname) {
+    public static Property createPropertyImpl(String BASE, String localname) {
         return new PropertyImpl(BASE, localname);
     }
 
@@ -1467,7 +1507,7 @@ public class Jena2Kit {
      * @param value string of uri.
      * @return literal.
      */
-    public static Literal lp(String value) {
+    public static Literal createLiteralPlain(String value) {
         return ResourceFactory.createPlainLiteral(value);
     }
 
@@ -1476,26 +1516,50 @@ public class Jena2Kit {
      * @param value object of uri.
      * @return literal.
      */
-    public static Literal lt(Object value) {
+    public static Literal createLiteralTyped(Object value) {
         return ResourceFactory.createTypedLiteral ( value );
     }
-    
+
     /**
      * Method utility: create new typed literal from uri.
      * @param lexicalform lexicalform of the literal.
      * @param datatype datatype of the literal.
      * @return literal.
      */
-    public static Literal lt(String lexicalform, RDFDatatype datatype) {
+    public static Literal createLiteralTyped(String lexicalform, RDFDatatype datatype) {
         return ResourceFactory.createTypedLiteral ( lexicalform, datatype );
+    }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param model the Jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the irir object.
+     * @return Statement.
+     */
+    public static Statement createStatement( Model model, String subject,String predicate,String object) {
+        //StringTokenizer st = new StringTokenizer( fact );
+        Resource sub = createResource(model, subject);
+        Property pred = createProperty(model, predicate);
+        RDFNode obj = createRDFNode(model, object);
+        return model.createStatement(sub, pred, obj);
     }
     
     /**
-     * Method utility: create new defautl jena model.
-     * @return jena model.
+     * Method utility: create new default Jena Model.
+     * @return Jena Model.
      */
-    public static Model m(){
+    public static Model createModel(){
        return ModelFactory.createDefaultModel();      
+    }
+
+    /**
+     * Method utility: create new default Jena Graph.
+     * @return Jena Graph.
+     */
+    public static com.hp.hpl.jena.graph.Graph createGraph(){
+        return  com.hp.hpl.jena.sparql.graph.GraphFactory.createDefaultGraph();
     }
 
     /**
@@ -1507,4 +1571,83 @@ public class Jena2Kit {
     public static InputStream loadResourceAsStream(String filename,Class<?> thisClass) {
         return thisClass.getClassLoader().getResourceAsStream(filename);
     }
+
+    /**
+     * Method to converts vector to string for jena
+     * @param inputVector java.util.Vector to convert string.
+     * @return string of the jena vector.
+     */
+    public static String convertVectorToJenaString(java.util.Vector <String> inputVector) {
+        String subjects = "";
+        for(int subIndex = 0;subIndex < inputVector.size();subIndex++)
+            subjects = subjects + "<" + inputVector.elementAt(subIndex) + ">";
+        return subjects;
+    }
+
+    /**
+     * Method to convert a Jena Model to a Jena Graph.
+     * @param model the jena Model
+     * @return the Jena Graph.
+     */
+    public com.hp.hpl.jena.graph.Graph convertModelToGraph(Model model){
+        return model.getGraph();
+    }
+
+    /**
+     * Method to convert a Jena Grpah to a Jena Model.
+     * @param graph the Jena Graph.
+     * @return the Jena Model.
+     */
+    public static Model convertGraphToModel(com.hp.hpl.jena.graph.Graph graph){
+        return ModelFactory.createModelForGraph(graph);
+    }
+
+
+
+    //////////////////////////////////////////////////////7
+    //Some method with the deprecated Graph package.
+    ////////////////////////////////////////////////////////77
+    /**
+     * Method to convert a set of Jena Graph Nodes to a Jena Graph Triple Object.
+     * old name : createTriple.
+     * @param subject the Jena Graph Node Subject of the triple.
+     * @param predicate the Jena Graph Node Predicate of the triple.
+     * @param object the Jena Graph Node Object of the triple.
+     * @return the Jena Graph Triple Object setted with the content of the jena Graph Nodes.
+     */
+    public com.hp.hpl.jena.graph.Triple convertGraphNodesToGraphTriple(
+            com.hp.hpl.jena.graph.Node subject,com.hp.hpl.jena.graph.Node predicate,com.hp.hpl.jena.graph.Node object){
+        return new com.hp.hpl.jena.graph.Triple(subject,predicate,object);
+    }
+
+    /**
+     * Method to convert a String uri to a jena Graph Node.
+     * old name : createNode.
+     * @param uriResource string of the uri resource to convert.
+     * @return the Jena Graph Node converted.
+     */
+    public com.hp.hpl.jena.graph.Node convertStringUriToGraphNode(String uriResource){
+        return com.hp.hpl.jena.graph.NodeFactory.createURI(uriResource);
+    }
+
+    /**
+     * Method to add a List of jena Graph triple to a Jena Graph Object.
+     * @param triples the List of jena Graph triples.
+     * @param graph the jena Graph Object.
+     */
+    @SuppressWarnings("deprecation")
+    public void addListOfTriplesToJenaGraph(List<com.hp.hpl.jena.graph.Triple> triples,com.hp.hpl.jena.graph.Graph graph){
+        graph.getBulkUpdateHandler().add(triples);
+       /* for(Triple triple: triples){
+            graph.add(triple);
+        }*/
+    }
+
+
+
+
+
+
+
+
 }//end of the class JenaKit
