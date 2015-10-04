@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.openlink.virtuoso:virtjena2:develop7-2015-06-25">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/openlink/virtuoso/virtjena2/develop7-2015-06-25/virtjena2-develop7-2015-06-25.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/openlink/virtuoso/virtjena2/develop7-2015-06-25/virtjena2-develop7-2015-06-25-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/openlink/virtuoso/virtjena2/develop7-2015-06-25/virtjena2-develop7-2015-06-25-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
