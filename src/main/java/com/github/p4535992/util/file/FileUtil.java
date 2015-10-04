@@ -24,7 +24,7 @@ import static java.util.Arrays.*;
 public class FileUtil {
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileUtil.class);
     private static String fullPath;
-    private static char pathSeparator = '\\';
+    private static char pathSeparator = File.separatorChar;
     private static char extensionSeparator = '.';
 
     /**
@@ -33,8 +33,8 @@ public class FileUtil {
      */
     public FileUtil(File f) {
         FileUtil.fullPath = f.getAbsolutePath();
-        FileUtil.pathSeparator = '/';
-        FileUtil.extensionSeparator = '.';
+        //FileUtil.pathSeparator = '/';
+        //FileUtil.extensionSeparator = '.';
     }
 
     /**
@@ -43,20 +43,20 @@ public class FileUtil {
      */
     public FileUtil(String filePath) {
         FileUtil.fullPath = filePath;
-        FileUtil.pathSeparator = '/';
-        FileUtil.extensionSeparator = '.';
+        //FileUtil.pathSeparator = '/';
+        //FileUtil.extensionSeparator = '.';
     }
 
     /**
      * Constructor.
      * @param str string of the path to the file
-     * @param sep path separator
-     * @param ext extension separator (usually '.')
+     * @param separator path separator
+     * @param extension extension separator (usually '.')
      */
-    public FileUtil(String str, char sep, char ext) {
+    public FileUtil(String str, char separator, char extension) {
         FileUtil.fullPath = str;
-        FileUtil.pathSeparator = sep;
-        FileUtil.extensionSeparator = ext;
+        FileUtil.pathSeparator = separator;
+        FileUtil.extensionSeparator = extension;
     }
 
     /**
@@ -64,9 +64,15 @@ public class FileUtil {
      * @param f file of input
      * @return string of the extension of the file
      */
-    public static String extension(File f) {
-        return extension(f.getAbsolutePath());
-    }
+    public static String extension(File f) {return extension(f.getAbsolutePath());}
+
+    /**
+     * Method for get the extension from a file.
+     * @param f file of input
+     * @return string of the extension of the file
+     */
+    public static String getExtension(File f) {return extension(f);}
+
     /**
      * Method for get the extension from a file.
      * @param fullPath string of the path to the file
@@ -78,13 +84,25 @@ public class FileUtil {
     }
 
     /**
+     * Method for get the extension from a file.
+     * @param fullPath string of the path to the file
+     * @return string of the extension of the file
+     */
+    public static String getExtension(String fullPath) {return extension(fullPath);}
+
+    /**
      * Method for get the filename without extension.
      * @param f file of input
      * @return name of the file without the extension
      */
-    public static String filenameNoExt(File f) { 
-        return filenameNoExt(f.getAbsolutePath());
-    }
+    public static String filenameNoExt(File f) {return filenameNoExt(f.getAbsolutePath());}
+
+    /**
+     * Method for get the filename without extension.
+     * @param f file of input
+     * @return name of the file without the extension
+     */
+    public static String getFilenameWithoutExt(File f) {return filenameNoExt(f);}
 
     /**
      * Method for get the filename without extension.
@@ -98,21 +116,37 @@ public class FileUtil {
     }
 
     /**
+     * Method for get the filename without extension.
+     * @param fullPath string of the path to the file
+     * @return name of the file without the extension
+     */
+    public static String getFilenameWithoutExt(String fullPath) {return filenameNoExt(fullPath);}
+
+    /**
      * Method for get the name of the file (with extensions).
      * @return name of the file
      */
-    public static String filename() {     
-        return new File(fullPath).getName();
-    }
+    public static String filename() {return new File(fullPath).getName();}
+
+    /**
+     * Method for get the name of the file (with extensions).
+     * @return name of the file
+     */
+    public static String getFilename() {return filename();}
 
     /**
      * Method for get the name of the file (with extensions).
      * @param f file of input
      * @return name of the file
      */
-    public static String filename(File f) {            
-        return f.getName();
-    }
+    public static String filename(File f) {return f.getName();}
+
+    /**
+     * Method for get the name of the file (with extensions).
+     * @param f file of input
+     * @return name of the file
+     */
+    public static String getFilename(File f) {return filename(f);}
 
     /**
      * Method for get the name of the file (with extensions).
@@ -120,7 +154,7 @@ public class FileUtil {
      * @return name of the file
      */
     public static String filename(String fullPath) {
-        String name="";
+        String name;
         if (fullPath.contains(File.separator)) {
             name = fullPath.replace(FileUtil.path(fullPath), "");
         }else{
@@ -129,6 +163,14 @@ public class FileUtil {
         name = name.replace(File.separator, "");
         return name;
     }
+
+    /**
+     * Method for get the name of the file (with extensions).
+     * @param fullPath string of the path to the file
+     * @return name of the file
+     */
+    public static String getFilename(String fullPath) {return filename(fullPath);}
+
 
     /**
      * Method for convert a absolut path to the file to a relative path.
@@ -146,18 +188,28 @@ public class FileUtil {
      * @param file File object.
      * @return the local path to the file in the project.
      */
-    public static String localPath(File file){
-        return localPath("", file.getAbsolutePath());
-    }
+    public static String localPath(File file){return localPath("", file.getAbsolutePath());}
+
+    /**
+     * Method or get the local path in the project.
+     * @param file File object.
+     * @return the local path to the file in the project.
+     */
+    public static String getLocalPath(File file){ return localPath(file);}
 
     /**
      * Method for get the local path in the project.
      * @param absolutePath string of the absolute path to the file in the project.
      * @return the local path to the file in the project
      */
-    public static String localPath(String absolutePath){
-        return localPath("", absolutePath);
-    }
+    public static String localPath(String absolutePath){return localPath("", absolutePath);}
+
+    /**
+     * Method for get the local path in the project.
+     * @param absolutePath string of the absolute path to the file in the project.
+     * @return the local path to the file in the project
+     */
+    public static String getLocalPath(String absolutePath){return localPath(absolutePath);}
 
     /**
      * Method for get the local path in the project.
@@ -171,12 +223,24 @@ public class FileUtil {
     }
 
     /**
+     * Method for get the local path in the project.
+     * @param basePath string of the absolute path to the direcotry of the project.
+     * @param localPath string of the absolute path to the file in the project.
+     * @return the local path to the file in the project
+     */
+    public static String getLocalPath(String basePath,String localPath){return localPath(basePath, localPath);}
+
+    /**
      * Method for get the path of a file.
      * @return the path to the file
      */
-    public static String path() {
-        return fullPath.substring(0, fullPath.lastIndexOf(File.separator));
-    }
+    public static String path() {return fullPath.substring(0, fullPath.lastIndexOf(File.separator));}
+
+    /**
+     * Method for get the path of a file.
+     * @return the path to the file
+     */
+    public static String getPath() {return path();}
 
     /**
      * Method for get the path of a file.
@@ -186,6 +250,13 @@ public class FileUtil {
     public static String path(File f) {
        return path(f.getAbsolutePath());
     }
+
+    /**
+     * Method for get the path of a file.
+     * @param f file of input
+     * @return the path to the file
+     */
+    public static String getPath(File f) {return path(f);}
 
     /**
      * Method for get the path of a file.
@@ -199,10 +270,29 @@ public class FileUtil {
         return fullPath.substring(0, fullPath.lastIndexOf(File.separator));
     }
 
-    public static File createFile(String fullPath) throws IOException {
-        return createFile(new File(fullPath));
-    }
+    /**
+     * Method for get the path of a file.
+     * @param fullPath string of the path to the file
+     * @return the path to the file
+     */
+    public static String getPath(String fullPath) {return  path(fullPath);}
 
+
+    /**
+     * Method to create a new File Object in a specific path.
+     * @param fullPath String output location of the new File .
+     * @return the new File object.
+     * @throws IOException throw if the output location not exists!.
+     */
+    public static File createFile(String fullPath) throws IOException {return createFile(new File(fullPath));}
+
+
+    /**
+     * Method to create a new File Object in a specific path.
+     * @param file File output location of the new File .
+     * @return the new File object.
+     * @throws IOException throw if the output location not exists!.
+     */
     public static File createFile(File file) throws IOException {
         if(file.createNewFile()){
             //System.out.println("File is created!");
@@ -327,30 +417,79 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Method to convert a File to a URI
+     * @param file the File to convert.
+     * @return the URI.
+     */
     public static URI convertFileToUri(File file){
         return file.toURI();
     }
 
+    /**
+     * Method to convert a File to a URI
+     * @param filePath the String to the File to convert.
+     * @return the URI.
+     */
     public static URI convertFileToUri(String filePath){
         return convertFileToUri(new File(filePath));
     }
 
-    public static URL convertFileToURL(File file) throws MalformedURLException {
-        return convertFileToUri(file).toURL();
+    /**
+     * Method to convert a File to a URL
+     * @param file the File to convert.
+     * @return the URL.
+     */
+    public static URL convertFileToURL(File file) throws MalformedURLException {return convertFileToUri(file).toURL();}
+
+    /**
+     * Method to convert a File to a URL
+     * @param filePath the String to the File to convert.
+     * @return the URL.
+     */
+    public static URL convertFileToURL(String filePath)throws MalformedURLException{return convertFileToURL(new File(filePath));}
+
+    /**
+     * Merthod to convert a URI to a File.
+     * @param uri the URI to convert.
+     * @return the File.
+     * @throws MalformedURLException throw if any error is occurred.
+     */
+    public static File convertURIToFile(URI uri) throws MalformedURLException {return new File(uri.toURL().getFile());}
+
+    /**
+     * Method to convert a URI to Stream.
+     * @param uri  the URI to convert.
+     * @return the Stream.
+     * @throws IOException throw if any error is occurred.
+     */
+    public static InputStream convertURIToStream(URI uri) throws IOException {return uri.toURL().openStream();}
+
+    /**
+     * Method to convert a File to a URI with the prefix file://.
+     * @param filename the String path tot the the File to convert.
+     * @return the URI with prefix.
+     */
+    public static URI convertFileToUriWithPrefix(String filename){
+        return URI.create(convertFileToStringUriWithPrefix(filename));
     }
 
-    public static URL convertFileToURL(String filePath)throws MalformedURLException{
-        return convertFileToURL(new File(filePath));
-
+    /**
+     * Method to convert a File to a URI with the prefix file://.
+     * @param file the File to convert.
+     * @return the String URI with prefix.
+     */
+    public static String convertFileToStringUriWithPrefix(File file){
+        return convertFileToStringUriWithPrefix(file.getAbsolutePath());
     }
 
-    public static File convertURIToFile(URI uri) throws MalformedURLException {
-        return new File(uri.toURL().getFile());
-    }
-
-    public static InputStream convertURIToStream(URI uri) throws IOException {
-        return uri.toURL().openStream();
-        //is.close();
+    /**
+     * Method to convert a File to a URI with the prefix file://.
+     * @param file the File to convert.
+     * @return the URI with prefix.
+     */
+    public static URI convertFileToUriWithPrefix(File file){
+        return URI.create(convertFileToStringUriWithPrefix(file.getAbsolutePath()));
     }
 
     /**
@@ -396,19 +535,6 @@ public class FileUtil {
         }
     }
 
-    public static URI convertFileToUriWithPrefix(String filename){
-        return URI.create(convertFileToStringUriWithPrefix(filename));
-    }
-
-    public static String convertFileToStringUriWithPrefix(File file){
-        return convertFileToStringUriWithPrefix(file.getAbsolutePath());
-    }
-
-    public static URI convertFileToUriWithPrefix(File file){
-        return URI.create(convertFileToStringUriWithPrefix(file.getAbsolutePath()));
-    }
-
-
     /**
      * Method for get in more dinamica way the currentdirectory of the projct
      * equivalent to : dir = System.getProperty("user.dir");
@@ -430,6 +556,49 @@ public class FileUtil {
         return dir;
     }
 
+    /**
+     * Method to get the directory name where a file is allocated
+     * @param file the File Object.
+     * @return the String name of the directory where the file is allocated.
+     */
+    public static String getDirectoryName(File file){
+        if(file.exists()) {
+            return file.getParent();
+        }
+        return null;
+    }
+
+    /**
+     * Method to get the directory File where a file is allocated
+     * @param file the File Object.
+     * @return the File of the directory where the file is allocated.
+     */
+    public static File getDirectoryFile(File file){
+        if(file.exists()) {
+            return file.getParentFile();
+        }
+        return null;
+    }
+
+    public static File getDirectoryFile(String fullPathFile) {
+        return getDirectoryFile(new File(fullPathFile));
+    }
+
+    public static String getDirectoryFullPath(File file){
+        if(file.exists()) {
+            return file.getAbsoluteFile().getParentFile().getAbsolutePath();
+        }
+        return null;
+    }
+
+    public static String getDirectoryFullPath(String fullPathFile){
+        return getDirectoryFullPath(new File(fullPathFile));
+    }
+
+    /**
+     * Method to get the letter fo teh current disk where the file is located.
+     * @return the letter of the disk.
+     */
     public static String getCurrentDisk() {
         String dir="";
         try {
@@ -442,18 +611,67 @@ public class FileUtil {
         return dir + ":".toLowerCase();
     }
 
-    public static String convertFileToString(String fullPath){
-    return convertFileToString(new File(fullPath));
+    /**
+     * Method to convert a String content to a Temporary File.
+     * @param content the String content.
+     * @param fullPath the String output path for the temporary File.
+     * @return the temporary File.
+     */
+    public static File convertStringToTempFile(String content,String fullPath){
+        try {
+            File file = File.createTempFile(
+                    filename(fullPath),
+                    extension(fullPath),
+                    getDirectoryFile(fullPath)
+            );
+            // Delete temp file when program exits.
+            file.deleteOnExit();
+            //Writer writer = new FileWriter(file);
+            //PrintWriter out = new PrintWriter(writer);
+            //out.println(content);
+            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+            bw.write(content);
+            bw.close();
+            return file;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+       return null;
     }
 
+    /**
+     * Method to convert a File to a String.
+     * @param fullPath the String of the path where is allocate the file.
+     * @return the String content of the File.
+     */
+    public static String convertFileToString(String fullPath){
+        return convertFileToString(new File(fullPath));
+    }
+
+
+    /**
+     * Method to convert a File to a String.
+     * @param file the File to convert.
+     * @return the String content of the File.
+     */
     public static String convertFileToString(File file){
         return readStringFromFileLineByLine(file);
     }
 
+    /**
+     * Method to read the content of a file line by line.
+     * @param pathToFile the String path to the file to read.
+     * @return the String content ofd the file.
+     */
     public static String readStringFromFileLineByLine(String pathToFile) {
         return readStringFromFileLineByLine(new File(pathToFile));
     }
 
+    /**
+     * Method to read the cotnetn of a file line by line.
+     * @param file the file to read.
+     * @return the String content ofd the file.
+     */
     public static String readStringFromFileLineByLine(File file) {
         StringBuilder stringBuilder = new StringBuilder();
         try
@@ -475,6 +693,13 @@ public class FileUtil {
         return stringBuilder.toString();
     }
 
+    /**
+     * Method to read the cotnetn of a file line by line.
+     * @param pathToFile the file to read.
+     * @param separator the Char separator.
+     * @param params map of parameters and value.
+     * @return the String content ofd the file.
+     */
     public static Map<String,String> readStringFromFileLineByLine(String pathToFile, char separator, SimpleParameters params) {
         Map<String,String> map = new HashMap<>();
         try
@@ -559,9 +784,16 @@ public class FileUtil {
         return uploadedFile;
     }*/
 
+    /**
+     * Method to copy a file.
+     * @param destination the String destination for the copy of the file.
+     * @param source the String source of the File to copy.
+     * @throws IOException throw if any error is occurrred.
+     */
     public static void copyFiles(File destination, File source) throws IOException {
         if (!destination.exists()) {
-            destination.createNewFile();
+            createFile(destination);
+            //destination.createNewFile();
         }
         InputStream in = new FileInputStream(source);
         OutputStream out = new FileOutputStream(destination);
@@ -574,13 +806,26 @@ public class FileUtil {
         }
         in.close();
         out.close();
-        logger.debug("Done copying contents of " + source.getName() + " to " + destination.getName());
+        SystemLog.message("Done copying contents of " + source.getName() + " to " + destination.getName());
     }
 
-    public static String readFileContentsToString(File file, String encoding) throws IOException {
+    /**
+     * Method to convert a File to a String with encoding.
+     * @param file the File to read.
+     * @param encoding the String name of the encoding you use.
+     * @return the String of the content of the file you read.
+     * @throws IOException thro if any error is occurred.
+     */
+    public static String convertFileToString(File file, String encoding) throws IOException {
         return EncodingUtil.getString(file, encoding);
     }
 
+    /**
+     * Method to covnert a resource file to a Stream.
+     * @param pathToFile String path to the Resource File to read(reference path).
+     * @return the Stream of the File.
+     * @throws IOException
+     */
     public static  InputStream convertResourceFileToStream(String pathToFile) throws IOException{
         // JDK7 try-with-resources ensures to close stream automatically
         try (InputStream is = FileUtil.class.getResourceAsStream(pathToFile)) {
@@ -596,6 +841,11 @@ public class FileUtil {
 //        File f = new File("/spring-hibernate4v2.xml");
     }
 
+    /**
+     * Method to covnert a file to a Stream.
+     * @param pathToFile String path to the File.
+     * @return the Stream of the File.
+     */
     public static  InputStream convertFileToStream(String pathToFile){
         try {
             return new FileInputStream(new File(pathToFile));
@@ -605,6 +855,11 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Method to covnert a resource file to a Stream.
+     * @param file File to read.
+     * @return the Stream of the File.
+     */
     public static InputStream convertFileToStream(File file){
         try {
             return new FileInputStream(file);
@@ -614,6 +869,12 @@ public class FileUtil {
         }
     }
 
+    /**
+     * Method to convert a Stream to a File.
+     * @param inStream the Inputstream to decode.
+     * @param filePathOutput the String path the the new location of the file.
+     * @return the File Object.
+     */
     public static File convertStreamToFile(InputStream inStream,String filePathOutput) {
         try(OutputStream outputStream = new FileOutputStream(new File(filePathOutput))) {
             int read;
@@ -632,11 +893,17 @@ public class FileUtil {
         }
     }
 
-    public static String convertResourceFileAsString(String fileName,Class<?> thisClass) {
+    /**
+     * Method to covnert a resource file to a Stream.
+     * @param fileName String name of the Resource File to read(reference path).
+     * @param clazz the Class who call this method.
+     * @return the Stream of the File..
+     */
+    public static String convertResourceFileToString(String fileName,Class<?> clazz) {
         try {
             StringBuilder result = new StringBuilder("");
             //Get file from resources folder
-            File file = new File(thisClass.getClassLoader().getResource(fileName).getFile());
+            File file = new File(clazz.getClassLoader().getResource(fileName).getFile());
             try (Scanner scanner = new Scanner(file)) {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
@@ -653,7 +920,13 @@ public class FileUtil {
         }
     }
 
-    public static InputStream convertResourceFileAsStream(String name,Class<?> clazz) {
+    /**
+     * Method to covnert a resource file to a Stream.
+     * @param name String name of the class
+     * @param clazz the Class who call this method.
+     * @return the Stream of the File.
+     */
+    public static InputStream convertResourceFileToStream(String name,Class<?> clazz) {
         name = resolveName(name);
         try {
             // A system class.
@@ -739,6 +1012,12 @@ public class FileUtil {
         return false;
     }
 
+    /**
+     * Method utility: help to coded the content of the file.
+     * @param file the File to code.
+     * @param algorithm the Hash algorithm you use.
+     * @return the String content of the file coded.
+     */
     private static String hashFile(File file, String algorithm){
         try (FileInputStream inputStream = new FileInputStream(file)) {
             MessageDigest digest = MessageDigest.getInstance(algorithm);
@@ -757,7 +1036,7 @@ public class FileUtil {
     }
 
     /**
-     * Metho to convet a File to a MD5 hash string.
+     * Method to convert a File to a MD5 hash string.
      * @param file the input File to codify to hash.
      * @return the string of the hash.
      */
@@ -766,7 +1045,7 @@ public class FileUtil {
     }
 
     /**
-     * Metho to convet a File to a SHA-1 hash string.
+     * Method to convert a File to a SHA-1 hash string.
      * @param file the input File to codify to hash.
      * @return the string of the hash.
      */
@@ -775,7 +1054,7 @@ public class FileUtil {
     }
 
     /**
-     * Metho to convet a File to a SHA-256 hash string.
+     * Method to convert a File to a SHA-256 hash string.
      * @param file the input File to codify to hash.
      * @return the string of the hash.
      */
@@ -783,17 +1062,33 @@ public class FileUtil {
         return hashFile(file, "SHA-256");
     }
 
-
+    /**
+     * Method to convert a String to a File.
+     * @param stringText the String content.
+     * @param fullPathfile the String to the new location of the File.
+     * @return the File Object.
+     */
     public static File convertStringToFile(String stringText,String fullPathfile){
         return convertStringToFile(stringText, new File(fullPathfile));
 
     }
 
+    /**
+     * Method to convert a String to a File.
+     * @param stringText the String content.
+     * @param file the  File.
+     * @return the File Object.
+     */
     public static File convertStringToFile(String stringText,File file){
         return writeStringToFile(stringText, file);
 
     }
 
+    /**
+     * Method to convert a File to a Writer Object.
+     * @param file the File to convert.
+     * @return the Writer Object.
+     */
     public static Writer convertFileToWriter(File file){
         Writer writer = null;
         try {
