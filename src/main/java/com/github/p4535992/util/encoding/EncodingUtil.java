@@ -752,7 +752,8 @@ public class EncodingUtil {
     
     /**
      * Read the contents of the given file. 
-     * @throws IOException file not found
+     * @return the String content of the file.
+     * @throws IOException file not found.
      */
     public String read() throws IOException {
         //log("Reading from file.");
@@ -796,7 +797,7 @@ public class EncodingUtil {
              }
 	     }
 	     catch (IOException ex){
-	       ex.printStackTrace();
+	       SystemLog.exception(ex);
 	     }
 	     
 	     return contents.toString();
@@ -816,18 +817,18 @@ public class EncodingUtil {
                  System.out.println("Usage: java UTF8ToAscii <filename>");
                  return null;
              }
-             BufferedReader r = new BufferedReader(
-                 new InputStreamReader(
-                     new FileInputStream(UTF8),"UTF-8" )
-             );
-             String line = r.readLine();
-
-             while (line != null) {
-                  System.out.println(unicodeEscape(line));                     
-                  line = r.readLine();
-                  list.add(line);
-             }
-             r.close();   
+        try (BufferedReader r = new BufferedReader(
+                new InputStreamReader(
+                        new FileInputStream(UTF8),"UTF-8" )
+        )) {
+            String line = r.readLine();
+            
+            while (line != null) {
+                System.out.println(unicodeEscape(line));
+                line = r.readLine();
+                list.add(line);
+            }
+        }   
              return list;
         }
 
@@ -868,17 +869,18 @@ public class EncodingUtil {
                 System.out.println("Usage: java UnicodeEscape2UTF8 <filename>");
                 return null;
             }
-            BufferedReader r = new BufferedReader(new FileReader(ASCII));
+        try (BufferedReader r = new BufferedReader(new FileReader(ASCII))) {
             String line = r.readLine();
             while (line != null) {
                 line = convertUnicodeEscape(line);
                 byte[] bytes = line.getBytes("UTF-8");
                 //System.out.write(bytes, 0, bytes.length);
                 //System.out.println();
-                line = r.readLine();
-                list.add(line);
+                //line = r.readLine();
+                //list.add(line);
+                list.add(StringKit.convertByteArrayToString(bytes));
             }
-            r.close();
+        }
             return list;
         }
         
@@ -1005,11 +1007,11 @@ public class EncodingUtil {
     public static void rewriteTheFileToUTF8(String filePathInput,String filePathOutput) {
         try {
             FileOutputStream fos = new FileOutputStream(filePathInput);
-            Writer out = new OutputStreamWriter(fos, ENCODING);
-            out.write(filePathOutput);
-            out.close();
+            try (Writer out = new OutputStreamWriter(fos, ENCODING)) {
+                out.write(filePathOutput);
+            }
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
     }
 
@@ -1019,15 +1021,15 @@ public class EncodingUtil {
         try {
             FileInputStream fis = new FileInputStream(filePathInput);
             InputStreamReader isr = new InputStreamReader(fis, ENCODING);
-            Reader in = new BufferedReader(isr);
-            int ch;
-            while ((ch = in.read()) > -1) {
-                buffer.append((char) ch);
+            try (Reader in = new BufferedReader(isr)) {
+                int ch;
+                while ((ch = in.read()) > -1) {
+                    buffer.append((char) ch);
+                }
             }
-            in.close();
             return buffer.toString();
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
             return null;
         }
     }
@@ -1039,27 +1041,26 @@ public class EncodingUtil {
         try {
             boolean firstLine = true;
             FileInputStream fis = new FileInputStream(fileUTF8);
-            BufferedReader r = new BufferedReader(new InputStreamReader(fis,"UTF8"));
-            FileOutputStream fos = new FileOutputStream(fileANSI);
-            Writer w = new BufferedWriter(new OutputStreamWriter(fos, "Cp1252"));
-            for (String s; (s = r.readLine()) != null;) {
-                if (firstLine) {
-                    if (s.startsWith(UTF8_BOM)) {
-                        s = s.substring(1);
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(fis,"UTF8"))) {
+                FileOutputStream fos = new FileOutputStream(fileANSI);
+                try (Writer w = new BufferedWriter(new OutputStreamWriter(fos, "Cp1252"))) {
+                    for (String s; (s = r.readLine()) != null;) {
+                        if (firstLine) {
+                            if (s.startsWith(UTF8_BOM)) {
+                                s = s.substring(1);
+                            }
+                            firstLine = false;
+                        }
+                        w.write(s + System.getProperty("line.separator"));
+                        w.flush();
                     }
-                    firstLine = false;
                 }
-                w.write(s + System.getProperty("line.separator"));
-                w.flush();
             }
-
-            w.close();
-            r.close();
             System.exit(0);
         }
 
         catch (Exception e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
             System.exit(1);
         }
     }

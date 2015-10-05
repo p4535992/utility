@@ -41,10 +41,11 @@ public class SQLQuery {
      * @param yourTable string name of the table.
      * @param nameColumnToCodify string name of the column to codify.
      * @param nameColumnCodified string name of the column to insert.
+     * @param ifNull if true set the new Value only where the old value is NULL.
      * @return string query.
      */
     public static String setMD5ColumnToTable(
-            String yourTable,String nameColumnToCodify,String nameColumnCodified,boolean ifNull){
+        String yourTable,String nameColumnToCodify,String nameColumnCodified,boolean ifNull){
         String query = "UPDATE "+yourTable+" \n" +
                 "SET "+nameColumnCodified+" = MD5("+nameColumnToCodify+") \n";
         if(ifNull) query += "WHERE "+nameColumnCodified+" IS NULL; \n";

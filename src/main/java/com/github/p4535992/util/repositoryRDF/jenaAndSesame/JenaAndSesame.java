@@ -1,6 +1,5 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 
-import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Property;

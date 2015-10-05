@@ -42,7 +42,6 @@ public class JenaAndVirtuoso {
 
     /**
      * Method to connect to a virtuoso repository like a Jena Model.
-     * @return the VirtGraph of the repository.
      */
     public void connectToVirtuoso(){
         graph = new virtuoso.jena.driver.VirtGraph (DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);

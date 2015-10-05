@@ -14,13 +14,14 @@ import java.util.jar.Attributes;
   */
 @SuppressWarnings("unused")
 class PrefixGrabber extends DefaultHandler {
-    private Hashtable<String,String> nsHash = new Hashtable<>();
+    private final Hashtable<String,String> nsHash = new Hashtable<>();
     private boolean root = true;
 
     public Hashtable<String,String> getNamespaces() {
         return nsHash;
     }
 
+    @Override
     public void startPrefixMapping (String prefix, String uri) throws SAXException {
         if (root) {
             nsHash.put(prefix, uri);

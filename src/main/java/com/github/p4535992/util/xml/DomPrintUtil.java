@@ -49,7 +49,7 @@ public class DomPrintUtil {
   private static final String ESC_GT = "&gt;";
   private static final String ESC_AMP = "&amp;";
 
-  private Document document;
+  private final Document document;
   private int whatToShow = NodeFilter.SHOW_ALL;
   private NodeFilter nodeFilter = null;
   private boolean entityReferenceExpansion = false;
@@ -211,7 +211,7 @@ public class DomPrintUtil {
 
       Node next = treeWalker.firstChild();
       if (null != next) {
-        if (indent && type == Node.ELEMENT_NODE) {
+        if (type == Node.ELEMENT_NODE && indent) {
           indentS = indentS + " ";
         }
         tmpN = next;
@@ -293,7 +293,6 @@ public class DomPrintUtil {
   /**
    * Set the entity reference expansion flag to TreeWalker used in the
    * utility.
-   *
    * @param entityReferenceExpansion
    *            the flag to determine whether the children of entity reference
    *            nodes are visible to TreeWalker.
@@ -305,18 +304,15 @@ public class DomPrintUtil {
 
   /**
    * Set the number of space characters used for indent
-   *
-   * @param indent
-   *            the number of space characters used for indent
+   * @param indent the number of space characters used for indent
    */
   public void setIndent(boolean indent) {
     this.indent = indent;
   }
 
   /**
-   * Determine to escape Tag bracket ('<','>') or not. Please set true if you
+   * Determine to escape Tag bracket ('&lt;','&gt;') or not. Please set true if you
    * want to print out DOM into &lt;pre&gt; section of HTML.
-   *
    * @param escapeTagBracket
    *            if true, print Tag bracket as escaped format ({@literal '&lt;',
    *            '&gt;'})
@@ -329,78 +325,57 @@ public class DomPrintUtil {
   /**
    * Set AttributeFilter to define the behavior for printing attributes of
    * each Element.
-   *
-   * @param attrFilter
-   *            the AttributeFilter to set
+   * @param attrFilter the AttributeFilter to set
    */
   public void setAttrFilter(AttributeFilter attrFilter) {
     this.attrFilter = attrFilter;
   }
 
   /**
-   * Print out the target Document.
-   *
-   * @param filePath
-   *            the target file path
-   * @throws IOException
+   * Method to Print out the target Document.
+   * @param filePath the target file path.
+   * @throws IOException throw if the File Output directory not exists.
    */
   public void writeToFile(String filePath) throws IOException {
     writeToFile(new File(filePath), UTF8);
   }
 
   /**
-   * Print out the target Document.
-   *
-   * @param file
-   *            the target File
-   * @throws IOException
+   * Method to Print out the target Document.
+   * @param file the target File
+   * @throws IOException throw if the File Output directory not exists.
    */
   public void writeToFile(File file) throws IOException {
     writeToFile(file, UTF8);
   }
 
   /**
-   * Print out the target Document in specified encoding
-   *
-   * @param filePath
-   *            the target file path
-   * @param encode
-   *            the target encoding
-   * @throws IOException
+   * Method to Print out the target Document in specified encoding
+   * @param filePath the target file path
+   * @param encode the target encoding
+   * @throws IOException throw if the File Output directory not exists.
    */
   public void writeToFile(String filePath, String encode) throws IOException {
     writeToFile(new File(filePath), encode);
   }
 
   /**
-   * Print out the target Document in specified encoding
-   *
-   * @param file
-   *            the target file
-   * @param encode
-   *            the target encoding
-   * @throws IOException
+   * Method to Print out the target Document in specified encoding
+   * @param file the target file
+   * @param encode the target encoding
+   * @throws IOException throw if the File Output directory not exists.
    */
   public void writeToFile(File file, String encode) throws IOException {
-    PrintWriter tmpPW = new PrintWriter(new OutputStreamWriter(
-        new FileOutputStream(file), encode));
-    tmpPW.println(toXMLString());
-    tmpPW.flush();
-    tmpPW.close();
+      try (PrintWriter tmpPW = new PrintWriter(new OutputStreamWriter(
+              new FileOutputStream(file), encode))) {
+          tmpPW.println(toXMLString());
+          tmpPW.flush();
+      }
   }
 
 }
 
-/*******************************************************************************
- * Copyright (c) 2008 IBM Corporation and Others
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *    Kentarou FUKUDA - initial API and implementation
- *******************************************************************************/
+
 
 class TreeWalkerImpl implements TreeWalker {
 
@@ -565,6 +540,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#firstChild()
    */
+  @Override
   public Node firstChild() {
     Node result = getVisibleFirstChild(current);
     if (null != result) {
@@ -578,6 +554,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#getCurrentNode()
    */
+  @Override
   public Node getCurrentNode() {
     return current;
   }
@@ -587,6 +564,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#getExpandEntityReferences()
    */
+  @Override
   public boolean getExpandEntityReferences() {
     return entitiyReferenceExpansion;
   }
@@ -596,6 +574,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#getFilter()
    */
+  @Override
   public NodeFilter getFilter() {
     return filter;
   }
@@ -605,6 +584,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#getRoot()
    */
+  @Override
   public Node getRoot() {
     return walkerRoot;
   }
@@ -614,6 +594,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#getWhatToShow()
    */
+  @Override
   public int getWhatToShow() {
     return whatToShow;
   }
@@ -623,6 +604,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#lastChild()
    */
+  @Override
   public Node lastChild() {
     Node result = getVisibleLastChild(current);
     if (null != result) {
@@ -636,6 +618,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#nextNode()
    */
+  @Override
   public Node nextNode() {
     // search child
     Node tmpN = getVisibleFirstChild(current);
@@ -670,6 +653,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#nextSibling()
    */
+  @Override
   public Node nextSibling() {
     Node result = getVisibleNextSibling(current, walkerRoot);
     if (null != result) {
@@ -683,6 +667,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#parentNode()
    */
+  @Override
   public Node parentNode() {
     Node result = getVisibleParent(current);
     if (null != result) {
@@ -696,6 +681,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#previousNode()
    */
+  @Override
   public Node previousNode() {
     // search previous sibling
     Node tmpN = getVisiblePreviousSibling(current, walkerRoot);
@@ -715,12 +701,11 @@ class TreeWalkerImpl implements TreeWalker {
       tmpN = tmpC;
       tmpC = getVisibleLastChild(tmpN);
     }
-    if (null != tmpN) {
+    //if (tmpN != null) {
       current = tmpN;
       return tmpN;
-    }
-
-    return null;
+    //}
+    //return null;
   }
 
   /*
@@ -728,6 +713,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#previousSibling()
    */
+  @Override
   public Node previousSibling() {
     Node result = getVisiblePreviousSibling(current, walkerRoot);
     if (null != result) {
@@ -741,6 +727,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.TreeWalker#setCurrentNode(org.w3c.dom.Node)
    */
+  @Override
   public void setCurrentNode(Node arg0) {
     if (arg0 == null) {
       System.out.println("Current node can't be null.");
@@ -761,7 +748,7 @@ class TreeWalkerImpl implements TreeWalker {
  *******************************************************************************/
  class WhatToShowNodeFilter implements NodeFilter {
 
-  private int filter;
+  private final int filter;
 
   public WhatToShowNodeFilter(int whatToShow) {
     this.filter = whatToShow;
@@ -772,6 +759,7 @@ class TreeWalkerImpl implements TreeWalker {
    *
    * @see org.w3c.dom.traversal.NodeFilter#acceptNode(org.w3c.dom.Node)
    */
+  @Override
   public short acceptNode(Node arg0) {
     if (null == arg0) {
       return FILTER_REJECT;

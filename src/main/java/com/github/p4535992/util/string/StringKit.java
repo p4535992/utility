@@ -12,7 +12,6 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,27 +70,27 @@ public class StringKit<T> {
         }
         @Override
         public String toString() {
-            String value="";
+            String svalue="";
             switch (this) {
-                case WHITESPACE: value = "\\s+"; break;
-                case NBSP: value ="\u00A0"; break;
+                case WHITESPACE: svalue = "\\s+"; break;
+                case NBSP: svalue ="\u00A0"; break;
                 ///case NBSP_CHAR: value ='\u00A0'; break;
-                case NEWLINE: value = System.lineSeparator(); break;
-                case PROJECTDIR: value = System.getProperty("user.dir");break;
-                case LINE_FEED: value = "\r\n";break;
+                case NEWLINE: svalue = System.lineSeparator(); break;
+                case PROJECTDIR: svalue = System.getProperty("user.dir");break;
+                case LINE_FEED: svalue = "\r\n";break;
                 case LINE_SEP: System.getProperty("line.separator");break;
-                case EMPTY_STR:  value ="";break;
-                case LT:  value ="<";break;
-                case GT:  value =">";break;
-                case AMP:  value ="&";break;
-                case QUAT:  value ="\"";break;
-                case SINGLE_QUAT: value = "'";break;
-                case ESC_LT:  value ="&lt;";break;
-                case ESC_GT:  value ="&gt;";break;
-                case ESC_AMP:  value ="&amp;";break;
-                case CRLF: value = "\r\n"; break;
+                case EMPTY_STR:  svalue ="";break;
+                case LT:  svalue ="<";break;
+                case GT:  svalue =">";break;
+                case AMP:  svalue ="&";break;
+                case QUAT:  svalue ="\"";break;
+                case SINGLE_QUAT: svalue = "'";break;
+                case ESC_LT:  svalue ="&lt;";break;
+                case ESC_GT:  svalue ="&gt;";break;
+                case ESC_AMP:  svalue ="&amp;";break;
+                case CRLF: svalue = "\r\n"; break;
             }
-            return value;
+            return svalue;
         }
     }
 
@@ -680,6 +679,7 @@ public class StringKit<T> {
     /**
      * Method to read a properties file.
      * @param file file.
+     * @param thisClass the reference class.
      * @return map of properties.
      */
     public static Map<String,String> readPropertiesFile(File file,Class<?> thisClass){

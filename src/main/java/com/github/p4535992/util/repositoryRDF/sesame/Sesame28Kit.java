@@ -148,88 +148,169 @@ public class Sesame28Kit {
         }
     }
 
-    /**
+    /*
      * Setter and getter
      */
 
+    /**
+     * Method to get RepositoryManager.
+     * @return the RepositoryManager.
+     */
     public RepositoryManager getRepositoryManager() {
         return mRepositoryManager;
     }
 
+    /**
+     * Method to set RepositoryManager.
+     * @param mRepositoryManager the Repository manager.
+     */
     public void setmRepositoryManager(RepositoryManager mRepositoryManager) {
         Sesame28Kit.mRepositoryManager = mRepositoryManager;
     }
 
+    /**
+     * Method to get RemoteRepositoryManager.
+     * @return the RemoteRepositoryManager.
+     */
     public RemoteRepositoryManager getRemoteRepositoryManager() {
         return mRemoteRepositoryManager;
     }
 
+    /**
+     * Method to set RemoteRepositoryManager.
+     * @param mRemoteRepositoryManager the Remote Repository Manager.
+     */
     public void setRemoteRepositoryManager(RemoteRepositoryManager mRemoteRepositoryManager) {
         Sesame28Kit.mRemoteRepositoryManager = mRemoteRepositoryManager;
     }
 
+    /**
+     * Method to get Repository.
+     * @return the Repository.
+     */
     public Repository getRepository() {
         return mRepository;
     }
 
+     /**
+     * Method to set Repository.
+     * @param mRepository the Repository.
+     */
     public void setRepository(Repository mRepository) {
         Sesame28Kit.mRepository = mRepository;
     }
 
+    /**
+     * Method to get RepositoryConnection.
+     * @return the RepositoryConnection.
+     */
     public RepositoryConnection getRepositoryConnection() {
         return mRepositoryConnection;
     }
 
+    /**
+     * Method to set RepositoryConnection.
+     * @param mRepositoryConnection the Repository Connection.
+     */
     public void setRepositoryConnection(RepositoryConnection mRepositoryConnection) {
         Sesame28Kit.mRepositoryConnection = mRepositoryConnection;
     }
 
+    /**
+     * Method to get RepositoryLocation.
+     * @return the RepositoryLocation.
+     */
     public String getRepositoryLocation() {
         return mRepositoryLocation;
     }
 
+    /**
+     * Method to set RepositoryLocation.
+     * @param mRepositoryLocation the Repository Location.
+     */
     public void setRepositoryLocation(String mRepositoryLocation) {
         Sesame28Kit.mRepositoryLocation = mRepositoryLocation;
     }
 
+    /**
+     * Method to get RepositoryName.
+     * @return the RepositoryName.
+     */
     public String getRepositoryName() {
         return mRepositoryName;
     }
 
+     /**
+     * Method to set RepositoryName.
+     * @param mRepositoryName the repository Name.
+     */
     public void setRepositoryName(String mRepositoryName) {
         Sesame28Kit.mRepositoryName = mRepositoryName;
     }
 
+    /**
+     * Method to get RepositoryProvider.
+     * @return the RepositoryProvider.
+     */
     public RepositoryProvider getRepositoryProvider() {
         return mRepositoryProvider;
     }
 
+    /**
+     * Method to set RepositoryProvider.
+     * @param mRepositoryProvider the Repository Provider.
+     */
     public void setRepositoryProvider(RepositoryProvider mRepositoryProvider) {
         Sesame28Kit.mRepositoryProvider = mRepositoryProvider;
     }
 
+    /**
+     * Method to get RepositoryConnectionWrapper.
+     * @return the RepositoryConnectionWrapper.
+     */
     public RepositoryConnectionWrapper getRepositoryConnectionWrappper() {
         return mRepositoryConnectionWrappper;
     }
 
+     /**
+     * Method to set RepositoryConnectionWrapper.  
+     * @param mRepositoryConnectionWrappper the Repository Connection Wrapper.
+     */
     public void setRepositoryConnectionWrappper(RepositoryConnectionWrapper mRepositoryConnectionWrappper) {
         Sesame28Kit.mRepositoryConnectionWrappper = mRepositoryConnectionWrappper;
     }
 
+    /**
+     * Method to get RepositoryConnectionWrapper.
+     * @param mRepository the Repository OpenRDF to Wrapper.
+     * @return the RepositoryConnectionWrapper.
+     */
     public RepositoryConnectionWrapper setNewRepositoryConnectionWrappper(Repository mRepository) {
         Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
         return mRepositoryConnectionWrappper;
     }
 
 
-    /**
+    /*
      * Setter and getter addition
      */
 
+    /**
+     * Method to get the String of the url where are located the  repositories 
+     * @return the String url.
+     */
     public String getURL_REPOSITORIES() {return URL_REPOSITORIES;}
 
+     /**
+     * Method to get the String of the url where are located the  sesame server.
+     * @return the String url.
+     */
     public String getURL_SESAME() {return URL_SESAME;}
 
+     /**
+     * Method to get the String of the url where are located the specific repository. 
+     * @return the String url.
+     */
     public String getURL_REPOSITORY_ID() {return URL_REPOSITORY_ID;}
 
 
@@ -244,6 +325,10 @@ public class Sesame28Kit {
         this.URL_REPOSITORY_ID = "http://localhost:8080/openrdf-sesame/repositories/"+ ID_REPOSITORY;
     }
 
+    /**
+     * Method to set the URL of the repository.
+     * @param ID_REPOSITORY the String name of the ID of the repository.
+     */
     public void setURLRepositoryId(String ID_REPOSITORY){
         this.URL_SESAME = "http://localhost:8080/openrdf-sesame/";
         this.URL_REPOSITORIES = "http://localhost:8080/openrdf-sesame/repositories/";
@@ -587,7 +672,7 @@ public class Sesame28Kit {
             return mRepositoryConnection.prepareTupleQuery(language, query);
         } catch (Exception e) {
             //SystemLog.exception(e);
-            SystemLog.warning(e.getMessage());
+            SystemLog.sparql(e.getMessage());
         }
         try {
             tempLocalConnection.prepareBooleanQuery(language, query);
@@ -596,14 +681,14 @@ public class Sesame28Kit {
             SystemLog.message("Query SPARQL is a boolean query");
             return mRepositoryConnection.prepareBooleanQuery(language, query);
         } catch (Exception e) {
-            SystemLog.warning(e.getMessage());
+            SystemLog.sparql(e.getMessage());
         }
 
         try {
             tempLocalConnection.prepareGraphQuery(language, query);
             //GraphQuery graphQuery = mRepositoryConnection.prepareGraphQuery(language, query);
             //if(graphQuery!=null){return graphQuery;}
-            SystemLog.message("Query SPARQL is a graph query");
+            SystemLog.sparql("Query SPARQL is a graph query");
             return mRepositoryConnection.prepareGraphQuery(language, query);
         } catch (Exception e) {
             SystemLog.warning(e.getMessage());
@@ -1243,6 +1328,7 @@ public class Sesame28Kit {
     /**
      * Method to support the evalutation o the Tuple query
      * @param queryString the query sparql SELECT or ASK.
+     * @return the List of OpenRDF Statement.
      */
     public List<Statement> TupleQueryEvalutation(String queryString){
         List<Statement> list = new ArrayList<>();
@@ -1285,6 +1371,7 @@ public class Sesame28Kit {
     /**
      * Method to support the evalutation o the Graph query.
      * @param queryString the query sparql CONSTRUCTOR or DESCRIBE.
+     * @return the List of OpenRDF Statement.
      */
     public List<Statement> GraphQueryEvalutation(String queryString){
         List<Statement> list = new ArrayList<>();
@@ -2183,26 +2270,29 @@ public class Sesame28Kit {
             } catch (RepositoryConfigException ex) {
                 SystemLog.error("Could not create repository from RDF graph", ex);
             }
-            try {
-                repConfig.validate();
-            } catch (RepositoryConfigException ex) {
-                SystemLog.error("Could not validate repository", ex);
-            }
-            RepositoryImplConfig rpc = repConfig.getRepositoryImplConfig();
-            Repository repo = createRepositoryStack(rpc);
-            if (repo != null) {
-                repo.setDataDir(repositoryDirFile);
+            if(repConfig!=null){
                 try {
-                    repo.initialize();
-                } catch (RepositoryException ex) {
-                    SystemLog.error("Could not initialize repository", ex);
+                    repConfig.validate();
+                } catch (RepositoryConfigException ex) {
+                    SystemLog.error("Could not validate repository", ex);
                 }
-                try {
-                    RepositoryConnection conn = repo.getConnection();
-                    SystemLog.message("Repo dir is " + repo.getDataDir().getAbsolutePath());
-                    SystemLog.message("Repo is writable " + repo.isWritable());
-                } catch (RepositoryException ex) {
-                    SystemLog.error("Could not get connection for unmanaged repository", ex);
+
+                RepositoryImplConfig rpc = repConfig.getRepositoryImplConfig();
+                Repository repo = createRepositoryStack(rpc);
+                if (repo != null) {
+                    repo.setDataDir(repositoryDirFile);
+                    try {
+                        repo.initialize();
+                    } catch (RepositoryException ex) {
+                        SystemLog.error("Could not initialize repository", ex);
+                    }
+                    try {
+                        RepositoryConnection conn = repo.getConnection();
+                        SystemLog.message("Repo dir is " + repo.getDataDir().getAbsolutePath());
+                        SystemLog.message("Repo is writable " + repo.isWritable());
+                    } catch (RepositoryException ex) {
+                        SystemLog.error("Could not get connection for unmanaged repository", ex);
+                    }
                 }
             }
         }catch(RDFParseException ex){
@@ -2684,6 +2774,7 @@ public class Sesame28Kit {
      * Method to add a jena tripel from a Sesame Repository.
      * @param triple the Jena triple to remove.
      * @param contexts The contexts to add statements to.
+     * @return the List of jena Triple.
      */
     public List<com.hp.hpl.jena.graph.Triple> findJenaTripleFromSesameRepository(
             com.hp.hpl.jena.graph.TripleMatch triple,
@@ -2736,6 +2827,7 @@ public class Sesame28Kit {
      * Method to set a Map of Namespaces to  a repository.
      * @param namespacePrefixes map of namespaces.
      * @param model the OpenRDF Model where add the new namespace.
+     * @return the OpenRDF Model.
      */
     public Model setNamespacePrefixesToModel(Map<String,String> namespacePrefixes,Model model){
         for(Map.Entry<String,String> entry: namespacePrefixes.entrySet()){
@@ -2749,6 +2841,7 @@ public class Sesame28Kit {
      * @param dir Data file that the native store will use.
      * @param indexes If not null, the store will use the given indexes to speed up queries
      * @param inferencing If true (and not null), it will activate rdfs inferencing
+     * @return the OpenRDF Repository.
      */
      public Repository connectToNativeRepository(File dir, String indexes, boolean inferencing){
          return initWithNative(dir,indexes,inferencing);
@@ -2773,6 +2866,7 @@ public class Sesame28Kit {
     /**
      * Initialize the Wrapper with a MemoryStore as a backend
      * @param inferencing If true (and not null), it will activate rdfs inferencing
+     * @return the OpenRDF Repository.
      */
     public Repository connectToMemoryRepository(boolean inferencing){
         return initWithMemory(inferencing);
@@ -2823,7 +2917,7 @@ public class Sesame28Kit {
      * @param user the username onthe repository.
      * @param password the password on the repository.
      * @return the Repository.
-     * @throws RepositoryException
+     * @throws RepositoryException throw if the repository not exists.
      */
     public Repository connectToHTTPRepository(String url, String user, String password) throws RepositoryException {
         return initWithHttp(url,user,password);
@@ -2859,7 +2953,6 @@ public class Sesame28Kit {
      * @param dataFormat the RDFFormat of the triple on the file to load
      * @param contexts Array of resource context.
      * @return if true every is gone ok.
-     * @throws Exception throw if any error is occurred.
      */
     public boolean importIntoRepository(String file, String baseUri, RDFFormat dataFormat, Resource... contexts) {
         try {

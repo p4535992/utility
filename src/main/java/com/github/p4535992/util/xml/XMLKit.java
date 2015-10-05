@@ -7,8 +7,6 @@ import org.xml.sax.SAXException;
 import com.github.p4535992.util.log.SystemLog;
 import java.io.*;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.parsers.*;
 import javax.xml.transform.*;
@@ -32,12 +30,12 @@ import javax.xml.xpath.XPathFactory;
 @SuppressWarnings("unused")
 public class XMLKit {
 
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKit.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKit.class);
     private static javax.xml.parsers.DocumentBuilderFactory docFactory;
     private static javax.xml.parsers.DocumentBuilder docBuilder;
     private static org.w3c.dom.Document doc;
     @SuppressWarnings("rawtypes")
-    private static java.util.Queue builders = new java.util.concurrent.ConcurrentLinkedQueue();
+    private static final java.util.Queue builders = new java.util.concurrent.ConcurrentLinkedQueue();
 
     //public static Map<String,String> namespaces = new Hashtable<>();
 
@@ -57,35 +55,46 @@ public class XMLKit {
     }
 
     /**
-     * Method to load the XML Document.
+     * Method to load the XML Document from file.
      * @param fileXML the XML file to input.
      * @return the document object initialize.
-     * @throws SAXException error.
-     * @throws IOException error.
      */
-    public static Document loadDocumentFromFile(File fileXML) throws SAXException, IOException {
-        //FileInputStream file = new FileInputStream(fileXML); //optional
-        doc = initDocumentXML();
-        doc = docBuilder.parse(fileXML);
-        SystemLog.message("Documento W3C loaded from file:" + fileXML.getAbsolutePath());
+    public static Document loadDocumentFromFile(File fileXML){
+        try{
+            //FileInputStream file = new FileInputStream(fileXML); //optional
+            doc = initDocumentXML();
+            doc = docBuilder.parse(fileXML);
+            SystemLog.message("Documento W3C loaded from file:" + fileXML.getAbsolutePath());
+         }catch (SAXException|IOException e) {
+            SystemLog.error(e.getMessage());
+            return null;
+        }
         return doc;
     }
 
     /**
-     * Method to load a XML Document.
+     * Method to load a XML Document from String.
      * @param xml string xml.
      * @return the document object initialize.
-     * @throws SAXException error.
-     * @throws IOException error.
      */
-    public static Document loadDocumentFromFile(String xml) throws SAXException, IOException{
-        doc = initDocumentXML();
-        //doc = docBuilder.parse(new ByteArrayInputStream(xml.getBytes()));
-        doc = docBuilder.parse(new InputSource(new StringReader(xml)));
-        SystemLog.message("Documento W3C loaded from file:" + xml);
+    public static Document loadDocumentFromFile(String xml) {
+        try {
+            doc = initDocumentXML();
+            //doc = docBuilder.parse(new ByteArrayInputStream(xml.getBytes()));
+            doc = docBuilder.parse(new InputSource(new StringReader(xml)));
+            SystemLog.message("Documento W3C loaded from file:" + xml);
+        }catch (SAXException|IOException e) {
+            SystemLog.error(e.getMessage());
+            return null;
+        }
         return doc;
     }
 
+    /**
+     * Method to load a XML Document from inputstream.
+     * @param in the InputStream of the XML document.
+     * @return the document object initialize.
+     */
     public static Document loadDocumentFromInputStream(InputStream in){
         try {
             doc = initDocumentXML();
@@ -93,11 +102,18 @@ public class XMLKit {
             //doc = docBuilder.parse(new InputSource(new StringReader(xml)));
             SystemLog.message("Documento W3C loaded from stream:" + in);
         }catch (SAXException|IOException e) {
-            SystemLog.exception(e);
+            SystemLog.error(e.getMessage());
+            return null;
         }
         return doc;
     }
 
+    /**
+     * Method to load a XML Document from specific element XML.
+     * @param fileXML the File of the XML document.
+     * @param defElement the Element XML to convert to a Document.
+     * @return the document object initialize.
+     */
     public static Element loadDocumentFromElement(File fileXML,String defElement){
         try {
             //FileInputStream file = new FileInputStream(fileXML); //optional
@@ -152,7 +168,7 @@ public class XMLKit {
             docBuilder = docFactory.newDocumentBuilder();
             doc = docBuilder.newDocument();
         }catch(ParserConfigurationException pe){
-            pe.printStackTrace();
+            SystemLog.exception(pe);
         }
         return doc;
     }
@@ -184,8 +200,9 @@ public class XMLKit {
      * Method to insert a new XML file.
      * @param pathFile where you want to insert the new file.
      * @param nameFile name of the XML file.
+     * @return if true the creation has succeded.
      */
-    public static void createXMLFile(String pathFile,String nameFile){
+    public static boolean createXMLFile(String pathFile,String nameFile){
         String path = pathFile+File.separator+nameFile;
         try {
             doc = initDocumentXML();
@@ -198,10 +215,11 @@ public class XMLKit {
             // StreamResult result = new StreamResult(System.out);
             transformer.transform(source, result);
             SystemLog.message("File " + path + "saved!");
+            return true;
         } catch (TransformerException tfe) {
-            tfe.printStackTrace();
-            //log.write(tfe.getMessageAndLocation(),"ERROR");
-            Logger.getLogger(XMLKit.class.getName()).log(Level.SEVERE, null, tfe);
+            SystemLog.error(tfe.getMessage());
+            return false;
+            //Logger.getLogger(XMLKit.class.getName()).log(Level.SEVERE, null, tfe);
         }
     }
 
@@ -411,7 +429,7 @@ public class XMLKit {
      */
     public static void readXMLFileAndPrint(File xmlFile) throws IOException, SAXException {
         //File xmlFile = new File("/Users/mkyong/staff.xml");
-        Document doc = loadDocumentFromFile(xmlFile);
+        doc = loadDocumentFromFile(xmlFile);
         //optional, but recommended
         //read this - http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
         doc.getDocumentElement().normalize();
@@ -519,6 +537,7 @@ public class XMLKit {
      * Returns a default DocumentBuilder instance or throws an
      * ExceptionInInitializerError if it can't be created.
      * @return a default DocumentBuilder instance.
+     * @throws javax.xml.parsers.ParserConfigurationException throw if some parser error is occurred.
      */
     public static DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
@@ -656,16 +675,19 @@ public class XMLKit {
      * Method to convert Element to Stream.
      * @param element Element to convert to Stream.
      * @param out outputStream.
+     * @return the Stream of the Element XML.
      */
-    public static void convertElementToStream(Element element, OutputStream out) {
+    public static StreamResult convertElementToStream(Element element, OutputStream out) {
         try {
             DOMSource source = new DOMSource(element);
             StreamResult result = new StreamResult(out);
             TransformerFactory transFactory = TransformerFactory.newInstance();
             Transformer transformer = transFactory.newTransformer();
             transformer.transform(source, result);
+            return result;
         } catch (TransformerException e) {
-            e.printStackTrace();
+            SystemLog.error(e.getMessage());
+            return null;
         }
     }
 
@@ -684,6 +706,7 @@ public class XMLKit {
             // Disable loading of external Entityes
             docBuilder.setEntityResolver(new EntityResolver() {
                 // Dummi resolver - alvays do nothing
+                @Override
                 public InputSource resolveEntity(String publicId, String systemId)
                         throws SAXException, IOException {
                     return new InputSource(new StringReader(""));
@@ -769,8 +792,9 @@ public class XMLKit {
             transformer.transform(new DOMSource(fragment), result);
             return out.toString();
 
-        } catch (Exception e) {
-            throw new Exception(e);
+        } catch (IllegalArgumentException | TransformerException e) {
+            SystemLog.error(e.getMessage());
+            return null;
         }
     }
 
@@ -902,9 +926,10 @@ public class XMLKit {
     /**
      * Method to get the Map of the namespaces.
      * @param xmlFile the string of the file xml.
+     * @return the Map of all namespace on the XML File.
      */
     @SuppressWarnings("rawtypes")
-    public static Map getNamespaces(String xmlFile) {
+    public static Map<String,String> getNamespaces(String xmlFile) {
         Map<String,String> namespaces = new Hashtable<>();
         // Construct a SAX Parser using JAXP
         SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -918,7 +943,7 @@ public class XMLKit {
             SAXParser parser = factory.newSAXParser();
             // use it to parse the document
             parser.parse(xmlFile, handler);
-        } catch(Exception e) {
+        } catch(ParserConfigurationException | SAXException | IOException e) {
             // Maybe FileNotFound, maybe something else, anyway, life goeson...
             return null;
         }
@@ -1007,7 +1032,6 @@ public class XMLKit {
 
     /**
      * Replace one node with a list of nodes.
-     * <p/>
      * Clones the NodeList elements.
      * @param newNodes New nodes - added in same location as oldNode.
      * @param oldNode Old node - removed.
@@ -1147,13 +1171,12 @@ public class XMLKit {
 
     /**
      * Remove the supplied element from its containing document.
-     * <p/>
      * Tries to manage scenarios where a request is made to remove the root element.
      * Cannot remove the root element in any of the following situations:
-     * <ul>
-     *  <li>"keepChildren" parameter is false.</li>
-     *  <li>root element is empty of {@link Node#ELEMENT_NODE} nodes.</li>
-     * </ul>
+     * &lt;ul&gt;
+     *  &lt;li&gt;"keepChildren" parameter is false.&lt;/li&gt;
+     *  &lt;li&gt;root element is empty of {@link Node#ELEMENT_NODE} nodes.&lt;/li&gt;
+     * &lt;/ul&gt;
      * @param element Element to be removed.
      * @param keepChildren Keep child content.
      */
@@ -1201,9 +1224,7 @@ public class XMLKit {
 
     /**
      * Copy the nodes of a NodeList into the supplied list.
-     * <p/>
      * This is not a clone.  It's just a copy of the node references.
-     * <p/>
      * Allows iteration over the Nodelist using the copy in the knowledge that
      * the list will remain the same length.  Using the NodeList can result in problems
      * because elements can get removed from the list while we're iterating over it.
@@ -1226,12 +1247,14 @@ public class XMLKit {
      * Append the nodes from the supplied list to the supplied node.
      * @param node Node to be appended to.
      * @param nodes List of nodes to append.
+     * @return the Node with the appended list.
      */
-    public static void appendList(Node node, List<Node> nodes) {
-        int nodeCount = nodes.size();
+    public static Node appendList(Node node, List<Node> nodes) {
+        //int nodeCount = nodes.size();
         for(Object node1 : nodes) {
             node.appendChild((Node) node1);
         }
+        return node;
     }
 
     /**
@@ -1297,7 +1320,6 @@ public class XMLKit {
 
     /**
      * Get the name from the supplied element.
-     * <p/>
      * Returns the {@link Node#getLocalName() localName} of the element
      * if set (namespaced element), otherwise the
      * element's {@link Element#getTagName() tagName} is returned.
@@ -1315,12 +1337,11 @@ public class XMLKit {
 
     /**
      * Get attribute value, returning <code>null</code> if unset.
-     * <p/>
      * Some DOM implementations return an empty string for an unset
      * attribute.
      * @param element The DOM element.
      * @param attributeName The attribute to get.
-     * @return The attribute value, or <code>null</code> if unset.
+     * @return The attribute value, or &lt;code&gt;null&lt;/code&gt; if unset.
      */
     public static String getAttributeValue(Element element, String attributeName) {
         return getAttributeValue(element, attributeName, null);
@@ -1328,14 +1349,13 @@ public class XMLKit {
 
     /**
      * Get attribute value, returning <code>null</code> if unset.
-     * <p/>
      * Some DOM implementations return an empty string for an unset
      * attribute.
      * @param element The DOM element.
      * @param attributeName The attribute to get.
      * @param namespaceURI Namespace URI of the required attribute, or null
      * to perform a non-namespaced get.
-     * @return The attribute value, or <code>null</code> if unset.
+     * @return The attribute value, or &lt;code&gt;null&lt;/code&gt; if unset.
      */
     public static String getAttributeValue(Element element, String attributeName, String namespaceURI) {
         String attributeValue;
@@ -1350,6 +1370,12 @@ public class XMLKit {
         return attributeValue;
     }
 
+    /**
+     * Method to get the previous sibling in a XML Node.
+     * @param node the Node where  execute the research.
+     * @param nodeType the Type of the Node to research.
+     * @return the Node founded.
+     */
     public static Node getPreviousSibling(Node node, short nodeType) {
         Node parent = node.getParentNode();
         if(parent == null) {
@@ -1384,7 +1410,6 @@ public class XMLKit {
     /**
      * Count the DOM nodes of the supplied type (nodeType) before the supplied
      * node, not including the node itself.
-     * <p/>
      * Counts the sibling nodes.
      * @param node Node whose siblings are to be counted.
      * @param nodeType The DOM {@link Node} type of the siblings to be counted.
@@ -1414,7 +1439,6 @@ public class XMLKit {
     /**
      * Count the DOM nodes of the supplied type (nodeType) between the supplied
      * sibling nodes, not including the nodes themselves.
-     * <p/>
      * Counts the sibling nodes.
      * @param node1 First sibling node.
      * @param node2 Second sibling node.
@@ -1450,7 +1474,6 @@ public class XMLKit {
 
     /**
      * Count the DOM nodes before the supplied node, not including the node itself.
-     * <p/>
      * Counts the sibling nodes.
      * @param node Node whose siblings are to be counted.
      * @return The number of siblings before the supplied node.
@@ -1477,7 +1500,6 @@ public class XMLKit {
     /**
      * Count the DOM nodes between the supplied sibling nodes, not including
      * the nodes themselves.
-     * <p/>
      * Counts the sibling nodes.
      * @param node1 First sibling node.
      * @param node2 Second sibling node.
@@ -1508,7 +1530,6 @@ public class XMLKit {
     /**
      * Count the DOM element nodes before the supplied node, having the specified
      * tag name, not including the node itself.
-     * <p/>
      * Counts the sibling nodes.
      * @param node Node whose element siblings are to be counted.
      * @param tagName The tag name of the sibling elements to be counted.
@@ -1566,7 +1587,8 @@ public class XMLKit {
     /**
      * Get all the text DOM sibling nodes before the supplied node and
      * concatenate them together into a single String.
-     * @param node1 Test node.
+     * @param node1 Test Node 1. 
+     * @param node2 Test Node 2.
      * @return String containing the concatentated text.
      */
     public static String getTextBetween(Node node1, Node node2) {
@@ -1605,7 +1627,6 @@ public class XMLKit {
 
     /**
      * Construct the XPath of the supplied DOM Node.
-     * <p/>
      * Supports element, comment and cdata sections DOM Node types.
      * @param node DOM node for XPath generation.
      * @return XPath string representation of the supplied DOM Node.
@@ -1635,6 +1656,11 @@ public class XMLKit {
         return xpath.toString();
     }
 
+    /**
+     * Method to get the XPath of a Element.
+     * @param element the XML Element.
+     * @return the String of the XPath.
+     */
     private static String getXPathToken(Element element) {
         String tagName = element.getTagName();
         int count = countElementsBefore(element, tagName);
@@ -1647,6 +1673,11 @@ public class XMLKit {
         return xpathToken;
     }
 
+    /**
+     * Method to get the depth of a XML Element.
+     * @param element the XML Element.
+     * @return the int depth of the XML Element.
+     */
     public static int getDepth(Element element) {
         Node parent = element.getParentNode();
         int depth = 0;
@@ -1671,14 +1702,12 @@ public class XMLKit {
     /**
      * Get the child element having the supplied localname, position
      * and namespace.
-     * <p/>
      * Can be used instead of XPath.
      * @param parent Parent element to be searched.
      * @param localname Localname of the element required.
      * @param position The position of the element relative to other sibling
-     * elements having the same name (and namespace if specified) e.g. if
-     * searching for the 2nd &ltinput&gt; element, this param needs to
-     * have a value of 2.
+     *              elements having the same name (and namespace if specified) e.g. if
+     *              searching for the 2nd &lt;input&gt; element, this param needs to have a value of 2.
      * @return The element at the requested position, or null if no such child
      * element exists on the parent element.
      */
@@ -1689,14 +1718,12 @@ public class XMLKit {
     /**
      * Get the child element having the supplied localname, position
      * and namespace.
-     * <p/>
      * Can be used instead of XPath.
      * @param parent Parent element to be searched.
      * @param localname Localname of the element required.
      * @param position The position of the element relative to other sibling
-     * elements having the same name (and namespace if specified) e.g. if
-     * searching for the 2nd &ltinput&gt; element, this param needs to
-     * have a value of 2.
+     *                  elements having the same name (and namespace if specified) e.g. if
+     *                  searching for the 2nd &lt;input&gt; element, this param needs to have a value of 2.
      * @param namespaceURI Namespace URI of the required element, or null
      * if a namespace comparison is not to be performed.
      * @return The element at the requested position, or null if no such child
@@ -1713,7 +1740,6 @@ public class XMLKit {
 
     /**
      * Get the child elements having the supplied localname and namespace.
-     * <p/>
      * Can be used instead of XPath.
      * @param parent Parent element to be searched.
      * @param localname Localname of the element required.  Supports "*" wildcards.
@@ -1728,7 +1754,6 @@ public class XMLKit {
 
     /**
      * Get the child elements having the supplied localname and namespace.
-     * <p/>
      * Can be used instead of XPath.
      * @param nodeList List of DOM nodes on which to perform the search.
      * @param localname Localname of the element required.  Supports "*" wildcards.

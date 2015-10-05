@@ -217,12 +217,16 @@ public class SQLHelper {
 
     /**
      * Method to get a HSQL connection.
+     * @param host String name of the host where is the server.
+     * @param port String number of the port where the server communicate.
      * @param database string name of the database.
      * @param username string username.
      * @param password string password.
      * @return the connection.
      * @throws ClassNotFoundException if any error class is occurred.
      * @throws SQLException if any error SQL is occurred.
+     * @throws java.lang.IllegalAccessException if any error class is occurred.
+     * @throws java.lang.InstantiationException if any error class is occurred.
      */
     public static Connection getHSQLConnection(String host,String port,String database,String username,String password)
             throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
@@ -247,6 +251,8 @@ public class SQLHelper {
      * @return the connection.
      * @throws ClassNotFoundException if any error class is occurred.
      * @throws SQLException if any error SQL is occurred.
+     * @throws java.lang.IllegalAccessException if any error class is occurred.
+     * @throws java.lang.InstantiationException if any error class is occurred.
      */
     public static Connection getMySqlConnection(
                     String host,String port,String database,String username,String password)
@@ -291,6 +297,8 @@ public class SQLHelper {
 
     /**
      * Method to get a Oracle connection.
+     * @param host string name of the host where is it the database
+     * @param port number of the port of the server.
      * @param database string name of the database.
      * @param username string username.
      * @param password string password.

@@ -439,6 +439,7 @@ public class FileUtil {
      * Method to convert a File to a URL
      * @param file the File to convert.
      * @return the URL.
+     * @throws java.net.MalformedURLException if any error is occurred.
      */
     public static URL convertFileToURL(File file) throws MalformedURLException {return convertFileToUri(file).toURL();}
 
@@ -446,6 +447,7 @@ public class FileUtil {
      * Method to convert a File to a URL
      * @param filePath the String to the File to convert.
      * @return the URL.
+     * @throws java.net.MalformedURLException if any error is occurrred.
      */
     public static URL convertFileToURL(String filePath)throws MalformedURLException{return convertFileToURL(new File(filePath));}
 
@@ -626,15 +628,15 @@ public class FileUtil {
             );
             // Delete temp file when program exits.
             file.deleteOnExit();
-            //Writer writer = new FileWriter(file);
+            try ( //Writer writer = new FileWriter(file);
             //PrintWriter out = new PrintWriter(writer);
             //out.println(content);
-            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-            bw.write(content);
-            bw.close();
+                    BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+                bw.write(content);
+            }
             return file;
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
        return null;
     }
@@ -795,16 +797,15 @@ public class FileUtil {
             createFile(destination);
             //destination.createNewFile();
         }
-        InputStream in = new FileInputStream(source);
-        OutputStream out = new FileOutputStream(destination);
-
-        byte[] buf = new byte[1024];
-        int len;
-
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
+        OutputStream out;
+        try (InputStream in = new FileInputStream(source)) {
+            out = new FileOutputStream(destination);
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
         }
-        in.close();
         out.close();
         SystemLog.message("Done copying contents of " + source.getName() + " to " + destination.getName());
     }
@@ -824,7 +825,7 @@ public class FileUtil {
      * Method to covnert a resource file to a Stream.
      * @param pathToFile String path to the Resource File to read(reference path).
      * @return the Stream of the File.
-     * @throws IOException
+     * @throws IOException throw if the File is not found or the Output directory not exists.
      */
     public static  InputStream convertResourceFileToStream(String pathToFile) throws IOException{
         // JDK7 try-with-resources ensures to close stream automatically
@@ -1094,7 +1095,7 @@ public class FileUtil {
         try {
             writer = new FileWriter(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
         return writer;
     }
@@ -1104,7 +1105,7 @@ public class FileUtil {
         try {
             reader = new FileReader(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
         return reader;
     }
@@ -1118,9 +1119,9 @@ public class FileUtil {
         try {
             OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8");
             BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter outWriter = new PrintWriter(bw);
-            outWriter.println(str);
-            outWriter.close();
+            try (PrintWriter outWriter = new PrintWriter(bw)) {
+                outWriter.println(str);
+            }
         } catch (UnsupportedEncodingException|FileNotFoundException e) {
             SystemLog.exception(e);
         }

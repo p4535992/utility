@@ -27,7 +27,7 @@ import java.util.*;
 public class PropertiesKit extends PropertyPlaceholderConfigurer {
 
     private static Map<String,String> propertiesMap;
-    private static HashMap<Class, HashMap<String,PropertyDescriptor>> descriptorCache = new HashMap<>();
+    private static final HashMap<Class<?>, HashMap<String,PropertyDescriptor>> descriptorCache = new HashMap<>();
 
     /**
      *
@@ -59,6 +59,7 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
 
     /**
      * Method to return the properties map already setted.
+     * @param prop the Properties name file e.g. "test.properties".
      * @param nameProperty the string name of the specific properties from name id.
      * @return the specific value string of the properties.
      */
@@ -108,7 +109,8 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param beanClazz the Class of the Bean.
      * @return the Iterator of Property.
      */
-    private static Map getPropertyDescriptors(Class beanClazz) {
+    @SuppressWarnings("unchecked")
+    private static Map<String,PropertyDescriptor> getPropertyDescriptors(Class<?> beanClazz) {
         HashMap<String,PropertyDescriptor> map = descriptorCache.get(beanClazz);
         if (map == null) {
             BeanInfo beanInfo;
@@ -132,7 +134,7 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param beanClazz the Class of the Bean.
      * @return the Iterator of Property.
      */
-    public static Iterator getPropertyNames(Class beanClazz) {
+    public static Iterator<String> getPropertyNames(Class<?> beanClazz) {
         return getPropertyDescriptors(beanClazz).keySet().iterator();
     }
 
@@ -142,8 +144,8 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param property the String name of the Property.
      * @return the PropertyDescriptor of the Property.
      */
-    public static PropertyDescriptor getPropertyDescriptor(Class beanClazz, String property) {
-        return (PropertyDescriptor)getPropertyDescriptors(beanClazz).get(property);
+    public static PropertyDescriptor getPropertyDescriptor(Class<?> beanClazz, String property) {
+        return getPropertyDescriptors(beanClazz).get(property);
     }
 
     /**
@@ -194,7 +196,6 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param bean the Bean Object.
      * @param property the String name of the Property.
      * @param value the new Object Value of the property.
-     * @return the Property of the Bean.
      * @throws NoSuchMethodException throw if any error is occurred.
      * @throws IllegalAccessException throw if any error is occurred.
      * @throws InvocationTargetException throw if any error is occurred.
@@ -245,10 +246,10 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param bean the Bean Object.
      * @param property the String name of the Property.
      * @param value the new Object Value of the property.
-     * @return the Property of the Bean.
      * @throws NoSuchMethodException throw if any error is occurred.
      * @throws IllegalAccessException throw if any error is occurred.
      * @throws InvocationTargetException throw if any error is occurred.
+     * @throws java.lang.InstantiationException throw if any error is occurred.
      */
     public static void setNestedProperty(Object bean, String property, Object value)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {

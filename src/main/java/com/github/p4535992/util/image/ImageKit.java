@@ -101,6 +101,8 @@ public class ImageKit {
 
     /**
      * Posted by alpha02 at http://www.dreamincode.net/code/snippet1076.htm
+     * @param image the Image Object to convert.
+     * @return the BufferedImage.
      */
     public static BufferedImage convertImageToBufferedImage(Image image) {
         if (image instanceof BufferedImage)return (BufferedImage)image;
@@ -203,6 +205,7 @@ public class ImageKit {
     private void waitForImage(BufferedImage bufferedImage) {
         final ImageLoadStatus imageLoadStatus = new ImageLoadStatus();
         bufferedImage.getHeight(new ImageObserver() {
+            @Override
             public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
                 if (infoflags == ALLBITS) {
                     imageLoadStatus.heightDone = true;
@@ -212,6 +215,7 @@ public class ImageKit {
             }
         });
         bufferedImage.getWidth(new ImageObserver() {
+            @Override
             public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
                 if (infoflags == ALLBITS) {
                     imageLoadStatus.widthDone = true;

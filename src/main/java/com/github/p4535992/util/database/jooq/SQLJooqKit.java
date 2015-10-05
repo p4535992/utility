@@ -188,6 +188,7 @@ public class SQLJooqKit {
      * @param offset String of the offset to add tot the query SQL.
      * @return string query SQL for the select operation.
      */
+    @SuppressWarnings("rawtypes")
     public static String select(String nameTable,String[] columns,boolean preparedStatement,List<Condition> conditions,
                                   String limit,String offset){
         Field[] fields = new Field[columns.length];
@@ -266,7 +267,7 @@ public class SQLJooqKit {
      * @param conditions list of jooq Condition for filter the result of the update operation.
      * @return string query SQL for the update operation.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked","rawtypes"})
     public static String update(String nameTable,String[] columns,Object[] values, boolean preparedStatement,List<Condition> conditions){
         Table<Record> table = new TableImpl<>(nameTable);
         UpdateQuery<Record> uQuery = dslContext.updateQuery(table);
@@ -408,6 +409,7 @@ public class SQLJooqKit {
      * @param sqlTypes java.sql.Type related to the object.
      * @return a JOOQ Field.
      */
+    @SuppressWarnings({"rawtypes","unchecked"})
     public static Field createFieldValue(Object value,int sqlTypes){
         if(value == null || sqlTypes == Types.NULL) return null;
         return DSL.val(value,createDataType(sqlTypes));
@@ -465,7 +467,7 @@ public class SQLJooqKit {
      * @param types Collection Array of java.sql.Types int, types of column.
      * @return a Map of JOOQ Field to JOOQ Field.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked","rawtypes"})
     public static Map<org.jooq.Field<String>,org.jooq.Field<Object>> convertArraysToMapJOOQField(
             String[] columns,Object[] values,int[] types){
         Field<String>[] fields = new Field[columns.length];
@@ -484,6 +486,7 @@ public class SQLJooqKit {
      * @param values Collection Array of Object values.
      * @return a Map of JOOQ Field to JOOQ Field.
      */
+    @SuppressWarnings("rawtypes")
     public static Map<org.jooq.Field,org.jooq.Field> convertArraysToMapJOOQField(
             String[] columns,Object[] values){
         org.jooq.Field[] fields = new org.jooq.Field[columns.length];
@@ -563,8 +566,9 @@ public class SQLJooqKit {
      * @param arrayObj the object array to convert.
      * @return the array of Field JOOQ converted.
      */
+    @SuppressWarnings("rawtypes")
     public static Field<?>[] convertObjecyArrayToFieldValueArray(Object[] arrayObj){
-        Field<?>[] fields = new Field[arrayObj.length];
+        Field[] fields = new Field[arrayObj.length];
         for(int i=0; i < arrayObj.length; i++){
             fields[i] = createFieldValue(arrayObj[i]);
         }
@@ -578,7 +582,7 @@ public class SQLJooqKit {
      * @param nameTable string name of the table you use.
      * @return a JOOQ Record.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked","rawtypes"})
     public static Record createRecord(
             String[] columns,Object[] values,String nameTable){
         org.jooq.Field[] fields = new org.jooq.Field[columns.length];

@@ -77,7 +77,7 @@ public class SparqlKit {
         return instance;
     }
 
-    private static Map<String,String> namespacePrefixes = new HashMap<>();
+    private static final Map<String,String> namespacePrefixes = new HashMap<>();
 
     /**
      * Method utility set some knowed namespace prefix.
@@ -155,6 +155,7 @@ public class SparqlKit {
 
     /**
      * Method to prepare the part of teh query with all prefix.
+     * @param map the Map of namespace.
      * @return string part of the query with the prefixes.
      */
     public static String preparePrefix(Map<String,String> map){

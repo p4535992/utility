@@ -1,5 +1,6 @@
 package com.github.p4535992.util.xml;
 
+
 import com.github.p4535992.util.log.SystemLog;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -14,6 +15,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +28,7 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public class XMLKitJDOM {
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKitJDOM.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKitJDOM.class);
 
     private static org.w3c.dom.Document w3cdoc;
     private static org.jdom2.Document jdom2doc;
@@ -109,38 +112,54 @@ public class XMLKitJDOM {
             XMLOutputter out = new XMLOutputter();
             out.output(root, System.out);
         } catch (JDOMException|IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
     }
 
 
     /**
-     * List an XML file after building it into a JDOM Document.
+     * Method to init and write a XML Document.
      * Notice it is easier than using SAX or DOM directly.
+     * @param file the File XML to create and init
+     * @return if true the init and create operation of the XML file are succeded.
      */
-    public static void initAndWriteFromFile(File file) {
+    public static boolean initAndWriteFromFile(File file) {
         try {
             SAXBuilder builder = new SAXBuilder();//
             jdom2doc = builder.build(file);
             XMLOutputter out = new XMLOutputter();
             out.output(jdom2doc, System.out);
+            return true;
         } catch (JDOMException|IOException e) {
-            e.printStackTrace();
+            SystemLog.error(e.getMessage());
+            return false;
         }
     }
 
 
-
-    public static void initAndWriteFromJDOM2Document(Document doc){
+    /**
+     * Method to init and write a XML JDOM2 Document.
+     * Notice it is easier than using SAX or DOM directly.
+     * @param doc the Document XML to create and init
+     * @return if true the init and create operation of the XML file are succeded.
+     */
+    public static boolean initAndWriteFromJDOM2Document(Document doc){
         try {
             jdom2doc = doc;
             XMLOutputter out = new XMLOutputter();
             out.output(jdom2doc, System.out);
+            return true;
         } catch (IOException e) {
-            SystemLog.exception(e);
+            SystemLog.error(e.getMessage());
+            return false;
         }
     }
 
+    /**
+     * Method to find and get all the element froma specificXPath.
+     * @param xpath the String of the Xpath.
+     * @return the List of XML Element.
+     */
     public static List<Element> findElementFromXPath(String xpath){
         XPathExpression<Element> expression =
                 XPathFactory.instance()
@@ -149,7 +168,10 @@ public class XMLKitJDOM {
     }
 
 
-    /** Generate the XML document */
+    /** Generate the XML document
+     * @return the XML Document with a specific strucuture.
+     * @throws java.lang.Exception throw if any error is occurrred.
+     */
     protected Document makeDoc() throws Exception {
         Document doc = new Document(new Element("Poem"));
         doc.getRootElement().
@@ -162,7 +184,14 @@ public class XMLKitJDOM {
         return doc;
     }
 
-    public static void readContent(String xmlText){
+    /**
+     * Method to read the String content of a String XML text.
+     * @param xmlText the String xml.
+     * @return the the String of the text of the XML String.
+     */
+    public static List<List<Map<String,String>>> readContent(String xmlText){
+        List<List<Map<String,String>>> listOfListsOfElement = new ArrayList<>();
+
         SAXBuilder builder = new SAXBuilder();
         org.jdom2.Document document;
         try {
@@ -172,20 +201,29 @@ public class XMLKitJDOM {
             for (Object row1 : rows) {
                 Element row = (Element) row1;
                 List<Element> columns = row.getChildren("column");
+
+                List<Map<String, String>> listOfElement = new ArrayList<>();
                 for (Object column1 : columns) {
                     Element column = (Element) column1;
                     String name = column.getAttribute("name").getValue();
                     String value = column.getText();
                     int length = column.getAttribute("length").getIntValue();
+                    //System.out.println("name = " + name);
+                    //System.out.println("value = " + value);
+                    //System.out.println("length = " + length);
 
-                    System.out.println("name = " + name);
-                    System.out.println("value = " + value);
-                    System.out.println("length = " + length);
+                    Map<String, String> mapOfContent = new HashMap<>();
+                    mapOfContent.put("name", name);
+                    mapOfContent.put("value", value);
+                    mapOfContent.put("length", String.valueOf(length));
+                    listOfElement.add(mapOfContent);
                 }
+                listOfListsOfElement.add(listOfElement);
             }
         } catch (JDOMException|IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
+        return listOfListsOfElement;
     }
 
 

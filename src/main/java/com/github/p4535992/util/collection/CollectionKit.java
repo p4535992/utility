@@ -40,9 +40,11 @@ public class CollectionKit {
     /**
      * Method to create a Array collection with a single element.
      * @param object the single element.
-     * @param <T> generic type.
+     * @param size the int size for the Array.
+     * @param <T> generic type
      * @return array with a single element.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T[] createArrayWithSingleElement(T object,int size){
         T[] newArray = (T[]) Array.newInstance(object.getClass(), size);
         Arrays.fill(newArray,object);
@@ -391,7 +393,6 @@ public class CollectionKit {
      * @param value array of values.
      * @param <T> generic type.
      * @return merged array.
-     * @throws Exception error.
      */
     @SuppressWarnings("unchecked")
     public static <T> T[] mergeArraysForCommandInput(T[] param, T[] value) {
@@ -425,7 +426,6 @@ public class CollectionKit {
      * @param <T> generic type.
      * @param <E> generic type.
      * @return merged array.
-     * @throws Exception error.
      */
     @SuppressWarnings("unchecked")
     public static <T,E> Object[] concatenateArraysForCommandInput(T[] param, E[] value) {
@@ -684,6 +684,8 @@ public class CollectionKit {
      * Method to convert two array keys and values tp a HashMap.
      * @param keys array of keys.
      * @param values array of values.
+     * @param <K> the generic key.
+     * @param <V> the generic value.
      * @return the hasmap fulled with array.
      */
     public static <K,V> HashMap<K,V> convertTwoArrayToMap(K[] keys, V[] values) {

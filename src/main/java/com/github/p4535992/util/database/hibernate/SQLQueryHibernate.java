@@ -1,9 +1,8 @@
 package com.github.p4535992.util.database.hibernate;
 
 import com.github.p4535992.util.calendar.DateKit;
-import org.hibernate.Criteria;
+import com.github.p4535992.util.log.SystemLog;
 import org.hibernate.Query;
-import org.hibernate.Session;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
@@ -21,10 +20,17 @@ import java.util.Map;
 
 /**
  * Created by 4535992 on 14/09/2015.
+ * @author 4535992.
+ * @version 2015-09-30.
  */
 @SuppressWarnings("unused")
 public class SQLQueryHibernate {
 
+    /**
+     * Method to convert a Query Hibernate Object to a String.
+     * @param query the Query Hibernate Object.
+     * @return the String of the Query.
+     */
     private static String convertQueryHibernateToString(Query query){
         CriteriaImpl c = (CriteriaImpl)query;
         SessionImpl s = (SessionImpl)c.getSession();
@@ -39,7 +45,7 @@ public class SQLQueryHibernate {
             f.setAccessible(true);
             sql = (String)f.get(loader);
         } catch (NoSuchFieldException|IllegalAccessException e) {
-            e.printStackTrace();
+            SystemLog.exception(e);
         }
         return sql;
     }
@@ -47,7 +53,10 @@ public class SQLQueryHibernate {
 
     /**
      * Method to extract parameters from Hibernate query.
+     * @param obj the Object for the Hibernate Query.
+     * @return a Map of Parameters Key-Value of the Hibernate Query.
      */
+    @SuppressWarnings({"unchecked","rawtype"})
     public static Map<String,String> getParameters(Object obj) {
         Map<String,String> parameters = new HashMap<>();
         Object query;
@@ -60,10 +69,12 @@ public class SQLQueryHibernate {
             AbstractQueryImpl q = (AbstractQueryImpl) query;
             Field f = AbstractQueryImpl.class.getDeclaredField("namedParameters");
             f.setAccessible(true);
-            Map<String,String> namedParameters = (Map<String, String>) f.get(q);
-            for (Map.Entry<String, String> stringStringEntry : namedParameters.entrySet()) {
-                Map.Entry entry = (Map.Entry) stringStringEntry;
-                String name = (String) entry.getKey();
+            Map<String,Object> namedParameters = (Map<String, Object>) f.get(q);
+            for (Map.Entry<String, Object> stringStringEntry : namedParameters.entrySet()) {
+                //Map.Entry entry = (Map.Entry<String, Object>) stringStringEntry;
+                //String name = (String) entry.getKey();
+                Map.Entry<String, Object> entry =  stringStringEntry;
+                String name = entry.getKey();
                 TypedValue value = (TypedValue) entry.getValue();
                 Object o = value.getValue();
                 String valueStr;
@@ -76,10 +87,11 @@ public class SQLQueryHibernate {
             }
             f = AbstractQueryImpl.class.getDeclaredField("namedParameterLists");
             f.setAccessible(true);
-            namedParameters = (Map<String, String>) f.get(q);
-            for (Map.Entry<String, String> stringStringEntry : namedParameters.entrySet()) {
-                Map.Entry entry = (Map.Entry) stringStringEntry;
-                String name = (String) entry.getKey();
+            namedParameters = (Map<String, Object>) f.get(q);
+            for (Map.Entry<String, Object> stringStringEntry : namedParameters.entrySet()) {
+                Map.Entry<String,Object> entry = (Map.Entry) stringStringEntry;
+                //String name = (String) entry.getKey();
+                String name = entry.getKey();
                 TypedValue value = (TypedValue) entry.getValue();
                 Object o = value.getValue();
                 String valueStr;
@@ -93,7 +105,9 @@ public class SQLQueryHibernate {
                 }
                 parameters.put(name, valueStr);
             }
-        } catch (Throwable t) {
+        } catch (NoSuchFieldException | SecurityException | 
+                IllegalArgumentException | IllegalAccessException e) {
+            SystemLog.exception(e);
             /*if (logger.isDebugEnabled()) {
                 logger.debug("Error intercepting query parameters", t);
             }*/
