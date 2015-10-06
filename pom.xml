@@ -40,6 +40,15 @@
     </licenses>
 
     <repositories>
+        <!-- Jena-Sesame-CumulusRDF Driver -->
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>cumulusrdf-repo</id>
+            <url>http://cumulusrdf.googlecode.com/svn/repository</url>
+        </repository>
+        <!-- Jena-Virtuosos Driver-->
         <repository>
             <id>maven.aksw.internal</id>
             <name>University Leipzig, AKSW Maven2 Repository</name>
@@ -89,6 +98,8 @@
         <!-- SESAME - OpenRDF -->
         <org.openrdf.sesame.version>2.8.4</org.openrdf.sesame.version>
         <!--<jsonld-java-jena.version>0.4.1</jsonld-java-jena.version>-->
+        <!-- CumulusRDF -->
+        <edu.kit.aifb.cumulusrdf.version>1.0.1</edu.kit.aifb.cumulusrdf.version>
         <!-- XML -->
         <org.jdom.jdom2.version>2.0.6</org.jdom.jdom2.version>
         <!-- HTML -->
@@ -406,7 +417,6 @@
             <artifactId>sesame-sail-rdbms</artifactId>
         </dependency>-->
 
-
         <!-- =============== -->
         <!-- VIRTUOSO-JENA   -->
         <!-- =============== -->
@@ -436,6 +446,21 @@
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjena2</artifactId>
             <version>develop7-2015-06-25</version>
+        </dependency>
+
+        <!-- =============== -->
+        <!-- CUMULUS-RDF   -->
+        <!-- =============== -->
+        <dependency>
+            <groupId>edu.kit.aifb</groupId>
+            <artifactId>cumulusrdf</artifactId>
+            <version>${edu.kit.aifb.cumulusrdf.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.semanticweb.yars</groupId>
+            <artifactId>nxparser-api</artifactId>
+            <version>2.2</version>
         </dependency>
 
         <!-- =============== -->

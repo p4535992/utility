@@ -53,7 +53,7 @@ import java.util.zip.GZIPInputStream;
 @SuppressWarnings("unused")
 public class Sesame28Kit {
 
-    private org.apache.log4j.Logger logger;
+    public static org.apache.log4j.Logger logger;
 
     protected Sesame28Kit() {
         logger = org.apache.log4j.Logger.getLogger(this.getClass().getName());
@@ -101,6 +101,13 @@ public class Sesame28Kit {
         this.OUTPUTFORMAT = outputformat;
         this.PRINT_RESULT_QUERY = printResultQuery;
         this.SHOWSTATS = !PRINT_RESULT_QUERY;
+    }
+
+    public void setOutput(String outputPathfile,String outputformat,boolean printResultQuery,boolean showOnConsole){
+        this.OUTPUTFILE = outputPathfile;
+        this.OUTPUTFORMAT = outputformat;
+        this.PRINT_RESULT_QUERY = printResultQuery;
+        this.SHOWSTATS = showOnConsole;
     }
 
     public void setParameterLocalRepository(
@@ -286,7 +293,23 @@ public class Sesame28Kit {
      * @return the RepositoryConnectionWrapper.
      */
     public RepositoryConnectionWrapper setNewRepositoryConnectionWrappper(Repository mRepository) {
-        Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
+        try {
+            Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
+            Sesame28Kit.mRepositoryConnectionWrappper.setDelegate(mRepository.getConnection());
+        } catch (RepositoryException e) {
+            return null;
+        }
+        return mRepositoryConnectionWrappper;
+    }
+
+    /**
+     * Method to get RepositoryConnectionWrapper.
+     * @param mRepository the Repository OpenRDF to Wrapper.
+     * @param mRepositoryConnection the RepositoryConnection OpenRDF to Wrapper.
+     * @return the RepositoryConnectionWrapper.
+     */
+    public RepositoryConnectionWrapper setNewRepositoryConnectionWrappper(Repository mRepository,RepositoryConnection mRepositoryConnection) {
+        Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
         return mRepositoryConnectionWrappper;
     }
 
@@ -339,7 +362,14 @@ public class Sesame28Kit {
     /**
      * Method for Close the currently opened repository. This works for managed and unmanaged repositories.
      */
-    public static void  closeRepository() {
+    public void  shutDownRepository() {
+        closeRepository();
+    }
+
+    /**
+     * Method for Close the currently opened repository. This works for managed and unmanaged repositories.
+     */
+    public void  closeRepository() {
         SystemLog.message("===== Shutting down ==========");
         if (mRepositoryConnection != null) {
             try {
@@ -487,6 +517,7 @@ public class Sesame28Kit {
      */
     public void importIntoRepositoryDirectoryChunked(String preloadFolder) throws Exception {
         SystemLog.message("===== Load Files (from the '" + preloadFolder + "' parameter) ==========");
+        SystemLog.message("Start the import of the Data on the repository...");
         final AtomicLong statementsLoaded = new AtomicLong();
         // Load all the files from the pre-load folder
         //String preload = preloadFolder;
@@ -509,6 +540,7 @@ public class Sesame28Kit {
             walker.setHandler(handler);
             walker.walk(new File(preloadFolder));
         }
+        SystemLog.message("...end the import of the Data on the repository...");
         SystemLog.warning("TOTAL: " + statementsLoaded.get() + " statements loaded");
     }
 
@@ -614,6 +646,10 @@ public class Sesame28Kit {
         return null;
     }
 
+    /**
+     * Method to evaluate a Query on aFile.
+     * @param queryFile the File with the QUERY/IES
+     */
     public void executeQuerySPARQLFromFile(File queryFile){
         evaluateQueries(queryFile);
     }
@@ -668,7 +704,7 @@ public class Sesame28Kit {
         //RepositoryConnection tempLocalConnection = tempLocalRepository.getConnection();
         try {
             tempLocalConnection.prepareTupleQuery(language, query);
-            SystemLog.message("Query SPARQL is a tuple query");
+            SystemLog.message("Query Sesame is a tuple query");
             return mRepositoryConnection.prepareTupleQuery(language, query);
         } catch (Exception e) {
             //SystemLog.exception(e);
@@ -678,7 +714,7 @@ public class Sesame28Kit {
             tempLocalConnection.prepareBooleanQuery(language, query);
             //BooleanQuery booleanQuery = mRepositoryConnection.prepareBooleanQuery(language, query);
             //if(booleanQuery!=null){ return booleanQuery;}
-            SystemLog.message("Query SPARQL is a boolean query");
+            SystemLog.message("Query Sesame is a boolean query");
             return mRepositoryConnection.prepareBooleanQuery(language, query);
         } catch (Exception e) {
             SystemLog.sparql(e.getMessage());
@@ -688,7 +724,7 @@ public class Sesame28Kit {
             tempLocalConnection.prepareGraphQuery(language, query);
             //GraphQuery graphQuery = mRepositoryConnection.prepareGraphQuery(language, query);
             //if(graphQuery!=null){return graphQuery;}
-            SystemLog.sparql("Query SPARQL is a graph query");
+            SystemLog.sparql("Query Sesame is a graph query");
             return mRepositoryConnection.prepareGraphQuery(language, query);
         } catch (Exception e) {
             SystemLog.warning(e.getMessage());
@@ -707,35 +743,33 @@ public class Sesame28Kit {
         Repository tempLocalRepository = new SailRepository(new MemoryStore());
         tempLocalRepository.initialize();
         RepositoryConnection tempLocalConnection = tempLocalRepository.getConnection();
-        try {
-            tempLocalConnection.prepareUpdate(QueryLanguage.SPARQL, query);
-            SystemLog.message("Query SPARQL is a update query");
-            return mRepositoryConnection.prepareUpdate(QueryLanguage.SPARQL, query);
-        }
-        catch(Exception e ) {
-            SystemLog.warning(e.getMessage());
-        }
-        try {
+        try{
+            for (QueryLanguage language : queryLanguages) {
+                try {
+                    tempLocalConnection.prepareUpdate(language, query);
+                    SystemLog.message("Query SPARQL is a update query");
+                    return mRepositoryConnection.prepareUpdate(language, query);
+                }catch(Exception e){
+                    //SystemLog.warning(e.getMessage());
+                }
+            }
             for (QueryLanguage language : queryLanguages) {
                 try {
                     Query result = prepareQuery(query, language, tempLocalConnection);
                     if (result != null) return result;
-                }catch(Exception e){
+                } catch (Exception e) {
                     //continue;
                 }
             }
             // Can't prepare this query in any language
             return null;
+        }catch(Exception e){
+            SystemLog.warning(e.getMessage());
+        }finally {
+            tempLocalConnection.close();
+            tempLocalRepository.shutDown();
         }
-        finally {
-            try {
-                tempLocalConnection.close();
-                tempLocalRepository.shutDown();
-            }
-            catch(Exception e ) {
-                SystemLog.exception(e);
-            }
-        }
+        return null;
     }
 
     /**
@@ -799,14 +833,12 @@ public class Sesame28Kit {
                     writeGraphQueryResultToFile(query, OUTPUTFILE, OUTPUTFORMAT);
                 }
                 long queryBegin = System.nanoTime();
-
                 GraphQueryResult result = q.evaluate();
-
                 int rows = 0;
                 while (result.hasNext()) {
-                    Statement statement = result.next();
                     rows++;
                     if (SHOWSTATS) {
+                        Statement statement = result.next();
                         System.out.print(beautifyRDFValue(statement.getSubject()));
                         System.out.print(" " + beautifyRDFValue(statement.getPredicate()) + " ");
                         System.out.print(" " + beautifyRDFValue(statement.getObject()) + " ");
@@ -818,34 +850,29 @@ public class Sesame28Kit {
 
                 }
                 result.close();
-
                 long queryEnd = System.nanoTime();
                 SystemLog.message(rows + " result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
             }
-            //If the Query is a Construct or a Describe..........
+            //If the Query is a Select or a Describe..........
             if (preparedOperation instanceof TupleQuery) {
                 TupleQuery q = (TupleQuery) preparedOperation;
                 if(PRINT_RESULT_QUERY){
                     writeTupleQueryResultToFile(query, OUTPUTFILE, OUTPUTFORMAT);
                 }
-
                 long queryBegin = System.nanoTime();
-
                 TupleQueryResult result = q.evaluate();
-
                 int rows = 0;
                 while (result.hasNext()) {
-                    BindingSet bindingSetTuples = result.next();
-                    if (rows == 0) {
-                        for (Binding bindingSetTuple : bindingSetTuples) {
-                            System.out.print(bindingSetTuple.getName());
-                            System.out.print("\t");
-                        }
-                        System.out.println();
-                        System.out.println("---------------------------------------------");
-                    }
-                    rows++;
                     if (SHOWSTATS) {
+                        BindingSet bindingSetTuples = result.next();
+                        if (rows == 0) {
+                            for (Binding bindingSetTuple : bindingSetTuples) {
+                                System.out.print(bindingSetTuple.getName());
+                                System.out.print("\t");
+                            }
+                            System.out.println();
+                            System.out.println("---------------------------------------------");
+                        }
                         for (Binding aTuple : bindingSetTuples) {
                             try {
                                 System.out.print(beautifyRDFValue(aTuple.getValue()) + "\t");
@@ -855,16 +882,18 @@ public class Sesame28Kit {
                         }
                         System.out.println();
                     }
+                    rows++;
                 }
                 result.close();
-
                 long queryEnd = System.nanoTime();
                 SystemLog.message(rows + " result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
             }
-        } catch (UpdateExecutionException|RepositoryException|QueryEvaluationException e) {
-            SystemLog.error("An error occurred during query execution: " + e.getMessage());
-        } catch (FileNotFoundException e){
+        } catch (UpdateExecutionException|QueryEvaluationException e) {
+            //SystemLog.error("An error occurred during query execution: " + e.getMessage());
+            SystemLog.exception(e);
+        } catch (FileNotFoundException|RepositoryException e){
             SystemLog.error("An error occurred during the writing of the result of SPARQL query: " + e.getMessage());
+            SystemLog.exception(e);
         }
     }
 
@@ -879,7 +908,6 @@ public class Sesame28Kit {
         try{
             if (UPDATES) {
                 SystemLog.message("===== Upload and Delete Statements ====================");
-
                 // Add a statement directly to the SAIL
                 SystemLog.message("----- Upload and check --------------------------------");
                 // first, insert the RDF nodes for the statement
@@ -1121,30 +1149,26 @@ public class Sesame28Kit {
                     tempConnection.prepareTupleQuery(language, query);
                     return mRepositoryConnection.prepareTupleQuery(language, query);
                 } catch (MalformedQueryException|RepositoryException e) {
-                    SystemLog.exception(e);
+                    SystemLog.sparql(e.getMessage());
                 }
 
                 try {
                     tempConnection.prepareBooleanQuery(language, query);
                     return mRepositoryConnection.prepareBooleanQuery(language, query);
                 } catch (MalformedQueryException|RepositoryException e) {
-                    SystemLog.exception(e);
+                    SystemLog.sparql(e.getMessage());
                 }
 
                 try {
                     tempConnection.prepareGraphQuery(language, query);
                     return mRepositoryConnection.prepareGraphQuery(language, query);
                 } catch (MalformedQueryException|RepositoryException e) {
-                    SystemLog.exception(e);
+                    SystemLog.sparql(e.getMessage());
                 }
                 return null;
             } finally {
-                try {
-                    tempConnection.close();
-                    tempRepository.shutDown();
-                } catch (RepositoryException e) {
-                    SystemLog.exception(e);
-                }
+                tempConnection.close();
+                tempRepository.shutDown();
             }
         }catch (RepositoryException e) {
             SystemLog.exception(e);
@@ -1407,7 +1431,7 @@ public class Sesame28Kit {
      * @param queryString the query sparql CONSTRUCTOR or DESCRIBE.
      * @return model filled with the result of the quey on the repository connection.
      */
-    public static Model convertGraphQueryEvalutationToSesameModel(Repository repository,String queryString){
+    public Model convertGraphQueryEvalutationToSesameModel(Repository repository,String queryString){
         Model resultModel = new TreeModel();
         //org.openrdf.repository.RepositoryConnection
         //repositoryConnection = repo.getConnection();
@@ -1457,20 +1481,33 @@ public class Sesame28Kit {
      * @param outputFormat string of the output format.
      */
     public void writeGraphQueryResultToFile(GraphQuery graphQuery,String filePath,String outputFormat){
-            String queryString = graphQuery.toString();
-            writeGraphQueryResultToFile(queryString,filePath,outputFormat);
+            writeGraphQueryResultToFile(graphQuery.toString(),filePath,outputFormat);
+    }
+
+    /**
+     * Method to print the query result of Tuple Query on a Sesame Repository.
+     * @param tupleQuery the OpenRDF TupleQuery query.
+     * @param filePath string of the patht to the file of output.
+     * @param outputFormat string of the output format.
+     * @throws FileNotFoundException throw if you not find the file.
+     */
+    public void writeTupleQueryResultToFile(TupleQuery tupleQuery,String filePath,String outputFormat) throws FileNotFoundException{
+        writeTupleQueryResultToFile(tupleQuery.toString(),filePath,outputFormat);
     }
 
     /**
      * Method to print the query result of Tuple Query on a Sesame Repository.
      * @param queryString string of SPARQL/SERQL query.
-     * @param filePath string of the patht to the file of output.
+     * @param filePath string of the path to the file of output.
      * @param outputFormat string of the output format.
      * @throws FileNotFoundException throw if you not find the file.
      */
     public void writeTupleQueryResultToFile(String queryString,String filePath,String outputFormat) throws FileNotFoundException{
         try {
-            SystemLog.message("Try to write with the format:" + outputFormat.toUpperCase() + " into the  file " + filePath);
+            outputFormat = outputFormat.replaceAll("[^A-Za-z0-9]", "");
+            String nameFileOut = filePath+"."+outputFormat.toLowerCase();
+            SystemLog.message("Try to write the query tuple result in the format:" +outputFormat +
+                    " int o the file " + nameFileOut + "...");
             //org.openrdf.rio.RDFWriter writer = org.openrdf.rio.Rio.createWriter(
             //        org.openrdf.rio.RDFFormat.TURTLE, System.out);
             //OutputStream out = new FileOutputStream(pathOutputXmlFileName+".xml");
@@ -1480,8 +1517,9 @@ public class Sesame28Kit {
             if(filePath==null){
                 out = System.out;
             }else{
-                out = new FileOutputStream(new File("."));
+                out = new FileOutputStream(new File(filePath+"."+outputFormat));
             }
+
             if(outputFormat.equalsIgnoreCase("csv")){
                 trh = new org.openrdf.query.resultio.text.csv.SPARQLResultsCSVWriter(out);
             }else if(outputFormat.equalsIgnoreCase("json")){
@@ -1584,7 +1622,7 @@ public class Sesame28Kit {
                 ||strFormat.equalsIgnoreCase("NTRIPLES")||strFormat.equalsIgnoreCase("N-TRIPLES")){
             strFormat = "N-Triples";
         }
-        if(strFormat.equalsIgnoreCase("TTL")){
+        if(strFormat.equalsIgnoreCase("TTL")||strFormat.equalsIgnoreCase("TURTLE")){
             strFormat = "TURTLE";
         }
         for (org.openrdf.rio.RDFFormat format : allFormats) {
@@ -1827,7 +1865,7 @@ public class Sesame28Kit {
      * Method for update your repository with a SPARQL query
      * @param queryString string of the SPARQL/SERQL query.
      */
-    public static void updateRepository(String queryString){
+    public void updateRepository(String queryString){
         Update update;
         try {
             QueryLanguage lang = checkLanguageOfQuery(queryString);
@@ -2270,7 +2308,7 @@ public class Sesame28Kit {
             } catch (RepositoryConfigException ex) {
                 SystemLog.error("Could not create repository from RDF graph", ex);
             }
-            if(repConfig!=null){
+            //if(repConfig!=null){
                 try {
                     repConfig.validate();
                 } catch (RepositoryConfigException ex) {
@@ -2294,7 +2332,7 @@ public class Sesame28Kit {
                         SystemLog.error("Could not get connection for unmanaged repository", ex);
                     }
                 }
-            }
+            //}
         }catch(RDFParseException ex){
             SystemLog.error("Could not get subject of config RDF",ex);
         }catch(IOException ex){
@@ -2453,12 +2491,15 @@ public class Sesame28Kit {
         if(mRepositoryConnection != null) {
             RDFFormat sesameFormat = stringToRDFFormat(inputFormat);
             if(sesameFormat==null) {
-                SystemLog.error( "Could not import - format not supported: "+inputFormat);
+                SystemLog.error( "Could not import - format not supported: "+inputFormat+" use the RDF/XML");
+                sesameFormat= RDFFormat.RDFXML;
             }
             try {
+                SystemLog.message("Start the import of the Data on the repository...");
                 mRepositoryConnection.begin();
                 mRepositoryConnection.add(filePath,baseURI,sesameFormat);
                 mRepositoryConnection.commit();
+                SystemLog.message("...end the import of the Data on the repository");
             } catch(RepositoryException|IOException|RDFParseException e) {
                 SystemLog.error("Could not import",e);
             }finally {
@@ -2485,10 +2526,12 @@ public class Sesame28Kit {
                 for (File file: files)  {
                     if (!mRepository.isInitialized()) mRepository.initialize();
                     try {
+                        SystemLog.message("Start the import of the Data on the repository...");
                         mRepositoryConnection.begin();
                         mRepositoryConnection.add(file, "file://" + file.getAbsolutePath(),
                                 convertFileNameToRDFFormat(file.getAbsolutePath()));
                         mRepositoryConnection.commit();
+                        SystemLog.message("...end the import of the Data on the repository...");
                     } finally {
                         mRepositoryConnection.close();
                     }
@@ -2496,8 +2539,12 @@ public class Sesame28Kit {
             }else{
                 if (!mRepository.isInitialized()) mRepository.initialize();
                 try {
+                    SystemLog.message("Start the import of the Data on the repository...");
+                    mRepositoryConnection.begin();
                     mRepositoryConnection.add(fileOrDirectory, "file://" + fileOrDirectory.getAbsolutePath(),
                             convertFileNameToRDFFormat(fileOrDirectory.getAbsolutePath()));
+                    mRepositoryConnection.commit();
+                    SystemLog.message("... end the import of the Data on the repository...");
                 } finally {
                     mRepositoryConnection.close();
                 }
@@ -2520,9 +2567,11 @@ public class Sesame28Kit {
         if(mRepositoryConnection != null) {
             RDFFormat sesameFormat = stringToRDFFormat(inputFormat);
             try {
+                SystemLog.message("Start the import of the Data on the repository...");
                 mRepositoryConnection.begin();
                 mRepositoryConnection.add(filePath,baseURI,sesameFormat);
                 mRepositoryConnection.commit();
+                SystemLog.message("...end the import of the Data on the repository");
             } catch(RepositoryException|IOException|RDFParseException e) {
                 SystemLog.error("Could not import: "+e);
             }finally {
@@ -2547,9 +2596,11 @@ public class Sesame28Kit {
         if(mRepositoryConnection != null) {
             RDFFormat sesameFormat = stringToRDFFormat(inputFormat);
             try {
+                SystemLog.message("Start the import of the Data on the repository...");
                 mRepositoryConnection.begin();
                 mRepositoryConnection.add(filePath,baseURI,sesameFormat);
                 mRepositoryConnection.commit();
+                SystemLog.message("...end the import of the Data on the repository");
             } catch(RepositoryException|IOException|RDFParseException e) {
                 SystemLog.error("Could not import: "+e);
             }finally {
@@ -2656,7 +2707,7 @@ public class Sesame28Kit {
      * @param queryString string of the query.
      * @return language of the query.
      */
-    public static QueryLanguage checkLanguageOfQuery(String queryString){
+    public QueryLanguage checkLanguageOfQuery(String queryString){
         //CHECK the language of the uery string if SPARQL or SERQL
         QueryLanguage lang = new QueryLanguage("");
         for (QueryLanguage language : queryLanguages) {
@@ -2814,7 +2865,7 @@ public class Sesame28Kit {
      * @throws RepositoryException throw if any erro ius occurred.
      */
     public void setNamespacePrefixesToRepository(Map<String,String> namespacePrefixes) throws RepositoryException {
-        mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
+        mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
         mRepositoryConnectionWrappper.begin();
         for(Map.Entry<String,String> entry: namespacePrefixes.entrySet()){
             mRepositoryConnectionWrappper.setNamespace(entry.getKey(),entry.getValue());
@@ -3003,6 +3054,151 @@ public class Sesame28Kit {
     //OTHER NEW METHODS
     //////////////////////////////////////////////////////////////
 
+    /**
+     * Method to convert the result of a GraphQuery to a Sesame Model.
+     * @param graphQuery the OpenRDF GraphQuery.
+     * @return the OpenRDF Model.
+     * @throws QueryEvaluationException throw if the Query is malformed.
+     */
+    public Model convertGraphQueryToModel(GraphQuery graphQuery) throws QueryEvaluationException {
+        GraphQueryResult graphQueryResult = graphQuery.evaluate();
+        return QueryResults.asModel(graphQueryResult);
+    }
 
+
+    /*public String ????????(Repository mRepository){
+        String defaultServerUrl = "http://localhost:8080/openrdf-sesame";
+        RepositoryManager manager = new RemoteRepositoryManager(defaultServerUrl);
+        manager.initialize();
+    }*/
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param graphQuery the OpenRDF GraphQuery to evaluate.
+     * @return the Long execution time for evaluate the query.
+     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
+     */
+    public Long getExecutionQueryTime(GraphQuery graphQuery) throws QueryEvaluationException {
+        long queryBegin = System.nanoTime();
+        GraphQueryResult gs = graphQuery.evaluate();
+        long queryEnd = System.nanoTime();
+        SystemLog.message("Query Graph result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+        return (queryEnd - queryBegin) / 1000000;
+    }
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param tupleQuery the OpenRDF TupleQuery to evaluate.
+     * @return the Long execution time for evaluate the query.
+     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
+     */
+    public Long getExecutionQueryTime(TupleQuery tupleQuery) throws QueryEvaluationException {
+        long queryBegin = System.nanoTime();
+        TupleQueryResult ts = tupleQuery.evaluate();
+        long queryEnd = System.nanoTime();
+        SystemLog.message("Query Tuple result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+        return (queryEnd - queryBegin) / 1000000;
+    }
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param booleanQuery the OpenRDF BooleanQuery to evaluate.
+     * @return the Long execution time for evaluate the query.
+     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
+     */
+    public Long getExecutionQueryTime(BooleanQuery booleanQuery) throws QueryEvaluationException {
+        long queryBegin = System.nanoTime();
+        boolean gs = booleanQuery.evaluate();
+        long queryEnd = System.nanoTime();
+        SystemLog.message("Query Boolean result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+        return (queryEnd - queryBegin) / 1000000;
+    }
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param updateQuery the OpenRDF updateQuery to evaluate.
+     * @return the Long execution time for evaluate the query.
+     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
+     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
+     */
+    public Long getExecutionQueryTime(Update updateQuery) throws QueryEvaluationException, UpdateExecutionException {
+        long queryBegin = System.nanoTime();
+        updateQuery.execute();
+        long queryEnd = System.nanoTime();
+        SystemLog.message("Query Update result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+        return (queryEnd - queryBegin) / 1000000;
+    }
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param query the String of the Query to evaluate.
+     * @return the Long execution time for evaluate the query.
+     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
+     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
+     * @throws RepositoryException throw if any error during the evaluation of the query is occurred.
+     */
+    public Long getExecutionQueryTime(String query) throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
+        return getExecutionQueryTime(convertStringQueryToOperation(query));
+    }
+
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param query the OpenRDF Query to evaluate.
+     * @return the Long execution time for evaluate the query.
+     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
+     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
+     * @throws RepositoryException throw if any error during the evaluation of the query is occurred.
+     */
+    public Long getExecutionQueryTime(Query query) 
+            throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
+        return getExecutionQueryTime(convertQueryToOperation(query));
+    }
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param preparedOperation the OpenRDF Operation to evaluate.
+     * @return the Long execution time for evaluate the query.
+     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
+     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
+     * @throws RepositoryException throw if any error during the evaluation of the query is occurred.
+     */
+    public Long getExecutionQueryTime(Operation preparedOperation) 
+            throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
+        if (preparedOperation == null) {
+            SystemLog.warning("Unable to parse query: " + preparedOperation);
+            return null;
+        }
+        //If the Query is a Update..........
+        if( preparedOperation instanceof Update) return getExecutionQueryTime((Update) preparedOperation);
+        //If the Query is a Ask..........
+        if (preparedOperation instanceof BooleanQuery) return getExecutionQueryTime((BooleanQuery) preparedOperation);
+        //If the Query is a Constructor..........
+        if (preparedOperation instanceof GraphQuery) return getExecutionQueryTime((GraphQuery) preparedOperation);
+        //If the Query is a Select or a Describe..........
+        if (preparedOperation instanceof TupleQuery) return getExecutionQueryTime((TupleQuery) preparedOperation);
+        //SystemLog.message("Query result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+        return null;
+    }
+
+    /**
+     * Method to convert a String Query to a OpenRDF Operation.
+     * @param query the String of the Query to analyze.
+     * @return the OpenRDF Operation.
+     * @throws RepositoryException throw if any error of connection to the repository is occurred.
+     */
+    public Operation convertStringQueryToOperation(String query) throws RepositoryException {
+        return prepareOperation(query);
+    }
+
+    /**
+     * Method to convert a String Query to a OpenRDF Operation.
+     * @param query the OpenRDF Query to analyze.
+     * @return the OpenRDF Operation.
+     * @throws RepositoryException throw if any error of connection to the repository is occurred.
+     */
+    public Operation convertQueryToOperation(Query query) throws RepositoryException {
+        return convertStringQueryToOperation(query.toString());
+    }
 }
 

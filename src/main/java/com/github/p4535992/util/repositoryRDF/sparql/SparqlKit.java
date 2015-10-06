@@ -166,6 +166,25 @@ public class SparqlKit {
         return sb.toString();
     }
 
+    /**
+     * Method to prepare a query SPARQL for count the number of triple in a repository.
+     * @param baseUri the String of the basic graph .
+     * @return the String of the query SPARQL for count the number of triple.
+     */
+    public static String countNumberOfTriple(String baseUri){
+        return "SELECT (COUNT(*) as ?count) " +
+                "FROM <"+baseUri+"> " +
+                "WHERE { ?s ?p ?o .}";
+    }
+
+    /**
+     * Method to prepare a query SPARQL for count the number of triple in a repository.
+     * @return the String of the query SPARQL for count the number of triple.
+     */
+    public static String countNumberOfTriple(){
+        return "SELECT (COUNT(*) as ?count) WHERE { ?s ?p ?o .}";
+    }
+
 
 
 }

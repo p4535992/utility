@@ -1,0 +1,365 @@
+package com.github.p4535992.util.repositoryRDF.sesame;
+
+/**
+ * Created by 4535992 on 06/10/2015.
+ * A tool for fast loading of RDF data.
+ * Copyright (C) Ontotext AD 2014
+ */
+
+import info.aduna.xml.XMLReaderFactory;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import org.openrdf.model.Literal;
+import org.openrdf.model.Statement;
+import org.openrdf.model.impl.URIImpl;
+import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFHandler;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.Rio;
+import org.openrdf.rio.UnsupportedRDFormatException;
+import org.openrdf.rio.helpers.BasicParserSettings;
+import org.openrdf.rio.helpers.RDFHandlerBase;
+import org.openrdf.rio.helpers.XMLParserSettings;
+import org.openrdf.rio.rdfxml.RDFXMLParser;
+import org.openrdf.sail.SailException;
+
+import com.ontotext.trree.BuildPredicates;
+import com.ontotext.trree.OwlimSchemaRepository;
+import com.ontotext.trree.owlim_ext.SailConnectionImpl;
+import com.ontotext.trree.util.FileUtils;
+
+
+/**
+ * A simple RDF loading tool which takes RDF files as input and
+ * produces an Owlim image which is readily deployable under
+ * the Sesame workbench.<br/>
+ * <br/>
+ * The input paths can be RDF files in any of the recognizable
+ * by Sesame formats, ZIP files, GZ files or directories which
+ * will be traversed recursively. Any entry in non-recognized
+ * format will be skipped. Some performance statistics is dumped
+ * on every 10M statements, as well as after completing each file.
+ */
+public class LoadRDF {
+
+    private static long startTime = System.currentTimeMillis();
+
+    private static interface Parser {
+
+        /**
+         * Parses the data coming from the supplied input stream and puts then into the
+         * Owlim's Sail connection. The statement count is updated.
+         */
+        void parse(SailConnectionImpl conn, long[] statementCount, String entry, InputStream inp);
+
+    }
+
+    /**
+     * Just invoke the LoadRDF class with one or several paths to
+     * RDF files in different formats, ZIP, GZ files or directories.
+     * The recommended -Xmx setting for a 256G machine is at least 200G
+     * when loading large data.
+     */
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0) {
+            System.out.println("Usage: java LoadRDF <config-ttl> <serial|parallel> <files...>");
+            System.out.println("  config-ttl -- the TTL file which contains the config params.");
+            System.out.println("  serial|parallel -- use the ordinary parse procedure or the parallel one.");
+            System.out.println("  files      -- file names (may be zip and gz as well).");
+            System.out.println("                If some of the specified path denote directories");
+            System.out.println("                then they will be traversed recursively.");
+            return;
+        }
+        int argNo = 0;
+
+        String configFile = args[argNo++];
+        File f = new File(configFile);
+        if (!f.exists()) {
+            System.err.println("Config file " + f.getCanonicalPath() + " does not exist");
+            return;
+        }
+        if (f.isDirectory()) {
+            System.err.println("Entry for config file " + f.getCanonicalPath() + " is a directory");
+            return;
+        }
+        if (!configFile.endsWith(".ttl")) {
+            System.err.println("Config file " + f.getCanonicalPath() + " is not a standard Owlim config file");
+            return;
+        }
+
+        if (argNo == args.length) {
+            System.err.println("Parser mode (parallel or serial) must be specified");
+            return;
+        }
+
+        Parser parser= null;
+        String parserMode = args[argNo++];
+        if (parserMode.equals("parallel")) {
+            parser = new ParallelizedParser();
+        } else if (parserMode.equals("serial")) {
+            parser = new SerialParser();
+        } else {
+            System.out.println("Invalid parser mode: must be 'parallel' or 'serial'");
+            return;
+        }
+        System.out.println("Parser mode: " + parser);
+
+        if (argNo == args.length) {
+            System.out.println("Nothing to load");
+            return;
+        }
+
+        // Check the file entries whether all of them exist and prepare the list of files.
+        String[] filesToBeLoaded = new String[1000];
+        int fileCount = 0;
+        for (int i = argNo; i < args.length; i++) {
+            if (i == filesToBeLoaded.length) {
+                String[] newArr = new String[filesToBeLoaded.length * 2];
+                System.arraycopy(filesToBeLoaded, 0, newArr, 0, filesToBeLoaded.length);
+                filesToBeLoaded = newArr;
+            }
+            f = new File(args[i]);
+            if (!f.exists()) {
+                System.err.println("Entry '" + args[i] + "' does not exist.");
+                return;
+            }
+            filesToBeLoaded[fileCount++] = args[i];
+        }
+
+        // Create an Owlim instance.
+        OwlimSchemaRepository owlim = new OwlimSchemaRepository();
+        owlim.setParameter("ruleset", "empty"); // May be overriden by the config.
+        owlim.setParameter("repository-type", "file-repository");
+        owlim.setParameter("storage-folder", "storage");
+        owlim.setDataDir(new File("."));
+        readParameters(owlim, configFile);
+        FileUtils.recursiveDelete(new File((String) owlim.getParams().get("storage-folder")));
+        owlim.initialize();
+        SailConnectionImpl conn = (SailConnectionImpl) owlim.getConnection();
+        long[] statementCount = new long[1];
+        conn.begin();
+
+        // Load files.
+        for (int i = 0; i < fileCount; i++) {
+            if (filesToBeLoaded[i] == null) {
+                break;
+            }
+            visit(conn, statementCount, new File(filesToBeLoaded[i]), parser);
+        }
+
+        if (parser instanceof ParallelizedParser && !"empty".equals(owlim.getParams().get("ruleset"))) {
+            System.out.println("Ruleset: " + owlim.getParams().get("ruleset"));
+            conn.addStatement(new URIImpl("http://a"), new URIImpl("http://www.ontotext.com/owlim/system#reinfer"), new URIImpl("http://b"));
+        }
+
+        // Commit.
+        conn.commit();
+        long time = System.currentTimeMillis() - startTime;
+        long rate = statementCount[0] * 1000 / time;
+        System.out.println("\nCommitted. Statements till now: " + statementCount[0] + " in " + (time / 1000) + "s, rate = " + rate + " st/s.");
+
+        // Shutdown.
+        conn.close();
+        owlim.shutDown();
+
+        String storageFolder = (String) owlim.getParams().get("storage-folder");
+        BuildPredicates.main(new String[] { storageFolder });
+        File storageDir = new File(storageFolder);
+        new File(storageDir, "predicates-old").delete();
+        new File(storageDir, "predicates-old.index").delete();
+
+        System.out.println("Job finished successfully on " + new Date() + ". Parsed " + statementCount[0] + " statements in " + ((System.currentTimeMillis() - startTime) / 1000) + "s.");
+    }
+
+    /**
+     * Reads the config file.
+     */
+    private static void readParameters(final OwlimSchemaRepository owlim, String configFile) throws Exception {
+        RDFParser parser = Rio.createParser(RDFFormat.forFileName(configFile));
+        parser.setRDFHandler(new RDFHandlerBase() {
+
+            private String prefix = "http://www.ontotext.com/trree/owlim#";
+
+            @Override
+            public void handleStatement(Statement st) throws RDFHandlerException {
+                if (st.getPredicate().toString().startsWith(prefix)) {
+                    Literal l = st.getObject() instanceof Literal ? (Literal) st.getObject() : null;
+                    owlim.setParameter(st.getPredicate().toString().substring(prefix.length()), l != null ? l.getLabel() : st.getObject().toString());
+                }
+            }
+        });
+        FileInputStream inp = new FileInputStream(configFile);
+        parser.parse(inp, "http://www.ontotext.com/");
+        inp.close();
+    }
+
+    /**
+     * Visits the given entry.
+     * It is checked whether it is a directory, ZIP, GZ file or an ordinary file.
+     * An input stream is created and passed to the parse() method.
+     */
+    private static void visit(SailConnectionImpl conn, long[] statementCount, File fileEntry, Parser parser) throws Exception {
+        if (fileEntry.isDirectory()) {
+            for (File entry: fileEntry.listFiles()) {
+                visit(conn, statementCount, entry, parser);
+            }
+        } else if (fileEntry.getName().endsWith(".zip")) {
+            ZipFile zip = new ZipFile(fileEntry);
+            for (Enumeration<? extends ZipEntry> iter = zip.entries(); iter.hasMoreElements(); ) {
+                ZipEntry entry = iter.nextElement();
+                parser.parse(conn, statementCount, entry.getName(), zip.getInputStream(entry));
+            }
+        } else if (fileEntry.getName().endsWith(".gz")) {
+            parser.parse(conn, statementCount, fileEntry.getName().substring(0, fileEntry.getName().length() - 3), new GZIPInputStream(new BufferedInputStream(new FileInputStream(fileEntry), 1048576 * 16)));
+        } else {
+            RDFFormat format = RDFFormat.forFileName(fileEntry.getName());
+            if (format != null) {
+                parser.parse(conn, statementCount, fileEntry.getCanonicalPath(), new BufferedInputStream(new FileInputStream(fileEntry), 1048576 * 16));
+            } else {
+                System.err.println("Cannot parse file: " + fileEntry.getAbsolutePath());
+            }
+        }
+    }
+
+    private static class ParallelizedParser implements Parser {
+
+        public void parse(final SailConnectionImpl conn, final long[] statementCount, String entry, InputStream inp) {
+            try {
+
+                int poolSize = Integer.parseInt(System.getProperty("pool.size", "1"));
+                int bufferSize = Integer.parseInt(System.getProperty("pool.buffer.size", "1000000"));
+                long start = System.currentTimeMillis();
+
+                System.out.println("Parsing file " + entry);
+                AVLRepositoryConnection repConn = (AVLRepositoryConnection) conn.getOwlim().getRepository().getConnection();
+                repConn.beginTransaction();
+                ParallelParser parser = new ParallelParser(inp, entry, conn.getOwlim().getEntities(), repConn, StatementIdIterator.EXPLICIT_STATEMENT_STATUS, poolSize, bufferSize);
+                parser.parse();
+                repConn.setSize(repConn.size() + parser.getNumberOfStatements());
+                repConn.setNumberOfExplicitStatements(repConn.numberOfExplicitStatements() + parser.getNumberOfExplicitStatements());
+                statementCount[0] += parser.getNumberOfStatements();
+                repConn.commit();
+                long time = System.currentTimeMillis() - start;
+                System.out.println("Statements in repo: " + repConn.size() + " in " + (time / 1000) + "s. Average rate for file: " + (repConn.size() * 1000 / time) + " st/s");
+                repConn.close();
+                inp.close();
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "parallel";
+        }
+
+    }
+
+    private static class SerialParser implements Parser {
+
+        /**
+         * Parses the given input stream and puts the statements into the SAIL connection.
+         * Outputs statistics.
+         */
+        public void parse(final SailConnectionImpl conn, final long[] statementCount, String entry, InputStream inp) {
+            try {
+
+                System.out.println("Parsing file " + entry);
+                final long start = System.currentTimeMillis();
+                final long startStatementCount = statementCount[0];
+                RDFParser parser = null;
+                if (entry.endsWith(".nt") || entry.endsWith(".nq")) {
+                    parser = new NQuadsSimpleParser();
+                    System.out.println("Using custom fast NT/NQ parser");
+                } else {
+                    try {
+                        parser = Rio.createParser(RDFFormat.forFileName(entry));
+                    } catch (UnsupportedRDFormatException ex) {
+                        System.out.println("Skipped.");
+                        return;
+                    }
+                    System.out.println("Using Sesame's parser");
+                    if (parser instanceof RDFXMLParser) {
+                        RDFXMLParser rdfXmlParser = (RDFXMLParser) parser;
+                        rdfXmlParser.setPreserveBNodeIDs(false);
+                        rdfXmlParser.setVerifyData(false);
+                        rdfXmlParser.setParseStandAloneDocuments(true);
+                        rdfXmlParser.getParserConfig().set(XMLParserSettings.FAIL_ON_DUPLICATE_RDF_ID, Boolean.FALSE);
+                        rdfXmlParser.getParserConfig().set(XMLParserSettings.LOAD_EXTERNAL_DTD, Boolean.FALSE);
+                        rdfXmlParser.getParserConfig().set(BasicParserSettings.FAIL_ON_UNKNOWN_DATATYPES, Boolean.FALSE);
+                        rdfXmlParser.getParserConfig().set(BasicParserSettings.PRESERVE_BNODE_IDS, Boolean.FALSE);
+                        rdfXmlParser.getParserConfig().set(BasicParserSettings.VERIFY_DATATYPE_VALUES, Boolean.FALSE);
+                        rdfXmlParser.getParserConfig().set(XMLParserSettings.CUSTOM_XML_READER, XMLReaderFactory.createXMLReader());
+                    }
+                }
+                parser.setStopAtFirstError(false);
+                parser.setDatatypeHandling(RDFParser.DatatypeHandling.IGNORE);
+                parser.setRDFHandler(new RDFHandler() {
+
+                    @Override
+                    public void startRDF() throws RDFHandlerException {
+                    }
+
+                    @Override
+                    public void handleStatement(Statement s) throws RDFHandlerException {
+                        statementCount[0]++;
+                        long st = statementCount[0] - startStatementCount;
+                        if (st % 10000000 == 0) {
+                            long time = System.currentTimeMillis() - start;
+                            System.out.println("Parsed " + st + " in " + (time / 1000) + "s. Rate: " + (st * 1000 / time) + " st/s. Statements overall: " + statementCount[0] + ". Global average rate: " + (statementCount[0] * 1000 / (System.currentTimeMillis() - startTime)) + " st/s. Now: " + new Date() + ".");
+                        }
+                        try {
+                            if (s.getContext() != null) {
+                                conn.addStatement(s.getSubject(), s.getPredicate(), s.getObject(), s.getContext());
+                            } else {
+                                conn.addStatement(s.getSubject(), s.getPredicate(), s.getObject());
+                            }
+                        } catch (SailException ex) {
+                            throw new RDFHandlerException(ex);
+                        }
+                    }
+
+                    @Override
+                    public void handleNamespace(String arg0, String arg1)
+                            throws RDFHandlerException {
+                    }
+
+                    @Override
+                    public void handleComment(String arg0) throws RDFHandlerException {
+                    }
+
+                    @Override
+                    public void endRDF() throws RDFHandlerException {
+                    }
+                });
+                parser.parse(inp, "http://www.ontotext.com/");
+                inp.close();
+                long time = System.currentTimeMillis() - start;
+                long numStatements = statementCount[0] - startStatementCount;
+                long rate = time == 0 ? numStatements : numStatements * 1000 / time;
+                System.out.println("File " + entry + " parsed in " + (time / 1000) + " s. Number of statements parsed: " + numStatements + ". Rate: " + rate + " st/s. Statements overall: " + statementCount[0] + ". Global average rate: " + (statementCount[0] * 1000 / (System.currentTimeMillis() - startTime)) + " st/s. Now: " + new Date());
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "serial";
+        }
+
+    }
+
+}
