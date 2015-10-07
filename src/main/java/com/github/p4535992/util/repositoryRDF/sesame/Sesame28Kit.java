@@ -291,6 +291,7 @@ public class Sesame28Kit {
      * @param mRepository the Repository OpenRDF to Wrapper.
      * @return the RepositoryConnectionWrapper.
      */
+
     public RepositoryConnectionWrapper createNewRepositoryConnectionWrappper(Repository mRepository) {
         try {
             Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
@@ -300,6 +301,7 @@ public class Sesame28Kit {
         }
         return mRepositoryConnectionWrappper;
     }
+
 
     /**
      * Method to get RepositoryConnectionWrapper.
@@ -324,8 +326,18 @@ public class Sesame28Kit {
      * Method to get a new OpenRDF ValueFactory.
      * @return the OpenRDF ValueFactory.
      */
-    public ValueFactory createNewValueFactory(){
-        return  ValueFactoryImpl.getInstance();
+    public ValueFactory createNewValueFactory() {
+        return ValueFactoryImpl.getInstance();
+    }
+    /**
+     * Method to get RepositoryConnectionWrapper.
+     * @param mRepository the Repository OpenRDF to Wrapper.
+     * @param mRepositoryConnection the RepositoryConnection OpenRDF to Wrapper.
+     * @return the RepositoryConnectionWrapper.
+     */
+    public RepositoryConnectionWrapper setNewRepositoryConnectionWrappper(Repository mRepository,RepositoryConnection mRepositoryConnection) {
+        Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
+        return mRepositoryConnectionWrappper;
     }
 
 
@@ -3206,6 +3218,7 @@ public class Sesame28Kit {
         return prepareOperation(query);
     }
 
+
     /**
      * Method to convert a String Query to a OpenRDF Operation.
      * @param query the OpenRDF Query to analyze.
@@ -3215,6 +3228,7 @@ public class Sesame28Kit {
     public Operation convertQueryToOperation(Query query) throws RepositoryException {
         return convertStringQueryToOperation(query.toString());
     }
+
 
     /**
      * Method to create a OpenRDF Statement.
@@ -3353,5 +3367,6 @@ public class Sesame28Kit {
         if(literalObject instanceof Date) return factory.createLiteral((Date) literalObject);
         return null;
     }
+
 }
 
