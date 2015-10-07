@@ -276,7 +276,7 @@ public class StringKit<T> {
      * This utility is equivalent to: native2ascii -reverse -encoding utf-8
      * @param ASCII string encoding ascii.
      * @return UTF8 string encoding utf8.
-     * @throws IOException thorw if any error is occurrred.
+     * @throws IOException thorw if any error is occurred.
       */
     public static List<String> convertUnicodeEscapeToUTF8(File ASCII) throws IOException {
         List<String> list = new ArrayList<>();

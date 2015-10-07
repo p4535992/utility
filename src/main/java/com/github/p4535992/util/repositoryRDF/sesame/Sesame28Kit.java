@@ -11,8 +11,7 @@ import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
 import org.openrdf.http.client.SesameClientImpl;
 import org.openrdf.model.*;
-import org.openrdf.model.impl.StatementImpl;
-import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.impl.*;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.*;
 import org.openrdf.repository.*;
@@ -33,8 +32,8 @@ import org.openrdf.sail.inferencer.fc.DirectTypeHierarchyInferencer;
 import org.openrdf.sail.inferencer.fc.ForwardChainingRDFSInferencer;
 import org.openrdf.sail.memory.MemoryStore;
 import org.openrdf.sail.nativerdf.NativeStore;
-import org.openrdf.model.impl.TreeModel;
 
+import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -292,7 +291,7 @@ public class Sesame28Kit {
      * @param mRepository the Repository OpenRDF to Wrapper.
      * @return the RepositoryConnectionWrapper.
      */
-    public RepositoryConnectionWrapper setNewRepositoryConnectionWrappper(Repository mRepository) {
+    public RepositoryConnectionWrapper createNewRepositoryConnectionWrappper(Repository mRepository) {
         try {
             Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
             Sesame28Kit.mRepositoryConnectionWrappper.setDelegate(mRepository.getConnection());
@@ -308,9 +307,25 @@ public class Sesame28Kit {
      * @param mRepositoryConnection the RepositoryConnection OpenRDF to Wrapper.
      * @return the RepositoryConnectionWrapper.
      */
-    public RepositoryConnectionWrapper setNewRepositoryConnectionWrappper(Repository mRepository,RepositoryConnection mRepositoryConnection) {
+    public RepositoryConnectionWrapper createNewRepositoryConnectionWrappper(Repository mRepository,RepositoryConnection mRepositoryConnection) {
         Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
         return mRepositoryConnectionWrappper;
+    }
+
+    /**
+     * Method to get a new OpenRDF Model.
+     * @return the OpenRDF Model.
+     */
+    public Model createNewModel(){
+        return new LinkedHashModel();
+    }
+
+    /**
+     * Method to get a new OpenRDF ValueFactory.
+     * @return the OpenRDF ValueFactory.
+     */
+    public ValueFactory createNewValueFactory(){
+        return  ValueFactoryImpl.getInstance();
     }
 
 
@@ -3150,7 +3165,7 @@ public class Sesame28Kit {
      * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
      * @throws RepositoryException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(Query query) 
+    public Long getExecutionQueryTime(Query query)
             throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
         return getExecutionQueryTime(convertQueryToOperation(query));
     }
@@ -3166,7 +3181,7 @@ public class Sesame28Kit {
     public Long getExecutionQueryTime(Operation preparedOperation) 
             throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
         if (preparedOperation == null) {
-            SystemLog.warning("Unable to parse query: " + preparedOperation);
+            SystemLog.warning("Unable to parse query the preparedOperation id NULL");
             return null;
         }
         //If the Query is a Update..........
@@ -3199,6 +3214,144 @@ public class Sesame28Kit {
      */
     public Operation convertQueryToOperation(Query query) throws RepositoryException {
         return convertStringQueryToOperation(query.toString());
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param uriObject the uri of the object.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(URI uriSubject,URI uriPredicate, URI uriObject){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(uriSubject,uriPredicate,uriObject);
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param literalObject the Object Value of the Literal Object.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(URI uriSubject,URI uriPredicate,Object literalObject){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(uriSubject,uriPredicate,createLiteral(literalObject));
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param uriObject the uri of the object.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(String uriSubject,String uriPredicate, String uriObject){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(
+                factory.createURI(uriSubject),
+                factory.createURI(uriPredicate),
+                factory.createURI(uriObject)
+        );
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param literalObject the Object Value of the Literal Object.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(String uriSubject,String uriPredicate,Object literalObject){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(
+                factory.createURI(uriSubject),
+                factory.createURI(uriPredicate),
+                createLiteral(literalObject)
+        );
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param uriObject the uri of the object.
+     * @param context the uri of the context.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(URI uriSubject,URI uriPredicate, URI uriObject,URI context){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(uriSubject,uriPredicate,uriObject,context);
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param literalObject the Object Value of the Literal Object.
+     * @param context the uri of the context.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(URI uriSubject,URI uriPredicate,Object literalObject,URI context){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(uriSubject,uriPredicate,createLiteral(literalObject),context);
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param uriObject the uri of the object.
+     * @param context the uri of the context.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(String uriSubject,String uriPredicate, String uriObject,String context){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(
+                factory.createURI(uriSubject),
+                factory.createURI(uriPredicate),
+                factory.createURI(uriObject),
+                factory.createURI(context)
+        );
+    }
+
+    /**
+     * Method to create a OpenRDF Statement.
+     * @param uriSubject the uri of the subject.
+     * @param uriPredicate the uri of the predicate.
+     * @param literalObject the Object Value of the Literal Object.
+     * @param context the uri of the context.
+     * @return the OpenRDF Statement Object.
+     */
+    public Statement createStatement(String uriSubject,String uriPredicate,Object literalObject,String context){
+        ValueFactory factory = createNewValueFactory();
+        return factory.createStatement(
+                factory.createURI(uriSubject),
+                factory.createURI(uriPredicate),
+                createLiteral(literalObject),
+                factory.createURI(context)
+        );
+    }
+
+    /**
+     * Method toc reate a OpenRDF Literal.
+     * @param literalObject the Object value of the Literal.
+     * @return the OpenRDF Literal Object.
+     */
+    public Literal createLiteral(Object literalObject){
+        ValueFactory factory = createNewValueFactory();
+        if(literalObject instanceof String) return factory.createLiteral((String) literalObject);
+        if(literalObject instanceof Boolean) return factory.createLiteral((Boolean) literalObject);
+        if(literalObject instanceof Byte) return factory.createLiteral((Byte) literalObject);
+        if(literalObject instanceof Short) return factory.createLiteral((Short) literalObject);
+        if(literalObject instanceof Integer) return factory.createLiteral((Integer) literalObject);
+        if(literalObject instanceof Long) return factory.createLiteral((Long) literalObject);
+        if(literalObject instanceof Float) return factory.createLiteral((Float) literalObject);
+        if(literalObject instanceof Double) return factory.createLiteral((Double) literalObject);
+        if(literalObject instanceof XMLGregorianCalendar) return factory.createLiteral((XMLGregorianCalendar) literalObject);
+        if(literalObject instanceof Date) return factory.createLiteral((Date) literalObject);
+        return null;
     }
 }
 
