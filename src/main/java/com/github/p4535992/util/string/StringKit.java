@@ -9,6 +9,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -1015,6 +1016,7 @@ public class StringKit<T> {
      * @return the String of the object.
      */
     public static String convertObjectToString(Object object){
+        if(object instanceof URL) return object.toString();
         return (String)object;
     }
 

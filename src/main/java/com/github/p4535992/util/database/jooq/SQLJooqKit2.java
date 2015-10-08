@@ -8,6 +8,7 @@ import com.github.p4535992.util.string.StringKit;
 import org.jooq.*;
 import org.jooq.impl.*;
 
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -193,7 +194,7 @@ public class SQLJooqKit2 {
                                   String limit,String offset){
         Field[] fields = new Field[columns.length];
         for(int i=0; i < columns.length; i++){
-            Field<String> field = (Field<String>) createField(columns[i]);
+            Field<String> field = DSL.field(columns[i],String.class);
             fields[i] = field;
         }
         Table<Record> table = new TableImpl<>(nameTable);
@@ -272,8 +273,8 @@ public class SQLJooqKit2 {
         Table<Record> table = new TableImpl<>(nameTable);
         UpdateQuery<Record> uQuery = dslContext.updateQuery(table);
         for(int i=0; i < columns.length; i++){
-            Field<String> field = (Field<String>) createField(columns[i]);
-            Field fv = createField(values[i]);
+            Field<String> field = DSL.field(columns[i],String.class);;
+            Field fv = createFieldValue(values[i]);
             uQuery.addValue(field, fv);
         }
         //uQuery.addFrom(table);
@@ -338,7 +339,8 @@ public class SQLJooqKit2 {
      * @param value object to convert.
      * @return a object JOOQ Field.
      */
-    public static Field<?> createField(Object value){
+    public static Field<?> createFieldValue(Object value){
+        if(value instanceof URL) return DSL.val(StringKit.convertObjectToString(value), String.class);
         if(value instanceof String) return DSL.val(StringKit.convertObjectToString(value), String.class);
         if(value instanceof Condition) return DSL.val((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,Boolean.class);
@@ -350,7 +352,8 @@ public class SQLJooqKit2 {
         if(value instanceof Float) return DSL.val(value,Float.class);
         if(value instanceof Character) return DSL.val(value,Character.class);
         if(value instanceof Void) return DSL.val(value,Void.class);
-        return DSL.val(value);
+        //return DSL.val(value);
+        return DSL.field(StringKit.convertObjectToString(value));
     }
 
     /**
@@ -359,8 +362,8 @@ public class SQLJooqKit2 {
      * @return a object JOOQ Field.
      */
     @SuppressWarnings("rawtypes")
-    public static Field createFieldCapture(Object value) {
-         return createField(value);
+    public static Field createFieldValueCapture(Object value) {
+         return createFieldValue(value);
     }
 
     /**
@@ -369,7 +372,8 @@ public class SQLJooqKit2 {
      * @param dataType the JOOQ Datatype.
      * @return a object JOOQ Field.
      */
-    public static Field<?> createField(Object value,DataType<?> dataType){
+    public static Field<?> createFieldValue(Object value,DataType<?> dataType){
+        if(value instanceof URL) return DSL.val(StringKit.convertObjectToString(value), dataType);
         if(value instanceof String) return DSL.val(StringKit.convertObjectToString(value), dataType);
         //if(value instanceof Condition) return DSL.field((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,dataType);
@@ -381,7 +385,8 @@ public class SQLJooqKit2 {
         if(value instanceof Float) return DSL.val(value,dataType);
         if(value instanceof Character) return DSL.val(value,dataType);
         if(value instanceof Void) return DSL.val(value,dataType);
-        return DSL.val(value);
+        //return DSL.val(value);
+        return DSL.field(StringKit.convertObjectToString(value),dataType);
     }
 
     /**
@@ -391,8 +396,8 @@ public class SQLJooqKit2 {
      * @return a object JOOQ Field.
      */
     @SuppressWarnings("rawtypes")
-    public static Field createFieldCapture(Object value,DataType<?> dataType){
-        return createField(value,dataType);
+    public static Field createFieldValueCapture(Object value,DataType<?> dataType){
+        return createFieldValue(value, dataType);
     }
 
     /**
@@ -422,7 +427,7 @@ public class SQLJooqKit2 {
      * @param clazzType class type of the object.
      * @return a JOOQ Field.
      */
-    public static Field<?> createField(Object value,Class<?> clazzType){return DSL.val(value, clazzType); }
+    public static Field<?> createFieldValue(Object value,Class<?> clazzType){return DSL.val(value, clazzType); }
 
     /**
      * Method to create a JOOQ Field.
@@ -431,7 +436,7 @@ public class SQLJooqKit2 {
      * @return a JOOQ Field.
      */
     @SuppressWarnings("rawtypes")
-    public static Field createFieldCapture(Object value,Class<?> clazzType){return DSL.val(value, clazzType); }
+    public static Field createFieldValueCapture(Object value,Class<?> clazzType){return DSL.val(value, clazzType); }
 
     /**
      * Method to create a JOOQ Field.
@@ -484,7 +489,7 @@ public class SQLJooqKit2 {
     @SuppressWarnings({"rawtypes","unchecked"})
     public static Field<?> createField(Object value,int sqlTypes){
         if(value == null || sqlTypes == Types.NULL) return null;
-        return createField(value,createDataType(sqlTypes));
+        return createFieldValue(value, createDataType(sqlTypes));
     }
 
     /**
@@ -494,9 +499,9 @@ public class SQLJooqKit2 {
      * @return a JOOQ Field.
      */
     @SuppressWarnings({"rawtypes","unchecked"})
-    public static Field createFieldCapture(Object value,int sqlTypes){
+    public static Field createFieldValueCapture(Object value,int sqlTypes){
         if(value == null || sqlTypes == Types.NULL) return null;
-        return createField(value,createDataType(sqlTypes));
+        return createFieldValue(value, createDataType(sqlTypes));
     }
 
     /**
@@ -568,9 +573,9 @@ public class SQLJooqKit2 {
         Field<Object>[] fv = new Field[columns.length];
         for(int i=0; i < columns.length; i++){
             //return Field<String>
-            Field<String> field = (Field<String>) createField(columns[i]);
+            Field<String> field = DSL.field(columns[i],String.class);;
             fields[i] = field;
-            fv[i] = createFieldCapture(values[i], types[i]);
+            fv[i] = createFieldValueCapture(values[i], types[i]);
         }
         return CollectionKit.convertTwoArrayToMap(fields,fv);
     }
@@ -589,7 +594,7 @@ public class SQLJooqKit2 {
         for(int i=0; i < columns.length; i++){
             Field<String> field = DSL.val(columns[i]);
             fields[i] = field;
-            fv[i] = createFieldCapture(values[i]);
+            fv[i] = createFieldValueCapture(values[i]);
         }
         return CollectionKit.convertTwoArrayToMap(fields,fv);
     }
@@ -621,10 +626,10 @@ public class SQLJooqKit2 {
         List<Condition> conds = new ArrayList<>();
         for(int i=0; i < columns.length; i++){
             if(values[i]==null) {
-                conds.add(createField(columns[i]).isNull());
+                conds.add(createFieldValue(columns[i]).isNull());
             }else {
                 if(values[i] instanceof String) {
-                    conds.add(createField(columns[i]).eq(createFieldCapture(values[i], types[i])));
+                    conds.add(createFieldValue(columns[i]).eq(createFieldValueCapture(values[i], types[i])));
                 }
             }
         }
@@ -643,13 +648,13 @@ public class SQLJooqKit2 {
         if (columns != null && !CollectionKit.isArrayEmpty(columns)) {
             for (int i = 0; i < columns.length; i++) {
                 if (values[i] == null) {
-                    conds.add(createField(columns[i]).isNull());
+                    conds.add(createFieldValue(columns[i]).isNull());
                 } else if(values[i] instanceof String){
-                    conds.add(createField(columns[i]).eq(createFieldCapture(values[i])));
+                    conds.add(createFieldValue(columns[i]).eq(createFieldValueCapture(values[i])));
                 /*} else if(values_where[i] instanceof Integer){
                     conds.add(createField(columns_where[i]).eq(createFieldValue(values_where[i])));*/
                 } else {
-                    conds.add(createField(columns[i]).eq((Field) createField(values[i])));
+                    conds.add(createFieldValue(columns[i]).eq((Field) createFieldValue(values[i])));
                 }
             }
         }else {
@@ -667,7 +672,7 @@ public class SQLJooqKit2 {
     public static Field<?>[] convertObjecyArrayToFieldValueArray(Object[] arrayObj){
         Field[] fields = new Field[arrayObj.length];
         for(int i=0; i < arrayObj.length; i++){
-            fields[i] = createField(arrayObj[i]);
+            fields[i] = createFieldValue(arrayObj[i]);
         }
         return fields;
     }
@@ -686,7 +691,7 @@ public class SQLJooqKit2 {
         Map<String,Object> map = new HashMap<>();
         Record rec = new TableRecordImpl<>(new TableImpl(nameTable));
         for(int i=0; i < columns.length; i++){
-            fields[i] = createField(columns[i]);
+            fields[i] = createFieldValue(columns[i]);
             if(values[i] == null){
                 map.put(columns[i],null);
             }else {
@@ -747,8 +752,8 @@ public class SQLJooqKit2 {
         System.out.println(StringKit.toStringInline(query));
         query = select("tabl1",columns,true);
         System.out.println(StringKit.toStringInline(query));
-        Field<String> f1 = (Field<String>) createField("col1");
-        Field<String> f2 = (Field<String>) createField("col2");
+        Field<String> f1 = (Field<String>) createFieldValue("col1");
+        Field<String> f2 = (Field<String>) createFieldValue("col2");
         /*final Condition cond1 = f1.eq(f2);
         final Condition cond2 = f1.isNotNull();
         final Condition cond3 = f2.isNotNull();
