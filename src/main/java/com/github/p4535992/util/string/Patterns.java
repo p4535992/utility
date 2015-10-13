@@ -144,6 +144,20 @@ public class Patterns {
                         // input.  This is to stop foo.sure from
                         // matching as foo.su
 
+    public static final Pattern WEB_URL_NO_PROTOCOL = Pattern.compile(
+            "(((?:(?:[a-zA-Z0-9\\$\\-\\_\\.\\+\\!\\*\\'\\(\\)"
+                    + "\\,\\;\\?\\&\\=]|(?:\\%[a-fA-F0-9]{2})){1,64}(?:\\:(?:[a-zA-Z0-9\\$\\-\\_"
+                    + "\\.\\+\\!\\*\\'\\(\\)\\,\\;\\?\\&\\=]|(?:\\%[a-fA-F0-9]{2})){1,25})?\\@)?)?"
+                    + "(?:" + DOMAIN_NAME + ")"
+                    + "(?:\\:\\d{1,5})?)" // plus option port number
+                    + "(\\/(?:(?:[" + GOOD_IRI_CHAR + "\\;\\/\\?\\:\\@\\&\\=\\#\\~"  // plus option query params
+                    + "\\-\\.\\+\\!\\*\\'\\(\\)\\,\\_])|(?:\\%[a-fA-F0-9]{2}))*)?"
+                    + "(?:\\b|$)"); // and finally, a word boundary or end of
+    // input.  This is to stop foo.sure from
+    // matching as foo.su
+
+    public static final Pattern Protocol_URL = Pattern.compile("((?:(http|https|Http|Https|rtsp|Rtsp):\\/\\/))");
+
     public static final Pattern EMAIL_ADDRESS
         = Pattern.compile(
             "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
@@ -264,12 +278,11 @@ public class Patterns {
      */
     public static boolean isValidPhoneNumber(String number) {
         return number != null && Patterns.PHONE.matcher(number).matches();
-//return Patterns.isGlobalPhoneNumber(number);
+        //return Patterns.isGlobalPhoneNumber(number);
     }
 
     /**
      * Uses androids android.util.Patterns.WEB_URL to check if an url is valid.
-     *
      * @param url Address to check
      * @return true if the <code>url</code> is a valid web address.
      */
@@ -277,10 +290,42 @@ public class Patterns {
         return url != null && Patterns.WEB_URL.matcher(url).matches();
     }
 
+    /**
+     * Method to  check if an url is valid.
+     * @param url Address to check
+     * @return true if the <code>url</code> is a valid web address.
+     */
     public  static boolean isValidURLSimple(String url) {
         return url != null && url.matches("^(https?|ftp)://.*$");
     }
 
+    /**
+     * Method to check if an url has the valid protocol.
+     * @param url Address to check
+     * @return true if the <code>url</code> is a valid web address.
+     */
+    public static boolean isValidURLWithProtocol(String url){
+        if(isValidURL(url) && Patterns.Protocol_URL.matcher(url).matches())  return true;
+        return false;
+    }
+
+    /**
+     * Method to check if an url has the valid protocol.
+     * @param url Address to check
+     * @return true if the <code>url</code> is a valid web address.
+     */
+    public static boolean isValidURLWithoutProtocol(String url){
+        if(Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() &&
+                !Patterns.Protocol_URL.matcher(url).matches())  return true;
+        return false;
+    }
+
+    /**
+     * Method utility convert a insert query of JOOQ in a insert query for springframework jdbc.
+     * @param queryString the String of the query JOOQ.
+     * @param columns the Array of String with names of columns.
+     * @return the String of the Query SpringFramework JDBC.
+     */
     public static String getQueryInsertValuesParam(String queryString, String[] columns){
         String preQuery = StringKit.findWithRegex(queryString,MANAGE_SQL_PREQUERY_INSERT);
         String postQuery = queryString.replace(preQuery, "");
@@ -305,6 +350,11 @@ public class Patterns {
                 + ") values (" + values +")" + postQuery;
     }
 
+    /**
+     * Method utility convert a insert query of JOOQ in a insert query for springframework jdbc.
+     * @param queryString the String of the query JOOQ.
+     * @return the String of the Query SpringFramework JDBC.
+     */
     public static String getQueryInsertWhereParam(String queryString){
         String values = StringKit.findWithRegex(queryString,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1);
         String supportQuery = queryString.replace(values, "");

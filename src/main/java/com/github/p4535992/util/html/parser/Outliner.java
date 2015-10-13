@@ -5,9 +5,8 @@ import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
 import java.io.*;
 import java.net.URL;
-/**
- * Created by 4535992 on 05/05/2015.
- */
+
+
 public class Outliner extends HTMLEditorKit.ParserCallback {
 
     private Writer out;

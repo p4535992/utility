@@ -13,9 +13,7 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
-/**
- * Created by 4535992 on 05/05/2015.
- */
+
 public class PageSaver extends HTMLEditorKit.ParserCallback {
 
     private Writer out;

@@ -725,7 +725,7 @@ public class StringKit<T> {
      * @param url the string address web.
      * @return if tru is a url address web.
      */
-    public static boolean isURLSimple(String url){
+    public static boolean isURLWithProtocol(String url){
         return url.matches("^(https?|ftp)://.*$");
     }
     /**
@@ -734,10 +734,14 @@ public class StringKit<T> {
      * @return he string of the url with protocol.
      */
     public static String addProtocolToURLString(String url) {
-        if (!url.matches("^(https?|ftp)://.*$")) {
-            return "http://" + url;
-        }
-        return url;
+       if(isURL(url)) {
+           if (!(Patterns.isValidURLWithProtocol(url))) {
+               url = "http://" + url;
+               if (isURL(url)) return url;
+           }
+           return url;
+       }
+        return null;
     }
 
     /**

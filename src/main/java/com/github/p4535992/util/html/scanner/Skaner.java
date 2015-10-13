@@ -37,7 +37,7 @@ public class Skaner {
                         }
                     });
             for (Object t : list) {
-                System.out.format("%-10s %s\n", (Tag)t, map.get(t));
+                System.out.format("%-10s %s\n", t, map.get(t));
             }
         }
         public Skaner() {
@@ -64,10 +64,10 @@ public class Skaner {
             }
         }
 
-        public void scan(File file, Map<Tag,Object> map) throws FileNotFoundException, IOException {
+        public void scan(File file, Map<Tag,Object> map) throws IOException {
             scan(new BufferedReader(new FileReader(file)), map);
         }
-        public Map<Tag,Object> scan(File file) throws FileNotFoundException, IOException {
+        public Map<Tag,Object> scan(File file) throws IOException {
             return scan(new BufferedReader(new FileReader(file)));
         }
 
@@ -101,11 +101,7 @@ public class Skaner {
 
         private static class ScannerParserCallback extends HTMLEditorKit.ParserCallback {
             final Map<Tag,Object> map;
-            Parser p;
-            ScannerParserCallback(Map<Tag,Object> map) {
-                this.map = map;
-            //p=pp;
-            }
+            ScannerParserCallback(Map<Tag,Object> map) {this.map = map;}
             @Override
             public void handleStartTag(Tag t, MutableAttributeSet a, int pos) {
                 System.out.println("hhhhhhh"+t.toString());
@@ -121,12 +117,14 @@ public class Skaner {
             @Override
             public void handleSimpleTag(Tag t, MutableAttributeSet a, int pos) {
                 Integer integer = (Integer)map.get(t);
-                int counter = (integer != null) ? integer.intValue() : 0;
+                int counter = (integer != null) ? integer : 0;
                 map.put(t, ++counter);
             }
+
             public void handleText(char[] data, int pos) {
                 System.out.println(data);
             }
+
             public void handleEndTag(Tag t,MutableAttributeSet a,int pos){
                 if ((t.toString()).compareTo("/table")==0){
                     System.out.println("TABELKA SIE KONCZY");

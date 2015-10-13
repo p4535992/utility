@@ -39,19 +39,20 @@ public class HtmlScanner {
         
         Collections.sort(list,compare);
         for (Object t : list) {
-            System.out.format("%-10s %s\n", (Tag)t, map.get(t));
+            System.out.format("%-10s %s\n", t, map.get(t));
         }
     }
     public HtmlScanner() {
         parser = (new ScannerHTMLEditorKit()).getParser();
     }
 
-    public Map<Tag,Integer> scanHierarchy(File file) throws FileNotFoundException, IOException {
+    public Map<Tag,Integer> scanHierarchy(File file) throws IOException {
         Map<Tag,Integer> map = new HashMap<>();
         scanHierarchyImpl(file, map);
         return map;
     }
-    private void scanHierarchyImpl(File file, Map<Tag,Integer> map) throws FileNotFoundException, IOException {
+
+    private void scanHierarchyImpl(File file, Map<Tag,Integer> map) throws IOException {
         if (file.isDirectory()) {
             for (File f :file.listFiles()) {
                 scanHierarchyImpl(f, map);
@@ -66,10 +67,10 @@ public class HtmlScanner {
         }
     }
 
-    public void scan(File file, Map<Tag,Integer> map) throws FileNotFoundException, IOException {
+    public void scan(File file, Map<Tag,Integer> map) throws IOException {
         scan(new FileReader(file), map);
     }
-    public Map<Tag,Integer> scan(File file) throws FileNotFoundException, IOException {
+    public Map<Tag,Integer> scan(File file) throws IOException {
         return scan(new FileReader(file));
     }
 
@@ -81,9 +82,10 @@ public class HtmlScanner {
         scan(in, map);
         return map;
     }
+
     //we need this class only to get the default html parser
-//the returned parser creates a new parser on every parse call
-//so one parser is enough
+    //the returned parser creates a new parser on every parse call
+    //so one parser is enough
     private static class ScannerHTMLEditorKit extends HTMLEditorKit {
         private static final long serialVersionUID = 1L;
         @Override
@@ -103,7 +105,7 @@ public class HtmlScanner {
         @Override
         public void handleSimpleTag(Tag t, MutableAttributeSet a, int pos) {
             Integer integer = map.get(t);
-            int counter = (integer != null) ? integer.intValue() : 0;
+            int counter = (integer != null) ? integer : 0;
             map.put(t, ++counter);
         }
     }

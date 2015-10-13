@@ -1,4 +1,5 @@
 package com.github.p4535992.util.html;
+import com.github.p4535992.util.http.HttpUtil;
 import com.github.p4535992.util.log.SystemLog;
 
 import java.io.File;
@@ -64,9 +65,12 @@ public class JSoupKit {
         /// <param name="HTML"></param>
         /// <param name="HtmlResponse"></param>
         /// <returns></returns>
-        public static List<List<List<String>>> UniversalExtractor(String HTMLDocument, boolean HTML, String tagName)throws Exception
+        public static List<List<List<String>>> UniversalExtractor(String url, boolean HTML, String tagName)throws Exception
         {        
-            org.jsoup.nodes.Document htmldoc = org.jsoup.Jsoup.parse(HTMLDocument);          
+            //org.jsoup.nodes.Document htmldoc = org.jsoup.Jsoup.parse(HTMLDocument);
+            //org.jsoup.nodes.Document htmldoc = org.jsoup.Jsoup.connect(url).get();
+            String doc = HttpUtil.get(url);
+            org.jsoup.nodes.Document htmldoc = convertHTMLStringToJsoupDocument(doc);
             return UniversalExtractor(htmldoc, HTML, tagName);
         }
         
@@ -318,11 +322,11 @@ public class JSoupKit {
         /// <returns></returns>
         private static List<String> Extractor6(org.jsoup.nodes.Element node, boolean HTML, List<String> Cols)
         {
-            String[] goodTag = new String[] { "A", "IMG", "P", "SPAN", "CAPTION", "DIV", "DD", "DT", "DL", "LI", "DIV", "BR", "STRONG"};//...possible new entry -> STRONG,#TEXT
+            String[] goodTag = new String[] { "A", "IMG", "P", "SPAN", "CAPTION", "DIV", "DD", "DT", "DL", "LI", "DIV", "BR", "STRONG","B"};//...possible new entry -> STRONG,#TEXT
             String[] goodAttr = new String[] { "SRC", "HREF", "ID", "NAME", "VALUE", "TITLE", "ALT","ONCLICK" }; //... aggiungere via via gli attributi che si reputano interessanti
             String Testo;                      
             org.jsoup.nodes.Element child;
-            if (node.children().size() == 1 && Arrays.asList(goodTag).contains(node.children().first().tagName().toUpperCase())) //Se è una tag in cui non si deve estarre informazioni a questo giro
+            if (node.children().size() == 1 && !Arrays.asList(goodTag).contains(node.children().first().tagName().toUpperCase())) //Se è una tag in cui non si deve estarre informazioni a questo giro
             { 
                 return Cols; //..do nothing
             }
@@ -345,11 +349,14 @@ public class JSoupKit {
                     boolean check = false;
                     for(String attr : goodAttr)
                     {
-                        if (child.attributes().asList().contains(attr) && clean(child.attr(attr))!=null)
+                        //org.jsoup.nodes.Attribute aaa = new  org.jsoup.nodes.Attribute(goodAttr,);
+                        if ((child.attributes().hasKey(attr)||(child.attributes().hasKey(attr.toLowerCase())))
+                                && clean(child.attr(attr))!=null)
                         {
                             Testo = Testo + "[" + attr + "=" + clean(child.attr(attr)) + "] ";
                         }
-                        else if (child.attributes().asList().contains(attr) && Testo == "" && Arrays.asList(goodAttr).contains(attr))
+                        else if ((child.attributes().hasKey(attr)||(child.attributes().hasKey(attr.toLowerCase())))
+                                && Objects.equals(Testo, "") && Arrays.asList(goodAttr).contains(attr))
                         {
                             check = true;
                         }

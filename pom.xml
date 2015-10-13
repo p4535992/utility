@@ -193,11 +193,11 @@
             <version>${org.hibernate.version}</version>
         </dependency>
         <!-- optional hibernate dependency -->
-        <!--<dependency>
+        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-osgi</artifactId>
             <version>${org.hibernate.version}</version>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-envers</artifactId>
