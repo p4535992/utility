@@ -146,7 +146,7 @@ public class RPC {
                 '}';
     }
 
-    public static List<RPC>getInfoRPC1() throws Exception {
+    public static List<RPC> getInfoRPCFromSite() throws Exception {
         String urlBaseComuni = "http://www.comuni-italiani.it/alfa/";
         URL url = new URL(urlBaseComuni);
         List<List<List<String>>> listaComuni = JSoupKit.TablesExtractor(url, false);

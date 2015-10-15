@@ -1,0 +1,84 @@
+INFO [2015-03-27 10:11:16,075] (ServletContextParameterMap-><clinit>->86): Karma home.home: C:\Users\Marco\karma\
+INFO [2015-03-27 10:11:16,318] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_PREFERENCES_DIRECTORY -> C:\Users\Marco\karma\UserPrefs\
+INFO [2015-03-27 10:11:16,335] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_CONFIG_DIRECTORY -> C:\Users\Marco\karma\Config\
+INFO [2015-03-27 10:11:16,344] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_PYTHON_SCRIPTS_DIRECTORY -> C:\Users\Marco\karma\python\
+INFO [2015-03-27 10:16:59,742] (ModelingConfiguration->loadParams->188): Load modeling.properties: C:\Users\Marco\karma\Config\modeling.properties:true
+INFO [2015-03-27 10:16:59,763] (ModelingConfiguration->loadParams->200): Done Loading modeling.properties
+INFO [2015-03-27 10:16:59,773] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:false
+INFO [2015-03-27 10:17:33,083] (Reflections->scan->205): Reflections took 31546 ms to scan 25 urls, producing 88 keys and 747 values 
+INFO [2015-03-27 10:17:40,350] (ExecutionController->dynamicallyBuildCommandFactoryMap->93): Loaded 101 possible commands
+INFO [2015-03-27 10:17:40,362] (ModelingConfiguration->loadParams->188): Load modeling.properties: C:\Users\Marco\karma\Config\modeling.properties:true
+INFO [2015-03-27 10:17:40,375] (ModelingConfiguration->loadParams->200): Done Loading modeling.properties
+INFO [2015-03-27 10:17:43,156] (WorksheetCommandHistoryExecutor->executeCommand->97): Command in history: RefreshSuperSelectionCommand
+INFO [2015-03-27 10:17:43,874] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:43,991] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,002] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,013] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,023] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,037] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,046] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,057] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,072] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,081] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,095] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,122] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,132] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,144] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,175] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,191] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,229] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,258] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,278] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,309] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,321] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 10:17:44,518] (WorksheetCommandHistoryExecutor->executeCommand->112): Executing command: RefreshSuperSelectionCommand
+INFO [2015-03-27 10:17:44,838] (UIConfiguration->loadConfig->65): UICOnfiguration:C:\Users\Marco\karma\Config\
+INFO [2015-03-27 10:17:44,848] (UIConfiguration->loadConfig->75): Load File:C:\Users\Marco\karma\Config\/ui.properties
+INFO [2015-03-27 10:17:45,167] (KR2RMLConfiguration->loadParams->47): Load kr2rml.properties: C:\Users\Marco\karma\Config\kr2ml.properties:true
+INFO [2015-03-27 10:17:45,192] (KR2RMLConfiguration->loadParams->61): Done loading kr2rml.properties
+INFO [2015-03-27 10:18:34,505] (OfflineRdfGenerator->generateRDF->183): done after 114778
+INFO [2015-03-27 10:18:40,446] (OfflineRdfGenerator->generateRDF->184): RDF published at: C:\Users\Marco\Desktop\tripla-model-2015-03-30.n3
+INFO [2015-03-27 13:47:59,509] (ServletContextParameterMap-><clinit>->86): Karma home.home: C:\Users\Marco\karma\
+INFO [2015-03-27 13:47:59,564] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_PREFERENCES_DIRECTORY -> C:\Users\Marco\karma\UserPrefs\
+INFO [2015-03-27 13:47:59,613] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_CONFIG_DIRECTORY -> C:\Users\Marco\karma\Config\
+INFO [2015-03-27 13:47:59,616] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_PYTHON_SCRIPTS_DIRECTORY -> C:\Users\Marco\karma\python\
+INFO [2015-03-27 14:24:01,066] (ServletContextParameterMap-><clinit>->86): Karma home.home: C:\Users\Marco\karma\
+INFO [2015-03-27 14:24:01,135] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_PREFERENCES_DIRECTORY -> C:\Users\Marco\karma\UserPrefs\
+INFO [2015-03-27 14:24:01,162] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_CONFIG_DIRECTORY -> C:\Users\Marco\karma\Config\
+INFO [2015-03-27 14:24:01,173] (KarmaUserMetadata->createDirectoryForMetadata->30): Set parameter: USER_PYTHON_SCRIPTS_DIRECTORY -> C:\Users\Marco\karma\python\
+INFO [2015-03-27 14:24:40,331] (ModelingConfiguration->loadParams->188): Load modeling.properties: C:\Users\Marco\karma\Config\modeling.properties:true
+INFO [2015-03-27 14:24:40,335] (ModelingConfiguration->loadParams->200): Done Loading modeling.properties
+INFO [2015-03-27 14:24:40,336] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:false
+INFO [2015-03-27 14:24:47,560] (Reflections->scan->205): Reflections took 6505 ms to scan 25 urls, producing 88 keys and 747 values 
+INFO [2015-03-27 14:24:49,882] (ExecutionController->dynamicallyBuildCommandFactoryMap->93): Loaded 101 possible commands
+INFO [2015-03-27 14:24:49,888] (ModelingConfiguration->loadParams->188): Load modeling.properties: C:\Users\Marco\karma\Config\modeling.properties:true
+INFO [2015-03-27 14:24:49,894] (ModelingConfiguration->loadParams->200): Done Loading modeling.properties
+INFO [2015-03-27 14:24:50,681] (WorksheetCommandHistoryExecutor->executeCommand->97): Command in history: RefreshSuperSelectionCommand
+INFO [2015-03-27 14:24:50,858] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,031] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,033] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,035] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,036] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,041] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,055] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,057] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,058] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,060] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,061] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,062] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,063] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,065] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,066] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,072] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,075] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,076] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,078] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,079] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,081] (ModelingConfiguration->getManualAlignment->231): Manual Alignment:true
+INFO [2015-03-27 14:24:51,111] (WorksheetCommandHistoryExecutor->executeCommand->112): Executing command: RefreshSuperSelectionCommand
+INFO [2015-03-27 14:24:51,194] (UIConfiguration->loadConfig->65): UICOnfiguration:C:\Users\Marco\karma\Config\
+INFO [2015-03-27 14:24:51,195] (UIConfiguration->loadConfig->75): Load File:C:\Users\Marco\karma\Config\/ui.properties
+INFO [2015-03-27 14:24:51,400] (KR2RMLConfiguration->loadParams->47): Load kr2rml.properties: C:\Users\Marco\karma\Config\kr2ml.properties:true
+INFO [2015-03-27 14:24:51,402] (KR2RMLConfiguration->loadParams->61): Done loading kr2rml.properties
+INFO [2015-03-27 14:24:54,620] (OfflineRdfGenerator->generateRDF->183): done after 26822
+INFO [2015-03-27 14:24:54,621] (OfflineRdfGenerator->generateRDF->184): RDF published at: C:\Users\Marco\Desktop\tripla-model-2015-03-30.n3
