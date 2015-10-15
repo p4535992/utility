@@ -1,9 +1,10 @@
 package com.github.p4535992.util.geo;
 
 /**
- * Created by Marco on 06/05/2015.
+ * Created by 4535992 on 06/05/2015.
  * href: http://www.geodatasource.com/developers/java
  */
+@SuppressWarnings("unused")
 public class GeoDistanceSimple {
 
     /*::  This routine calculates the distance between two points (given the     :*/

@@ -1,6 +1,7 @@
 package com.github.p4535992.util.html;
 import com.github.p4535992.util.http.HttpUtil;
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringKit;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,12 +66,21 @@ public class JSoupKit {
         /// <param name="HTML"></param>
         /// <param name="HtmlResponse"></param>
         /// <returns></returns>
-        public static List<List<List<String>>> UniversalExtractor(String url, boolean HTML, String tagName)throws Exception
-        {        
-            //org.jsoup.nodes.Document htmldoc = org.jsoup.Jsoup.parse(HTMLDocument);
+        public static List<List<List<String>>> UniversalExtractor(String htmlContentOrUrl, boolean HTML, String tagName)throws Exception
+        {
+            org.jsoup.nodes.Document htmldoc;
+            if(StringKit.isURL(htmlContentOrUrl)) {
+                try {
+                    htmldoc = org.jsoup.Jsoup.connect(htmlContentOrUrl).get();
+                }catch(Exception e) {
+                    String doc = HttpUtil.get(htmlContentOrUrl);
+                    htmldoc = convertHTMLStringToJsoupDocument(doc);
+                }
+            }
+            else htmldoc = org.jsoup.Jsoup.parse(htmlContentOrUrl);
             //org.jsoup.nodes.Document htmldoc = org.jsoup.Jsoup.connect(url).get();
-            String doc = HttpUtil.get(url);
-            org.jsoup.nodes.Document htmldoc = convertHTMLStringToJsoupDocument(doc);
+            //String doc = HttpUtil.get(url);
+            //org.jsoup.nodes.Document htmldoc = convertHTMLStringToJsoupDocument(doc);
             return UniversalExtractor(htmldoc, HTML, tagName);
         }
         

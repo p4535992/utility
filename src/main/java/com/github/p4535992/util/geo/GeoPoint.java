@@ -4,6 +4,7 @@ package com.github.p4535992.util.geo;
  * Created by 4535992on 06/05/2015.
  * href: https://github.com/elastic/elasticsearch/blob/master/src/main/java/org/elasticsearch/common/geo/GeoPoint.java
  */
+@SuppressWarnings("unused")
 public final class GeoPoint {
 
     private double lat;

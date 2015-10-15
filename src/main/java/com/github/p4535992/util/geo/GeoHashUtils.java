@@ -9,6 +9,7 @@ import java.util.Collection;
  */
 // LUCENE MONITOR: monitor against spatial package
 // replaced with native DECODE_MAP
+@SuppressWarnings("unused")
 public class GeoHashUtils {
 
     private static final char[] BASE_32 = {'0', '1', '2', '3', '4', '5', '6',
@@ -48,7 +49,7 @@ public class GeoHashUtils {
         int ch = 0;
 
         while (geohash.length() < precision) {
-            double mid = 0.0;
+            double mid;
             if (isEven) {
 //                mid = (lngInterval[0] + lngInterval[1]) / 2D;
                 mid = (lngInterval0 + lngInterval1) / 2D;
@@ -87,7 +88,7 @@ public class GeoHashUtils {
         return geohash.toString();
     }
 
-    private static final char encode(int x, int y) {
+    private static char encode(int x, int y) {
         return BASE_32[((x & 1) + ((y & 1) * 2) + ((x & 2) * 2) + ((y & 2) * 4) + ((x & 4) * 4)) % 32];
     }
 
@@ -110,7 +111,7 @@ public class GeoHashUtils {
      * @param dy      delta of the second grid coordinate (must be -1, 0 or +1).
      * @return geohash of the defined cell.
      */
-    private final static String neighbor(String geohash, int level, int dx, int dy) {
+    private static String neighbor(String geohash, int level, int dx, int dy) {
         int cell = decode(geohash.charAt(level - 1));
 
         // Decoding the Geohash bit pattern to determine grid coordinates
@@ -166,7 +167,7 @@ public class GeoHashUtils {
     * @param neighbors llist to add the neighbors to.
     * @return the given list.
     */
-    public static final <E extends Collection<? super String>> E addNeighbors(String geohash, E neighbors) {
+    public static <E extends Collection<? super String>> E addNeighbors(String geohash, E neighbors) {
         return addNeighbors(geohash, geohash.length(), neighbors);
     }
 
@@ -178,7 +179,7 @@ public class GeoHashUtils {
      * @param neighbors list to add the neighbors to.
      * @return the given list.
      */
-    public static final <E extends Collection<? super String>> E addNeighbors(String geohash, int length, E neighbors) {
+    public static <E extends Collection<? super String>> E addNeighbors(String geohash, int length, E neighbors) {
         String south = neighbor(geohash, length, 0, -1);
         String north = neighbor(geohash, length, 0, +1);
         if (north != null) {
@@ -199,7 +200,7 @@ public class GeoHashUtils {
         return neighbors;
     }
 
-    private static final int decode(char geo) {
+    private static int decode(char geo) {
         switch (geo) {
             case '0':
                 return 0;
@@ -351,7 +352,7 @@ public class GeoHashUtils {
 
         int geohashLength = 0;
         while (geohashLength < precision) {
-            double mid = 0.0;
+            double mid;
             if (isEven) {
                 mid = (lngInterval0 + lngInterval1) / 2D;
                 if (longitude > mid) {
@@ -438,8 +439,7 @@ public class GeoHashUtils {
             geohash >>= 5;
         }
 
-        for (int i = 0; i < cds.length; i++) {
-            final int cd = cds[i];
+        for (final int cd : cds) {
             for (int mask : BITS) {
                 if (isEven) {
                     if ((cd & mask) != 0) {
