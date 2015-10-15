@@ -14,7 +14,7 @@ public class MarkerCategory {
 
     MarkerCategory(){}
 
-    public static void getMapmarkerCategory(){
+    public static Map<String,String> getMapmarkerCategory(){
         mapCategory.put("affittacamere","markerAccommodation");
         mapCategory.put("villaggio_vacanze","markerAccommodation");
         mapCategory.put("albergo","markerAccommodation");
@@ -169,7 +169,7 @@ public class MarkerCategory {
 
         mapCategory.put("fermata","markerBusStops");
         mapCategory.put("","markerEducation");
-
+        return mapCategory ;
     }
 
     public String getCategoryFromSimilarString(String similarString){
