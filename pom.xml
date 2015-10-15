@@ -456,6 +456,12 @@
             <artifactId>cumulusrdf</artifactId>
             <version>${edu.kit.aifb.cumulusrdf.version}</version>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.openrdf.sesame</groupId>
+                    <artifactId>sesame-bom</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.semanticweb.yars</groupId>
