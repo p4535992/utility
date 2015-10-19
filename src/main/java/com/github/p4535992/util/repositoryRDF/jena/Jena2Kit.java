@@ -3,13 +3,7 @@ package com.github.p4535992.util.repositoryRDF.jena;
 import com.github.p4535992.util.collection.CollectionKit;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFactory;
-import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -23,7 +17,8 @@ import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.rdf.model.impl.PropertyImpl;
 import com.hp.hpl.jena.rdf.model.impl.SelectorImpl;
-import com.hp.hpl.jena.sparql.util.NodeUtils;
+import com.hp.hpl.jena.sparql.resultset.RDFOutput;
+import com.hp.hpl.jena.sparql.util.*;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
 
@@ -52,7 +47,19 @@ import org.apache.jena.riot.RDFFormat;
  */
 @SuppressWarnings("unused")
 public class Jena2Kit {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Jena2Kit.class);
+
+    //CONSTRUCTOR
+    protected Jena2Kit() {}
+
+    private static Jena2Kit instance = null;
+
+    public static Jena2Kit getInstance(){
+        if(instance == null) {
+            instance = new Jena2Kit();
+        }
+        return instance;
+    }
+
     //PRIVATE
     public static String INFORMAT,OUTFORMAT;
     public static Lang OUTLANGFORMAT,INLANGFORMAT;
@@ -168,6 +175,135 @@ public class Jena2Kit {
         model.write(writer, OUTFORMAT);
     }
 
+
+    /**
+     * Method for execute a CONSTRUCTOR SPARQL on a Jena Model.
+     * @param sparql sparql query.
+     * @param model Jena Model.
+     * @return the result of the query allocated on a Jena model.
+     */
+    public static Model execSparqlOnModel(String sparql,Model model) {
+        Query query = QueryFactory.create(sparql);
+        Model resultModel;
+        if (query.isSelectType()) {
+            ResultSet results;
+            RDFOutput output = new RDFOutput();
+            QueryExecution qexec = QueryExecutionFactory.create(sparql, model);
+            results = qexec.execSelect();
+            //... make exit from the thread the result of query
+            results = ResultSetFactory.copyResults(results);
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return output.toModel(results);
+        } else if (query.isConstructType()) {
+            QueryExecution qexec = QueryExecutionFactory.create(query, model);
+            resultModel = qexec.execConstruct();
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return resultModel;
+        } else if (query.isDescribeType()) {
+            QueryExecution qexec = QueryExecutionFactory.create(query, model);
+            resultModel = qexec.execDescribe();
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return resultModel;
+        } else if (query.isAskType()) {
+           /* boolean result ;
+            QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+            result = qexec.execAsk();
+            SystemLog.sparql(sparql);
+            return result;*/
+            SystemLog.sparql("ATTENTION the SPARQL query:"+sparql+".\n is a ASK Query can't return a Model object",Jena2Kit.class);
+            return null;
+        } else if (query.isUnknownType()) {
+            SystemLog.sparql("ATTENTION the SPARQL query:"+sparql+".\n is a UNKNOWN Query can't return a Model object",Jena2Kit.class);
+            return null;
+        }else{
+            return null;
+        }
+    }
+
+    /**
+     * Method for execute a CONSTRUCTOR SPARQL on a Jena Model.
+     * @param sparql sparql query.
+     * @param dataset Jena Dataset.
+     * @return the result of the query allocated on a Jena model.
+     */
+    public static Model execSparqlOnDataset(String sparql,Dataset dataset) {
+        Query query = QueryFactory.create(sparql);
+        Model resultModel;
+        if (query.isSelectType()) {
+            ResultSet results;
+            RDFOutput output = new RDFOutput();
+            QueryExecution qexec = QueryExecutionFactory.create(sparql, dataset);
+            results = qexec.execSelect();
+            //... make exit from the thread the result of query
+            results = ResultSetFactory.copyResults(results);
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return output.toModel(results);
+        } else if (query.isConstructType()) {
+            QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+            resultModel = qexec.execConstruct();
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return resultModel;
+        } else if (query.isDescribeType()) {
+            QueryExecution qexec = QueryExecutionFactory.create(query, dataset);
+            resultModel = qexec.execDescribe();
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return resultModel;
+        } else if (query.isAskType()) {
+           /* boolean result ;
+            QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+            result = qexec.execAsk();
+            SystemLog.sparql(sparql);
+            return result;*/
+            SystemLog.sparql("ATTENTION the SPARQL query:"+sparql+".\n is a ASK Query can't return a Model object",Jena2Kit.class);
+            return null;
+        } else if (query.isUnknownType()) {
+            SystemLog.sparql("ATTENTION the SPARQL query:"+sparql+".\n is a UNKNOWN Query can't return a Model object",Jena2Kit.class);
+            return null;
+        }else return null;
+    }
+
+    public static Model execSparqlOnRemote(String sparql,String remoteService){
+        /*HttpAuthenticator authenticator = new PreemptiveBasicAuthenticator(
+                new ScopedAuthenticator(new URI(SPARQLR_ENDPOINT), SPARQLR_USERNAME, SPARQLR_PASSWORD.toCharArray())
+        );*/
+        Query query = QueryFactory.create(sparql);
+        Model resultModel;
+        if (query.isSelectType()) {
+            ResultSet results;
+            RDFOutput output = new RDFOutput();
+            QueryExecution qexec = QueryExecutionFactory.sparqlService(remoteService,query);
+            //QueryEngineHTTP qexec = new QueryEngineHTTP(remoteService, sparql);
+            //qexec.setBasicAuthentication("siimobility", "siimobility".toCharArray());
+            results = qexec.execSelect();
+            //... make exit from the thread the result of query
+            results = ResultSetFactory.copyResults(results);
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return output.toModel(results);
+        } else if (query.isConstructType()) {
+            QueryExecution qexec = QueryExecutionFactory.sparqlService(remoteService,query);
+            resultModel = qexec.execConstruct();
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return resultModel;
+        } else if (query.isDescribeType()) {
+            QueryExecution qexec = QueryExecutionFactory.sparqlService(remoteService,query);
+            resultModel = qexec.execDescribe();
+            SystemLog.sparql(sparql,Jena2Kit.class);
+            return resultModel;
+        } else if (query.isAskType()) {
+           /* boolean result ;
+            QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
+            result = qexec.execAsk();
+            SystemLog.sparql(sparql);
+            return result;*/
+            SystemLog.sparql("ATTENTION the SPARQL query:"+sparql+".\n is a ASK Query can't return a Model object",Jena2Kit.class);
+            return null;
+        } else if (query.isUnknownType()) {
+            SystemLog.sparql("ATTENTION the SPARQL query:"+sparql+".\n is a UNKNOWN Query can't return a Model object",Jena2Kit.class);
+            return null;
+        }else return null;
+
+    }
+
     /**
      * Method for execute a CONSTRUCTOR SPARQL on a Jena Model.
      * @param sparql sparql query.
@@ -178,10 +314,8 @@ public class Jena2Kit {
         Query query = QueryFactory.create(sparql) ;
         Model resultModel ;
         QueryExecution qexec = QueryExecutionFactory.create(query, model);
-        //try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
-            resultModel = qexec.execConstruct();
-            SystemLog.sparql(sparql);
-        //}
+        resultModel = qexec.execConstruct();
+        SystemLog.sparql(sparql,Jena2Kit.class);
         return  resultModel;
     }
     
@@ -195,10 +329,8 @@ public class Jena2Kit {
         Query query = QueryFactory.create(sparql) ;
         Model resultModel ;
         QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
-        //try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
-            resultModel = qexec.execDescribe();
-            SystemLog.sparql(sparql);
-        //}
+        resultModel = qexec.execDescribe();
+        SystemLog.sparql(sparql,Jena2Kit.class);
         return resultModel;
     }
 
@@ -211,14 +343,25 @@ public class Jena2Kit {
     public static ResultSet execSparqlSelectOnModel(String sparql,Model model) {
         ResultSet results;
         QueryExecution qexec = QueryExecutionFactory.create(sparql, model);
-        //try (QueryExecution qexec = QueryExecutionFactory.create(sparql, model)) {
-            results = qexec.execSelect();
-            //... make exit from the thread the result of query
-            results = ResultSetFactory.copyResults(results) ;
-            SystemLog.sparql(sparql);
-        //}
+        results = qexec.execSelect();
+        //... make exit from the thread the result of query
+        results = ResultSetFactory.copyResults(results) ;
+        SystemLog.sparql(sparql,Jena2Kit.class);
         return results;
     }
+
+    /**
+     * Method for execute a SELECT SPARQL on a Jena Model.
+     * @param sparql sparql query.
+     * @param model jena model.
+     * @return the result set of the query.
+     */
+    public static Model execSparqlSelectOnModel2(String sparql,Model model) {
+        RDFOutput output = new RDFOutput();
+        return output.toModel(execSparqlSelectOnModel(sparql,model));
+    }
+
+
 
      /**
      * Method for execute a ASK SPARQL on a Jena Model.
@@ -232,7 +375,7 @@ public class Jena2Kit {
         QueryExecution qexec = QueryExecutionFactory.create(query, model) ;
         //try (QueryExecution qexec = QueryExecutionFactory.create(query, model)) {
             result = qexec.execAsk();
-            SystemLog.sparql(sparql);
+            SystemLog.sparql(sparql,Jena2Kit.class);
         //}
         return result;
     }
@@ -278,13 +421,13 @@ public class Jena2Kit {
                         //If you are just opening the stream from a file (or URL) then Apache Jena
                         org.apache.jena.riot.RDFDataMgr.read(m,fileInput.toURI().toString());
                     } catch (Exception e3) {
-                        SystemLog.exception(e3);
+                        SystemLog.exception(e3,Jena2Kit.class);
                         SystemLog.abort(0, "Failed read the file of triples from the path:" + fileInput.getAbsolutePath());
                     }
                 }
             }
         }
-        SystemLog.message("...file of triples from the path:" + fileInput.getAbsolutePath()+" readed!!");
+        SystemLog.message("...file of triples from the path:" + fileInput.getAbsolutePath()+" readed!!",Jena2Kit.class);
         return m;
     }
     /**
@@ -459,8 +602,8 @@ public class Jena2Kit {
                     ResultSetFormatter.outputAsSSE(fos, results);
                 } else if (outputFormat.toLowerCase().contains("bio")) {
                     ResultSetFormatter.outputAsBIO(fos, results);
-//                }else if(outputFormat.toLowerCase().contains("rdf")){
-//                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsRDF(fos, "RDF/XML", results);
+                }else if(outputFormat.toLowerCase().contains("rdf")){
+                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsRDF(fos, "RDF/XML", results);
                 }
                 SystemLog.message("... the file of triple Infodoument to:" + fullPathOutputFile + " is been wrote!");
             } else if (outputFormat.toLowerCase().contains("ttl")) {
@@ -1436,11 +1579,11 @@ public class Jena2Kit {
     /**
      * Method utility: create new resource from uri.
      * @param BASE base uri.
-     * @param localname local name resource uri.
+     * @param localName local name resource uri.
      * @return resource uri.
      */
-    public static Resource createResource(String BASE, String localname ) {
-        return ResourceFactory.createResource ( BASE + localname );
+    public static Resource createResource(String BASE, String localName ) {
+        return ResourceFactory.createResource ( BASE +"/"+ localName );
     }
 
     /**
@@ -1545,7 +1688,48 @@ public class Jena2Kit {
         RDFNode obj = createRDFNode(model, object);
         return model.createStatement(sub, pred, obj);
     }
-    
+
+    /**
+     * Method to create a Jena Dataset for the SPARQL query.
+     * @param dftGraphURI the URI of the location of the resource with the triples.
+     * @param namedGraphURIs the URI's of all locations with name.
+     * @return the JENA Dataset.
+     */
+    public static Dataset createDataSet(String dftGraphURI,List<String> namedGraphURIs){
+       /* String dftGraphURI = "file:default-graph.ttl" ;
+        List namedGraphURIs = new ArrayList() ;
+        namedGraphURIs.add("file:named-1.ttl") ;
+        namedGraphURIs.add("file:named-2.ttl") ;*/
+        return DatasetFactory.create(dftGraphURI, namedGraphURIs) ;
+    }
+
+    /**
+     * Method to get a Dataset from a existent Jena Model.
+     * @param model the Jena Model.
+     * @return the Dataset extract from Jena Model.
+     */
+    public static Dataset getDataSetFromModel(Model model){
+        Dataset dataset = DatasetFactory.createMem() ;
+        dataset.setDefaultModel(model) ;
+        return dataset;
+    }
+
+    /**
+     * Method to get a Dataset from a existent List of Jena Models.
+     * @param baseModel the Jena Model.
+     * @param listModel the Map of Model with the specific uri to add to the new Dataset.
+     * @return the Dataset extract from a list of Jena Model.
+     */
+    public static Dataset getDataSetFromListOfModel(Model baseModel,Map<String,Model> listModel){
+        Dataset dataset = DatasetFactory.createMem() ;
+        dataset.setDefaultModel(baseModel) ;
+        for(Map.Entry<String,Model> entry : listModel.entrySet()){
+            dataset.addNamedModel(entry.getKey(),entry.getValue());
+        }
+        return dataset;
+    }
+
+
     /**
      * Method utility: create new default Jena Model.
      * @return Jena Model.
@@ -1641,6 +1825,63 @@ public class Jena2Kit {
        /* for(Triple triple: triples){
             graph.add(triple);
         }*/
+    }
+
+
+    //----------------------------------------
+    //NEW METHODS
+    //----------------------------------------
+
+    /**
+     * Method to create a JENA Query from a String SPARQL Query.
+     * @param querySPARQL the String SPARQL Query.
+     * @return the JENA Query object.
+     */
+    public static Query createQuery(String querySPARQL){
+        return QueryFactory.create(querySPARQL) ;
+    }
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param query the Query Select to analyze.
+     * @param model the Jena Model.
+     * @return the Long execution time for evaluate the query.
+     */
+    public static Long getExecutionQueryTime(String query,Model model){
+        return getExecutionQueryTime(createQuery(query), model);
+    }
+
+    /**
+     * Method to get the execution time of the query on the remote repository Sesame.
+     * @param query the Query Select to analyze.
+     * @param model the Jena Model.
+     * @return the Long execution time for evaluate the query.
+     */
+    public static Long getExecutionQueryTime(Query query,Model model){
+        com.hp.hpl.jena.sparql.util.Timer timer = new com.hp.hpl.jena.sparql.util.Timer() ;
+        //Dataset ds = qexec.getDataset();
+        Dataset ds = getDataSetFromModel(model);
+        QueryExecution qexec = QueryExecutionFactory.create(query,ds);
+        if (query.isSelectType()) {
+            timer.startTimer() ;
+            ResultSet results = qexec.execSelect();
+            //ResultSetFormatter.consume(results) ;
+            return timer.endTimer();   // Time in milliseconds.
+        } else if (query.isConstructType()) {
+            timer.startTimer() ;
+            Model results = qexec.execConstruct();
+            return timer.endTimer();   // Time in milliseconds.
+        }else if (query.isAskType()) {
+            timer.startTimer() ;
+            boolean results = qexec.execAsk();
+            return timer.endTimer();   // Time in milliseconds.
+        }else if (query.isDescribeType()) {
+            timer.startTimer() ;
+            Model results = qexec.execDescribe();
+            return timer.endTimer();   // Time in milliseconds.
+        }else{
+            return null;
+        }
     }
 
 

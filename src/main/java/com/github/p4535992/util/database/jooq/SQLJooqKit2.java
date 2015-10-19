@@ -8,6 +8,7 @@ import com.github.p4535992.util.string.StringKit;
 import org.jooq.*;
 import org.jooq.impl.*;
 
+import java.net.URI;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -273,12 +274,13 @@ public class SQLJooqKit2 {
         Table<Record> table = new TableImpl<>(nameTable);
         UpdateQuery<Record> uQuery = dslContext.updateQuery(table);
         for(int i=0; i < columns.length; i++){
-            Field<String> field = DSL.field(columns[i],String.class);;
+            Field<String> field = DSL.field(columns[i],String.class);
             Field fv = createFieldValue(values[i]);
             uQuery.addValue(field, fv);
         }
         //uQuery.addFrom(table);
         if(conditions!=null && !conditions.isEmpty()) uQuery.addConditions(conditions);
+
         if(preparedStatement)return StringKit.toStringInline(uQuery.getSQL());
         else return StringKit.toStringInline(uQuery.toString());
     }
@@ -341,6 +343,7 @@ public class SQLJooqKit2 {
      */
     public static Field<?> createFieldValue(Object value){
         if(value instanceof URL) return DSL.val(StringKit.convertObjectToString(value), String.class);
+        if(value instanceof URI) return DSL.val(StringKit.convertObjectToString(value), String.class);
         if(value instanceof String) return DSL.val(StringKit.convertObjectToString(value), String.class);
         if(value instanceof Condition) return DSL.val((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,Boolean.class);
@@ -352,8 +355,8 @@ public class SQLJooqKit2 {
         if(value instanceof Float) return DSL.val(value,Float.class);
         if(value instanceof Character) return DSL.val(value,Character.class);
         if(value instanceof Void) return DSL.val(value,Void.class);
-        //return DSL.val(value);
-        return DSL.field(StringKit.convertObjectToString(value));
+        return DSL.val(value);
+        //return DSL.field(StringKit.convertObjectToString(value));
     }
 
     /**
@@ -374,6 +377,7 @@ public class SQLJooqKit2 {
      */
     public static Field<?> createFieldValue(Object value,DataType<?> dataType){
         if(value instanceof URL) return DSL.val(StringKit.convertObjectToString(value), dataType);
+        if(value instanceof URI) return DSL.val(StringKit.convertObjectToString(value), dataType);
         if(value instanceof String) return DSL.val(StringKit.convertObjectToString(value), dataType);
         //if(value instanceof Condition) return DSL.field((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,dataType);
@@ -385,8 +389,8 @@ public class SQLJooqKit2 {
         if(value instanceof Float) return DSL.val(value,dataType);
         if(value instanceof Character) return DSL.val(value,dataType);
         if(value instanceof Void) return DSL.val(value,dataType);
-        //return DSL.val(value);
-        return DSL.field(StringKit.convertObjectToString(value),dataType);
+        return DSL.val(value);
+        //return DSL.field(StringKit.convertObjectToString(value),dataType);
     }
 
     /**
@@ -573,7 +577,7 @@ public class SQLJooqKit2 {
         Field<Object>[] fv = new Field[columns.length];
         for(int i=0; i < columns.length; i++){
             //return Field<String>
-            Field<String> field = DSL.field(columns[i],String.class);;
+            Field<String> field = DSL.field(columns[i],String.class);
             fields[i] = field;
             fv[i] = createFieldValueCapture(values[i], types[i]);
         }
@@ -722,15 +726,11 @@ public class SQLJooqKit2 {
      * @param password string password.
      */
     public static void getMySQLConnection(String host,String port,String database,String username,String password){
-        try {
-            connection = SQLHelper.getMySqlConnection(host, port, database, username, password);
-            connProvider= new DefaultConnectionProvider(connection);
-            connProvider.acquire();
-            sqlDialect = SQLDialect.MYSQL;
-            dslContext = DSL.using(connection,SQLDialect.MYSQL);
-        } catch (ClassNotFoundException | SQLException | InstantiationException | IllegalAccessException e) {
-            SystemLog.exceptionAndAbort(e);
-        }
+        connection = SQLHelper.getMySqlConnection(host, port, database, username, password);
+        connProvider= new DefaultConnectionProvider(connection);
+        connProvider.acquire();
+        sqlDialect = SQLDialect.MYSQL;
+        dslContext = DSL.using(connection,SQLDialect.MYSQL);
     }
 
     @SuppressWarnings("unchecked")

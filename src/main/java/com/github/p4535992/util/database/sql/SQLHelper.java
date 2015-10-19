@@ -4,6 +4,7 @@ import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringKit;
 import org.jooq.SQLDialect;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
@@ -23,10 +24,18 @@ public class SQLHelper {
     private static Statement stmt;
     private static String query;
 
-    public static Map<Integer, String> getAllJdbcTypeNames() throws IllegalArgumentException, IllegalAccessException {
+    /**
+     * Method to get all JDBC type name of JAVA.
+     * @return the Map of all JDBC type present in java.
+     */
+    public static Map<Integer, String> getAllJdbcTypeNames(){
         Map<Integer, String> result = new HashMap<>();
         for (Field field : Types.class.getFields()) {
-            result.put((Integer)field.get(null), field.getName());
+            try {
+                result.put((Integer)field.get(null), field.getName());
+            } catch (IllegalAccessException e) {
+                SystemLog.warning(e.getMessage(),e,SQLHelper.class);
+            }
         }
         return result;
     }
@@ -170,18 +179,44 @@ public class SQLHelper {
         }
     }
 
+    /**
+     * Method to convert a DialectDatabase of JOOQ to a String name for a correct cast.
+     * @param dialectDb the String to cast to a correct format.
+     * @return the String with correct format.
+     */
     public static String convertDialectDatabaseToTypeNameId(String dialectDb){
         if(dialectDb.toLowerCase().contains("mysql"))return "mysql";
+        if(dialectDb.toLowerCase().contains("cubrid"))return "cubrid";
+        if(dialectDb.toLowerCase().contains("derby"))return "derby";
+        if(dialectDb.toLowerCase().contains("firebird"))return "firebird";
+        if(dialectDb.toLowerCase().contains("h2"))return "h2";
+        if(dialectDb.toLowerCase().contains("hsqldb"))return "hsqldb";
+        if(dialectDb.toLowerCase().contains("mariadb"))return "mariadb";
+        if(dialectDb.toLowerCase().contains("postgres"))return "postgres";
+        if(dialectDb.toLowerCase().contains("postgres93"))return "postgres93";
+        if(dialectDb.toLowerCase().contains("postgres94"))return "postgres94";
+        if(dialectDb.toLowerCase().contains("sqlite"))return "sqlite";
         SystemLog.warning("There is not database type for the specific database dialect used.");
         return "?";
     }
 
+    /**
+     * Method to convert a DialectDB to a SQLDialect of JOOQ.
+     * @param dialectDb String name of a dialectDb.
+     * @return the SQLDialect of JOOQ.
+     */
     public static SQLDialect convertDialectDBToSQLDialectJOOQ(String dialectDb){
-        return convertStringToSQLDialectJOOQ(convertDialectDatabaseToTypeNameId(dialectDb));
+        return convertStringToSQLDialectJOOQ(dialectDb);
 
     }
 
+    /**
+     * Method to convert a String to a SQLDialect of JOOQ.
+     * @param sqlDialect the String name of the SQLDialect.
+     * @return the SQLDialect of JOOQ.
+     */
     public static SQLDialect convertStringToSQLDialectJOOQ(String sqlDialect) {
+        sqlDialect = convertDialectDatabaseToTypeNameId(sqlDialect);
         switch (sqlDialect.toLowerCase()) {
             case "cubrid":return SQLDialect.CUBRID;
             case "derby": return SQLDialect.DERBY;
@@ -199,20 +234,30 @@ public class SQLHelper {
     }
 
     public static Connection chooseAndGetConnection(String dialectDB,
-                                String host,String port,String database,String username,String password) throws ClassNotFoundException, SQLException, InstantiationException, IllegalAccessException {
+                                String host,String port,String database,String username,String password){
         if(StringKit.isNullOrEmpty(username) || StringKit.isNullOrEmpty(password)){
             username = "root";
             password = "";
         }
         if(!StringKit.isNullOrEmpty(port) || !StringKit.isNumeric(port)) port = "";
-        if(StringKit.isNullOrEmpty(dialectDB)) dialectDB = "mysql";
-
-        if(convertDialectDatabaseToTypeNameId(dialectDB).equalsIgnoreCase("mysql")){
-            return getMySqlConnection(host,port,database,username,password);
+        if(StringKit.isNullOrEmpty(dialectDB)){
+            SystemLog.warning("No connection database type detected fro this type.");
+            return null;
+        }else dialectDB = convertDialectDatabaseToTypeNameId(dialectDB);
+        switch (dialectDB) {
+            case "cubrid": return null;
+            case "derby": return null;
+            case "firebird": return null;
+            case "h2": return null;
+            case "hsqldb": return null;
+            case "mariadb": return null;
+            case "mysql": return getMySqlConnection(host,port,database,username,password);
+            case "postgres": return null;
+            case "postgres93": return null;
+            case "postgres94": return null;
+            case "sqlite": return null;
+            default: {SystemLog.warning("No connection database type detected fro this type."); return null;}
         }
-        //other connection to implement.....
-        SystemLog.warning("No connection database type detected fro this type.");
-        return null;
     }
 
     /**
@@ -223,22 +268,23 @@ public class SQLHelper {
      * @param username string username.
      * @param password string password.
      * @return the connection.
-     * @throws ClassNotFoundException if any error class is occurred.
-     * @throws SQLException if any error SQL is occurred.
-     * @throws java.lang.IllegalAccessException if any error class is occurred.
-     * @throws java.lang.InstantiationException if any error class is occurred.
      */
-    public static Connection getHSQLConnection(String host,String port,String database,String username,String password)
-            throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
+    public static Connection getHSQLConnection(String host,String port,String database,String username,String password) {
         // The newInstance() call is a work around for some broken Java implementations
-        Class.forName("org.hsqldb.jdbcDriver").newInstance();
-        //String url = "jdbc:hsqldb:data/"+database;
-        String url = "jdbc:hsqldb:hsql" + "://" + host;
-        if(port != null && StringKit.isNumeric(port)){
-            url +=  ":"+port;
+        try {
+            Class.forName("org.hsqldb.jdbcDriver").newInstance();
+            String url = "jdbc:hsqldb:hsql://" + host;
+            if (port != null && StringKit.isNumeric(port)) {
+                url += ":" + port; //jdbc:hsqldb:data/database
+            }
+            url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
+            conn = DriverManager.getConnection(url, username, password);
+        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            SystemLog.error("The Class.forName is not present on the classpath of the project", e, SQLHelper.class);
+        } catch (SQLException e) {
+        SystemLog.error("The URL is not correct", e, SQLHelper.class);
         }
-        url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
-        return conn = DriverManager.getConnection(url, username, password);
+        return conn;
     }
 
     /**
@@ -249,30 +295,31 @@ public class SQLHelper {
      * @param username string username.
      * @param password string password.
      * @return the connection.
-     * @throws ClassNotFoundException if any error class is occurred.
-     * @throws SQLException if any error SQL is occurred.
-     * @throws java.lang.IllegalAccessException if any error class is occurred.
-     * @throws java.lang.InstantiationException if any error class is occurred.
      */
     public static Connection getMySqlConnection(
-                    String host,String port,String database,String username,String password)
-            throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
+                    String host,String port,String database,String username,String password) {
         // The newInstance() call is a work around for some broken Java implementations
         try {
-            Class.forName("com.mysql.jdbc.Driver").newInstance(); //load driver//"com.sql.jdbc.Driver"
-        }catch(ClassNotFoundException e){
-            Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-        }
-        String url = "jdbc:mysql" + "://" + host;
-        if(port != null && StringKit.isNumeric(port)){
-            url +=  ":"+port;
-        }
-        url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
-        try {
-            conn = DriverManager.getConnection(url, username, password);
-        }catch(com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e){
-            SystemLog.error("You forgot to turn on your MySQL Server!!!");
-            SystemLog.abort(0);
+            try {
+                Class.forName("com.mysql.jdbc.Driver").newInstance(); //load driver//"com.sql.jdbc.Driver"
+            } catch (ClassNotFoundException e) {
+                Class.forName("org.gjt.mm.mysql.Driver").newInstance();
+            }
+            String url = "jdbc:mysql//" + host;
+            if (port != null && StringKit.isNumeric(port)) {
+                url += ":" + port;
+            }
+            url += "/"  + database; //"jdbc:sql://localhost:3306/jdbctest"
+            try {
+                conn = DriverManager.getConnection(url, username, password);
+            } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
+                SystemLog.error("You forgot to turn on your MySQL Server!!!");
+                SystemLog.abort(0);
+            } catch (SQLException e) {
+                SystemLog.error("The URL is not correct", e, SQLHelper.class);
+            }
+        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e1) {
+            SystemLog.error("The Class.forName is not present on the classpath of the project", e1, SQLHelper.class);
         }
         return conn;
     }
@@ -284,15 +331,24 @@ public class SQLHelper {
      * @param username string username.
      * @param password string password.
      * @return the connection.
-     * @throws ClassNotFoundException if any error class is occurred.
-     * @throws SQLException if any error SQL is occurred.
-     * @throws IllegalAccessException if any error SQL is occurred.
-     * @throws InstantiationException if any error SQL is occurred.
      */
     public static Connection getMySqlConnection(
-            String host,String database,String username,String password)
-            throws ClassNotFoundException, SQLException, IllegalAccessException, InstantiationException {
+            String host,String database,String username,String password) {
         return getMySqlConnection(host,null,database,username,password);
+    }
+
+    /**
+     * Method to get a MySQL connection.
+     * @param hostAndDatabase string name of the host where is it the database
+     * @param username string username.
+     * @param password string password.
+     * @return the connection.
+     */
+    public static Connection getMySqlConnection(
+            String hostAndDatabase,String username,String password) {
+        String[] split = hostAndDatabase.split("/");
+        hostAndDatabase = hostAndDatabase.replace("/"+split[split.length-1],"");
+        return getMySqlConnection(hostAndDatabase,null,split[split.length-1],username,password);
     }
 
     /**
@@ -303,19 +359,23 @@ public class SQLHelper {
      * @param username string username.
      * @param password string password.
      * @return the connection.
-     * @throws ClassNotFoundException if any error class is occurred.
-     * @throws SQLException if any error SQL is occurred.
      */
-    public static Connection getOracleConnection(String host,String port,String database,String username,String password)
-            throws ClassNotFoundException, SQLException {
-        Class.forName("oracle.jdbc.driver.OracleDriver");
-        //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
-        String url = "jdbc:oracle:thin:@" + host;
-        if(port != null && StringKit.isNumeric(port)){
-            url +=  ":"+port;
+    public static Connection getOracleConnection(String host,String port,String database,String username,String password){
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+            //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
+            String url = "jdbc:oracle:thin:@" + host;
+            if (port != null && StringKit.isNumeric(port)) {
+                url += ":" + port;
+            }
+            url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
+            conn = DriverManager.getConnection(url, username, password);
+        }catch (ClassNotFoundException e) {
+            SystemLog.error("The Class.forName is not present on the classpath of the project", e, SQLHelper.class);
+        } catch (SQLException e) {
+            SystemLog.error("The URL is not correct", e, SQLHelper.class);
         }
-        url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
-        return conn = DriverManager.getConnection(url, username, password);
+        return conn;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////

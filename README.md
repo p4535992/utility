@@ -2,17 +2,21 @@
 ### A MODULE MAVEN WITH MANY UTILITY CLASS FOR MANY PURPOSE###
 ##############################################################
 #########################
-###Last Update: 2015-09-15
+###Last Update: 2015-10-19
 #########################
 Class utility for the third library:
-- Many Useful Class for Pay with the JDK version 7
+- Many Useful Class for Play with the JDK version 7
+- JDOM
 - JDOM2
 - Hibernate 4 (in progress)
 - Jena 2
 - Sesame OpenRDF
+- VirtJena (Sesame Adapter for Virtuoso server)
 - JSoup
+- JOOQ 3
 
-(For the future try to put some JDK version 8)
+
+(For the future try to put some best performance for JDK version 8)
 
 Any Help,suggestion or improvement for this utility is welcome!!
 
@@ -29,7 +33,7 @@ You can the dependency to this github repository With jitpack (https://jitpack.i
  <pre class="prettyprint">&lt;dependency&gt;
   &lt;groupId&gt;com.github.p4535992&lt;/groupId&gt;
   &lt;artifactId&gt;utility&lt;/artifactId&gt;
-  &lt;version&gt;<span id="latest_release">1.4</span>&lt;/version&gt;
+  &lt;version&gt;<span id="latest_release">1.4.1</span>&lt;/version&gt;
 &lt;/dependency&gt;  </pre>
 
 <!-- Add this script to update "latest_release" span to latest version -->

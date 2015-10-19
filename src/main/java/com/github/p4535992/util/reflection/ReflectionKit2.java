@@ -2180,6 +2180,40 @@ public final class ReflectionKit2 {
         return null;
     }
 
+    //--------------------------------------------------------------------------
+    // NEW METHODS 1
+    //-------------------------------------------------------------------------
+
+    /**
+     *
+     * Method to get the name of a class.
+     * http://stackoverflow.com/questions/6271417/java-get-the-current-class-name
+     * @param clazz the current clazz to analyze.
+     * @return the name of the current class.
+     */
+    public static String nameOfClass(Class<?> clazz){
+        String name;
+        Class<?> enclosingClass = clazz.getEnclosingClass();
+        if (enclosingClass != null) {
+            name = enclosingClass.getName();
+        } else {
+            name = clazz.getName();
+        }
+        if(name.contains("$")) name = name.substring(0, name.indexOf("$"));
+        return name;
+    }
+
+    /**
+     *
+     * Method to get the name of a anonymus class.
+     * http://stackoverflow.com/questions/6271417/java-get-the-current-class-name
+     * @param clazz the current clazz to analyze.
+     * @return the name of the current class.
+     */
+    public static String nameOfAnonymusClass(Class<?> clazz){
+        return clazz.getSuperclass().getName();
+    }
+
 
     //OTHER METHODS
     /*public static Class createNewClass(String annotatedClassName,String pathPackageToAnnotatedClass)

@@ -1,16 +1,14 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 
+import com.hp.hpl.jena.graph.FrontsNode;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Node_ANY;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.rdf.model.Property;
-import com.hp.hpl.jena.rdf.model.RDFNode;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Literal;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.rdf.model.AnonId;
-import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.rdf.model.*;
+import com.hp.hpl.jena.sparql.util.NodeUtils;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 
 /**
@@ -67,6 +65,11 @@ public class JenaAndSesame {
             new org.openrdf.model.impl.ValueFactoryImpl();
 
     /**
+     * Jena Resource factory for creating instances of Sesame API objects
+     */
+    //private static final ResourceFactory RFACTORY = new ResourceFactory();
+
+    /**
      * Convert the given Jena Resource into a Sesame Resource
      * @param theRes the jena resource to convert
      * @return the jena resource as a sesame resource
@@ -80,16 +83,10 @@ public class JenaAndSesame {
      * @param theRes the jena resource to convert
      * @return the jena resource as a sesame resource
      */
-    public static org.openrdf.model.Resource asSesameResource(Resource theRes) {
-        if (theRes == null) {
-            return null;
-        }
-        else if (theRes.canAs(Property.class)) {
-            return asSesameURI(theRes.as(Property.class));
-        }
-        else {
-            return FACTORY.createBNode(theRes.getId().getLabelString());
-        }
+    private org.openrdf.model.Resource asSesameResource(Resource theRes) {
+        if (theRes == null) return null;
+        else if (theRes.canAs(Property.class))  return asSesameURI(theRes.as(Property.class));
+        else return FACTORY.createBNode(theRes.getId().getLabelString());
     }
 
     /**
@@ -156,7 +153,7 @@ public class JenaAndSesame {
      * @param theLiteral the Jena Literal to convert
      * @return the Jena Literal as a Sesame Literal
      */
-    public static org.openrdf.model.Literal asSesameLiteral(Literal theLiteral) {
+    private static org.openrdf.model.Literal asSesameLiteral(Literal theLiteral) {
         if (theLiteral == null) {
             return null;
         }
@@ -187,16 +184,10 @@ public class JenaAndSesame {
      * @param theNode the Jena node to convert
      * @return the jena node as a Sesame Value
      */
-    public static org.openrdf.model.Value asSesameValue(RDFNode theNode) {
-        if (theNode == null) {
-            return null;
-        }
-        else if (theNode.canAs(Literal.class)) {
-            return asSesameLiteral(theNode.as(Literal.class));
-        }
-        else {
-            return asSesameResource(theNode.as(Resource.class));
-        }
+    private org.openrdf.model.Value asSesameValue(RDFNode theNode) {
+        if (theNode == null)return null;
+        else if (theNode.canAs(Literal.class)) return asSesameLiteral(theNode.as(Literal.class));
+        else return asSesameResource(theNode.as(Resource.class));
     }
 
 
@@ -315,7 +306,7 @@ public class JenaAndSesame {
      * @return the set of statements in the Jena model saved in a sesame Graph
      */
     @SuppressWarnings("deprecation")
-    public static org.openrdf.model.Graph asSesameGraph(Model theModel) {
+    private org.openrdf.model.Graph asSesameGraph(Model theModel) {
         org.openrdf.model.Graph aGraph = new org.openrdf.model.impl.GraphImpl();
         StmtIterator sIter = theModel.listStatements();
         while (sIter.hasNext()) {
@@ -350,7 +341,7 @@ public class JenaAndSesame {
      * @param theModel the model to convert
      * @return the set of statements in the Jena model saved in a sesame Graph
      */
-    public static org.openrdf.model.Model asSesameModel(Model theModel) {
+    private org.openrdf.model.Model asSesameModel(Model theModel) {
         org.openrdf.model.Model sesameModel = new org.openrdf.model.impl.TreeModel();
         StmtIterator sIter = theModel.listStatements();
         while (sIter.hasNext()) {
@@ -374,8 +365,9 @@ public class JenaAndSesame {
      * @param theStatement the statement to convert
      * @return the equivalent Sesame statement
      */
-    public static org.openrdf.model.Statement asSesameStatement(Statement theStatement) {
-        return new org.openrdf.model.impl.StatementImpl(asSesameResource(theStatement.getSubject()),
+    private org.openrdf.model.Statement asSesameStatement(Statement theStatement) {
+        return new org.openrdf.model.impl.StatementImpl(
+                asSesameResource(theStatement.getSubject()),
                 asSesameURI(theStatement.getPredicate()),
                 asSesameValue(theStatement.getObject()));
     }
@@ -408,7 +400,32 @@ public class JenaAndSesame {
      * @return the Jena Model converted.
      */
     public Model convertOpenRDFModelToJenaModel(org.openrdf.model.Model theModel){
-        return asJenaModel(theModel);
+        Model jenaModel = ModelFactory.createDefaultModel();
+        for(org.openrdf.model.Statement stmt: theModel){
+                Node node = NodeUtils.asNode(stmt.getObject().stringValue());
+                RDFNode rdfNode;
+                if(node.isURI()){
+                    try {
+                        rdfNode = ResourceFactory.createTypedLiteral(new URI(stmt.getObject().stringValue()));
+                    }catch (URISyntaxException e) {
+                        if(node.isLiteral()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                        else if(node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
+                        else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                    }
+                }
+                else if(node.isLiteral()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                else if(node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
+                else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                //RDFNode rdfNode = jenaModel.asRDFNode(node);
+                Statement ss =  ResourceFactory.createStatement(
+                        ResourceFactory.createResource(stmt.getSubject().toString()),
+                        ResourceFactory.createProperty(stmt.getPredicate().getNamespace(),stmt.getPredicate().getLocalName()),
+                        rdfNode);
+                jenaModel.add(ss);
+
+        }
+        return jenaModel;
+        //return asJenaModel(theModel);
     }
 
     /**
@@ -416,26 +433,26 @@ public class JenaAndSesame {
      * @param theModel the OpenRDF Model to convert.
      * @return the Jena Model converted.
      */
-    public static Model asJenaModel(org.openrdf.model.Model theModel){
+   /* private Model asJenaModel(org.openrdf.model.Model theModel){
         Model jenaModel = ModelFactory.createDefaultModel();
         for(org.openrdf.model.Statement stmt: theModel){
             jenaModel.add(asJenaStatement(stmt));
         }
         return jenaModel;
-    }
+    }*/
 
-    /*// converts vector to string for sesame
-    public String convertVectorToSesameString(java.util.Vector <String> inputVector) {
+    /** converts vector to string for sesame */
+  /*  public String convertVectorToSesameString(java.util.Vector <String> inputVector) {
         String subjects = "";
         for(int subIndex = 0;subIndex < inputVector.size();subIndex++)
             subjects = subjects + "(<" + inputVector.elementAt(subIndex) + ">)";
 
         return subjects;
 
-    }
+    }*/
 
-    // converts vector to string for jena
-    public String convertVectorToJenaString(java.util.Vector <String> inputVector) {
+    /** converts vector to string for jena */
+   /* public String convertVectorToJenaString(java.util.Vector <String> inputVector) {
         String subjects = "";
         for(int subIndex = 0;subIndex < inputVector.size();subIndex++)
             subjects = subjects + "<" + inputVector.elementAt(subIndex) + ">";
@@ -642,7 +659,7 @@ public class JenaAndSesame {
      * @param node the Jena Node.
      * @return the OpenRDF BNode.
      */
-    public static org.openrdf.model.BNode nodeBlankToValue( org.openrdf.model.ValueFactory factory, Node node) {
+    private static org.openrdf.model.BNode nodeBlankToValue( org.openrdf.model.ValueFactory factory, Node node) {
         return factory.createBNode(node.getBlankNodeLabel()) ;
     }
 
@@ -685,7 +702,7 @@ public class JenaAndSesame {
      * @param node the Jena Node.
      * @return the OpenRDF Value.
      */
-    public static org.openrdf.model.Value nodeLiteralToValue(
+    private static org.openrdf.model.Value nodeLiteralToValue(
             org.openrdf.model.ValueFactory factory, Node node) {
         if ( node.getLiteralDatatype() != null ) {
             org.openrdf.model.URI x = factory.createURI(node.getLiteralDatatypeURI()) ;

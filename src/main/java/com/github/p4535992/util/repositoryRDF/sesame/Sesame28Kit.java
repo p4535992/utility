@@ -39,6 +39,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -287,6 +288,14 @@ public class Sesame28Kit {
     }
 
     /**
+     * Method to get ValueFactory obtained from Repository you are working with (recommend).
+     * @return the ValueFactory of the Repository where you working.
+     */
+    public ValueFactory getValueFactory() {
+        return mRepository.getValueFactory();
+    }
+
+    /**
      * Method to get RepositoryConnectionWrapper.
      * @param mRepository the Repository OpenRDF to Wrapper.
      * @return the RepositoryConnectionWrapper.
@@ -329,6 +338,7 @@ public class Sesame28Kit {
     public ValueFactory createNewValueFactory() {
         return ValueFactoryImpl.getInstance();
     }
+
     /**
      * Method to get RepositoryConnectionWrapper.
      * @param mRepository the Repository OpenRDF to Wrapper.
@@ -764,39 +774,43 @@ public class Sesame28Kit {
      * is a SELECT/DESCRIBE/CONSTRUCTOR/ASK/UPDATE/ecc.
      * @param query string content of the query SPARQL/SERQL.
      * @return the OpenRDF Operation.
-     * @throws RepositoryException throw if any error is occurred.
      */
-    private static Operation prepareOperation(String query) throws RepositoryException{
-        Repository tempLocalRepository = new SailRepository(new MemoryStore());
-        tempLocalRepository.initialize();
-        RepositoryConnection tempLocalConnection = tempLocalRepository.getConnection();
-        try{
-            for (QueryLanguage language : queryLanguages) {
-                try {
-                    tempLocalConnection.prepareUpdate(language, query);
-                    SystemLog.message("Query SPARQL is a update query");
-                    return mRepositoryConnection.prepareUpdate(language, query);
-                }catch(Exception e){
-                    //SystemLog.warning(e.getMessage());
+    private static Operation prepareOperation(String query){
+        try {
+            Repository tempLocalRepository = new SailRepository(new MemoryStore());
+            tempLocalRepository.initialize();
+            RepositoryConnection tempLocalConnection = tempLocalRepository.getConnection();
+            try {
+                for (QueryLanguage language : queryLanguages) {
+                    try {
+                        tempLocalConnection.prepareUpdate(language, query);
+                        SystemLog.message("Query SPARQL is a update query");
+                        return mRepositoryConnection.prepareUpdate(language, query);
+                    } catch (Exception e) {
+                        //SystemLog.warning(e.getMessage());
+                    }
                 }
-            }
-            for (QueryLanguage language : queryLanguages) {
-                try {
-                    Query result = prepareQuery(query, language, tempLocalConnection);
-                    if (result != null) return result;
-                } catch (Exception e) {
-                    //continue;
+                for (QueryLanguage language : queryLanguages) {
+                    try {
+                        Query result = prepareQuery(query, language, tempLocalConnection);
+                        if (result != null) return result;
+                    } catch (Exception e) {
+                        //continue;
+                    }
                 }
+                // Can't prepare this query in any language
+                return null;
+            } catch (Exception e) {
+                SystemLog.warning(e.getMessage());
+            } finally {
+                tempLocalConnection.close();
+                tempLocalRepository.shutDown();
             }
-            // Can't prepare this query in any language
             return null;
-        }catch(Exception e){
-            SystemLog.warning(e.getMessage());
-        }finally {
-            tempLocalConnection.close();
-            tempLocalRepository.shutDown();
+        }catch(RepositoryException e){
+            SystemLog.exception(e,Sesame28Kit.class);
+            return null;
         }
-        return null;
     }
 
     /**
@@ -3092,79 +3106,112 @@ public class Sesame28Kit {
         return QueryResults.asModel(graphQueryResult);
     }
 
+    /**
+     * Method to convert the Sesame Repository to a Sesame Model.
+     * @param repository the OpenRDF Repository.
+     * @return the OpenRDF Model.
+     */
+    public Model convertRepositoryToModel(Repository repository){
+        return convertRepositoryToModel(repository,null);
+    }
 
-    /*public String ????????(Repository mRepository){
-        String defaultServerUrl = "http://localhost:8080/openrdf-sesame";
-        RepositoryManager manager = new RemoteRepositoryManager(defaultServerUrl);
-        manager.initialize();
-    }*/
+    /**
+     * Method to convert the Sesame Repository to a Sesame Model.
+     * @param repository the OpenRDF Repository.
+     * @param limit the Integer limit of Statement to get from the OpenRDF Repository.
+     * @return the OpenRDF Model.
+     */
+    public Model convertRepositoryToModel(Repository repository,Integer limit){
+        Model model = createNewModel();
+        RepositoryConnection conn ;
+        try {
+            conn = repository.getConnection();
+            //this method retrieves all statements that appear in the repository
+            RepositoryResult<Statement> rri = conn.getStatements(null, null, null, true);
+            if(limit!=null){
+                int i = 0;
+                while(rri.hasNext()){
+                    if(i > limit) break;
+                    model.add(rri.next());
+                    i++;
+                }
+            }
+            return model;
+        } catch (RepositoryException e) {
+            SystemLog.exception("The connection to the Repository:"+repository+" is not possible!",e,Sesame28Kit.class);
+            return  null;
+        }
+    }
 
     /**
      * Method to get the execution time of the query on the remote repository Sesame.
      * @param graphQuery the OpenRDF GraphQuery to evaluate.
      * @return the Long execution time for evaluate the query.
-     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(GraphQuery graphQuery) throws QueryEvaluationException {
-        long queryBegin = System.nanoTime();
-        GraphQueryResult gs = graphQuery.evaluate();
-        long queryEnd = System.nanoTime();
-        SystemLog.message("Query Graph result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
-        return (queryEnd - queryBegin) / 1000000;
+    public Long getExecutionQueryTime(GraphQuery graphQuery) {
+        Long calculate = calculateExecutionTime(graphQuery);
+        if(calculate == null) SystemLog.sparql("Query Graph result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'",Sesame28Kit.class);
+        else SystemLog.sparql("Query Graph result(s) in " +  calculate  + "ms.",Sesame28Kit.class);
+        return calculate;
+
     }
 
     /**
      * Method to get the execution time of the query on the remote repository Sesame.
      * @param tupleQuery the OpenRDF TupleQuery to evaluate.
      * @return the Long execution time for evaluate the query.
-     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(TupleQuery tupleQuery) throws QueryEvaluationException {
-        long queryBegin = System.nanoTime();
-        TupleQueryResult ts = tupleQuery.evaluate();
-        long queryEnd = System.nanoTime();
-        SystemLog.message("Query Tuple result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
-        return (queryEnd - queryBegin) / 1000000;
+    public Long getExecutionQueryTime(TupleQuery tupleQuery){
+        Long calculate = calculateExecutionTime(tupleQuery);
+        if(calculate == null) SystemLog.sparql("Query Tuple result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'",Sesame28Kit.class);
+        else SystemLog.sparql("Query Tuple result(s) in " +  calculate  + "ms.",Sesame28Kit.class);
+        return calculate;
     }
 
     /**
      * Method to get the execution time of the query on the remote repository Sesame.
      * @param booleanQuery the OpenRDF BooleanQuery to evaluate.
      * @return the Long execution time for evaluate the query.
-     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(BooleanQuery booleanQuery) throws QueryEvaluationException {
-        long queryBegin = System.nanoTime();
-        boolean gs = booleanQuery.evaluate();
-        long queryEnd = System.nanoTime();
-        SystemLog.message("Query Boolean result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
-        return (queryEnd - queryBegin) / 1000000;
+    public Long getExecutionQueryTime(BooleanQuery booleanQuery){
+        try {
+            long queryBegin = System.nanoTime();
+            boolean gs = booleanQuery.evaluate();
+            long queryEnd = System.nanoTime();
+            SystemLog.sparql("Query Boolean result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.",Sesame28Kit.class);
+            return (queryEnd - queryBegin) / 1000000;
+        } catch (QueryEvaluationException e) {
+            SystemLog.setIsERROR(true);
+            SystemLog.sparql("Query Boolean result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'",Sesame28Kit.class);
+            return null;
+        }
     }
 
     /**
      * Method to get the execution time of the query on the remote repository Sesame.
      * @param updateQuery the OpenRDF updateQuery to evaluate.
      * @return the Long execution time for evaluate the query.
-     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
-     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(Update updateQuery) throws QueryEvaluationException, UpdateExecutionException {
-        long queryBegin = System.nanoTime();
-        updateQuery.execute();
-        long queryEnd = System.nanoTime();
-        SystemLog.message("Query Update result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
-        return (queryEnd - queryBegin) / 1000000;
+    public Long getExecutionQueryTime(Update updateQuery){
+        try {
+            long queryBegin = System.nanoTime();
+            updateQuery.execute();
+            long queryEnd = System.nanoTime();
+            SystemLog.sparql("Query Update result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.", Sesame28Kit.class);
+            return (queryEnd - queryBegin) / 1000000;
+        } catch (UpdateExecutionException e) {
+            SystemLog.setIsERROR(true);
+            SystemLog.sparql("Query Update result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'", Sesame28Kit.class);
+            return null;
+        }
     }
 
     /**
      * Method to get the execution time of the query on the remote repository Sesame.
      * @param query the String of the Query to evaluate.
      * @return the Long execution time for evaluate the query.
-     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
-     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
-     * @throws RepositoryException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(String query) throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
+    public Long getExecutionQueryTime(String query){
         return getExecutionQueryTime(convertStringQueryToOperation(query));
     }
 
@@ -3173,12 +3220,8 @@ public class Sesame28Kit {
      * Method to get the execution time of the query on the remote repository Sesame.
      * @param query the OpenRDF Query to evaluate.
      * @return the Long execution time for evaluate the query.
-     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
-     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
-     * @throws RepositoryException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(Query query)
-            throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
+    public Long getExecutionQueryTime(Query query){
         return getExecutionQueryTime(convertQueryToOperation(query));
     }
 
@@ -3186,14 +3229,17 @@ public class Sesame28Kit {
      * Method to get the execution time of the query on the remote repository Sesame.
      * @param preparedOperation the OpenRDF Operation to evaluate.
      * @return the Long execution time for evaluate the query.
-     * @throws QueryEvaluationException throw if any error during the evaluation of the query is occurred.
-     * @throws UpdateExecutionException throw if any error during the evaluation of the query is occurred.
-     * @throws RepositoryException throw if any error during the evaluation of the query is occurred.
      */
-    public Long getExecutionQueryTime(Operation preparedOperation) 
-            throws QueryEvaluationException, UpdateExecutionException, RepositoryException {
+    public Long getExecutionQueryTime(Operation preparedOperation){
+        //Deprecated methods...
+        /*long queryBegin = System.nanoTime();
+        GraphQueryResult gs = graphQuery.evaluate();
+        long queryEnd = System.nanoTime();
+        return (queryEnd - queryBegin) / 1000000;*/
+        long timeConnection = 150; //all the connection to a repository in a tomcat server are around the 250ms.
         if (preparedOperation == null) {
-            SystemLog.warning("Unable to parse query the preparedOperation id NULL");
+            SystemLog.setIsERROR(true);
+            SystemLog.sparql("Unable to parse SPARQL query the preparedOperation is NULL");
             return null;
         }
         //If the Query is a Update..........
@@ -3209,12 +3255,243 @@ public class Sesame28Kit {
     }
 
     /**
+     * Method to calculate the Query execution time of SPARQL or SeRQL query on a sesame repository
+     * @param query  the TupleQuery to analyze
+     * @return the Long value of the execution time of the query less the close query time.
+     */
+    private Long calculateExecutionTime(final TupleQuery query){
+        long QUERY_TIME = 500; //time reference for sesame...
+        long calculate;
+        if (query == null) {
+            SystemLog.setIsERROR(true);
+            SystemLog.sparql("Unable to calculate the execution time, the TupleQuery is NULL",Sesame28Kit.class);
+            return null;
+        }
+        final TupleQueryResult[] result = new TupleQueryResult[1];
+        final AtomicBoolean stop = new AtomicBoolean(false);
+        final long[] times = new long[] { -1, -1 };
+        Runnable queryRunner = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    synchronized (result) {
+                        result[0] = query.evaluate();
+                        //SystemLog.sparql(">>>>>>>> query evaluating",Sesame28Kit.class);
+                    }
+                    while (result[0].hasNext()) {
+                        //SystemLog.sparql(">>>>>>>> query found result",Sesame28Kit.class);
+                        result[0].next();
+                    }
+                    times[0] = System.currentTimeMillis();
+                    //SystemLog.sparql(">>>>>>>> query finished:" + times[0],Sesame28Kit.class);
+                    try {
+                        result[0].close();
+                    }
+                    catch (QueryEvaluationException ex) {
+                        SystemLog.setIsERROR(true);
+                        SystemLog.sparql(ex,Sesame28Kit.class);
+                    }
+                }
+                catch (Exception ex) {
+                    SystemLog.setIsERROR(true);
+                    SystemLog.sparql(ex,Sesame28Kit.class);
+                }
+                finally {stop.set(true);}
+            }
+        };
+        Runnable closeRunner = new Runnable() {
+            @Override
+            public void run() {
+                //SystemLog.sparql("<<<<<<<<< waiting for query",Sesame28Kit.class);
+                boolean doClose = false;
+                while (true) {
+                    if (stop.get()) {
+                        break;
+                    }
+                    synchronized (result) {
+                        if (result[0] != null) {
+                            doClose = true;
+                            break;
+                        }
+                    }
+                    sleep(100);
+                }
+                if (doClose) {
+                    sleep(200);
+                    try {
+                        //SystemLog.sparql("<<<<<<<<< closing query",Sesame28Kit.class);
+                        result[0].close();
+                        times[1] = System.currentTimeMillis();
+                        //SystemLog.sparql("<<<<<<<<< query closed", Sesame28Kit.class);
+                        stop.set(true);
+                    }
+                    catch (QueryEvaluationException ex) {
+                        SystemLog.setIsERROR(true);
+                        SystemLog.sparql(ex,Sesame28Kit.class);
+                    }
+                }
+                else {
+                    stop.set(true);
+                }
+            }
+        };
+        try{run(queryRunner, "<QUERY>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
+        try{run(closeRunner, "<CLOSER>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
+        long start = System.currentTimeMillis();
+        while (!stop.get()) {
+            sleep(100);
+        }
+        long printQueryRunner = times[0] - start;
+        long printCloseRunner = times[1] - start;
+        SystemLog.sparql("QUERY RUNNER: took = "+printQueryRunner+"ms",Sesame28Kit.class);
+        SystemLog.sparql("CLOSE RUNNER: took = "+printCloseRunner+"ms",Sesame28Kit.class);
+        if(times[0] < QUERY_TIME) SystemLog.sparql("the query should have been closed within the query timeout:"+times[0]+"ms",Sesame28Kit.class);
+        if(-1==times[0]) SystemLog.sparql("the query runner should not have set an end time as it should have been cancelled",Sesame28Kit.class);
+        calculate = printQueryRunner;
+        return calculate;
+    }
+
+    /**
+     * Method to calculate the Query execution time of SPARQL or SeRQL query on a sesame repository
+     * @param query  the GraphQuery to analyze
+     * @return the Long value of the execution time of the query less the close query time.
+     */
+    private Long calculateExecutionTime(final GraphQuery query){
+        long QUERY_TIME = 500; //time reference for sesame...
+        long calculate;
+        if (query == null) {
+            SystemLog.setIsERROR(true);
+            SystemLog.sparql("Unable to calculate the execution time, the GraphQuery is NULL",Sesame28Kit.class);
+            return null;
+        }
+        final GraphQueryResult[] result = new GraphQueryResult[1];
+        final AtomicBoolean stop = new AtomicBoolean(false);
+        final long[] times = new long[] { -1, -1 };
+
+        Runnable queryRunner = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    synchronized (result) {
+                        result[0] = query.evaluate();
+                        //SystemLog.sparql(">>>>>>>> query evaluating",Sesame28Kit.class);
+                    }
+
+                    while (result[0].hasNext()) {
+                        //SystemLog.sparql(">>>>>>>> query found result",Sesame28Kit.class);
+                        result[0].next();
+                    }
+
+                    times[0] = System.currentTimeMillis();
+                    //SystemLog.sparql(">>>>>>>> query finished:" + times[0],Sesame28Kit.class);
+
+                    try {
+                        result[0].close();
+                    }
+                    catch (QueryEvaluationException ex) {
+                        SystemLog.setIsERROR(true);
+                        SystemLog.sparql(ex,Sesame28Kit.class);
+                    }
+                }
+                catch (Exception ex) {
+                    SystemLog.setIsERROR(true);
+                    SystemLog.sparql(ex,Sesame28Kit.class);
+                }
+                finally {
+                    stop.set(true);
+                }
+            }
+        };
+
+        Runnable closeRunner = new Runnable() {
+            @Override
+            public void run() {
+                //SystemLog.sparql("<<<<<<<<< waiting for query",Sesame28Kit.class);
+                boolean doClose = false;
+                while (true) {
+                    if (stop.get()) {
+                        break;
+                    }
+
+                    synchronized (result) {
+                        if (result[0] != null) {
+                            doClose = true;
+                            break;
+                        }
+                    }
+                    sleep(100);
+                }
+
+                if (doClose) {
+                    sleep(200);
+                    try {
+                        //SystemLog.sparql("<<<<<<<<< closing query",Sesame28Kit.class);
+
+                        result[0].close();
+                        times[1] = System.currentTimeMillis();
+                        //SystemLog.sparql("<<<<<<<<< query closed",Sesame28Kit.class);
+                        stop.set(true);
+                    }
+                    catch (QueryEvaluationException ex) {
+                        SystemLog.setIsERROR(true);
+                        SystemLog.sparql(ex,Sesame28Kit.class);
+                    }
+                }
+                else {
+                    stop.set(true);
+                }
+            }
+        };
+
+        try{run(queryRunner, "<QUERY>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
+        try{run(closeRunner, "<CLOSER>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
+
+        long start = System.currentTimeMillis();
+        while (!stop.get()) {
+            sleep(100);
+        }
+
+        long printQueryRunner = times[0] - start;
+        long printCloseRunner = times[1] - start;
+        SystemLog.sparql("QUERY RUNNER: took = "+printQueryRunner,Sesame28Kit.class);
+        SystemLog.sparql("CLOSE RUNNER: took = "+printCloseRunner,Sesame28Kit.class);
+
+        if(times[0] < QUERY_TIME) SystemLog.sparql("the query should have been closed within the query timeout:"+times[0],Sesame28Kit.class);
+        if(-1==times[0]) SystemLog.sparql("the query runner should not have set an end time as it should have been cancelled",Sesame28Kit.class);
+        calculate = printQueryRunner;
+        return calculate;
+    }
+
+
+
+    /**
+     * Method utility for calculate the execution time.
+     * @param time the input long time of the execution query.
+     */
+    private static void sleep(long time) {
+        try {
+            Thread.sleep(time);
+        }
+        catch (InterruptedException ex) { /* .... */ }
+    }
+
+    /**
+     * Method utility for calculate the execution time.
+     * @param runnable the Runnable object.
+     * @param name the String name of the runnable.
+     */
+    private static void run(Runnable runnable, String name) {
+        Thread thread = new Thread(runnable);
+        thread.setName(name);
+        thread.start();
+    }
+
+    /**
      * Method to convert a String Query to a OpenRDF Operation.
      * @param query the String of the Query to analyze.
      * @return the OpenRDF Operation.
-     * @throws RepositoryException throw if any error of connection to the repository is occurred.
      */
-    public Operation convertStringQueryToOperation(String query) throws RepositoryException {
+    public Operation convertStringQueryToOperation(String query){
         return prepareOperation(query);
     }
 
@@ -3223,9 +3500,8 @@ public class Sesame28Kit {
      * Method to convert a String Query to a OpenRDF Operation.
      * @param query the OpenRDF Query to analyze.
      * @return the OpenRDF Operation.
-     * @throws RepositoryException throw if any error of connection to the repository is occurred.
      */
-    public Operation convertQueryToOperation(Query query) throws RepositoryException {
+    public Operation convertQueryToOperation(Query query){
         return convertStringQueryToOperation(query.toString());
     }
 

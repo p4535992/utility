@@ -45,9 +45,14 @@ public class SystemLog<T> {
     private static boolean isDEBUG=false;
     private static boolean isERROR;
     private static boolean isPRINT = true;
+
     private static boolean isLogOff = false;
     private static boolean isLog4j = false;
     private static boolean isSlf4j = false;
+
+    public static boolean isERROR() {return isERROR;}
+
+    public static void setIsERROR(boolean isERROR) {SystemLog.isERROR = isERROR;}
 
     public static boolean isLogOff() {return isLogOff;}
 
@@ -159,7 +164,7 @@ public class SystemLog<T> {
                 if(isERROR)System.err.println(logEntry);
                 else System.out.println(logEntry);
             } else {
-                if (!LOGFILE.exists()) new SystemLog();
+                if (LOGFILE==null || !LOGFILE.exists()) new SystemLog();
                 //if(!logging){ log = new SystemLog();}
                 StringBuilder sb = new StringBuilder();
                 if (logTimestamp != null)
@@ -217,8 +222,9 @@ public class SystemLog<T> {
         else write(logEntry);
     }
 
-    public static void error(String logEntry){error(logEntry,null,null);}
+    public static void error(String logEntry){error(logEntry,new Throwable(logEntry),null);}
     public static void error(String logEntry,Exception ex){error(logEntry+"->"+ex.getMessage(),null,null);}
+    public static void error(String logEntry,Exception ex,Class<?> thisClass){error(logEntry, new Throwable(ex.getCause()),thisClass);}
     public static void error(String logEntry,Throwable th){error(logEntry,th,null);}
     public static void error(String logEntry,Throwable th,Class<?> thisClass){
         level = Level.ERR;
@@ -271,12 +277,25 @@ public class SystemLog<T> {
         else write(logEntry);
     }
 
-    public static void sparql(String logEntry) {sparql(logEntry,null);}
-    public static void sparql(String logEntry,Class<?> thisClass){
+    public static void sparql(String logEntry) {sparql(logEntry,null,null);}
+    public static void sparql(String logEntry,Class<?> clazz) {sparql(logEntry,null,clazz);}
+    public static void sparql(String logEntry,Exception e) {sparql(logEntry,new Throwable(e.getCause()),null);}
+    //public static void sparql(String logEntry,Exception e,Class<?> clazz) {sparql(logEntry,new Throwable(e.getCause()),clazz);}
+    public static void sparql(Exception e) {sparql(e.getMessage(),new Throwable(e.getCause()),null);}
+    public static void sparql(Exception e,Class<?> clazz) {sparql(e.getMessage(),new Throwable(e.getCause()),clazz);}
+    public static void sparql(String logEntry,Throwable th,Class<?> thisClass){
         level = Level.SPARQL;
         if(thisClass!=null) {
-            if(isLog4j){ log4j = org.apache.log4j.Logger.getLogger(thisClass); log4j.info(logEntry);}
-            if(isSlf4j){ slf4j = org.slf4j.LoggerFactory.getLogger(thisClass); slf4j.info(logEntry);}
+            if(isLog4j){
+                log4j = org.apache.log4j.Logger.getLogger(thisClass);
+                if(th!=null)log4j.info(logEntry,th);
+                else log4j.info(logEntry);
+            }
+            if(isSlf4j) {
+                slf4j = org.slf4j.LoggerFactory.getLogger(thisClass);
+                if (th != null) slf4j.info(logEntry, th);
+                else slf4j.info(logEntry);
+            }
             else write(logEntry);
         }
         else write(logEntry);
@@ -340,6 +359,7 @@ public class SystemLog<T> {
     }
 
     public static void exception(Exception e){ exception(e.getMessage(), new Throwable(e.getCause()), null);}
+    public static void exception(Exception e,Class<?> clazz){ exception(e.getMessage(), new Throwable(e.getCause()), clazz);}
     public static void exception(String logEntry,Throwable th,Class<?> thisClass){
         level = Level.EXCEP;
         isERROR=true;
@@ -420,10 +440,10 @@ public class SystemLog<T> {
     private void setLogWriter()  {
         try {
             logWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGFILE.getAbsolutePath(), true)));
-            SystemLog.t = getClass().getGenericSuperclass();
+            /*SystemLog.t = getClass().getGenericSuperclass();
             SystemLog.pt = (java.lang.reflect.ParameterizedType) t;
             SystemLog.cl = (Class) pt.getActualTypeArguments()[0];
-            SystemLog.clName = cl.getSimpleName();
+            SystemLog.clName = cl.getSimpleName();*/
         } catch (IOException e) {
             logStackTrace(e, SLF4JLogger);
         }
