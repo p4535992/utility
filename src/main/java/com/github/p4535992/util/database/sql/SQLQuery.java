@@ -32,7 +32,7 @@ public class SQLQuery {
      * @param size the siza of the column to add.
      * @return string query.
      */
-    public static String addColumnToTable(String yourTable,String nameNewColumn,int SQLTypes,Integer size){
+    public static String alterAddColumn(String yourTable,String nameNewColumn,int SQLTypes,Integer size){
         return "ALTER TABLE " + yourTable + " ADD nameNewColumn "+SQLHelper.convertSQLTypes2String(SQLTypes)+"("+size+");";
     }
 
@@ -40,16 +40,15 @@ public class SQLQuery {
      * UPDATE yourTable SET nameColumnCodified = MD5(nameColumnToCodify) WHERE nameColumnCodified IS NULL;
      * @param yourTable string name of the table.
      * @param nameColumnToCodify string name of the column to codify.
-     * @param nameColumnCodified string name of the column to insert.
+     * @param nameColumnToUpdate string name of the column to insert.
      * @param ifNull if true set the new Value only where the old value is NULL.
      * @return string query.
      */
-    public static String setMD5ColumnToTable(
-        String yourTable,String nameColumnToCodify,String nameColumnCodified,boolean ifNull){
-        String query = "UPDATE "+yourTable+" \n" +
-                "SET "+nameColumnCodified+" = MD5("+nameColumnToCodify+") \n";
-        if(ifNull) query += "WHERE "+nameColumnCodified+" IS NULL; \n";
-        else query += "; \n";
+    public static String updateColumnToMD5Hash(
+        String yourTable,String nameColumnToCodify,String nameColumnToUpdate,boolean ifNull){
+        String query = "UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = MD5("+nameColumnToCodify+") ";
+        if(ifNull) query += "WHERE "+nameColumnToUpdate+" IS NULL; ";
+        else query += "; ";
         return query;
     }
 
@@ -63,7 +62,7 @@ public class SQLQuery {
      * @param prefix string prefix on the new copied column.
      * @return string query.
      */
-    public static String addCopyColumnWithPrefix(String yourTable,String nameColumnToCopy,String nameColumnToInsert,String prefix){
+    public static String updateCopyAColumnWithPrefix(String yourTable,String nameColumnToCopy,String nameColumnToInsert,String prefix){
         return "SELECT "+nameColumnToCopy+" FROM " + yourTable + "; \n" +
                 "UPDATE " + yourTable + " SET "+nameColumnToInsert+" = "+nameColumnToCopy+"; \n"+
                 "UPDATE " + yourTable + " SET "+nameColumnToInsert+" = CONCAT('"+prefix+"',"+nameColumnToInsert+");"
@@ -77,7 +76,7 @@ public class SQLQuery {
      * @param prefix string of the prefix to add at the column to update.
      * @return string query.
      */
-    public static String addPrefixToColumn(String yourTable,String nameColumnToUpdate,String prefix){
+    public static String updateAddPrefixToColumn(String yourTable,String nameColumnToUpdate,String prefix){
         return "UPDATE " + yourTable + " SET "+nameColumnToUpdate+" = CONCAT('"+prefix+"',"+nameColumnToUpdate+");";
     }
 
@@ -102,7 +101,7 @@ public class SQLQuery {
      * @param separator string of the separator.
      * @return string query.
      */
-    public static String setColumnConcatenationFromTwoColumns(
+    public static String updateColumnConcatenationFromTwoColumns(
             String yourTable,String nameColumnToUpdate,
             String nameFirstColumnConcatenate,String nameSecondColumnConcatenate,
             String separator){
@@ -119,7 +118,7 @@ public class SQLQuery {
      * @param content string to append to the column.
      * @return string query.
      */
-    public static String setColumnConcatenationContent(
+    public static String updateColumnConcatenationContent(
             String yourTable,String nameColumnToUpdate,String content){
         return "UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = CONCAT("+nameColumnToUpdate+",'"+content+"');";
     }

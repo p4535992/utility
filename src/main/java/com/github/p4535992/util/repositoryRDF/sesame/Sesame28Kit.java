@@ -327,9 +327,13 @@ public class Sesame28Kit {
      * Method to get a new OpenRDF Model.
      * @return the OpenRDF Model.
      */
-    public Model createNewModel(){
-        return new LinkedHashModel();
-    }
+    public Model createNewModel(){return new LinkedHashModel();}
+
+    /**
+     * Method to get a new OpenRDF Graph.
+     * @return the OpenRDF Graph.
+     */
+    public Graph createNewGraph(){return new TreeModel();}
 
     /**
      * Method to get a new OpenRDF ValueFactory.
@@ -351,9 +355,9 @@ public class Sesame28Kit {
     }
 
 
-    /*
-     * Setter and getter addition
-     */
+    //------------------------------------------
+    // Setter and getter addition
+    //------------------------------------------
 
     /**
      * Method to get the String of the url where are located the  repositories 
@@ -2830,9 +2834,9 @@ public class Sesame28Kit {
         com.hp.hpl.jena.graph.Node p = triple.getPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getObject() ;
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
-        Resource subj = JenaAndSesame.nodeToValueResource(valueFactory, s) ;
-        URI pred = JenaAndSesame.nodeURIToValue(valueFactory, p) ;
-        Value obj = JenaAndSesame.nodeToValue(valueFactory, o) ;
+        Resource subj = JenaAndSesame.asResource(valueFactory, s) ;
+        URI pred = JenaAndSesame.asURI(valueFactory, p) ;
+        Value obj = JenaAndSesame.asValue(valueFactory, o) ;
         try {
             Statement stmt = valueFactory.createStatement(subj, pred, obj) ;
             mRepositoryConnection.remove(stmt, contexts) ;
@@ -2851,9 +2855,9 @@ public class Sesame28Kit {
         com.hp.hpl.jena.graph.Node p = triple.getPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getObject() ;
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
-        Resource subj   = JenaAndSesame.nodeToValueResource(valueFactory, s) ;
-        URI pred        = JenaAndSesame.nodeURIToValue(valueFactory, p) ;
-        Value obj       = JenaAndSesame.nodeToValue(valueFactory, o) ;
+        Resource subj   = JenaAndSesame.asResource(valueFactory, s) ;
+        URI pred        = JenaAndSesame.asURI(valueFactory, p) ;
+        Value obj       = JenaAndSesame.asValue(valueFactory, o) ;
         try {
             Statement stmt = valueFactory.createStatement(subj, pred, obj) ;
             mRepositoryConnection.add(stmt, contexts) ;
@@ -2876,9 +2880,9 @@ public class Sesame28Kit {
         com.hp.hpl.jena.graph.Node s = triple.getMatchSubject() ;
         com.hp.hpl.jena.graph.Node p = triple.getMatchPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getMatchObject() ;
-        org.openrdf.model.Resource subj = ( s==null ? null : JenaAndSesame.nodeToValueResource(valueFactory, s) ) ;
-        org.openrdf.model.URI pred   = ( p==null ? null : JenaAndSesame.nodeURIToValue(valueFactory, p) ) ;
-        org.openrdf.model.Value obj  = ( o==null ? null : JenaAndSesame.nodeToValue(valueFactory, o) ) ;
+        org.openrdf.model.Resource subj = ( s==null ? null : JenaAndSesame.asResource(valueFactory, s) ) ;
+        org.openrdf.model.URI pred   = ( p==null ? null : JenaAndSesame.asURI(valueFactory, p) ) ;
+        org.openrdf.model.Value obj  = ( o==null ? null : JenaAndSesame.asValue(valueFactory, o) ) ;
         List<com.hp.hpl.jena.graph.Triple> list = new ArrayList<>();
         try {
             org.openrdf.repository.RepositoryResult<org.openrdf.model.Statement> iter1 =
@@ -3134,6 +3138,10 @@ public class Sesame28Kit {
                     if(i > limit) break;
                     model.add(rri.next());
                     i++;
+                }
+            }else{
+                while(rri.hasNext()){
+                    model.add(rri.next());
                 }
             }
             return model;

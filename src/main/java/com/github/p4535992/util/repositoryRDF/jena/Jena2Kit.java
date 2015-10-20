@@ -38,6 +38,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFFormat;
+import org.apache.xerces.impl.dv.XSSimpleType;
+import org.apache.xerces.util.SymbolHash;
 
 /**
  * Class utility for Jena
@@ -462,7 +464,7 @@ public class Jena2Kit {
 
     /**
      * A list of org.apache.jena.riot.RDFFormat file formats used in jena.
-     * if you are not using the last verions of jena you cna found in build:
+     * if you are not using the last version of jena you can found in build:
      * "AWT-EventQueue-0" java.lang.NoSuchFieldError: JSONLD_FLAT
      * @return all the RDFFormat supported from jena.
      */
@@ -481,13 +483,50 @@ public class Jena2Kit {
         RDFFormat.TURTLE_PRETTY};
         //org.apache.jena.riot.RDFFormat.RDF_THRIFT,org.apache.jena.riot.RDFFormat.RDF_THRIFT_VALUES,
 
-    /*
-    public static com.hp.hpl.jena.datatypes.RDFDatatype convertXSDDatatypeToRDFDatatype(
-            com.hp.hpl.jena.datatypes.xsd.XSDDatatype xsdDatatype){
-        com.hp.hpl.jena.datatypes.RDFDatatype rdfDatatype = null;
-        return rdfDatatype;
+    /**
+     * A list of com.hp.hpl.jena.datatypes.RDFDatatype file formats used in jena.
+     * @return all the RDFFormat supported from jena.
+     */
+   /* private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] {
+            RDFDatatype.
+    };*/
+
+    /**
+     * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
+     * return all the com.hp.hpl.jena.datatypes.RDFDatatype supported from jena.
+     */
+    public static com.hp.hpl.jena.datatypes.RDFDatatype convertStringToRDFDatatype(String uri){
+        return stringToXSDDatatype(uri);
     }
-    */
+
+
+    /*public static com.hp.hpl.jena.datatypes.RDFDatatype convertXSDDatatypeToRDFDatatype(XSDDatatype xsdD){
+        return xsdD;
+    }
+
+    public static XSSimpleType convertStringToXssSimpleType(String nameDatatype){
+        SymbolHash fBuiltInTypes = new SymbolHash();
+        return (XSSimpleType)fBuiltInTypes.get(nameDatatype);
+    }
+
+    public static XSDDatatype convertStringToXSDDatatype(String nameDatatype){
+        XSSimpleType xss = convertStringToXssSimpleType(nameDatatype);
+        return new XSDDatatype(xss,xss.getNamespace());
+    }*/
+
+    /**
+     * A list of org.apache.xerces.impl.dv.XSSimpleType.
+     * return all the XSSimpleType supported from jena.
+     */
+   /* private static final short[] allFormatOfXSSimpleType = new short[]{
+            XSSimpleType.PRIMITIVE_ANYURI,XSSimpleType.PRIMITIVE_BASE64BINARY,XSSimpleType.PRIMITIVE_BOOLEAN,
+            XSSimpleType.PRIMITIVE_DATE,XSSimpleType.PRIMITIVE_DATETIME,XSSimpleType.PRIMITIVE_DECIMAL,XSSimpleType.PRIMITIVE_DOUBLE,
+            XSSimpleType.PRIMITIVE_DURATION,XSSimpleType.PRIMITIVE_FLOAT,XSSimpleType.PRIMITIVE_GDAY,XSSimpleType.PRIMITIVE_GMONTH,
+            XSSimpleType.PRIMITIVE_GMONTHDAY,XSSimpleType.PRIMITIVE_GYEAR,XSSimpleType.PRIMITIVE_GYEARMONTH,
+            XSSimpleType.PRIMITIVE_HEXBINARY,XSSimpleType.PRIMITIVE_NOTATION,XSSimpleType.PRIMITIVE_PRECISIONDECIMAL,
+            XSSimpleType.PRIMITIVE_QNAME,XSSimpleType.PRIMITIVE_STRING,XSSimpleType.PRIMITIVE_TIME,XSSimpleType.WS_COLLAPSE,
+            XSSimpleType.WS_PRESERVE,XSSimpleType.WS_REPLACE
+    };*/
 
     /**
      * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
@@ -513,10 +552,10 @@ public class Jena2Kit {
      */
     public static XSDDatatype stringToXSDDatatype(String uri) {
             for (XSDDatatype xsdDatatype : allFormatsOfXSDDataTypes) {
-                   if(xsdDatatype.getURI().equalsIgnoreCase("http://www.w3.org/2001/XMLSchema#"+uri)){
-                       return xsdDatatype;
-                   }
-             }
+                   if(xsdDatatype.getURI().equalsIgnoreCase("http://www.w3.org/2001/XMLSchema#"+uri)) return xsdDatatype;
+                if(xsdDatatype.getURI().replace("http://www.w3.org/2001/XMLSchema","")
+                        .toLowerCase().contains(uri.toLowerCase())) return xsdDatatype;
+            }
             throw new IllegalArgumentException("The XSD Datatype '" + uri + "' is not recognised");
  	}
 
