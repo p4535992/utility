@@ -1,7 +1,7 @@
 package com.github.p4535992.util.encoding;
 
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringKit;
 
 import java.io.*;
 import java.nio.charset.Charset;

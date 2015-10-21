@@ -2,7 +2,8 @@ package com.github.p4535992.util.file;
 
 import com.github.p4535992.util.encoding.EncodingUtil;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringIs;
+import com.github.p4535992.util.string.impl.StringKit;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -949,7 +950,7 @@ public class FileUtil {
      * @return the full name package+class
      */
     public static String resolveName(String name) {
-        if (StringKit.isNullOrEmpty(name)) {
+        if (StringIs.isNullOrEmpty(name)) {
             return name;
         }
         if (!name.startsWith("/")) {

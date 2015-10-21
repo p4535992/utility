@@ -3,15 +3,14 @@ package com.github.p4535992.util.database.jooq;
 import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.database.sql.SQLHelper;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.Patterns;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringIs;
+import com.github.p4535992.util.string.impl.StringKit;
 import org.jooq.*;
 import org.jooq.impl.*;
 
 import java.net.URI;
 import java.net.URL;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -115,7 +114,7 @@ public class SQLJooqKit2 {
         Query iQuery = dslContext.insertInto(table).set(map);
         if(preparedStatement){
             String query = StringKit.toStringInline(iQuery.toString());
-            query = Patterns.getQueryInsertValuesParam(query, columns);
+            query = JOOQSupport.getQueryInsertValuesParam(query, columns);
             //return StringKit.toStringInline(iQuery.getSQL(ParamType.NAMED_OR_INLINED));
             return StringKit.toStringInline(query);
         }
@@ -203,16 +202,16 @@ public class SQLJooqKit2 {
         sQuery.addSelect(fields);
         sQuery.addFrom(table);
         if(conditions!=null && !conditions.isEmpty()) sQuery.addConditions(conditions);
-        if(!StringKit.isNullOrEmpty(limit) && !StringKit.isNullOrEmpty(offset)) {
-            if (StringKit.isNumeric(limit) && StringKit.isNumeric(offset)) {
+        if(!StringIs.isNullOrEmpty(limit) && !StringIs.isNullOrEmpty(offset)) {
+            if (StringIs.isNumeric(limit) && StringIs.isNumeric(offset)) {
                 sQuery.addLimit(StringKit.convertStringToInt(offset), StringKit.convertStringToInt(limit));
             }
-        }else if(!StringKit.isNullOrEmpty(limit)){
-            if (StringKit.isNumeric(limit)) {
+        }else if(!StringIs.isNullOrEmpty(limit)){
+            if (StringIs.isNumeric(limit)) {
                 sQuery.addLimit(StringKit.convertStringToInt(limit));
             }
-        }else if(!StringKit.isNullOrEmpty(offset)){
-            if (StringKit.isNumeric(offset)) {
+        }else if(!StringIs.isNullOrEmpty(offset)){
+            if (StringIs.isNumeric(offset)) {
                 sQuery.addLimit(StringKit.convertStringToInt(offset), 1000000);
             }
         }
@@ -220,7 +219,7 @@ public class SQLJooqKit2 {
             if (conditions==null || conditions.isEmpty()) {
                 return StringKit.toStringInline(sQuery.toString());
             }else {
-                String query = Patterns.getQueryInsertWhereParam(StringKit.toStringInline(sQuery.toString()));
+                String query = JOOQSupport.getQueryInsertWhereParam(StringKit.toStringInline(sQuery.toString()));
                 return StringKit.toStringInline(query);
             }
         } else{

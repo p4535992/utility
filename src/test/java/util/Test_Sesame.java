@@ -1,7 +1,5 @@
 package util;
 
-import com.github.p4535992.util.repositoryRDF.sparql.SparqlKit;
-import com.github.p4535992.util.string.StringKit;
 import org.openrdf.query.*;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;

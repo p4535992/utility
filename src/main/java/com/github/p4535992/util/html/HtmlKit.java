@@ -2,7 +2,7 @@ package com.github.p4535992.util.html;
 import com.github.p4535992.util.html.parser.Outliner;
 import com.github.p4535992.util.html.parser.PageSaver;
 import com.github.p4535992.util.html.parser.ParserGetter;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringIs;
 import com.github.p4535992.util.log.SystemLog;
 
 import java.io.*;
@@ -72,7 +72,7 @@ public class HtmlKit {
     }
 
     public static String toHtml( String string ) {
-        if(StringKit.isNullOrEmpty(string) )
+        if(StringIs.isNullOrEmpty(string) )
             return "<html><body></body></html>";
 
         BufferedReader st = new BufferedReader( new StringReader( string ) );

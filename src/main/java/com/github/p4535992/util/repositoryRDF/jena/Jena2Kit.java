@@ -1,6 +1,7 @@
 package com.github.p4535992.util.repositoryRDF.jena;
 
 import com.github.p4535992.util.collection.CollectionKit;
+import com.github.p4535992.util.string.impl.StringIs;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.query.*;
@@ -22,10 +23,9 @@ import com.hp.hpl.jena.sparql.util.*;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
 
-import com.github.p4535992.util.string.StringOutputStreamKit;
+import com.github.p4535992.util.string.impl.StringOutputStreamKit;
 import com.github.p4535992.util.file.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
 import com.github.p4535992.util.xml.XMLKit;
 
 import java.io.*;
@@ -38,8 +38,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFFormat;
-import org.apache.xerces.impl.dv.XSSimpleType;
-import org.apache.xerces.util.SymbolHash;
 
 /**
  * Class utility for Jena
@@ -909,7 +907,7 @@ public class Jena2Kit {
         try {
             Property p;
             String uri = namespaces.get(prefix);
-            if(!StringKit.isNullOrEmpty(uri)) {
+            if(!StringIs.isNullOrEmpty(uri)) {
                 p = model.createProperty(uri, property);
             }else{
                 p = model.createProperty(property);
@@ -998,7 +996,7 @@ public class Jena2Kit {
      */
     public static String convertModelToString(Model showRDF, String baseURI,String outputFormat) {
         StringOutputStreamKit stringOutput = new StringOutputStreamKit();
-        if(!StringKit.isNullOrEmpty(outputFormat)){
+        if(!StringIs.isNullOrEmpty(outputFormat)){
              RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
              if(rdfFormat==null){outputFormat = "RDF/XML-ABBREV";}
         }else{
@@ -1260,7 +1258,7 @@ public class Jena2Kit {
         if (model == null) {
             return "Null Model.";
         }
-        if(!StringKit.isNullOrEmpty(outputFormat)){
+        if(!StringIs.isNullOrEmpty(outputFormat)){
             try {
                 RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
                 outputFormat = rdfFormat.getLang().getName();

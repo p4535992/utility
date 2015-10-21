@@ -1,4 +1,4 @@
-package com.github.p4535992.util.string;
+package com.github.p4535992.util.string.impl;
 
 import com.github.p4535992.util.log.SystemLog;
 import org.slf4j.Logger;
@@ -15,8 +15,6 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Class with many utilities on String and Collection.
@@ -129,16 +127,12 @@ public class StringKit<T> {
      * @param argStr string to remove multiple spaces from.
      * @return String
      */
-    public static String collapseSpaces(String argStr)
-    {
+    public static String collapseSpaces(String argStr) {
         char last = argStr.charAt(0);
         StringBuilder argBuf = new StringBuilder();
-
-        for (int cIdx = 0 ; cIdx < argStr.length(); cIdx++)
-        {
+        for (int cIdx = 0 ; cIdx < argStr.length(); cIdx++) {
             char ch = argStr.charAt(cIdx);
-            if (ch != ' ' || last != ' ')
-            {
+            if (ch != ' ' || last != ' ') {
                 argBuf.append(ch);
                 last = ch;
             }
@@ -174,15 +168,6 @@ public class StringKit<T> {
         }
         return sb.toString();
     }
-    /**
-     * Returns true if the parameter is null or empty. false otherwise.
-     *
-     * @param text string text.
-     * @return true if the parameter is null or empty.
-     */
-    public static boolean isNullOrEmpty(String text) {
-        return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty();
-    }
 
     /**
      * Returns a String with the content of the InputStream.
@@ -210,8 +195,7 @@ public class StringKit<T> {
     }
 
     /**
-     * Returns am InputStream with the parameter.
-     *
+     * Method to Returns am InputStream with the parameter.
      * @param string string input.
      * @return InputStream with the string value.
      */
@@ -224,9 +208,6 @@ public class StringKit<T> {
         }
         return is;
     }
-
-
-
     
      /**
         * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
@@ -237,7 +218,7 @@ public class StringKit<T> {
         * @throws UnsupportedEncodingException throw if any error is occurrred.  
         * @throws IOException throw if any error is occurrred.
         */
-     public static List<String> convertUTF82UnicodeEscape(File UTF8) throws IOException{
+     public static List<String> convertUTF8ToUnicodeEscape(File UTF8) throws IOException{
          List<String> list = new ArrayList<>();
          if (UTF8==null) {
              System.out.println("Usage: java UTF8ToAscii <filename>");
@@ -383,29 +364,6 @@ public class StringKit<T> {
     * @return java.util.UUID.
     */
     public static java.util.UUID convertStringToUUID(String uuid){return java.util.UUID.fromString(uuid); }
-       
-    /**
-    * Metodo che matcha e sostituisce determinati parti di una stringa attraverso le regular expression.
-    * @param input stringa di input.
-    * @param expression regular expression da applicare.
-    * @param replace setta la stringa con cui sostituire il risultato del match.
-    * @return il risultato in formato stringa della regular expression.
-    */
-   public static String regexAndReplace(String input,String expression,String replace){
-       String result ="";
-       if(replace==null){
-           Pattern pattern = Pattern.compile(expression);
-           Matcher matcher = pattern.matcher(input);
-           while(matcher.find()){
-                result = matcher.group();
-                if(!isNullOrEmpty(result)){break;}
-           }
-           return result;
-       }else{
-           return input.replaceAll(expression, replace);
-       }
-
-   }
 
     /**
      * Methohs remove the symbol if exists in the first and last caracther of the string
@@ -414,7 +372,7 @@ public class StringKit<T> {
      * @return the string update.
      */
     private static String removeFirstAndLast(String stringToUpdate, String symbol) {
-        if (!isNullOrEmpty(stringToUpdate)) {
+        if (!StringIs.isNullOrEmpty(stringToUpdate)) {
             stringToUpdate = stringToUpdate.replaceAll("(\\" + symbol + ")\\1+", symbol);
             if (stringToUpdate.substring(0, 1).contains(symbol)) {
                 stringToUpdate = stringToUpdate.substring(1, stringToUpdate.length());
@@ -433,7 +391,7 @@ public class StringKit<T> {
     * @return  il valore della stringa se null o come è arrivata.
     */
     public static String setNullForEmptyString(String s){
-        if(isNullOrEmpty(s)){return null;}
+        if(StringIs.isNullOrEmpty(s)){return null;}
         else{return s;}
     } //setNullforEmptyString
 
@@ -474,7 +432,7 @@ public class StringKit<T> {
         StringTokenizer st = new StringTokenizer(content, symbol);
         while (st.hasMoreTokens()) {
             content = st.nextToken();
-            if(!isNullOrEmpty(content)){
+            if(!StringIs.isNullOrEmpty(content)){
                  break;
             }
         }
@@ -539,16 +497,17 @@ public class StringKit<T> {
 
 
     /**
-     * Method to  count the elements caracthers of a string.
+     * Method to  count the elements characters of a string.
      * @return string of int where the first element is the number of words,the second is the number of characters
      * and the third is the number of lines.
      * @throws IOException throw if any error is occurred.
      */
-    public static int[] countElementOfAString() throws IOException {
+    public static int[] countElementOfAString(String text) throws IOException {
         int i=0,j=0,k=0;
-        BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(convertStringToInputStream(text)));
         String s;
-        s=br.readLine();//Enter File Name:
+        s = br.readLine();//Enter File Name:
         br=new BufferedReader(new FileReader(s));
         while((s=br.readLine())!=null)
         {
@@ -634,18 +593,6 @@ public class StringKit<T> {
     }
 
     /**
-     * Method for check if a string rappresent a numeric value.
-     * @param str string rapresentative of a number.
-     * @return booleanvalue if the string rappresent a number or not.
-     */
-    public static boolean isNumeric(String str) {
-        //match a number with optional '-' and decimal.
-        str = str.replace(",",".").replace(" ",".");
-        return str.matches("(\\-|\\+)?\\d+(\\.\\d+)?");
-    }
-
-
-    /**
      * Method to convert a POJO java object to XML string.
      * @param object object.
      * @param clazz class.
@@ -699,9 +646,6 @@ public class StringKit<T> {
         return map;
     }
 
-
-
-
     /**
      * Method to convert Strng to char.
      * @param string string.
@@ -711,114 +655,20 @@ public class StringKit<T> {
         return string.toCharArray();
     }
 
-
-    /**
-     * Method to check if a s tring is a url address web or not.
-     * @param url the string address web.
-     * @return if tru is a url address web.
-     */
-    public static boolean isURL(String url){
-        return Patterns.isValidURL(url);
-    }
-
-    /**
-     * Method to check if a s tring is a url address web or not.
-     * @param url the string address web.
-     * @return if tru is a url address web.
-     */
-    public static boolean isURLWithProtocol(String url){
-        return url.matches("^(https?|ftp)://.*$");
-    }
     /**
      * Method to add a protocl to a strin to match a url.
      * @param url the string of the url.
      * @return he string of the url with protocol.
      */
-    public static String addProtocolToURLString(String url) {
-       if(isURL(url)) {
-           if (!(Patterns.isValidURLWithProtocol(url))) {
+    public static String convertStringURLToStringURLWithProtocol(String url) {
+       if(StringIs.isURL(url)) {
+           if (!(StringIs.isURLWithProtocol(url))) {
                url = "http://" + url;
-               if (isURL(url)) return url;
+               if (StringIs.isURL(url)) return url;
            }
            return url;
        }
         return null;
-    }
-
-    /**
-     * Method to find all the string matches of the expression with regular expression.
-     * @param text string text to check.
-     * @param expression string regular expression.
-     * @param justFirstResult if true get only the first element.
-     * @return a list of string of all matches.
-     */
-    public static List<String> findWithRegex(String text,String expression,boolean justFirstResult){
-        List<String> result =new ArrayList<>();
-        Pattern pattern = Pattern.compile(expression);
-        return findWithRegex(text,pattern,justFirstResult);
-    }
-
-    /**
-     * Method to find all the string matches of the expression with regular expression.
-     * @param text string text to check.
-     * @param pattern pattern of regular expression.
-     * @param justFirstResult if true get only the first element.
-     * @return a list of string of all matches.
-     */
-    public static List<String> findWithRegex(String text,Pattern pattern,boolean justFirstResult){
-        List<String> result =new ArrayList<>();
-        Matcher matcher = pattern.matcher(text);
-        while(matcher.find()){
-            result.add(matcher.group());
-            if(justFirstResult)break;
-
-        }
-        return result;
-    }
-
-    /**
-     * Method to find the string matches of the expression with regular expression.
-     * @param text string text to check.
-     * @param expression string regular expression.
-     * @return the first match on the text string.
-     */
-    public static String findWithRegex(String text,String expression){
-        Pattern pat = Pattern.compile(expression);
-        return findWithRegex(text,pat);
-    }
-
-    /**
-     * Method to find the string matches of the expression with regular expression.
-     * @param text string text to check.
-     * @param pattern pattern regular expression.
-     * @return the first match on the text string.
-     */
-    public static String findWithRegex(String text,Pattern pattern){
-        Matcher matcher = pattern.matcher(text);
-        if(matcher.find()){
-            return matcher.group(0);
-        }
-        return "?";
-    }
-
-    /**
-     * Method to check if  a string contain some match for the regular expression.
-     * @param text string text to check.
-     * @param expression string regular expression.
-     * @return if true the string contains a match for the regular expression.
-     */
-    public static boolean isMatch(String text,String expression){
-        return text != null && Pattern.compile(expression).matcher(text).matches();
-    }
-
-    /**
-     * Method to check if  a string contain some match for the regular expression.
-     * @param text string text to check.
-     * @param pattern the pattern of the regular expression.
-     * @return if true the string contains a match for the regular expression.
-     */
-    public static boolean isMatch(String text,Pattern pattern){
-        return text != null && pattern.matcher(text).matches();
     }
 
     /**
@@ -993,7 +843,7 @@ public class StringKit<T> {
      * @return the integer object.
      */
     public static Integer convertStringToInteger(String numericText){
-        if(isNumeric(numericText)){
+        if(StringIs.isNumeric(numericText)){
             return Integer.parseInt(numericText);
         }else{
             SystemLog.warning("The string text:"+numericText+" is not a number!!!");
@@ -1007,7 +857,7 @@ public class StringKit<T> {
      * @return the int primitive.
      */
     public static int convertStringToInt(String numericText){
-        if(isNumeric(numericText)){
+        if(StringIs.isNumeric(numericText)){
             return convertIntegerToInt(Integer.parseInt(numericText));
         }else{
             SystemLog.warning("The string text:"+numericText+" is not a number!!!");

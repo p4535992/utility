@@ -1,7 +1,7 @@
 package com.github.p4535992.util.http;
 
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringIs;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -42,7 +42,7 @@ public class HttpKit {
 
     public String getDomainName(String url){
         try {
-            if (StringKit.isURL(url)) {
+            if (StringIs.isURL(url)) {
                 return getDomainName(new URL(url));
             } else {
                 SystemLog.warning("The " + url + " is not a correct url !!!");
@@ -61,7 +61,7 @@ public class HttpKit {
 
     public String getTopLevelDomainName(String url){
         try {
-            if (StringKit.isURL(url)) {
+            if (StringIs.isURL(url)) {
                 return getTopLevelDomainName(new URL(url));
             } else {
                 SystemLog.warning("The " + url + " is not a correct url !!!");
@@ -84,7 +84,7 @@ public class HttpKit {
 
     public boolean isSameDomainName(String url1,String url2){
         try {
-            if (StringKit.isURL(url1) && StringKit.isURL(url2)) {
+            if (StringIs.isURL(url1) && StringIs.isURL(url2)) {
                 return isSameDomainName(new URL(url1), new URL(url2));
             } else {
                 SystemLog.warning("The " + url1 + " or "+url2+" is not a correct url !!!");
@@ -102,7 +102,7 @@ public class HttpKit {
 
     public String[] getHostSegments(String url){
         try {
-            if (StringKit.isURL(url)) {
+            if (StringIs.isURL(url)) {
                 return getHostSegments(new URL(url));
             } else {
                 SystemLog.warning("The " + url + " is not a correct url !!!");

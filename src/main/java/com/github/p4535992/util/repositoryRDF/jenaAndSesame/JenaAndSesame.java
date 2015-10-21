@@ -1,5 +1,6 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 
+import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
 import com.github.p4535992.util.repositoryRDF.sesame.Sesame28Kit;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
@@ -506,7 +507,11 @@ public class JenaAndSesame {
         if ( value instanceof org.openrdf.model.Literal )return asNode((org.openrdf.model.Literal) value) ;
         if ( value instanceof org.openrdf.model.URI )return asNode((org.openrdf.model.URI)value) ;
         if ( value instanceof org.openrdf.model.BNode )return asNode((org.openrdf.model.BNode) value) ;
-        throw new IllegalArgumentException("Not a concrete value") ;
+        else {
+            SystemLog.exception("JenaAndSesame$asNode. Not a concrete value",
+                    new IllegalArgumentException("JenaAndSesame$asNode. Not a concrete value"), JenaAndSesame.class);
+            return null;
+        }
     }
 
     /**
@@ -524,7 +529,8 @@ public class JenaAndSesame {
      * @return the Jena Node.
      */
     public static Node asNode(org.openrdf.model.BNode value) {
-        return NodeFactory.createAnon(new AnonId(value.getID())) ;
+        //NodeFactory.createAnon(new AnonId(value.toString()));
+        return NodeFactory.createAnon(new AnonId(value.toString())) ;
     }
 
     /**
@@ -585,7 +591,8 @@ public class JenaAndSesame {
         Node s = asNode(stmt.getSubject()) ;
         Node p = asNode(stmt.getPredicate()) ;
         Node o = asNode(stmt.getObject()) ;
-        return new Triple(s,p,o) ;
+        if (s != null && o !=null) return new Triple(s,p,o) ;
+        else return null;
     }
 
     /**
@@ -608,7 +615,11 @@ public class JenaAndSesame {
         if ( node.isLiteral() )return asValueLiteral(factory, node) ;
         if ( node.isURI() ) return asURI(factory, node) ;
         if ( node.isBlank() )return asBNode(factory, node) ;
-        throw new IllegalArgumentException("Not a concrete node") ;
+        else if (node.matches(Node.ANY) || node.isVariable()) return null;
+        else {
+            SystemLog.exception("JenaAndSesame$asValue", new IllegalArgumentException("JenaAndSesame$asValue: Not a concrete node"), JenaAndSesame.class);
+            return null;
+        }
     }
 
     /**
@@ -652,7 +663,19 @@ public class JenaAndSesame {
      * @return the OpenRDF BNode.
      */
     public static org.openrdf.model.BNode asBNode( org.openrdf.model.ValueFactory factory, Node node) {
-        return factory.createBNode(node.getBlankNodeLabel()) ;
+        // In Sesame Rio, the node can not begin with digits. But Jena blank node begins
+        // with digits. We need to fix this.
+        // A Sesame blank node looks like: node10jofjuktx143
+        // A Jena blank node looks like: 1fe1feb:104f0e31293:-7ff9
+        // We change it to: node1fe1febC104f0e31293CM7ff9
+        // : becomes C, - becomes M
+        // prefix should be "node". Because when Sesame reads triples from the file, it will change
+        // the name of any blank node to its own format.
+        String s = node.getBlankNodeId().toString();
+        String prefix = "node";
+        if (s.startsWith(prefix)) return factory.createBNode(s);
+        else return factory.createBNode(prefix + s.replaceAll(":", "C").replaceAll("\\-", "M"));
+        //return factory.createBNode(node.getBlankNodeLabel()) ;
     }
 
     /**

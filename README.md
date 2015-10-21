@@ -15,6 +15,9 @@ Class utility for the third library:
 - JSoup
 - JOOQ 3
 
+Other useful utility on these repository:
+https://github.com/mhgrove/cp-common-utils
+https://github.com/mhgrove/cp-openrdf-utils
 
 (For the future try to put some best performance for JDK version 8)
 

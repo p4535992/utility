@@ -1,14 +1,10 @@
-package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
+package com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl;
 
-import com.hp.hpl.jena.graph.Node;
+import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.shared.JenaException;
-import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by 4535992 on 02/10/2015.

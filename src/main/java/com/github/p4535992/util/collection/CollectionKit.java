@@ -2,7 +2,8 @@ package com.github.p4535992.util.collection;
 
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionKit;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringIs;
+import com.github.p4535992.util.string.impl.StringKit;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -659,7 +660,7 @@ public class CollectionKit {
         StringBuilder strBuilder = new StringBuilder();
         for (int i = 0; i < array.length; i++) {
             strBuilder.append( array[i].toString() );
-            if(!StringKit.isNullOrEmpty(Character.toString(separator))&& i < array.length-1){
+            if(!StringIs.isNullOrEmpty(Character.toString(separator))&& i < array.length-1){
                 strBuilder.append(separator);
             }else{
                 strBuilder.append(',');

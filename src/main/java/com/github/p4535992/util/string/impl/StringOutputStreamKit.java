@@ -3,7 +3,7 @@
  * 
  * @@ Where did this come from originaly??
  */
-package com.github.p4535992.util.string;
+package com.github.p4535992.util.string.impl;
 
 import com.github.p4535992.util.log.SystemLog;
 

@@ -1,4 +1,4 @@
-package com.github.p4535992.util.string;
+package com.github.p4535992.util.string.pattern;
 
 import com.github.p4535992.util.collection.CollectionKit;
 
@@ -238,6 +238,9 @@ public class Patterns {
         return buffer.toString();
     }
 
+    //-------------------------------------------------------------------------------
+    //Utility for JOOQSupport
+    //-------------------------------------------------------------------------------
     public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_1
             = Pattern.compile("(values)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
     public static final Pattern MANAGE_SQL_PREQUERY_INSERT
@@ -260,119 +263,7 @@ public class Patterns {
      */
     private Patterns() {}
 
-    /**
-     * Uses androids android.util.Patterns.EMAIL_ADDRESS to check if an email address is valid.
-     *
-     * @param email Address to check
-     * @return true if the <code>email</code> is a valid email address.
-     */
-    public static boolean isValidEmail(String email) {
-        return email != null && Patterns.EMAIL_ADDRESS.matcher(email).matches();
-    }
 
-    /**
-     * Uses androids android.telephony.PhoneNumberUtils to check if an phone number is valid.
-     *
-     * @param number Phone number to check
-     * @return true if the <code>number</code> is a valid phone number.
-     */
-    public static boolean isValidPhoneNumber(String number) {
-        return number != null && Patterns.PHONE.matcher(number).matches();
-        //return Patterns.isGlobalPhoneNumber(number);
-    }
 
-    /**
-     * Uses androids android.util.Patterns.WEB_URL to check if an url is valid.
-     * @param url Address to check
-     * @return true if the <code>url</code> is a valid web address.
-     */
-    public  static boolean isValidURL(String url) {
-        return url != null && Patterns.WEB_URL.matcher(url).matches();
-    }
 
-    /**
-     * Method to  check if an url is valid.
-     * @param url Address to check
-     * @return true if the <code>url</code> is a valid web address.
-     */
-    public  static boolean isValidURLSimple(String url) {
-        return url != null && url.matches("^(https?|ftp)://.*$");
-    }
-
-    /**
-     * Method to check if an url has the valid protocol.
-     * @param url Address to check
-     * @return true if the <code>url</code> is a valid web address.
-     */
-    public static boolean isValidURLWithProtocol(String url){
-        if(isValidURL(url) && Patterns.Protocol_URL.matcher(url).matches())  return true;
-        return false;
-    }
-
-    /**
-     * Method to check if an url has the valid protocol.
-     * @param url Address to check
-     * @return true if the <code>url</code> is a valid web address.
-     */
-    public static boolean isValidURLWithoutProtocol(String url){
-        if(Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() &&
-                !Patterns.Protocol_URL.matcher(url).matches())  return true;
-        return false;
-    }
-
-    /**
-     * Method utility convert a insert query of JOOQ in a insert query for springframework jdbc.
-     * @param queryString the String of the query JOOQ.
-     * @param columns the Array of String with names of columns.
-     * @return the String of the Query SpringFramework JDBC.
-     */
-    public static String getQueryInsertValuesParam(String queryString, String[] columns){
-        String preQuery = StringKit.findWithRegex(queryString,MANAGE_SQL_PREQUERY_INSERT);
-        String postQuery = queryString.replace(preQuery, "");
-        if (StringKit.isMatch(postQuery,MANAGE_SQL_QUERY_INSERT_CHECK_WHERE )){
-            String[] val = postQuery.split(MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3.pattern());
-            if(val.length > 2) {
-                String postQuery0 = val[0].replace("(","").replace(")", "");
-                String postQuery1 = val[1].replace("(","").replace(")","");
-            }
-        }else {
-            //queryString = queryString.replace(preQuery, "");
-            postQuery = "";
-        }
-        preQuery = StringKit.findWithRegex(preQuery,MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
-        //values = values.substring(0, values.length() - 1);
-        //String[] param = values.split(",");
-        //for(String s: param)values = values.replace(s.trim(),"?");
-        String[] array = CollectionKit.createArrayWithSingleElement("?",columns.length);
-        String values = CollectionKit.convertArrayContentToSingleString(array);
-        //return queryString + " values (" + values +")" + supportQuery;
-        return preQuery + CollectionKit.convertArrayContentToSingleString(columns)
-                + ") values (" + values +")" + postQuery;
-    }
-
-    /**
-     * Method utility convert a insert query of JOOQ in a insert query for springframework jdbc.
-     * @param queryString the String of the query JOOQ.
-     * @return the String of the Query SpringFramework JDBC.
-     */
-    public static String getQueryInsertWhereParam(String queryString){
-        String values = StringKit.findWithRegex(queryString,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1);
-        String supportQuery = queryString.replace(values, "");
-        if (supportQuery.toLowerCase().contains(" order by ")){
-            String[] val = queryString.split(values);
-            queryString = val[0];
-            supportQuery = val[1];
-        }else {
-            queryString = queryString.replace(values, "");
-            supportQuery = "";
-        }
-        values = values.replace(StringKit.findWithRegex(values,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2),"");
-        values = values.substring(0,values.length()-1);
-        String[] paramCond = values.split("(and|or)");
-        for(String s: paramCond){
-            String[] paramWhere = s.split("(is|=|>=)");
-            values = values.replace(paramWhere[1].trim(), "?");
-        }
-        return queryString + " where (" + values +")" + supportQuery;
-    }
 }

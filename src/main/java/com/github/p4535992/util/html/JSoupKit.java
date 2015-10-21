@@ -1,7 +1,7 @@
 package com.github.p4535992.util.html;
 import com.github.p4535992.util.http.HttpUtil;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringIs;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class JSoupKit {
         public static List<List<List<String>>> UniversalExtractor(String htmlContentOrUrl, boolean HTML, String tagName)throws Exception
         {
             org.jsoup.nodes.Document htmldoc;
-            if(StringKit.isURL(htmlContentOrUrl)) {
+            if(StringIs.isURL(htmlContentOrUrl)) {
                 try {
                     htmldoc = org.jsoup.Jsoup.connect(htmlContentOrUrl).get();
                 }catch(Exception e) {

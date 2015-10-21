@@ -3,8 +3,8 @@ package com.github.p4535992.util.repositoryRDF.sesame;
 import com.github.p4535992.util.file.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
-import com.github.p4535992.util.repositoryRDF.jenaAndSesame.RepositoryResultIterator;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator;
+import com.github.p4535992.util.string.impl.StringIs;
 import info.aduna.iteration.Iterations;
 
 import org.openrdf.OpenRDFException;
@@ -1605,12 +1605,12 @@ public class Sesame28Kit {
      */
     public void convertFileNameToRDFFormat(String urlFile,String inputFormat,String outputFormat) {
         try {
-            if(StringKit.isNullOrEmpty(inputFormat)) inputFormat ="n3";
+            if(StringIs.isNullOrEmpty(inputFormat)) inputFormat ="n3";
             // open our input document
             URL documentUrl;
             RDFFormat format;
             InputStream inputStream;
-            if(StringKit.isURL(urlFile)){
+            if(StringIs.isURL(urlFile)){
                 documentUrl = new URL(urlFile);
                 //AutoDetecting the file format
                 format = convertFileNameToRDFFormat(documentUrl.toString());
@@ -1992,7 +1992,7 @@ public class Sesame28Kit {
         // is a remote location, otherwise it will be regarded as a directory
         // repositoryID.
         SystemLog.message("Calling SesameManager.connectToLocation with String: " + repositoryLocation);
-        if(StringKit.isURL(repositoryLocation)) {
+        if(StringIs.isURL(repositoryLocation)) {
             connectToRemoteLocation(repositoryLocation);
         } else {
             connectToLocalLocation(repositoryLocation);
@@ -2006,7 +2006,7 @@ public class Sesame28Kit {
         // repositoryID.
         SystemLog.message("Calling SesameManager.connectToLocation with URL: " + repositoryLocation);
         SystemLog.message("Protocol is: " + repositoryLocation.getProtocol());
-        if(StringKit.isURL(repositoryLocation.toString())) {
+        if(StringIs.isURL(repositoryLocation.toString())) {
             connectToRemoteLocation(repositoryLocation.toString());
         } else {
             connectToLocalLocation(repositoryLocation);
@@ -2163,7 +2163,7 @@ public class Sesame28Kit {
         try{
             //Creating a Native RDF Repository
             //does not keep data in main memory, but instead stores it directly to disk
-            if(StringKit.isNullOrEmpty(indexes)){indexes = "spoc,posc,cosp";}
+            if(StringIs.isNullOrEmpty(indexes)){indexes = "spoc,posc,cosp";}
             mRepository = new SailRepository(new NativeStore(directory,indexes));
             mRepository.initialize();
             setRepositoryConnection();

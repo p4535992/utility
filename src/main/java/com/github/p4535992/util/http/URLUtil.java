@@ -1,5 +1,5 @@
 package com.github.p4535992.util.http;
-import com.github.p4535992.util.string.Patterns;
+import com.github.p4535992.util.string.pattern.Patterns;
 
 import java.net.MalformedURLException;
 import java.net.*;

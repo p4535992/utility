@@ -1,10 +1,9 @@
 package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringKit;
+import com.github.p4535992.util.string.impl.StringIs;
 import org.jooq.SQLDialect;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
@@ -235,12 +234,12 @@ public class SQLHelper {
 
     public static Connection chooseAndGetConnection(String dialectDB,
                                 String host,String port,String database,String username,String password){
-        if(StringKit.isNullOrEmpty(username) || StringKit.isNullOrEmpty(password)){
+        if(StringIs.isNullOrEmpty(username) || StringIs.isNullOrEmpty(password)){
             username = "root";
             password = "";
         }
-        if(!StringKit.isNullOrEmpty(port) || !StringKit.isNumeric(port)) port = "";
-        if(StringKit.isNullOrEmpty(dialectDB)){
+        if(!StringIs.isNullOrEmpty(port) || !StringIs.isNumeric(port)) port = "";
+        if(StringIs.isNullOrEmpty(dialectDB)){
             SystemLog.warning("No connection database type detected fro this type.");
             return null;
         }else dialectDB = convertDialectDatabaseToTypeNameId(dialectDB);
@@ -274,7 +273,7 @@ public class SQLHelper {
         try {
             Class.forName("org.hsqldb.jdbcDriver").newInstance();
             String url = "jdbc:hsqldb:hsql://" + host;
-            if (port != null && StringKit.isNumeric(port)) {
+            if (port != null && StringIs.isNumeric(port)) {
                 url += ":" + port; //jdbc:hsqldb:data/database
             }
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
@@ -306,7 +305,7 @@ public class SQLHelper {
                 Class.forName("org.gjt.mm.mysql.Driver").newInstance();
             }
             String url = "jdbc:mysql//" + host;
-            if (port != null && StringKit.isNumeric(port)) {
+            if (port != null && StringIs.isNumeric(port)) {
                 url += ":" + port;
             }
             url += "/"  + database; //"jdbc:sql://localhost:3306/jdbctest"
@@ -365,7 +364,7 @@ public class SQLHelper {
             Class.forName("oracle.jdbc.driver.OracleDriver");
             //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
             String url = "jdbc:oracle:thin:@" + host;
-            if (port != null && StringKit.isNumeric(port)) {
+            if (port != null && StringIs.isNumeric(port)) {
                 url += ":" + port;
             }
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
