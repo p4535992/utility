@@ -159,39 +159,43 @@ public class SystemLog<T> {
      */
     @SuppressWarnings("rawtypes")
     protected static void write(String logEntry) {
-        try{
-            if(isLogOff){
-                if(isERROR)System.err.println(logEntry);
-                else System.out.println(logEntry);
-            } else {
-                if (LOGFILE==null || !LOGFILE.exists()) new SystemLog();
-                //if(!logging){ log = new SystemLog();}
-                StringBuilder sb = new StringBuilder();
-                if (logTimestamp != null)
-                    sb.append(logTimestamp.format(new Date()));
-                else {
-                    if (df == null)
-                        df = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-                    sb.append(df.format(logTimestamp));
-                }
-                if (isDEBUG) {
-                    sb.append(Level.DEBUG);
-                }
-                sb.append(level.toString());
-                sb.append(logEntry);
-                if (isERROR) System.err.println(sb.toString());
-                else System.out.println(sb.toString());
-                if (isPRINT) {
-                    try (PrintWriter pWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGFILE.getAbsolutePath(), true)))) {
-                        //try{
-                        pWriter.print(sb.toString() + System.getProperty("line.separator"));
-                        pWriter.flush();
-                        //logWriter.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+        try {
+            if (logEntry != null) {
+                if (isLogOff) {
+                    if (isERROR) System.err.println(logEntry);
+                    else System.out.println(logEntry);
+                } else {
+                    if (LOGFILE == null || !LOGFILE.exists()) new SystemLog();
+                    //if(!logging){ log = new SystemLog();}
+                    StringBuilder sb = new StringBuilder();
+                    if (logTimestamp != null)
+                        sb.append(logTimestamp.format(new Date()));
+                    else {
+                        if (df == null)
+                            df = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
+                        sb.append(df.format(logTimestamp));
+                    }
+                    if (isDEBUG) {
+                        sb.append(Level.DEBUG);
+                    }
+                    sb.append(level.toString());
+                    sb.append(logEntry);
+                    if (isERROR) System.err.println(sb.toString());
+                    else System.out.println(sb.toString());
+                    if (isPRINT) {
+                        try (PrintWriter pWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGFILE.getAbsolutePath(), true)))) {
+                            //try{
+                            pWriter.print(sb.toString() + System.getProperty("line.separator"));
+                            pWriter.flush();
+                            //logWriter.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
+        }catch(Exception e){
+            e.printStackTrace();
         }finally{
             isERROR=false;
         }

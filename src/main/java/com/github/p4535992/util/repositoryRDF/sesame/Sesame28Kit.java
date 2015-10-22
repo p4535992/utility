@@ -3269,7 +3269,6 @@ public class Sesame28Kit {
      */
     private Long calculateExecutionTime(final TupleQuery query){
         long QUERY_TIME = 500; //time reference for sesame...
-        long calculate;
         if (query == null) {
             SystemLog.setIsERROR(true);
             SystemLog.sparql("Unable to calculate the execution time, the TupleQuery is NULL",Sesame28Kit.class);
@@ -3322,10 +3321,10 @@ public class Sesame28Kit {
                             break;
                         }
                     }
-                    sleep(100);
+                    //sleep(100);
                 }
                 if (doClose) {
-                    sleep(200);
+                    //sleep(200);
                     try {
                         //SystemLog.sparql("<<<<<<<<< closing query",Sesame28Kit.class);
                         result[0].close();
@@ -3349,14 +3348,11 @@ public class Sesame28Kit {
         while (!stop.get()) {
             sleep(100);
         }
-        long printQueryRunner = times[0] - start;
-        long printCloseRunner = times[1] - start;
-        SystemLog.sparql("QUERY RUNNER: took = "+printQueryRunner+"ms",Sesame28Kit.class);
-        SystemLog.sparql("CLOSE RUNNER: took = "+printCloseRunner+"ms",Sesame28Kit.class);
+        SystemLog.sparql("QUERY RUNNER: took = "+ (times[0] - start) + "ms",Sesame28Kit.class);
+        SystemLog.sparql("CLOSE RUNNER: took = "+ (times[1] - start) + "ms",Sesame28Kit.class);
         if(times[0] < QUERY_TIME) SystemLog.sparql("the query should have been closed within the query timeout:"+times[0]+"ms",Sesame28Kit.class);
         if(-1==times[0]) SystemLog.sparql("the query runner should not have set an end time as it should have been cancelled",Sesame28Kit.class);
-        calculate = printQueryRunner;
-        return calculate;
+        return (times[0] - start);
     }
 
     /**
