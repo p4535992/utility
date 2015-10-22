@@ -492,8 +492,10 @@ public class Jena2Kit {
     /**
      * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
      * return all the com.hp.hpl.jena.datatypes.RDFDatatype supported from jena.
+     * @param uri the String of the uri resource.
+     * @return  the RDFDatatype of the uri resource.
      */
-    public static com.hp.hpl.jena.datatypes.RDFDatatype convertStringToRDFDatatype(String uri){
+    public static RDFDatatype convertStringToRDFDatatype(String uri){
         return stringToXSDDatatype(uri);
     }
 

@@ -498,6 +498,7 @@ public class StringKit<T> {
 
     /**
      * Method to  count the elements characters of a string.
+     * @param text the string phrase to analyze.
      * @return string of int where the first element is the number of words,the second is the number of characters
      * and the third is the number of lines.
      * @throws IOException throw if any error is occurred.
