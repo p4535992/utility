@@ -304,12 +304,13 @@ public class SQLHelper {
             } catch (ClassNotFoundException e) {
                 Class.forName("org.gjt.mm.mysql.Driver").newInstance();
             }
-            String url = "jdbc:mysql//" + host;
+            String url = "jdbc:mysql://" + host;
             if (port != null && StringIs.isNumeric(port)) {
                 url += ":" + port;
             }
             url += "/"  + database; //"jdbc:sql://localhost:3306/jdbctest"
             try {
+                //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(url, username, password);
             } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
                 SystemLog.error("You forgot to turn on your MySQL Server!!!");
