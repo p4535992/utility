@@ -24,7 +24,7 @@ import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
 
 import com.github.p4535992.util.string.impl.StringOutputStreamKit;
-import com.github.p4535992.util.file.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.xml.XMLKit;
 

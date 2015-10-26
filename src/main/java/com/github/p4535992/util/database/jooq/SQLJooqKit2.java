@@ -10,8 +10,7 @@ import org.jooq.impl.*;
 
 import java.net.URI;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,8 +63,29 @@ public class SQLJooqKit2 {
         return connection;
     }
 
-    public static void setConnection(Connection connection) {
-        SQLJooqKit2.connection = connection;
+    public static void setConnection(Connection conn) {
+        connection = conn;
+        connProvider= new DefaultConnectionProvider(connection);
+        sqlDialect = getJOOQDSLContext(connection);
+        dslContext = DSL.using(connection,sqlDialect);
+    }
+
+    /**
+     * Methoc getSQLDialect JooQ from Connection.
+     * @param conn the Connection java SQL.
+     * @return the JooQ SQLDialect.
+     */
+    public static SQLDialect getJOOQDSLContext(Connection conn){
+        DatabaseMetaData m;
+        if(conn!=null) {
+            try {
+                m = conn.getMetaData();
+                return SQLHelper.convertDialectDBToSQLDialectJOOQ(m.getDatabaseProductName());
+            } catch (SQLException e) {
+                SystemLog.exception(e);
+                return null;
+            }
+        }else return null;
     }
 
     /**
@@ -714,6 +734,27 @@ public class SQLJooqKit2 {
     @SuppressWarnings("unchecked")
     public static <T> DataType<T> convertFieldToDatatype(Field<T> field){
         return (DataType<T>) (field == null ? SQLDataType.OTHER : field.getDataType());
+    }
+
+    /**
+     * Method to fetch the result of a query .
+     * @param sql the String SQL.
+     * @return the Result of the Query.
+     */
+    public static Result<Record> fetchQuery(String sql) {
+        // Fetch results using jOOQ
+        return dslContext.fetch(sql);
+    }
+
+    /**
+     * Method to execute and fetch the result of a query .
+     * @param sql the String SQL.
+     * @return the Result of the Query.
+     */
+    public static Result<Record> executeAndFetchQuery(String sql) throws SQLException {
+        // Or execute that SQL with JDBC, fetching the ResultSet with jOOQ:
+        ResultSet rs = connProvider.acquire().createStatement().executeQuery(sql);
+        return dslContext.fetch(rs);
     }
 
     /**

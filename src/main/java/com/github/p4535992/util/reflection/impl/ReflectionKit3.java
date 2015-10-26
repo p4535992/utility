@@ -1,8 +1,7 @@
-package com.github.p4535992.util.reflection;
+package com.github.p4535992.util.reflection.impl;
 
 
 import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 
 import java.io.File;
@@ -22,11 +21,12 @@ import java.util.*;
  * href: https://github.com/dancerjohn/LibEx/blob/master/libex/src/main/java/org/libex/reflect/ReflectionUtils.java (href)
  * href: http://www.java2s.com/Code/Java/Reflection/Findasettermethodforthegiveobjectspropertyandtrytocallit.htm
  *
- * http://stackoverflow.com/questions/1555326/java-class-cast-vs-cast-operator
+ * href: http://stackoverflow.com/questions/1555326/java-class-cast-vs-cast-operator
+ * href:
  *
  */
 @SuppressWarnings("unused")
-public final class ReflectionKit2 {
+public final class ReflectionKit3 {
 
     // ---------------------------------------------------------------------
     // Members
@@ -50,26 +50,26 @@ public final class ReflectionKit2 {
     // Constructors
     // ---------------------------------------------------------------------
 
-    public ReflectionKit2(){
+    public ReflectionKit3(){
         //java.lang.reflect.Type t =getClass().getGenericSuperclass();
         //java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) t;
         //this.cl =  (Class<T>) pt.getActualTypeArguments()[0];
         //this.clName = cl.getSimpleName();
-        ReflectionKit2.isClass = false;
-        ReflectionKit2.object = null;
-        ReflectionKit2.clazz = null;
+        ReflectionKit3.isClass = false;
+        ReflectionKit3.object = null;
+        ReflectionKit3.clazz = null;
     }
 
-    private ReflectionKit2(Class<?> type) {
-        ReflectionKit2.object = type;
-        ReflectionKit2.isClass = true;
-        ReflectionKit2.clazz = type();
+    private ReflectionKit3(Class<?> type) {
+        ReflectionKit3.object = type;
+        ReflectionKit3.isClass = true;
+        ReflectionKit3.clazz = type();
     }
 
-    private ReflectionKit2(Object object) {
-        ReflectionKit2.object = object;
-        ReflectionKit2.isClass = false;
-        ReflectionKit2.clazz = type();
+    private ReflectionKit3(Object object) {
+        ReflectionKit3.object = object;
+        ReflectionKit3.isClass = false;
+        ReflectionKit3.clazz = type();
     }
 
     // ---------------------------------------------------------------------
@@ -89,10 +89,10 @@ public final class ReflectionKit2 {
      * @return The same wrapped object, to be used for further reflection.
      * @throws Exception If any reflection exception occurred.
      */
-    public ReflectionKit2 set(String name, Object value) throws Exception {
+    public ReflectionKit3 set(String name, Object value) throws Exception {
         try {
             Field field = convertStringToReflectionField(name);
-            field.set(object, unwrap(value));
+            field.set(object, unwrappper(value));
             return this;
         }
         catch (Exception e) {
@@ -107,10 +107,10 @@ public final class ReflectionKit2 {
      * <code>create(new Object[0])</code>
      *
      * @return The wrapped new object, to be used for further reflection.
-     * @throws java.lang.Exception throw if any error is occurred.
+     * @throws Exception throw if any error is occurred.
      * @see #create(Object...)
      */
-    public ReflectionKit2 create() throws Exception {return create(new Object[0]);}
+    public ReflectionKit3 create() throws Exception {return create(new Object[0]);}
 
     /**
      * Wrap a class name.
@@ -119,10 +119,10 @@ public final class ReflectionKit2 {
      *
      * @param name A fully qualified class name
      * @return A wrapped class object, to be used for further reflection.
-     * @throws java.lang.Exception throw if any error is occurred.
+     * @throws Exception throw if any error is occurred.
      * @see #on(Class)
      */
-    public static ReflectionKit2 on(String name) throws Exception {
+    public static ReflectionKit3 on(String name) throws Exception {
         return on(forName(name));
     }
 
@@ -136,8 +136,8 @@ public final class ReflectionKit2 {
      * @param clazz The class to be wrapped
      * @return A wrapped class object, to be used for further reflection.
      */
-    public static ReflectionKit2 on(Class<?> clazz) {
-        return new ReflectionKit2(clazz);
+    public static ReflectionKit3 on(Class<?> clazz) {
+        return new ReflectionKit3(clazz);
     }
 
     /**
@@ -149,17 +149,17 @@ public final class ReflectionKit2 {
      * @param object The object to be wrapped
      * @return A wrapped object, to be used for further reflection.
      */
-    public static ReflectionKit2 on(Object object) {
-        return new ReflectionKit2(object);
+    public static ReflectionKit3 on(Object object) {
+        return new ReflectionKit3(object);
     }
 
 
     /**
      * Wrap an object created from a constructor
      */
-    private static ReflectionKit2 on(Constructor<?> constructor, Object... args){
+    private static ReflectionKit3 on(Constructor<?> constructor, Object... args){
         try {return on(accessible(constructor).newInstance(args));}
-        catch (InstantiationException | IllegalAccessException 
+        catch (InstantiationException | IllegalAccessException
                 | IllegalArgumentException | InvocationTargetException e) {
             SystemLog.warning(e);
             return null;
@@ -169,7 +169,7 @@ public final class ReflectionKit2 {
     /**
      * Wrap an object returned from a method
      */
-    private static ReflectionKit2 on(Method method, Object object, Object... args) throws Exception {
+    private static ReflectionKit3 on(Method method, Object object, Object... args) throws Exception {
         try {
             accessible(method);
             if (method.getReturnType() == void.class) {
@@ -196,52 +196,52 @@ public final class ReflectionKit2 {
      * @return The wrapped method result or the same wrapped object if the
      *         method returns <code>void</code>, to be used for further
      *         reflection.
-     * @throws java.lang.Exception throw if any error is occurred.
+     * @throws Exception throw if any error is occurred.
      * @see #call(String, Object...)
      */
-    public ReflectionKit2 call(String name) throws Exception {
+    public ReflectionKit3 call(String name) throws Exception {
         return call(name, new Object[0]);
     }
 
     /**
      * Call a method by its name.
-     * 
+     *
      * This is roughly equivalent to {@link Method#invoke(Object, Object...)}.
      * If the wrapped object is a {@link Class}, then this will invoke a static
      * method. If the wrapped object is any other {@link Object}, then this will
      * invoke an instance method.
-     * 
+     *
      * Just like {@link Method#invoke(Object, Object...)}, this will try to wrap
      * primitive types or unwrap primitive type wrappers if applicable. If
      * several methods are applicable, by that rule, the first one encountered
-     * is called. i.e. when calling 
+     * is called. i.e. when calling
      * on(...).call("method", 1, 1);
      * The first of the following methods will be called:
-     * 
+     *
      * public void method(int param1, Integer param2);
      * public void method(Integer param1, int param2);
      * public void method(Number param1, Number param2);
      * public void method(Number param1, Object param2);
      * public void method(int param1, Object param2);
-     * 
-     * 
+     *
+     *
      * The best matching method is searched for with the following strategy:
-     * 
+     *
      * public method with exact signature match in class hierarchy
      * non-public method with exact signature match on declaring class
      * public method with similar signature in class hierarchy
      * non-public method with similar signature on declaring class
-     * 
+     *
      *
      * @param name The method name
      * @param args The method arguments
      * @return The wrapped method result or the same wrapped object if the
      *         method returns void, to be used for further
      *         reflection.
-     * @throws java.lang.Exception throw if any error is occurred.
-     * 
+     * @throws Exception throw if any error is occurred.
+     *
      */
-    public ReflectionKit2 call(String name, Object... args) throws Exception {
+    public ReflectionKit3 call(String name, Object... args) throws Exception {
         Class<?>[] types = types(args);
         // Try invoking the "canonical" method, i.e. the one with exact
         // matching argument types
@@ -263,31 +263,31 @@ public final class ReflectionKit2 {
 
     /**
      * Call a constructor.
-     * 
+     *
      * This is roughly equivalent to {@link Constructor#newInstance(Object...)}.
      * If the wrapped object is a {@link Class}, then this will create a new
      * object of that class. If the wrapped object is any other {@link Object},
      * then this will create a new object of the same type.
-     * 
+     *
      * Just like {@link Constructor#newInstance(Object...)}, this will try to
      * wrap primitive types or unwrap primitive type wrappers if applicable. If
      * several constructors are applicable, by that rule, the first one
      * encountered is called. i.e. when calling
      * on(C.class).create(1, 1);
      * The first of the following constructors will be applied:
-     * 
+     *
      * public C(int param1, Integer param2);
      * public C(Integer param1, int param2);
      * public C(Number param1, Number param2);
      * public C(Number param1, Object param2);
      * public C(int param1, Object param2);
-     * 
+     *
      *
      * @param args The constructor arguments
      * @return The wrapped new object, to be used for further reflection.
-     * @throws java.lang.Exception throw if any error is occurred.
+     * @throws Exception throw if any error is occurred.
      */
-    public ReflectionKit2 create(Object... args) throws Exception {
+    public ReflectionKit3 create(Object... args) throws Exception {
         Class<?>[] types = types(args);
         // Try invoking the "canonical" constructor, i.e. the one with exact
         // matching argument types
@@ -318,9 +318,9 @@ public final class ReflectionKit2 {
      *
      * @param name The field name
      * @return The wrapped field
-     * @throws java.lang.Exception throw if any error is occurred.
+     * @throws Exception throw if any error is occurred.
      */
-    public ReflectionKit2 field(String name) throws Exception {
+    public ReflectionKit3 field(String name) throws Exception {
         try {
             Field field = convertStringToReflectionField(name);
             return on(field.get(object));
@@ -441,8 +441,8 @@ public final class ReflectionKit2 {
     /**
      * Unwrap an object
      */
-    private static Object unwrap(Object object) {
-        if (object instanceof ReflectionKit2) return ((ReflectionKit2) object).get();
+    private static Object unwrappper(Object object) {
+        if (object instanceof ReflectionKit3) return ((ReflectionKit3) object).get();
         return object;
     }
 
@@ -560,21 +560,21 @@ public final class ReflectionKit2 {
     /**
      * Get a Map containing field names and wrapped values for the fields'
      * values.
-     * 
+     *
      * If the wrapped object is a {@link Class}, then this will return static
      * fields. If the wrapped object is any other {@link Object}, then this will
      * return instance fields.
-     * 
-     * These two calls are equivalent 
+     *
+     * These two calls are equivalent
      * on(object).field("myField");
      * on(object).fields().get("myField");
-     * 
+     *
      *
      * @return A map containing field names and wrapped values.
-     * @throws java.lang.Exception throw if any error is occurrred.
+     * @throws Exception throw if any error is occurrred.
      */
-    public Map<String, ReflectionKit2> fields() throws Exception {
-        Map<String, ReflectionKit2> result = new LinkedHashMap<>();
+    public Map<String, ReflectionKit3> fields() throws Exception {
+        Map<String, ReflectionKit3> result = new LinkedHashMap<>();
         Class<?> type = type();
         do {
             for (Field field : type.getDeclaredFields()) {
@@ -611,10 +611,10 @@ public final class ReflectionKit2 {
      */
     public Class<?> type() {
         if (isClass) {
-            return (Class<?>) ReflectionKit2.object;
+            return (Class<?>) ReflectionKit3.object;
         }
         else {
-            return ReflectionKit2.object.getClass();
+            return ReflectionKit3.object.getClass();
         }
     }
 
@@ -688,7 +688,7 @@ public final class ReflectionKit2 {
 
     /**
      * Searches a method with a similar signature as desired using
-     * {@link #isSimilarSignature(java.lang.reflect.Method, String, Class[])}.
+     * {@link #isSimilarSignature(Method, String, Class[])}.
      * <p>
      * First public methods are searched in the class hierarchy, then private
      * methods on the declaring class. If a method could be found, it is
@@ -720,225 +720,12 @@ public final class ReflectionKit2 {
     // Other Methods
     // ---------------------------------------------------------------------
 
-    /**
-     * Method to get all basic information on a method
-     * @param obj object to inspect.
-     * @return list of array name-value for that object.
-     */
-    public static List<String[]> inspectFieldClass(Object obj) {
-        return inspectFieldClass(obj.getClass());
-    }
 
-    /**
-     * Method to get all basic information on a method
-     * @return list of array name-value for that object.
-     */
-    public static List<String[]> inspectFieldClass() {
-        return inspectFieldClass(object.getClass());
-    }
-
-    /**
-     * Method to get all basic information on a method
-     * @param clazz Class to inspect.
-     * @return list of array name-value for that object.
-     */
-    public static List<String[]> inspectFieldClass(Class<?> clazz) {
-        Field[] fields = clazz.getDeclaredFields();
-        List<String[]> oField = new ArrayList<>();
-        for (Field field : fields) {
-            field.setAccessible(true); // if you want to modify private fields
-            String modify = Modifier.toString(field.getModifiers());
-            String type = field.getType().getSimpleName();
-            String name = field.getName();
-            oField.add(new String[]{modify,type,name});
-        }
-        return oField;
-    }
-
-    /**
-     * Method to get all Filed with all the property annotation on them.
-     * @param clazz Class to inspect.
-     * @return Map of Field and Array of Annotation.
-     */
-    public static Map<Field,Annotation[]> inspectFieldAndAnnotationClass(Class<?> clazz){
-        Map<Field,Annotation[]> map = new HashMap<>();
-        for(Field field : clazz.getDeclaredFields()){
-            Annotation[] annotations = field.getDeclaredAnnotations();
-            map.put(field, annotations);
-        }
-        return map;
-    }
-
-    public static List<String[]> inspectTypesMethod(Class<?> clazz,String nameOfMethhod) {
-        List<String[]> list = new ArrayList<>();
-        try {
-            Method method = clazz.getMethod(nameOfMethhod);
-            Type returnType = method.getGenericReturnType();
-            if(returnType instanceof ParameterizedType){
-                ParameterizedType type = (ParameterizedType) returnType;
-                Type[] typeArguments = type.getActualTypeArguments();
-                for(Type typeArgument : typeArguments){
-                    Class<?> typeArgClass = (Class<?>) typeArgument;
-                    list.add(new String[]{typeArgClass.getName(),getClassReference(typeArgClass)});
-                }
-            }
-        } catch (NullPointerException|NoSuchMethodException e) {
-            SystemLog.exception(e);
-        }
-        return list;
-    }
-
-    public static List<String[]> inspectTypesMethod(Class<?> aClass,Method method){
-        List<String[]> list = new ArrayList<>();
-        try {
-            Type returnType = method.getGenericReturnType();
-            if (returnType instanceof ParameterizedType) {
-                ParameterizedType type = (ParameterizedType) returnType;
-                Type[] typeArguments = type.getActualTypeArguments();
-                for (Type typeArgument : typeArguments) {
-                    Class<?> typeArgClass = (Class<?>) typeArgument;
-                    System.out.println("typeArgClass = " + typeArgClass);
-                    list.add(new String[]{typeArgClass.getName(), getClassReference(typeArgClass)});
-
-                }
-            }
-        } catch (NullPointerException e) {
-            SystemLog.exception(e);
-        }
-        return list;
-    }
-
-    /**
-     * Method for inpsect a method on a class.
-     * @param aClass the class java where is put the method.
-     * @param method the method to inspect.
-     * @return a map with all information on the method.
-     */
-    public static Map<Class<?>,List<String[]>> inspectSimpleTypesMethod(Class<?> aClass,Method method) {
-        Map<Class<?>,List<String[]>> map = new HashMap<>();
-        List<String[]> list = new ArrayList<>();
-        Type returnType = method.getGenericReturnType();
-        try {
-            ParameterizedType type = (ParameterizedType) returnType;
-            Type[] typeArguments = type.getActualTypeArguments();
-            for (Type typeArgument : typeArguments) {
-                Class<?> typeArgClass = (Class<?>) typeArgument;
-                System.out.println("typeArgClass = " + typeArgClass);
-                list.add(new String[]{typeArgClass.getName(), getClassReference(typeArgClass)});
-            }
-        } catch (NullPointerException e) {
-            SystemLog.exception(e);
-        }
-        map.put(returnType.getClass(),list);
-        return map;
-    }
-
-    public static Map<String,Class<?>> inspectAndLoadGetterObject(Object obj) throws NoSuchMethodException{
-        List<Method> getter = getGettersClass(obj.getClass());
-        Map<String,Class<?>> map = new HashMap<>();
-        for(Method met : getter){
-            Class<?> cl = met.getReturnType();
-            String name = met.getName();
-            map.put(name, cl);
-        }
-        return map;
-    }
-
-    public static Map<String,Class<?>> inspectAndLoadSetterObject(Object obj) throws NoSuchMethodException{
-        List<Method> setter = getSettersClass(obj.getClass());
-        Map<String,Class<?>> map = new HashMap<>();
-        for(Method met : setter){
-            Class<?> cl = met.getReturnType();
-            String name = met.getName();
-            map.put(name, cl);
-        }
-        return map;
-    }
 
     public static Integer countGetterAndsetter(Class<?> aClass){
-        return getGettersSettersClass(aClass).size()/2;
+        return ReflectionFind.findGettersAndSetters(aClass).size()/2;
     }
 
-//    public static List<String[]> inspectMethods(Class<?> aClass){
-//        Method[] methods = aClass.getMethods();
-//        List<String[]> oMethod = new ArrayList<String[]>();
-//        for (Method method : methods) {
-//            String modify = method.
-//            String type = field.getType().getSimpleName();
-//            String name = field.getName();
-//            oMethod.add(new String[]{modify,type,name});
-//        }
-//        return oMethod;
-//    }
-//
-//    public static List<String[]> inspectAnnotations(Class<?> aClass) {
-//        Annotation[] annotations = aClass.getAnnotations();
-//        List<String[]> oAnn = new ArrayList<String[]>();
-//        for (Annotation ann : annotations) {
-//            String test = ann.annotationType().
-//            oAnn.add(new String[]{modify,type,name});
-//        }
-//        return oAnn;
-//    }
-
-    public static List<String[]> inspectConstructor(Class<?> aClass){
-        Constructor<?>[] constructors = aClass.getConstructors();
-        List<String[]> oConst = new ArrayList<>();
-        for (Constructor<?> cons : constructors) {
-            String modify = Modifier.toString(cons.getModifiers());
-            String type = Arrays.toString(cons.getTypeParameters());
-            String name = cons.getName();
-            oConst.add(new String[]{modify,type,name});
-        }
-        return oConst;
-    }
-
-    public static List<Method> getGettersSettersClass(Class<?> aClass) {
-        List<Method> list = new ArrayList<>();
-        Method[] methods = aClass.getDeclaredMethods();
-        for (Method method : methods)
-            if (isGetter(method) || isSetter(method))
-                list.add(method);
-        return list;
-    }
-
-    public static List<Method> getGettersClass(Class<?> aClass){
-        List<Method> list = new ArrayList<>();
-        Method[] methods = aClass.getDeclaredMethods();
-        for (Method method : methods)
-            if (isGetter(method))
-                list.add(method);
-        return list;
-    }
-
-     public static List<Method> getSettersClass(Class<?> aClass){
-        List<Method> list = new ArrayList<>();
-        Method[] methods = aClass.getDeclaredMethods();
-        for (Method method : methods)
-            if (isSetter(method))
-                list.add(method);
-        return list;
-    }
-
-    public static List<Method> getSettersClassOrder(Class<?> clazz){
-        List<Method> list = new ArrayList<>();
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            Method method = findSetterMethod(clazz, field.getName(), field.getType());
-            list.add(method);
-        }
-        return list;
-    }
-
-    public static List<Method> getGettersClassOrder(Class<?> clazz){
-        List<Method> list = new ArrayList<>();
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            Method method = findGetterMethod(clazz, field.getName(), field.getType());
-            list.add(method);
-        }
-        return list;
-    }
 
     public static boolean isGetter(Method method) {
         if (Modifier.isPublic(method.getModifiers()) &&
@@ -1098,274 +885,7 @@ public final class ReflectionKit2 {
         return CollectionKit.convertListToArray(classes);
     }
 
-    /**
-     * Method to get the return type of a method in a specific class
-     * get method that takes a String as argument
-     * The null parameter is the object you want to invoke the method on. If the method is static you supply null instead
-     * of an object instance. In this example, if doSomething(String.class) is not static, you need to supply a valid
-     * MyObject instance instead of null;The Method.invoke(Object target, Object ... parameters) method takes an optional amount of parameters,
-     * but you must supply exactly one parameter per argument in the method you are invoking. In this case it was
-     * a method taking a String, so one String must be supplied.
-     * @param MyObject T object to inspec
-     * @param nameOfMethod name of the methof you want ot find.
-     * @param param class of the parameter of the constructor of the method you wan to find.
-     * @param <T> generic type.
-     * @return result of the return of the method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeObjectMethod(T MyObject, String nameOfMethod, Class<?>[] param)//4th parameter , Class<T> aClass
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        Method method;
-        T MyTObject2;
-        if(param==null || param.length==0 )method = getMethodByNameAndParam(MyObject, nameOfMethod, null);
-        else method = getMethodByNameAndParam(MyObject, nameOfMethod, param); //String.class
-        try{
-            //MyObject = method.invoke(null, param); //if the method you try to invoke is static...
-            MyTObject2 = (T) method.invoke(param);
-        }catch(NullPointerException ne){
-            //MyObject = method.invoke(MyObject, param); //...if the methos is non-static
-            MyTObject2 = (T) method.invoke(MyObject);
-        }
-        return MyTObject2;
-    }
 
-    /**
-     * Method for invoke a method.
-     * @param MyObject the object where the methos is applied.
-     * @param method the method to invoke.
-     * @param param the param for the method.
-     * @return a object update with the result of the method.
-     * @throws IllegalAccessException throw any error if is occurrred.
-     * @throws InvocationTargetException throw any error if is occurrred.
-     * @throws NoSuchMethodException throw any error if is occurrred.
-     */
-    public static Object invokeObjectMethod(Object MyObject,Method method,Class<?>[] param)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        try{
-            //MyObject = method.invoke(null, param); //if the method you try to invoke is static...
-            MyObject = method.invoke(param);
-        }catch(NullPointerException ne){
-            //MyObject = method.invoke(MyObject, param); //...if the methos is non-static
-            MyObject = method.invoke(MyObject);
-        }
-        return MyObject;
-    }
-
-    /**
-     * Method for invoke a method.
-     * @param MyObject the object where the methos is applied.
-     * @param method the method to invoke.
-     * @param param the param for the method.
-     * @return a object update with the result of the method.
-     * @throws IllegalAccessException throw any error if is occurrred.
-     * @throws InvocationTargetException throw any error if is occurrred.
-     * @throws NoSuchMethodException throw any error if is occurrred.
-     */
-    public static Object invokeObjectMethod(Object MyObject,Method method,Object[] param)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        try{
-            //MyObject = method.invoke(null, param); //if the method you try to invoke is static...
-            MyObject = method.invoke(param);
-        }catch(NullPointerException ne){
-            //MyObject = method.invoke(MyObject, param); //...if the methos is non-static
-            MyObject = method.invoke(MyObject);
-        }
-        return MyObject;
-    }
-
-    /**
-     * Method to invoke a getter method from a class.
-     * @param MyObject object target.
-     * @param methodName string name of the method getter.
-     * @param value value to set with the setter method.
-     * @param clazzValue class of the calue to set.
-     * @param <T> generic type.
-     * @return the returned value from the getter method is exists.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeSetterClass(T MyObject,String methodName,Object value,Class<?> clazzValue)
-    {
-        try {
-            Method method = getMethodByNameAndParam(
-                    MyObject.getClass(),methodName,new Class<?>[]{clazzValue});
-            MyObject = (T) method.invoke(MyObject,value);
-            return MyObject;
-        } catch (InvocationTargetException|IllegalAccessException|
-                SecurityException|NoSuchMethodException|
-                ClassCastException|NullPointerException  e) {
-            SystemLog.exception(e);
-        }
-        return null;
-    }
-
-    /**
-     * Method to invoke a getter method from a class.
-     * @param MyObject object target.
-     * @param methodName string name of the method getter.
-     * @param <T> generic type.
-     * @return the returned value from the getter method is exists.
-     */
-    public static <T> Object invokeGetterClass(T MyObject,String methodName) {
-        Object MyObject2;
-        try {
-            //Object MyObject = clazzValue.cast(new Object());
-            Method method = getMethodByNameAndParam(
-                   MyObject.getClass(),methodName,new Class<?>[0]);
-            MyObject2 = method.invoke(MyObject);
-            return MyObject2;
-        } catch (InvocationTargetException|IllegalAccessException|
-                SecurityException|NoSuchMethodException  e) {
-            SystemLog.exception(e);
-        }
-        return null;
-    }
-
-    /**
-     * Method to invoke a getter method from  a Object.
-     * @param MyObject object where invoke the getter method.
-     * @param method the getter method.
-     * @param value to set with the setter method.
-     * @param <T> generic type.
-     * @return the return value of the invoke on the getter method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeSetterMethodForObject(T MyObject, Method method, Object value)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        T MyObject2;
-        try{
-            //if the method you try to invoke is static...
-            MyObject2 = (T) method.invoke(null, value);
-        }catch(NullPointerException ne) {
-            //...The method is not static
-            MyObject2 = (T) method.invoke(MyObject, value);
-        }
-        return MyObject2;
-    }
-
-    /**
-     * Method to invoke a setter method from  a Object.
-     * @param MyObject object where invoke the getter method.
-     * @param method the setter method.
-     * @param value to set with the setter method.
-     * @return the return value of the invoke on the setter method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     */
-    public static Object invokeSetterMethod(Object MyObject, Method method, Object value)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        Object MyObject2;
-        try{
-            //if the method you try to invoke is static...
-            MyObject2 = method.invoke(null, value);
-        }catch(NullPointerException ne) {
-            //...The method is not static
-            MyObject2 = method.invoke(MyObject, value);
-        }
-        return MyObject2;
-    }
-
-    /**
-     * Method to invoke a getter method from  a Object.
-     * @param MyObject object where invoke the getter method.
-     * @param method the getter method.
-     * @param <T> generic type.
-     * @return the return value of the invoke on the getter method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeGetterMethodForObject(T MyObject, Method method)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        T MyObject2;
-        Class<T> aClazz = (Class<T>) MyObject.getClass();
-        try{
-            //if the method you try to invoke is static...
-            MyObject2 = aClazz.cast(method.invoke(null));
-        }catch(NullPointerException ne) {
-            //...The method is not static
-            MyObject2 =  aClazz.cast(method.invoke(MyObject));
-        }
-        return MyObject2;
-    }
-
-    /**
-     * Method to invoke a getter method from  a Object.
-     * @param MyObject object where invoke the getter method.
-     * @param method the getter method.
-     * @return the return value of the invoke on the getter method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     */
-    public static Object invokeGetterMethod(Object MyObject,Method method)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        Object MyObject2;
-        try{
-            //if the method you try to invoke is static...
-            MyObject2 = method.invoke(null);
-        }catch(NullPointerException ne) {
-            //...The method is not static
-            MyObject2 = method.invoke(MyObject);
-        }
-        return MyObject2;
-    }
-
-   /**
-    * Method to get the return value of a constructor that takes specific arguments.
-    * @param <T> generic type.
-    * @param MyObject object T in input.
-    * @param param arrays of class for the constructor.
-    * @param defaultValues array of object for the constructor.
-    * @return T object return from the constructor.
-    * @throws NoSuchMethodException throw if any error is occurred.
-    * @throws InstantiationException throw if any error is occurred.
-    * @throws IllegalAccessException throw if any error is occurred.
-    * @throws IllegalArgumentException throw if any error is occurred.
-    * @throws InvocationTargetException throw if any error is occurred.
-    */
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeConstructor(T MyObject, Class<?>[] param, Object[] defaultValues)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        Class<T> aClazz= (Class<T>)MyObject.getClass();
-        return aClazz.cast(invokeConstructor(MyObject.getClass(), param, defaultValues));
-    }
-
-
-    /**
-     * Method to get the return value of a constructor that takes specific arguments.
-     * @param <T> generic type.
-     * @param clazz the class where is the constructor.
-     * @param param arrays of class for the constructor.
-     * @param defaultValues array of object for the constructor.
-     * @return T object return from the constructor.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws InstantiationException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws IllegalArgumentException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     */
-    public static <T> T invokeConstructor(Class<T> clazz, Class<?>[] param, Object[] defaultValues)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        Constructor<?> constructor = clazz.getConstructor(param);
-        return clazz.cast(constructor.newInstance(defaultValues));
-    }
-
-    public static <T> T invokeConstructor(Class<T> clazz) {
-        try {
-            return clazz.newInstance();
-        }catch(IllegalAccessException|InstantiationException e){
-            SystemLog.exception(e);
-        }
-        return null;
-    }
 
 
     public static URL getCodeSourceLocation(Class<?> aClass) {return aClass.getProtectionDomain().getCodeSource().getLocation(); }
@@ -1377,318 +897,6 @@ public final class ReflectionKit2 {
 //        Set<Class<? extends Object>> allClasses = reflections.getSubTypesOf(Object.class);
 //    }
 
-    /**
-     * Method to inspect a Annotation object java.
-     * @param annotation the anntation to inspect.
-     * @return a list of properties of the annotation.
-     * @throws InvocationTargetException thow if any error is occurrred.
-     * @throws IllegalAccessException thow if any error is occurrred.
-     */
-    public static List<Object[]> inspectAnnotation(Annotation annotation) throws InvocationTargetException, IllegalAccessException {
-        List<Object[]> list = new ArrayList<>();
-        Class<? extends Annotation> type = annotation.annotationType();
-        for (Method method : type.getDeclaredMethods()) {
-            Object[] aObj = new Object[]{type.getName(),method.getName(),method.invoke(annotation)};
-            list.add(aObj);
-        }
-        return list;
-    }
-    /**
-     * Method for inspect/find annottion for the class java.
-     * href: http://tutorials.jenkov.com/java-reflection/annotations.html
-     * href: http://stackoverflow.com/questions/20362493/how-to-get-annotation-class-name-attribute-values-using-reflection
-     * Usage: @Resource(name = "foo", description = "bar")
-     * name: foo
-     * type: class java.lang.Object
-     * lookup:
-     * description: bar
-     * authenticationType: CONTAINER
-     * mappedName:
-     * shareable: true
-     * @param aClass class you want to inspect.
-     * @return list of arrays name-value of the annotation on the class.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws IllegalArgumentException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     */
-    public static List<Object[]> inspectAnnotationsClass(Class<?> aClass)
-            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        //Annotation[] annotations = aClass.getAnnotations();
-        List<Object[]> list = new ArrayList<>();
-        for (Annotation annotation : aClass.getAnnotations()) {
-            Object[] array = new Object[3];
-            Class<? extends Annotation> type = annotation.annotationType();
-            array[0] = type.getName();
-            for (Method method : type.getDeclaredMethods()){
-                array[1] = method.getName();
-                array[2] = method.invoke(annotation);//annotation,null deprecated
-                list.add(array);
-            }
-        }
-        return list;
-    }
-
-    public static List<String[]> inspectAnnotationMethodClass(Class<?> aClass,String methodName)
-            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException{
-        Method method = aClass.getMethod(methodName);//methodName,null deprecated
-        List<String[]> list = new ArrayList<>();
-        String[] array = new String[3];
-        for (Annotation annotation : aClass.getAnnotations()){
-            Class<? extends Annotation> type = annotation.annotationType();
-            array[0] = type.getName();
-            array[1] = Arrays.toString(type.getFields());
-            array[2] = method.getName();
-            list.add(array);
-        }
-        return list;
-    }
-
-    /**
-     * Method for get all the field with at least a annotation on a specific class.
-     * @param aClass class to inspect.
-     * @return list of all the properties of the fields with a annotation.
-     * @throws SecurityException throw if any error is occurred.
-     * @throws NoSuchFieldException throw if any error is occurred.
-     */
-    @SuppressWarnings("unchecked")
-    public static List<List<Object[]>> getAnnotationsFieldsOriginal(Class<?> aClass) throws SecurityException, NoSuchFieldException {
-        List<List<Object[]>> listOfAnnotation = new ArrayList<>();
-        //for(Annotation ann : aClass.getAnnotations()){
-            Field[] fields = aClass.getDeclaredFields();
-            for(Field field  : fields ){
-                Object[] array = new Object[3];
-                //final Annotation annotation = field.getAnnotation(ann.getClass());//??????????
-                for(Annotation annotation : field.getAnnotations()) {
-                    if (annotation != null) {
-                        Object handler = Proxy.getInvocationHandler(annotation);
-                        Field f;
-                        try {
-                            //This is the name of the field.
-                            f = handler.getClass().getDeclaredField("memberValues");
-                        } catch (NoSuchFieldException | SecurityException e) {
-                            throw new IllegalStateException(e);
-                        }
-                        f.setAccessible(true);
-                        Map<String, Object> memberValues;
-                        try {
-                            memberValues = (Map<String, Object>) f.get(handler);
-                        } catch (IllegalArgumentException | IllegalAccessException e) {
-                            throw new IllegalStateException(e);
-                        }
-                        List<Object[]> list = new ArrayList<>();
-                        array[0] = annotation.annotationType().getName();//javax.persistence.column
-                        for (Map.Entry<String, Object> entry : memberValues.entrySet()) {
-                            array[1] = entry.getKey();
-                            array[2] = entry.getValue();
-                            list.add(array.clone());
-                        }
-                        listOfAnnotation.add(list);
-                    }
-                }
-            }
-        //}
-        return listOfAnnotation;
-    }
-
-    /**
-     * Method for check if exists a annotation a a filed of the specific class
-     * Usage: System.out.println(isRequired(Employee.class, "email"));
-     * @param aClass class you want to inspect.
-     * @return list of list of arrays name-value of all annotation on the declareted types.
-     * @throws NoSuchFieldException throw if any error is occurrred.
-     * @throws SecurityException throw if any error is occurrred.
-     * @throws InvocationTargetException throw if any error is occurrred.
-     * @throws IllegalAccessException throw if any error is occurrred.
-     */
-    public static List<List<Object[]>> getAnnotationsFields(Class<?> aClass) throws SecurityException, NoSuchFieldException, InvocationTargetException, IllegalAccessException {
-        List<List<Object[]>> listOfAnnotation = new ArrayList<>();
-          Field[] fields = aClass.getDeclaredFields();
-          for(Field field  : fields ){
-              List<Object[]> list = getAnnotationsField(aClass, field);
-              if(list!=null) {
-                  listOfAnnotation.add(list);
-              }
-          }
-        return listOfAnnotation;
-    }
-
-    /**
-     * Method for check if exists a annotation a a filed of the specific class
-     * Usage: System.out.println(isRequired(Employee.class, "email"));
-     * @param aClass class you wan to inspect.
-     * @param field field you want o find.
-     * @return list of array name-value with all information on the type field.
-     * @throws NoSuchFieldException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurrred.
-     * @throws IllegalAccessException throw if any error is occurrred.
-     */
-    @SuppressWarnings("rawtypes")
-    public static List<Object[]> getAnnotationsField(Class<?> aClass, Field field)
-            throws SecurityException, NoSuchFieldException, InvocationTargetException, IllegalAccessException {
-        List<Object[]> list = new ArrayList<>();
-        String fieldName = field.getName();
-        Class fieldType = field.getType();
-        Object[] fObj = new Object[]{fieldName,fieldType};
-        for(Annotation annotation : field.getAnnotations()) {
-            List<Object[]> aObj = inspectAnnotation(annotation);
-            //final Annotation annotation = field.getAnnotation(annotationClass);
-            //list = getAnnotationField(aClass, annotation, fieldName);
-            if(aObj != null && !aObj.isEmpty()) {
-                Object[] bObj = CollectionKit.concatenateArrays(fObj, aObj.toArray());
-                list.add(bObj);
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Method for get the properties of a Annotation form a Field.
-     * @param annotation Annotation object to inspect.
-     * @return a list of properties of the Annotation.
-     * @throws SecurityException throw if any error is occurred.
-     * @throws NoSuchFieldException throw if any error is occurred.
-     */
-    @SuppressWarnings("unchecked")
-    public static List<Object[]> getAnnotationField(Annotation annotation)
-            throws SecurityException, NoSuchFieldException {
-        List<Object[]> list = new ArrayList<>();
-        Object[] array = new Object[3];
-        if(annotation!=null) {
-            Object handler = Proxy.getInvocationHandler(annotation);
-            Field f;
-            try {
-                //This is the name of the field.
-                f = handler.getClass().getDeclaredField("memberValues");
-            } catch (NoSuchFieldException | SecurityException e) {
-                throw new IllegalStateException(e);
-            }
-            f.setAccessible(true);
-            Map<String, Object> memberValues;
-            try {
-                memberValues = (Map<String, Object>) f.get(handler);
-            } catch (IllegalArgumentException | IllegalAccessException e) {
-                throw new IllegalStateException(e);
-            }
-            array[0] = annotation.annotationType().getName();//javax.persistence.column
-            for (Map.Entry<String, Object> entry : memberValues.entrySet()) {
-                array[1] = entry.getKey();
-                array[2] = entry.getValue();
-                list.add(array.clone());
-            }
-            return list;
-        }
-        return null;
-    }
-
-//    public static List<Object[]> getAnnotationField(Class<?> aClass, Annotation annotation,String fieldName )
-//            throws SecurityException, NoSuchFieldException {
-//        Field field = getFieldByName(aClass,fieldName);
-//        Annotation annotation2 = field.getAnnotations();
-//        return getAnnotationField(annotation2);
-//    }
-
-    public static  List<List<Object[]>> getAnnotationsFields(Class<?> aClass,Class<? extends Annotation> clazz)
-            throws SecurityException, NoSuchFieldException {
-        List<List<Object[]>> result = new ArrayList<>();
-        Field[] fields = aClass.getDeclaredFields();
-        for(Field field : fields){
-            Annotation annotation = field.getAnnotation(clazz);
-            List<Object[]> list = getAnnotationField(annotation);
-            result.add(list);
-        }
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static List<Object[]> getAnnotationField(Class<? extends Annotation> annotationClass,Field field)
-            throws SecurityException, NoSuchFieldException {
-        List<Object[]> list = new ArrayList<>();
-        Object[] array = new Object[3];
-        final Annotation annotation = field.getAnnotation(annotationClass);
-        if(annotation!=null) {
-            Object handler = Proxy.getInvocationHandler(annotation);
-            Field f;
-            try {
-                //This is the name of the field.
-                f = handler.getClass().getDeclaredField("memberValues");
-            } catch (NoSuchFieldException | SecurityException e) {
-                throw new IllegalStateException(e);
-            }
-            f.setAccessible(true);
-            Map<String, Object> memberValues;
-            try {
-                memberValues = (Map<String, Object>) f.get(handler);
-            } catch (IllegalArgumentException | IllegalAccessException e) {
-                throw new IllegalStateException(e);
-            }
-            array[0] = annotation.annotationType().getName();//javax.persistence.column
-            for (Map.Entry<String, Object> entry : memberValues.entrySet()) {
-                array[1] = entry.getKey();
-                array[2] = entry.getValue();
-                list.add(array.clone());
-            }
-            return list;
-        }
-        return null;
-    }
-
-    public static List<Object[]> getAnnotationField(Class<?> aClass, Class<? extends Annotation> annotationClass,String fieldName )
-            throws SecurityException, NoSuchFieldException {
-        return getAnnotationField(annotationClass,getFieldByName(aClass, fieldName));
-    }
-
-    /**
-     * Method to get the properties of a Annotation on a class.
-     * @param aClass classs to inspect.
-     * @return properteis of the specific annotation.
-     * @throws SecurityException throw if any error is occurred.
-     * @throws NoSuchFieldException throw if any error is occurred.
-     */
-    public static List<List<Object[]>> getAnnotationsClass(Class<?> aClass)
-            throws SecurityException, NoSuchFieldException {
-        List<List<Object[]>> result = new ArrayList<>();
-        for(Annotation annotation : aClass.getAnnotations()){
-            List<Object[]> list = getAnnotationClass(annotation);
-            result.add(list);
-        }
-        return result;
-    }
-
-    /**
-     * Method to get the properties of a Annotation on a class.
-     * @param annotation the Annotation object to inpsect.
-     * @return properteis of the specific annotation.
-     */
-    @SuppressWarnings("unchecked")
-    public static List<Object[]> getAnnotationClass(Annotation annotation){
-        List<Object[]> list = new ArrayList<>();
-        Object[] array = new Object[3];
-        if(annotation!=null) {
-            Object handler = Proxy.getInvocationHandler(annotation);
-            Field f;
-            try {
-                //This is the name of the field.
-                f = handler.getClass().getDeclaredField("memberValues");
-            } catch (NoSuchFieldException | SecurityException e) {
-                throw new IllegalStateException(e);
-            }
-            f.setAccessible(true);
-            Map<String, Object> memberValues;
-            try {
-                memberValues = (Map<String, Object>) f.get(handler);
-            } catch (IllegalArgumentException | IllegalAccessException e) {
-                throw new IllegalStateException(e);
-            }
-            array[0] = annotation.annotationType().getName();//javax.persistence.column
-            for (Map.Entry<String, Object> entry : memberValues.entrySet()) {
-                array[1] = entry.getKey();
-                array[2] = entry.getValue();
-                list.add(array.clone());
-            }
-            return list;
-        }
-        return null;
-    }
 
 
    /**
@@ -1743,7 +951,7 @@ public final class ReflectionKit2 {
             Field fieldColumn = getFieldByName(aClass, fieldName);
             Annotation annColumn = fieldColumn.getAnnotation(annotationClass);
             if (annColumn != null) {
-                ReflectionKit2.updateAnnotationValue(annColumn, attributeName, attributeValue);
+                ReflectionKit3.updateAnnotationValue(annColumn, attributeName, attributeValue);
             }else{
                 SystemLog.warning("No annotation for the class whit attribute:"+attributeName);
             }
@@ -1762,7 +970,7 @@ public final class ReflectionKit2 {
     public static void updateAnnotationClassValue(Class<?> aClass,Class<? extends Annotation> annotationClass,String attributeName,String attributeValue){
         Annotation ann = aClass.getAnnotation(annotationClass);
         if(ann!=null) {
-            ReflectionKit2.updateAnnotationValue(ann, attributeName, attributeValue);
+            ReflectionKit3.updateAnnotationValue(ann, attributeName, attributeValue);
         }
     }
 
@@ -1967,7 +1175,7 @@ public final class ReflectionKit2 {
         Method m;
         boolean result = false;
         if(!SETTERS_MAP.containsKey(key)) {
-            m = findSetterMethod(obj, property, value);
+            m = ReflectionFind.findSetter(obj, property, value);
             SETTERS_MAP.put(key, m);
         } else {
             m = SETTERS_MAP.get(key);
@@ -2009,158 +1217,12 @@ public final class ReflectionKit2 {
         }
         List<Class<?>> classes = new ArrayList<>();
         for (File directory : dirs) {
-            classes.addAll(findClasses(directory, packageName));
+            classes.addAll(ReflectionFind.findClasses(directory, packageName));
         }
         return classes.toArray(new Class<?>[classes.size()]);
     }
 
-    /**
-     * Recursive method used to find all classes in a given directory and subdirs.
-     *
-     * @param directory   The base directory
-     * @param packageName The package name for classes found inside the base directory
-     * @return list of class in the directory package.
-     * @throws ClassNotFoundException throw if any error is occurred.
-     */
-    public static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
-        List<Class<?>> classes = new ArrayList<>();
-        if (!directory.exists()) {
-            return classes;
-        }
-        List<File> files = FileUtil.readDirectory(directory);
-        if(files!= null && files.size()>0){
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    assert !file.getName().contains(".");
-                    classes.addAll(findClasses(file, packageName + "." + file.getName()));
-                } else if (file.getName().endsWith(".class")) {
-                    classes.add(Class.forName(packageName + '.' + file.getName().substring(0, file.getName().length() - 6)));
-                }
-            }
-        }
-        return classes;
-    }
 
-
-    /**
-     * Method for get a specific setter method froma object.
-     * @param obj object to inspect.
-     * @param fieldName string name of the field.
-     * @param value object value to set in the obj parameter.
-     * @return the setter method.
-     */
-    public static Method findSetterMethod(Object obj,String fieldName, Object value) {
-        Class<?> clazzObject = obj.getClass();
-        Class<?> clazzField = value.getClass();
-        return findSetterMethod(clazzObject, fieldName, clazzField);
-    }
-
-    /**
-     * Method for get a specific setter method froma object
-     * @param clazz class of the object to inspect.
-     * @param fieldName string name of the field.
-     * @param clazzField class of the field value to set in the obj parameter.
-     * @return the setter method.
-     */
-    public static Method findSetterMethod(Class<?> clazz,String fieldName,Class<?> clazzField) {
-        String setter = String.format("set%C%s",fieldName.charAt(0), fieldName.substring(1));
-        while (clazzField != null) {
-            try {
-                return  clazz.getMethod(setter, clazzField);
-            } catch (NoSuchMethodException ex) {
-                // try on the interfaces of this class
-                for (Class<?> iface : clazzField.getInterfaces()) {
-                    try {
-                        return clazz.getMethod(setter, iface);
-                    } catch (NoSuchMethodException ex1) {
-                        SystemLog.exception(ex1);
-                    }
-                }
-                clazzField = clazzField.getSuperclass();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Method for get a specific getter method froma object.
-     * @param obj object to inspect.
-     * @param fieldName string name of the field.
-     * @param value object value to set in the obj parameter.
-     * @return the setter method.
-     */
-    public static Method findGetterMethod(Object obj,String fieldName, Object value) {
-        Class<?> clazzObject = obj.getClass();
-        Class<?> clazzField = value.getClass();
-        return findGetterMethod(clazzObject, fieldName, clazzField);
-
-    }
-
-    /**
-     * Method for get a specific getter method froma object
-     * @param clazz class of the object to inspect.
-     * @param fieldName string name of the field.
-     * @param clazzField class of the field value to set in the obj parameter.
-     * @return the setter method.
-     */
-    public static Method findGetterMethod(Class<?> clazz,String fieldName,Class<?> clazzField) {
-        String getter = String.format("get%C%s",fieldName.charAt(0), fieldName.substring(1));
-        while (clazzField != null) {
-            try {
-                return  clazz.getMethod(getter);
-            } catch (NoSuchMethodException ex) {
-                // try on the interfaces of this class
-                for (Class<?> iface : clazzField.getInterfaces()) {
-                    try {
-                        return  clazz.getMethod(getter, iface);
-                    } catch (NoSuchMethodException ex1) {
-                        SystemLog.exception(ex1);
-                    }
-                }
-                clazzField = clazzField.getSuperclass();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Method for find a specific Method object on a object.
-     * @param obj object where fin the method.
-     * @param methodName string of name of the method.
-     * @param value object value of get the class of the field used on the method.
-     * @return  the method if found otherwise a null.
-     */
-    public static Method findMethod(Object obj,String methodName, Object value) {
-        Class<?> clazzObject  = obj.getClass();
-        Class<?> clazzField = value.getClass();
-        return findMethod(clazzObject,methodName,clazzField);
-    }
-
-    /**
-     * Method for find a specific Method object on a object.
-     * @param clazz class where find the method.
-     * @param methodName string of name of the method.
-     * @param clazzField class of the filed used on the method
-     * @return the method if found otherwise a null.
-     */
-    public static Method findMethod(Class<?> clazz,String methodName, Class<?> clazzField) {
-        while (clazzField != null) {
-            try {
-                return clazz.getMethod(methodName, clazzField);
-            } catch (NoSuchMethodException ex) {
-                // try on the interfaces of this class
-                for (Class<?> iface : clazzField.getInterfaces()) {
-                    try {
-                        return clazz.getMethod(methodName, iface);
-                    } catch (NoSuchMethodException ex1) {
-                        SystemLog.exception(ex1);
-                    }
-                }
-                clazzField = clazzField.getSuperclass();
-            }
-        }
-        return null;
-    }
 
     /**
      * Method for get the class from a reference path to it.
@@ -2263,24 +1325,498 @@ public final class ReflectionKit2 {
         return (Class) pt.getActualTypeArguments()[0];
     }
 
+    //-----------------------------------------------------------------------
+    // ADDED
+    //-----------------------------------------------------------------------
 
-    @Override
-    public int hashCode() {
-        return object.hashCode();
+
+    /**
+     * Determine whether the given field is a "public static final" constant.
+     * @param field the field to check
+     */
+    public static boolean isPublicStaticFinal(Field field) {
+        int modifiers = field.getModifiers();
+        return (Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers));
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ReflectionKit2) {
-            return object.equals(((ReflectionKit2) obj).get());
+    /**
+     * Determine whether the given method is an "equals" method.
+     * @see java.lang.Object#equals(Object)
+     */
+    public static boolean isEqualsMethod(Method method) {
+        if (method == null || !method.getName().equals("equals")) {
+            return false;
         }
+        Class<?>[] paramTypes = method.getParameterTypes();
+        return (paramTypes.length == 1 && paramTypes[0] == Object.class);
+    }
 
+    /**
+     * Determine whether the given method is a "hashCode" method.
+     * @see java.lang.Object#hashCode()
+     */
+    public static boolean isHashCodeMethod(Method method) {
+        return (method != null && method.getName().equals("hashCode") && method.getParameterTypes().length == 0);
+    }
+
+    /**
+     * Determine whether the given method is a "toString" method.
+     * @see java.lang.Object#toString()
+     */
+    public static boolean isToStringMethod(Method method) {
+        return (method != null && method.getName().equals("toString") && method.getParameterTypes().length == 0);
+    }
+
+    /**
+     * Determine whether the given method is originally declared by {@link java.lang.Object}.
+     */
+    public static boolean isObjectMethod(Method method) {
+        if (method == null) {
+            return false;
+        }
+        try {
+            Object.class.getDeclaredMethod(method.getName(), method.getParameterTypes());
+            return true;
+        }
+        catch (Exception ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Naming prefix for CGLIB-renamed methods.
+     * @see #isCglibRenamedMethod
+     */
+    private static final String CGLIB_RENAMED_METHOD_PREFIX = "CGLIB$";
+
+    /**
+     * Determine whether the given method is a CGLIB 'renamed' method,
+     * following the pattern "CGLIB$methodName$0".
+     * @param renamedMethod the method to check
+     * @see org.springframework.cglib.proxy.Enhancer#rename
+     */
+    public static boolean isCglibRenamedMethod(Method renamedMethod) {
+        String name = renamedMethod.getName();
+        if (name.startsWith(CGLIB_RENAMED_METHOD_PREFIX)) {
+            int i = name.length() - 1;
+            while (i >= 0 && Character.isDigit(name.charAt(i))) {
+                i--;
+            }
+            return ((i > CGLIB_RENAMED_METHOD_PREFIX.length()) &&
+                    (i < name.length() - 1) && name.charAt(i) == '$');
+        }
         return false;
     }
 
-    @Override
-    public String toString() {
-        return object.toString();
+    /**
+     * Make the given field accessible, explicitly setting it accessible if
+     * necessary. The {@code setAccessible(true)} method is only called
+     * when actually necessary, to avoid unnecessary conflicts with a JVM
+     * SecurityManager (if active).
+     * @param field the field to make accessible
+     * @see java.lang.reflect.Field#setAccessible
+     */
+    public static void makeAccessible(Field field) {
+        if ((!Modifier.isPublic(field.getModifiers()) ||
+                !Modifier.isPublic(field.getDeclaringClass().getModifiers()) ||
+                Modifier.isFinal(field.getModifiers())) && !field.isAccessible()) {
+            field.setAccessible(true);
+        }
     }
+
+    /**
+     * Make the given method accessible, explicitly setting it accessible if
+     * necessary. The {@code setAccessible(true)} method is only called
+     * when actually necessary, to avoid unnecessary conflicts with a JVM
+     * SecurityManager (if active).
+     * @param method the method to make accessible
+     * @see java.lang.reflect.Method#setAccessible
+     */
+    public static void makeAccessible(Method method) {
+        if ((!Modifier.isPublic(method.getModifiers()) ||
+                !Modifier.isPublic(method.getDeclaringClass().getModifiers())) && !method.isAccessible()) {
+            method.setAccessible(true);
+        }
+    }
+
+    /**
+     * Make the given constructor accessible, explicitly setting it accessible
+     * if necessary. The {@code setAccessible(true)} method is only called
+     * when actually necessary, to avoid unnecessary conflicts with a JVM
+     * SecurityManager (if active).
+     * @param ctor the constructor to make accessible
+     * @see java.lang.reflect.Constructor#setAccessible
+     */
+    public static void makeAccessible(Constructor<?> ctor) {
+        if ((!Modifier.isPublic(ctor.getModifiers()) ||
+                !Modifier.isPublic(ctor.getDeclaringClass().getModifiers())) && !ctor.isAccessible()) {
+            ctor.setAccessible(true);
+        }
+    }
+
+    /**
+     * This variant retrieves {@link Class#getDeclaredFields()} from a local cache
+     * in order to avoid the JVM's SecurityManager check and defensive array copying.
+     * @param clazz the class to introspect
+     * @return the cached array of fields
+     * @see Class#getDeclaredFields()
+     */
+    public static Field[] getDeclaredFields(Class<?> clazz) {
+        return clazz.getDeclaredFields();
+    }
+
+    /**
+     * This variant retrieves {@link Class#getDeclaredMethods()} from a local cache
+     * in order to avoid the JVM's SecurityManager check and defensive array copying.
+     * In addition, it also includes Java 8 default methods from locally implemented
+     * interfaces, since those are effectively to be treated just like declared methods.
+     * @param clazz the class to introspect
+     * @return the cached array of methods.
+     */
+    public static Method[] getDeclaredMethods(Class<?> clazz) {
+        return clazz.getDeclaredMethods();
+    }
+
+    /**
+     * Get all declared methods on the leaf class and all superclasses.
+     * Leaf class methods are included first.
+     * @param leafClass the class to introspect
+     */
+    public static Method[] getAllDeclaredMethods(Class<?> leafClass) {
+        final List<Method> methods = new ArrayList<Method>(32);
+        doWithMethods(leafClass, new MethodCallback() {
+            @Override
+            public void doWith(Method method) {
+                methods.add(method);
+            }
+        });
+        return methods.toArray(new Method[methods.size()]);
+    }
+
+    /**
+     * Get the unique set of declared methods on the leaf class and all superclasses.
+     * Leaf class methods are included first and while traversing the superclass hierarchy
+     * any methods found with signatures matching a method already included are filtered out.
+     * @param leafClass the class to introspect
+     */
+    public static Method[] getUniqueDeclaredMethods(Class<?> leafClass) {
+        final List<Method> methods = new ArrayList<Method>(32);
+        doWithMethods(leafClass, new MethodCallback() {
+            @Override
+            public void doWith(Method method) {
+                boolean knownSignature = false;
+                Method methodBeingOverriddenWithCovariantReturnType = null;
+                for (Method existingMethod : methods) {
+                    if (method.getName().equals(existingMethod.getName()) &&
+                            Arrays.equals(method.getParameterTypes(), existingMethod.getParameterTypes())) {
+                        // Is this a covariant return type situation?
+                        if (existingMethod.getReturnType() != method.getReturnType() &&
+                                existingMethod.getReturnType().isAssignableFrom(method.getReturnType())) {
+                            methodBeingOverriddenWithCovariantReturnType = existingMethod;
+                        }
+                        else {
+                            knownSignature = true;
+                        }
+                        break;
+                    }
+                }
+                if (methodBeingOverriddenWithCovariantReturnType != null) {
+                    methods.remove(methodBeingOverriddenWithCovariantReturnType);
+                }
+                if (!knownSignature && !isCglibRenamedMethod(method)) {
+                    methods.add(method);
+                }
+            }
+        });
+        return methods.toArray(new Method[methods.size()]);
+    }
+
+    /**
+     * Set the field represented by the supplied {@link Field field object} on the
+     * specified {@link Object target object} to the specified {@code value}.
+     * In accordance with {@link Field#set(Object, Object)} semantics, the new value
+     * is automatically unwrapped if the underlying field has a primitive type.
+     * @param field the field to set
+     * @param target the target object on which to set the field
+     * @param value the value to set; may be {@code null}
+     */
+    public static void setField(Field field, Object target, Object value) {
+        try {
+            field.set(target, value);
+        }
+        catch (IllegalAccessException ex) {
+            ReflectionInvoke.handleReflectionException(ex);
+            throw new IllegalStateException(
+                    "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Get the field represented by the supplied {@link Field field object} on the
+     * specified {@link Object target object}. In accordance with {@link Field#get(Object)}
+     * semantics, the returned value is automatically wrapped if the underlying field
+     * has a primitive type.
+     * @param field the field to get
+     * @param target the target object from which to get the field
+     * @return the field's current value
+     */
+    public static Object getField(Field field, Object target) {
+        try {
+            return field.get(target);
+        }
+        catch (IllegalAccessException ex) {
+            ReflectionInvoke.handleReflectionException(ex);
+            throw new IllegalStateException(
+                    "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage());
+        }
+    }
+
+
+    /**
+     * Perform the given callback operation on all matching methods of the given
+     * class, as locally declared or equivalent thereof (such as default methods
+     * on Java 8 based interfaces that the given class implements).
+     * @param clazz the class to introspect
+     * @param mc the callback to invoke for each method
+     * @since 4.2
+     * @see #doWithMethods
+     */
+    public static void doWithLocalMethods(Class<?> clazz, MethodCallback mc) {
+        Method[] methods = getDeclaredMethods(clazz);
+        for (Method method : methods) {
+            try {
+                mc.doWith(method);
+            }
+            catch (IllegalAccessException ex) {
+                throw new IllegalStateException("Not allowed to access method '" + method.getName() + "': " + ex);
+            }
+        }
+    }
+
+    /**
+     * Perform the given callback operation on all matching methods of the given
+     * class and superclasses.
+     * <p>The same named method occurring on subclass and superclass will appear
+     * twice, unless excluded by a {@link MethodFilter}.
+     * @param clazz the class to introspect
+     * @param mc the callback to invoke for each method
+     * @see #doWithMethods(Class, MethodCallback, MethodFilter)
+     */
+    public static void doWithMethods(Class<?> clazz, MethodCallback mc) {
+        doWithMethods(clazz, mc, null);
+    }
+
+    /**
+     * Perform the given callback operation on all matching methods of the given
+     * class and superclasses (or given interface and super-interfaces).
+     * <p>The same named method occurring on subclass and superclass will appear
+     * twice, unless excluded by the specified {@link MethodFilter}.
+     * @param clazz the class to introspect
+     * @param mc the callback to invoke for each method
+     * @param mf the filter that determines the methods to apply the callback to
+     */
+    public static void doWithMethods(Class<?> clazz, MethodCallback mc, MethodFilter mf) {
+        // Keep backing up the inheritance hierarchy.
+        Method[] methods = getDeclaredMethods(clazz);
+        for (Method method : methods) {
+            if (mf != null && !mf.matches(method)) {
+                continue;
+            }
+            try {
+                mc.doWith(method);
+            }
+            catch (IllegalAccessException ex) {
+                throw new IllegalStateException("Not allowed to access method '" + method.getName() + "': " + ex);
+            }
+        }
+        if (clazz.getSuperclass() != null) {
+            doWithMethods(clazz.getSuperclass(), mc, mf);
+        }
+        else if (clazz.isInterface()) {
+            for (Class<?> superIfc : clazz.getInterfaces()) {
+                doWithMethods(superIfc, mc, mf);
+            }
+        }
+    }
+
+    /**
+     * Invoke the given callback on all fields in the target class, going up the
+     * class hierarchy to get all declared fields.
+     * @param clazz the target class to analyze
+     * @param fc the callback to invoke for each field
+     * @since 4.2
+     * @see #doWithFields
+     */
+    public static void doWithLocalFields(Class<?> clazz, FieldCallback fc) {
+        for (Field field : getDeclaredFields(clazz)) {
+            try {
+                fc.doWith(field);
+            }
+            catch (IllegalAccessException ex) {
+                throw new IllegalStateException("Not allowed to access field '" + field.getName() + "': " + ex);
+            }
+        }
+    }
+
+    /**
+     * Invoke the given callback on all fields in the target class, going up the
+     * class hierarchy to get all declared fields.
+     * @param clazz the target class to analyze
+     * @param fc the callback to invoke for each field
+     */
+    public static void doWithFields(Class<?> clazz, FieldCallback fc) {
+        doWithFields(clazz, fc, null);
+    }
+
+    /**
+     * Invoke the given callback on all fields in the target class, going up the
+     * class hierarchy to get all declared fields.
+     * @param clazz the target class to analyze
+     * @param fc the callback to invoke for each field
+     * @param ff the filter that determines the fields to apply the callback to
+     */
+    public static void doWithFields(Class<?> clazz, FieldCallback fc, FieldFilter ff) {
+        // Keep backing up the inheritance hierarchy.
+        Class<?> targetClass = clazz;
+        do {
+            Field[] fields = getDeclaredFields(targetClass);
+            for (Field field : fields) {
+                if (ff != null && !ff.matches(field)) {
+                    continue;
+                }
+                try {
+                    fc.doWith(field);
+                }
+                catch (IllegalAccessException ex) {
+                    throw new IllegalStateException("Not allowed to access field '" + field.getName() + "': " + ex);
+                }
+            }
+            targetClass = targetClass.getSuperclass();
+        }
+        while (targetClass != null && targetClass != Object.class);
+    }
+
+
+
+    /**
+     * Given the source object and the destination, which must be the same class
+     * or a subclass, copy all fields, including inherited fields. Designed to
+     * work on objects with public no-arg constructors.
+     */
+    public static void shallowCopyFieldState(final Object src, final Object dest) {
+        if (src == null) {
+            throw new IllegalArgumentException("Source for field copy cannot be null");
+        }
+        if (dest == null) {
+            throw new IllegalArgumentException("Destination for field copy cannot be null");
+        }
+        if (!src.getClass().isAssignableFrom(dest.getClass())) {
+            throw new IllegalArgumentException("Destination class [" + dest.getClass().getName() +
+                    "] must be same or subclass as source class [" + src.getClass().getName() + "]");
+        }
+        doWithFields(src.getClass(), new FieldCallback() {
+            @Override
+            public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+                makeAccessible(field);
+                Object srcValue = field.get(src);
+                field.set(dest, srcValue);
+            }
+        }, COPYABLE_FIELDS);
+    }
+
+
+
+
+    //------------------------------------------------
+    //INTERFACE SUPPORT
+    //-----------------------------------------------
+
+    /**
+     * Action to take on each method.
+     */
+    public interface MethodCallback {
+
+        /**
+         * Perform an operation using the given method.
+         * @param method the method to operate on
+         */
+        void doWith(Method method) throws IllegalArgumentException, IllegalAccessException;
+    }
+
+
+    /**
+     * Callback optionally used to filter methods to be operated on by a method callback.
+     */
+    public interface MethodFilter {
+
+        /**
+         * Determine whether the given method matches.
+         * @param method the method to check
+         */
+        boolean matches(Method method);
+    }
+
+
+    /**
+     * Callback interface invoked on each field in the hierarchy.
+     */
+    public interface FieldCallback {
+
+        /**
+         * Perform an operation using the given field.
+         * @param field the field to operate on
+         */
+        void doWith(Field field) throws IllegalArgumentException, IllegalAccessException;
+    }
+
+
+    /**
+     * Callback optionally used to filter fields to be operated on by a field callback.
+     */
+    public interface FieldFilter {
+
+        /**
+         * Determine whether the given field matches.
+         * @param field the field to check
+         */
+        boolean matches(Field field);
+    }
+
+
+    /**
+     * Pre-built FieldFilter that matches all non-static, non-final fields.
+     */
+    public static FieldFilter COPYABLE_FIELDS = new FieldFilter() {
+
+        @Override
+        public boolean matches(Field field) {
+            return !(Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers()));
+        }
+    };
+
+
+    /**
+     * Pre-built MethodFilter that matches all non-bridge methods.
+     */
+    public static MethodFilter NON_BRIDGED_METHODS = new MethodFilter() {
+
+        @Override
+        public boolean matches(Method method) {
+            return !method.isBridge();
+        }
+    };
+
+
+    /**
+     * Pre-built MethodFilter that matches all non-bridge methods
+     * which are not declared on {@code java.lang.Object}.
+     */
+    public static MethodFilter USER_DECLARED_METHODS = new MethodFilter() {
+
+        @Override
+        public boolean matches(Method method) {
+            return (!method.isBridge() && method.getDeclaringClass() != Object.class);
+        }
+    };
 
 }

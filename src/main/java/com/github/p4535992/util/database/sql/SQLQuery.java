@@ -1,8 +1,13 @@
 package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.collection.CollectionKit;
+import com.github.p4535992.util.file.impl.FileCSV;
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringUtil;
+import com.github.p4535992.util.string.impl.StringIs;
 
+import java.io.File;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -130,7 +135,7 @@ public class SQLQuery {
      * @param nameFirstColumn string name of the column.
      * @return string query.
      */
-    public static String setColumnConcatenationSingleColumn(
+    public static String updateColumnConcatenationSingleColumn(
             String yourTable,String nameColumnToUpdate,String nameFirstColumn){
         return "UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = CONCAT("+nameColumnToUpdate+","+nameFirstColumn+");";
     }
@@ -142,7 +147,7 @@ public class SQLQuery {
      * @param arrayColumns array of the strings names of the columns to concatenate.
      * @return string query.
      */
-    public static String setColumnConcatenationMultipleColumns(String yourTable,String nameColumnToUpdate,String[] arrayColumns){
+    public static String updateColumnConcatenationMultipleColumns(String yourTable,String nameColumnToUpdate,String[] arrayColumns){
         StringBuilder builder = new StringBuilder("UPDATE "+yourTable+" SET "+nameColumnToUpdate+" = CONCAT(");
         for(int i=0; i < arrayColumns.length; i++){
             builder.append(arrayColumns[i]);
@@ -411,4 +416,44 @@ public class SQLQuery {
 //        }
 //        return values;
 //    }
+
+    //-------------------------------------------
+    // OTHER METHODS 2015-10-23
+    //-------------------------------------------
+
+    /**
+     * Method to create a String SQL for create a table.
+     * @param nameTable the name of the table.
+     * @param columns the list of columns.
+     * @return the String SQL for create a Table.
+     */
+    public static String createTableToInsertData(String nameTable,String[] columns){
+        return createTableToInsertData(null,nameTable,columns);
+    }
+
+    /**
+     * Method to create a String SQL for create a table.
+     * @param database the name of the database to use.
+     * @param nameTable the name of the table.
+     * @param columns the list of columns.
+     * @return the String SQL for create a Table.
+     */
+    public static String createTableToInsertData(String database,String nameTable,String[] columns){
+        StringBuilder bQuery = new StringBuilder();
+        //CREATE TABLE TO INSERT DATA
+        if(database!=null) {
+            bQuery.append("USE ").append(database).append("\n")
+                    .append("GO \n");
+        }
+        bQuery.append("CREATE TABLE ").append(nameTable).append(" (").append("\n");
+        for(int i=0; i < columns.length; i++){
+            bQuery.append(columns[i]).append(" ") .append(
+                    SQLHelper.convertSQLTypes2String(
+                            SQLHelper.convertStringToSQLTypes(columns[i]))).append("(255)");
+            if(i < columns.length) bQuery.append(", ");
+
+        }
+        bQuery.append(")\n");
+        return bQuery.toString();
+    }
 }

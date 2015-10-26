@@ -1,6 +1,7 @@
-package com.github.p4535992.util.file;
+package com.github.p4535992.util.file.impl;
 
 import com.github.p4535992.util.encoding.EncodingUtil;
+import com.github.p4535992.util.file.SimpleParameters;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.impl.StringIs;
 import com.github.p4535992.util.string.impl.StringKit;
@@ -110,7 +111,7 @@ public class FileUtil {
      * @param fullPath string of the path to the file
      * @return name of the file without the extension
      */
-    public static String filenameNoExt(String fullPath) { 
+    public static String filenameNoExt(String fullPath) {
         int dot = fullPath.lastIndexOf(extensionSeparator);
         int sep = fullPath.lastIndexOf(pathSeparator);
         return fullPath.substring(sep + 1, dot);
@@ -175,7 +176,7 @@ public class FileUtil {
 
     /**
      * Method for convert a absolut path to the file to a relative path.
-     * @param base the base of the absolute path where you want start the 
+     * @param base the base of the absolute path where you want start the
      * relative path e.g. /var/data
      * @param absolutePath the full pth to the file e.g. /var/data/stuff/xyz.dat
      * @return the relative path to the file e.g. stuff/xyz.dat
@@ -249,7 +250,7 @@ public class FileUtil {
      * @return the path to the file
      */
     public static String path(File f) {
-       return path(f.getAbsolutePath());
+        return path(f.getAbsolutePath());
     }
 
     /**
@@ -393,7 +394,7 @@ public class FileUtil {
                 files.add(new File(fullPathDir+File.separator+path));
             }
         } catch (Exception e) {
-          SystemLog.exception(e);
+            SystemLog.exception(e);
         }
         return files;
     }
@@ -630,16 +631,16 @@ public class FileUtil {
             // Delete temp file when program exits.
             file.deleteOnExit();
             try ( //Writer writer = new FileWriter(file);
-            //PrintWriter out = new PrintWriter(writer);
-            //out.println(content);
-                    BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+                  //PrintWriter out = new PrintWriter(writer);
+                  //out.println(content);
+                  BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
                 bw.write(content);
             }
             return file;
         } catch (IOException e) {
             SystemLog.exception(e);
         }
-       return null;
+        return null;
     }
 
     /**
@@ -705,8 +706,7 @@ public class FileUtil {
      */
     public static Map<String,String> readStringFromFileLineByLine(String pathToFile, char separator, SimpleParameters params) {
         Map<String,String> map = new HashMap<>();
-        try
-        {
+        try{
             File file = new File(pathToFile);
             String[] lines;
             List<String> linesSupport;
@@ -818,12 +818,13 @@ public class FileUtil {
      * @return the String of the content of the file you read.
      * @throws IOException thro if any error is occurred.
      */
-    public static String convertFileToString(File file, String encoding) throws IOException {
-        return EncodingUtil.getString(file, encoding);
-    }
+     /* public static String convertFileToString(File file, String encoding) throws IOException {
+        return EncodingUtil.getStringFileWithEncoding(file, encoding);
+     }
+     */
 
     /**
-     * Method to covnert a resource file to a Stream.
+     * Method to convert a resource file to a Stream.
      * @param pathToFile String path to the Resource File to read(reference path).
      * @return the Stream of the File.
      * @throws IOException throw if the File is not found or the Output directory not exists.
@@ -983,7 +984,7 @@ public class FileUtil {
     }
 
     /**
-     * Method for compress file of triple before upload to thte repository 
+     * Method for compress file of triple before upload to thte repository
      * make the upload more faster.
      * @param filePathToFile string of the path tot the file
      * @return inputstream of the file
@@ -1129,6 +1130,24 @@ public class FileUtil {
         return fileName;
     }
 
+    /**
+     * Method to convert a MultipartFile to a File
+     * @param multiPartFile the MultiPartFile of Spring to convert.
+     * @return the File.
+     * @throws IOException
+     */
+    /*public File convertMultiPartFileToFile(org.springframework.web.multipart.MultipartFile multiPartFile) throws IOException {
+        File convFile = new File(multiPartFile.getOriginalFilename());
+        //do
+        convFile.createNewFile();
+        FileOutputStream fos = new FileOutputStream(convFile);
+        fos.write(multiPartFile.getBytes());
+        fos.close();
+        //or
+        // multipart.transferTo(convFile);
+        return convFile;
+    }*/
+
 
     //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1157,7 +1176,7 @@ public class FileUtil {
              * Called to notify that a normal file has been encountered.
              *
              * @param file The file encountered.
-             * @throws Exception error during the search. 
+             * @throws Exception error during the search.
              */
             void file(File file) throws Exception;
 
@@ -1165,7 +1184,7 @@ public class FileUtil {
              * Called to notify that a directory has been encountered.
              *
              * @param directory The directory encountered.
-             * @throws Exception error during the search. 
+             * @throws Exception error during the search.
              */
             void directory(File directory) throws Exception;
         }
@@ -1184,7 +1203,7 @@ public class FileUtil {
          * short walk, or a directory which will be traversed recursively.
          *
          * @param node The starting point for the walk.
-         * @throws Exception error during the search. 
+         * @throws Exception error during the search.
          */
         public void walk(File node) throws Exception{
             if (node.isDirectory()) {
@@ -1240,53 +1259,10 @@ public class FileUtil {
     }*/
 
 
-    /////////////////////////////////
-    //OTHER METHODS DERPECATED
-    ///////////////////////////////
-
-    /*
-     * Get current working directory as a URI.
-     */
-    /*public static String uriFromCwd() {
-        String cwd = System.getProperty("user.dir");
-        return uriFromFilename( cwd ) + "/" ;
-    }*/
-
-    /*
-     * Convert File descriptor string to a URI.
-     */
-   /* public static String uriFromFile(File filespec){
-        return uriFromFilename( filespec.getAbsolutePath() ) ;
-    }*/
-
-    /*
-     * Convert filename string to a URI.
-     * Map '\' characters to '/' (this might break if '\' is used in
-     * a Unix filename, but this is assumed to be a very rare occurrence
-     * as '\' is often used with special meaning on Unix.)
-     * For unix-like systems, the absolute filename begins with a '/'
-     * and is preceded by "file://".
-     * For other systems an extra '/' must be supplied.
-     */
-    /*public static String uriFromFilename(String filename){
-        StringBuffer mapfilename = new StringBuffer( filename ) ;
-        for ( int i = 0 ; i < mapfilename.length() ; i++ )
-        {
-            if ( mapfilename.charAt(i) == '\\' )
-                mapfilename.setCharAt(i, '/') ;
-        }
-        if (filename.charAt(0) == '/')
-        {
-            return "file://"+mapfilename.toString() ;
-        }
-        else
-        {
-            return "file:///"+mapfilename.toString() ;
-        }
-    }*/
 
 
 
-          
-    
+
+
+
 }

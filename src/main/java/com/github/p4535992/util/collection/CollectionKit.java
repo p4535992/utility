@@ -2,6 +2,7 @@ package com.github.p4535992.util.collection;
 
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionKit;
+import com.github.p4535992.util.string.StringUtil;
 import com.github.p4535992.util.string.impl.StringIs;
 import com.github.p4535992.util.string.impl.StringKit;
 
@@ -610,7 +611,7 @@ public class CollectionKit {
      * @param al lista dei valori per il determianto parametro del GeoDocument
      * @return  il valore più diffuso per tale parametro
      */
-    private String getMoreCommonParameter(List<String> al){
+    public static String getMoreCommonParameter(List<String> al){
         Map<String,Integer> map = new HashMap<>();
         for (String anAl : al) {
             Integer count = map.get(anAl);
@@ -621,7 +622,7 @@ public class CollectionKit {
         for ( Map.Entry<String, Integer> entry : map.entrySet()) {
             String key = entry.getKey();
             Integer value = entry.getValue();
-            if(value >= keyValue && StringKit.setNullForEmptyString(key)!=null && !key.equals("null") && !key.equals("NULL")){
+            if(value >= keyValue && StringUtil.toNull(key)!=null && !key.equals("null") && !key.equals("NULL")){
                 keyValue = value;
                 keyParameter = key;
             }

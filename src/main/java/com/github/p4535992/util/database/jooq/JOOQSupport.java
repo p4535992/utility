@@ -1,7 +1,7 @@
 package com.github.p4535992.util.database.jooq;
 
 import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.string.pattern.Patterns;
+import com.github.p4535992.util.regex.pattern.Patterns;
 import com.github.p4535992.util.string.impl.StringRegex;
 
 /**

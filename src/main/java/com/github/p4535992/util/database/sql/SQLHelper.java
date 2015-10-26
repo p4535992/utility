@@ -1,6 +1,7 @@
 package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringUtil;
 import com.github.p4535992.util.string.impl.StringIs;
 import org.jooq.SQLDialect;
 
@@ -59,6 +60,22 @@ public class SQLHelper {
             }
         }
         return map;
+    }
+
+    /**
+     * method to convert a String to a SQL Type.
+     * @param value the String value to convert.
+     * @return the SQL Type of the value.
+     */
+    public static int convertStringToSQLTypes(String value){
+        if(value == null) return Types.NULL;
+        if(StringUtil.isFloat(value)) return Types.FLOAT;
+        if(StringUtil.isDouble(value)) return Types.DOUBLE;
+        if(StringUtil.isDecimal(value)) return Types.DECIMAL;
+        if(StringUtil.isInt(value)) return Types.INTEGER;
+        if(StringUtil.isURL(value)) return Types.VARCHAR;
+        if(StringUtil.isNumeric(value)) return Types.NUMERIC;
+        else  return Types.VARCHAR;
     }
 
     /**
@@ -190,8 +207,10 @@ public class SQLHelper {
         if(dialectDb.toLowerCase().contains("firebird"))return "firebird";
         if(dialectDb.toLowerCase().contains("h2"))return "h2";
         if(dialectDb.toLowerCase().contains("hsqldb"))return "hsqldb";
+        if(dialectDb.toLowerCase().contains("hsql"))return "hsqldb";
         if(dialectDb.toLowerCase().contains("mariadb"))return "mariadb";
         if(dialectDb.toLowerCase().contains("postgres"))return "postgres";
+        if(dialectDb.toLowerCase().contains("postgresql"))return "postgres";
         if(dialectDb.toLowerCase().contains("postgres93"))return "postgres93";
         if(dialectDb.toLowerCase().contains("postgres94"))return "postgres94";
         if(dialectDb.toLowerCase().contains("sqlite"))return "sqlite";
@@ -308,7 +327,7 @@ public class SQLHelper {
             if (port != null && StringIs.isNumeric(port)) {
                 url += ":" + port;
             }
-            url += "/"  + database; //"jdbc:sql://localhost:3306/jdbctest"
+            url += "/"  + database + "?noDatetimeStringSync=true"; //"jdbc:sql://localhost:3306/jdbctest"
             try {
                 //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(url, username, password);
@@ -378,16 +397,69 @@ public class SQLHelper {
         return conn;
     }
 
+
+    /**
+     * Method to connect to a h2  database.
+     * href: http://www.h2database.com/html/features.html.
+     * @param host string name of the host where is it the database.
+     * @param port number of the port of the server.
+     * @param database string name of the database.
+     * @param username string username.
+     * @param password string password.
+     */
+    public static Connection getH2RemoteConnection(String host,String port,String database,String username,String password)
+            throws SQLException, ClassNotFoundException{
+        try {
+            Class.forName("org.h2.Driver"); //Loading driver connection
+            /*
+            jdbc:h2:tcp://<server>[:<port>]/[<path>]<databaseName>
+            jdbc:h2:tcp://localhost/~/test
+            jdbc:h2:tcp://dbserv:8084/~/sample
+            jdbc:h2:tcp://localhost/mem:test
+            */
+            String url = "jdbc:h2:tcp://" + host;
+            if (port != null && StringIs.isNumeric(port)) {
+                url += ":" + port;
+            }
+            url += "/~/" + database;
+            conn = DriverManager.getConnection(url, username, password);
+        }catch (ClassNotFoundException e) {
+            SystemLog.error("The Class.forName is not present on the classpath of the project", e, SQLHelper.class);
+        } catch (SQLException e) {
+            SystemLog.error("The URL is not correct", e, SQLHelper.class);
+        }
+        return conn;
+    }
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Map<String,Integer> getColumns(String host,String database,String table,String column)
+    /**
+     * Method to get the columns from a specific Table.
+     * @param host string name of the host where is it the database.
+     * @param database string name of the database.
+     * @param table the String name of the Table.
+     * @param columnNamePattern the String Pattern name of the columnss to get.
+     * @return
+     * @throws SQLException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws ClassNotFoundException
+     */
+    public static Map<String,Integer> getColumns(String host,String database,String table,String columnNamePattern)
             throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+        Map<String,Integer> map = new HashMap<>();
         DatabaseMetaData metaData;
         if(conn!=null)metaData = conn.getMetaData();
-        else metaData = chooseAndGetConnection(null,host,null,database,null,null).getMetaData();
-
-        ResultSet result = metaData.getColumns( null, database, table, column );
-        Map<String,Integer> map = new HashMap<>();
+        else {
+            conn = chooseAndGetConnection(null,host,null,database,null,null);
+            if(conn!=null)metaData = conn.getMetaData();
+            else{
+                SystemLog.warning("SQLHelper::getColumns -> Can't get the connection for the database",
+                        new Throwable("SQLHelper::getColumns -> Can't get the connection for the database"),SQLHelper.class);
+                return map;
+            }
+        }
+        ResultSet result = metaData.getColumns( null, database, table, columnNamePattern );
         while(result.next()){
             String columnName = result.getString(4);
             Integer columnType = result.getInt(5);
@@ -396,6 +468,12 @@ public class SQLHelper {
         return map;
     }
 
+    /**
+     * Method to get the List of all Tables on a Specific connection.
+     * @param connection the SQL Connection.
+     * @return the List of Name of the Tables.
+     * @throws SQLException throw if any error is occurred.
+     */
     public static List<String> getTablesFromConnection(Connection connection) throws SQLException {
         List<String> tableNames = new ArrayList<>();
         DatabaseMetaData md = connection.getMetaData();
@@ -406,31 +484,40 @@ public class SQLHelper {
         return tableNames;
     }
 
-
-
-    public static void openConnection(String url,String user,String pass) throws SQLException, ClassNotFoundException{
-        //Class.forName("org.h2.Driver"); //Loading driver connection
-        conn = DriverManager.getConnection(url, user, pass);
-    }
-
+    /**
+     * Method to close the actual connectiom.
+     * @throws SQLException throw if any error is occurred.
+     */
     public static void closeConnection() throws SQLException{ conn.close();}
 
-    public static Connection setConnection(String classDriverName,String dialectDB,
+    public static Connection setNewConnection(String classDriverName,String dialectDB,
                                            String host,String port,String database,String user,String pass) throws ClassNotFoundException, SQLException {
         //"org.hsqldb.jdbcDriver","jdbc:hsqldb:data/tutorial"
         Class.forName(classDriverName); //load driver//"com.sql.jdbc.Driver"
-        String url = ("" + dialectDB + "://" + host + ":" + port + "/" + database); //"jdbc:sql://localhost:3306/jdbctest"
+        String url = (dialectDB  + host + ":" + port + "/" + database); //"jdbc:sql://localhost:3306/jdbctest"
         conn = DriverManager.getConnection(url, user, pass);
         System.out.println("Got Connection.");
         return conn;
     }
 
-    public static Connection getConnection(){
-        return conn;
+    public static void setConnection(Connection connection){
+        SQLHelper.conn = connection;
     }
 
-    public static void executeSQLCommand(String sql) throws Exception {
-        stmt.executeUpdate(sql);
+    public static ResultSet executeSQL(String sql) throws Exception {
+        // create the java statement
+        stmt = conn.createStatement();
+        // execute the query, and get a java resultset
+        return stmt.executeQuery(query);
+        //stmt.executeUpdate(sql);
+    }
+
+    public static ResultSet executeSQL(String sql,Connection conn) throws Exception {
+        // create the java statement
+        stmt = conn.createStatement();
+        // execute the query, and get a java resultset
+        return stmt.executeQuery(query);
+        //stmt.executeUpdate(sql);
     }
 
     public static void checkData(String sql) throws Exception {
@@ -452,6 +539,24 @@ public class SQLHelper {
             System.out.println("");
         }
     }
+
+    /**
+     * Method to get the type of the Database used for the current connection
+     * "MySQL","PostgreSQL","H2","Oracle","HSQL Database Engine".
+     * @return the Name type of the database.
+     */
+    public static String getNameTypeDatabase(){
+        DatabaseMetaData m;
+        try {
+            m = conn.getMetaData();
+            return m.getDatabaseProductName();
+        } catch (SQLException e) {
+            SystemLog.exception(e);
+            return null;
+        }
+    }
+
+
 
 
 }

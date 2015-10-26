@@ -100,6 +100,7 @@
         <!--<jsonld-java-jena.version>0.4.1</jsonld-java-jena.version>-->
         <!-- CumulusRDF -->
         <edu.kit.aifb.cumulusrdf.version>1.0.1</edu.kit.aifb.cumulusrdf.version>
+        <org.semanticweb.yars.nxparser-api.version>2.2</org.semanticweb.yars.nxparser-api.version>
         <!-- XML -->
         <org.jdom.jdom2.version>2.0.6</org.jdom.jdom2.version>
         <!-- HTML -->
@@ -108,9 +109,14 @@
         <com.fasterxml.jackson.core.version>2.5.3</com.fasterxml.jackson.core.version>
         <org-json.version>20140107</org-json.version>
         <com.google.code.gson.version>2.3.1</com.google.code.gson.version>
+        <!-- CSV -->
+        <com.opencsv.opencsv.version>3.5</com.opencsv.opencsv.version>
+        <!-- GTFS -->
+        <org.onebusaway.version>1.3.3</org.onebusaway.version>
         <!-- SPRING FRAMEWORK -->
         <io.spring.platform-version>1.1.2.RELEASE</io.spring.platform-version>
         <org.springframework.version>4.1.6.RELEASE</org.springframework.version>
+        <commons-fileupload.commons-fileupload.version>1.3.1</commons-fileupload.commons-fileupload.version>
         <!-- Logging -->
         <logback.version>1.1.3</logback.version>
         <org.slf4j.version>1.7.12</org.slf4j.version>
@@ -172,6 +178,13 @@
             <artifactId>spring-beans</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>${commons-fileupload.commons-fileupload.version}</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Added 2015-09-25 -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -298,6 +311,7 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${com.google.code.gson.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- =============== -->
@@ -307,6 +321,7 @@
             <groupId>org.jdom</groupId>
             <artifactId>jdom2</artifactId>
             <version>${org.jdom.jdom2.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- =============== -->
@@ -316,6 +331,7 @@
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>${org.jsoup.jsoup.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- =============== -->
@@ -340,12 +356,14 @@
                     <artifactId>jcl-over-slf4j</artifactId>
                 </exclusion>
             </exclusions>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-querybuilder</artifactId>
             <type>jar</type>
             <version>${org.apache.jena.jena-querybuilder.version}</version>
+            <optional>true</optional>
         </dependency>
 
 
@@ -424,12 +442,14 @@
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virt_jena2</artifactId>
             <version>7.1.0</version>
+            <optional>true</optional>
         </dependency>
         <!-- The Jena Provider for Jena 2.10 requires the Virtuoso JDBC 4 Driver. -->
         <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjdbc4-1</artifactId>
             <version>7.1.0</version>
+            <optional>true</optional>
         </dependency>
         <!--  The Jena Provider for Jena 2.6 requires the Virtuoso JDBC 3 Driver. -->
       <!--  <dependency>
@@ -446,6 +466,7 @@
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjena2</artifactId>
             <version>develop7-2015-06-25</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- =============== -->
@@ -462,11 +483,13 @@
                     <artifactId>sesame-bom</artifactId>
                 </exclusion>
             </exclusions>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.semanticweb.yars</groupId>
             <artifactId>nxparser-api</artifactId>
-            <version>2.2</version>
+            <version>${org.semanticweb.yars.nxparser-api.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- =============== -->
@@ -552,6 +575,36 @@
             <artifactId>platform_frameworks_base</artifactId>
             <version>android-5.1.1_r6</version>
         </dependency>-->
+
+        <!-- CSV -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>${com.opencsv.opencsv.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <!-- Core GTFS Library -->
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-gtfs</artifactId>
+            <version>${org.onebusaway.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <!-- Optional Hibernate GTFS Database Persistence -->
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-gtfs-hibernate</artifactId>
+            <version>${org.onebusaway.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <!-- Optional GTFS Transformation Library -->
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-gtfs-transformer</artifactId>
+            <version>${org.onebusaway.version}</version>
+            <optional>true</optional>
+        </dependency>
+
     </dependencies>
 
     <build>

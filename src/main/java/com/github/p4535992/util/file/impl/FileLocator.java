@@ -1,4 +1,4 @@
-package com.github.p4535992.util.file;
+package com.github.p4535992.util.file.impl;
 
 /*
  * JBoss, Home of Professional Open Source

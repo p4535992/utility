@@ -1,6 +1,6 @@
 package com.github.p4535992.util.log;
 
-import com.github.p4535992.util.file.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtil;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -250,7 +250,7 @@ public class SystemLog<T> {
     }
 
     public static void warning(String logEntry){warning(logEntry,null,null);}
-    public static void warning(Throwable th){warning(th.getMessage() + "," + th.getLocalizedMessage(), null, null);}
+    public static void warning(Throwable th){warning(th.getMessage() + "," + th.getLocalizedMessage(), th, null);}
     public static void warning(String logEntry,Throwable th,Class<?> thisClass){
         level = Level.WARN;
         isERROR=true;

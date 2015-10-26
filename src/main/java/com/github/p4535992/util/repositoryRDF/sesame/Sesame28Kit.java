@@ -1,6 +1,6 @@
 package com.github.p4535992.util.repositoryRDF.sesame;
 
-import com.github.p4535992.util.file.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator;
@@ -53,11 +53,7 @@ import java.util.zip.GZIPInputStream;
 @SuppressWarnings("unused")
 public class Sesame28Kit {
 
-    public static org.apache.log4j.Logger logger;
-
-    protected Sesame28Kit() {
-        logger = org.apache.log4j.Logger.getLogger(this.getClass().getName());
-    }
+    protected Sesame28Kit() {}
 
     private static Sesame28Kit instance = null;
 

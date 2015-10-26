@@ -27,9 +27,9 @@ import java.util.*;
  */
 @SuppressWarnings("unused")
 public class StringKit<T> {
-    private Class<T> cl;
-    private String clName;
-    private static final Logger logger = LoggerFactory.getLogger(StringKit.class);
+    //private Class<T> cl;
+    //private String clName;
+    //private static final Logger logger = LoggerFactory.getLogger(StringKit.class);
 
     /**
      * A regular expression that matches several kinds of whitespace characters, including and newlines.
@@ -109,11 +109,11 @@ public class StringKit<T> {
      */
     public static String cleanStringHTML(String stringHtml){
         return stringHtml.replaceAll("\\r\\n|\\r|\\n"," ").trim();
-                //.replace("\\n\\r", "").replace("\\n","").replace("\\r","").trim())
+        //.replace("\\n\\r", "").replace("\\n","").replace("\\r","").trim())
     }
 
     /**
-     * Method to simplify the content of a string for a better vison of the content.
+     * Method to simplify the content of a string for a better vision of the content.
      * @param stringText string of the text.
      * @return string of text simplify.
      */
@@ -146,7 +146,7 @@ public class StringKit<T> {
      * @param encoding charset for the encoding.
      * @return string.
      */
-    public static String convertInputStreamToStringNoEncoding(InputStream is, Charset encoding) {
+    public static String convertInputStreamToStringWithEncoding(InputStream is, Charset encoding) {
         BufferedReader br = new BufferedReader(new InputStreamReader(is, encoding));
         StringBuilder sb = new StringBuilder(1024);
         try {
@@ -156,7 +156,7 @@ public class StringKit<T> {
                 line = br.readLine();
             }
         } catch (IOException io) {
-            System.out.println("Failed to read from Stream");
+            SystemLog.warning("Failed to read from Stream");
             SystemLog.exception(io);
         } finally {
             try {
@@ -173,10 +173,8 @@ public class StringKit<T> {
      * Returns a String with the content of the InputStream.
      * @param is with the InputStream.
      * @return string with the content of the InputStream.
-     * @throws IOException throw any error is occurred.
      */
-    public static String convertInputStreamToString(InputStream is)
-            throws IOException {
+    public static String convertInputStreamToString(InputStream is){
         if (is != null) {
             StringBuilder sb = new StringBuilder();
             String line;
@@ -185,8 +183,16 @@ public class StringKit<T> {
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append("\n");
                 }
+            } catch (IOException io) {
+                SystemLog.warning("Failed to read from Stream");
+                SystemLog.exception(io);
             } finally {
-                is.close();
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    SystemLog.warning("Failed to read from Stream");
+                    SystemLog.exception(e);
+                }
             }
             return sb.toString();
         } else {
@@ -208,34 +214,29 @@ public class StringKit<T> {
         }
         return is;
     }
-    
-     /**
-        * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
-        * escaped sequence for characters outside of ASCII.
-        * It is equivalent to: native2ascii -encoding utf-8
-        * @param UTF8 string encoding utf8
-        * @return ASCII string encoding ascii.
-        * @throws UnsupportedEncodingException throw if any error is occurrred.  
-        * @throws IOException throw if any error is occurrred.
-        */
-     public static List<String> convertUTF8ToUnicodeEscape(File UTF8) throws IOException{
-         List<String> list = new ArrayList<>();
-         if (UTF8==null) {
-             System.out.println("Usage: java UTF8ToAscii <filename>");
-             return null;
-         }
-        try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(UTF8),"UTF-8" ))){
-            String line = r.readLine();
-            while (line != null) {
-                //System.out.println(unicodeEscape(line));
-                line = r.readLine();
-                list.add(line);
-            }
-        }
-         return list;
-     }
+
+    /**
+     * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
+     * escaped sequence for characters outside of ASCII.
+     * It is equivalent to: native2ascii -encoding utf-8
+     * @param UTF8 string encoding utf8
+     * @return ASCII string encoding ascii.
+     * @throws UnsupportedEncodingException throw if any error is occurred.
+     * @throws IOException throw if any error is occurred.
+     */
+    public static String convertStringUTF8ToStringASCII(String UTF8) throws IOException{
+        if (UTF8==null) return null;
+        Reader reader = new StringReader(convertByteArrayToHexString(UTF8.getBytes("UTF-8")));
+        return unicodeEscape(reader.toString());
+
+    }
 
     private static final char[] hexChar = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+    /**
+     * Method for convert a string UTF-8 to HEX
+     * @param s string of text you want to convert to HEX
+     * @return the text in HEX encoding
+     */
     private static String unicodeEscape(String s) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
@@ -260,25 +261,13 @@ public class StringKit<T> {
      * @param ASCII string encoding ascii.
      * @return UTF8 string encoding utf8.
      * @throws IOException thorw if any error is occurred.
-      */
-    public static List<String> convertUnicodeEscapeToUTF8(File ASCII) throws IOException {
-        List<String> list = new ArrayList<>();
-          if (ASCII == null) {
-              //System.out.println("Usage: java UnicodeEscape2UTF8 <filename>");
-              return null;
-          }
-        try (BufferedReader r = new BufferedReader(new FileReader(ASCII))) {
-            String line = r.readLine();
-            while (line != null) {
-                line = convertUnicodeEscapeToASCII(line);
-                byte[] bytes = line.getBytes("UTF-8");
-                System.out.write(bytes, 0, bytes.length);
-                System.out.println();
-                line = r.readLine();
-                list.add(line);
-            }
-        }
-        return list;
+     */
+    public static String convertStringASCIIToStringUTF8(String ASCII) throws IOException {
+        if (ASCII == null) return null;
+        Reader reader = new StringReader(convertByteArrayToHexString(ASCII.getBytes("US-ASCII")));
+        String line = convertUnicodeEscapeToASCII(reader.toString());
+        byte[] bytes = line.getBytes("UTF-8");
+        return convertByteArrayToHexString(bytes);
     }
 
     enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
@@ -299,43 +288,43 @@ public class StringKit<T> {
                     state = ParseState.UNICODE_ESCAPE;
                     unicode = 0;
                 }
-               else { // we don't care about other escapes
-                   out[j++] = '\\';
-                   out[j++] = c;
-                   state = ParseState.NORMAL;
-               }
-           }
-           else if (state == ParseState.UNICODE_ESCAPE) {
-               if ((c >= '0') && (c <= '9')) {
-                   unicode = (unicode << 4) + c - '0';
-               }
-               else if ((c >= 'a') && (c <= 'f')) {
-                   unicode = (unicode << 4) + 10 + c - 'a';
-               }
-               else if ((c >= 'A') && (c <= 'F')) {
-                   unicode = (unicode << 4) + 10 + c - 'A';
-               }
-               else {
-                   throw new IllegalArgumentException("Malformed unicode escape");
-               }
-               k++;
-               if (k == 4) {
-                   out[j++] = (char) unicode;
-                   k = 0;
-                   state = ParseState.NORMAL;
-               }
-           }
-           else if (c == '\\') {
-               state = ParseState.ESCAPE;
-           }
-           else {
-               out[j++] = c;
-           }
-       }//for
-       if (state == ParseState.ESCAPE) {
-           out[j++] = c;
-       }
-       return new String(out, 0, j);
+                else { // we don't care about other escapes
+                    out[j++] = '\\';
+                    out[j++] = c;
+                    state = ParseState.NORMAL;
+                }
+            }
+            else if (state == ParseState.UNICODE_ESCAPE) {
+                if ((c >= '0') && (c <= '9')) {
+                    unicode = (unicode << 4) + c - '0';
+                }
+                else if ((c >= 'a') && (c <= 'f')) {
+                    unicode = (unicode << 4) + 10 + c - 'a';
+                }
+                else if ((c >= 'A') && (c <= 'F')) {
+                    unicode = (unicode << 4) + 10 + c - 'A';
+                }
+                else {
+                    throw new IllegalArgumentException("Malformed unicode escape");
+                }
+                k++;
+                if (k == 4) {
+                    out[j++] = (char) unicode;
+                    k = 0;
+                    state = ParseState.NORMAL;
+                }
+            }
+            else if (c == '\\') {
+                state = ParseState.ESCAPE;
+            }
+            else {
+                out[j++] = c;
+            }
+        }//for
+        if (state == ParseState.ESCAPE) {
+            out[j++] = c;
+        }
+        return new String(out, 0, j);
     }
 
     /**
@@ -352,26 +341,26 @@ public class StringKit<T> {
         }
         return out.toString();
     }
-       
+
     /**
      *Creating a random UUID (Universally unique identifier).
      * @return string asuuid.
      */
     public static String randomUUID(){ return  java.util.UUID.randomUUID().toString(); }
-   /**
-    * Metodo che converte una stringa a un'oggetto UUID.
-    * @param uuid string uuid.
-    * @return java.util.UUID.
-    */
+    /**
+     * Metodo che converte una stringa a un'oggetto UUID.
+     * @param uuid string uuid.
+     * @return java.util.UUID.
+     */
     public static java.util.UUID convertStringToUUID(String uuid){return java.util.UUID.fromString(uuid); }
 
     /**
-     * Methohs remove the symbol if exists in the first and last caracther of the string
+     * Methohs remove the symbol if exists in the first and last character of the string
      * @param stringToUpdate string of input.
      * @param symbol symbol to check.
      * @return the string update.
      */
-    private static String removeFirstAndLast(String stringToUpdate, String symbol) {
+    public static String removeFirstAndLast(String stringToUpdate, String symbol) {
         if (!StringIs.isNullOrEmpty(stringToUpdate)) {
             stringToUpdate = stringToUpdate.replaceAll("(\\" + symbol + ")\\1+", symbol);
             if (stringToUpdate.substring(0, 1).contains(symbol)) {
@@ -385,26 +374,26 @@ public class StringKit<T> {
     }
 
     /**
-    * Setta a null se verifica che la stringa non è
-    * nulla, non è vuota e non è composta da soli spaceToken (white space).
-    * @param s stringa di input.
-    * @return  il valore della stringa se null o come è arrivata.
-    */
+     * Setta a null se verifica che la stringa non è
+     * nulla, non è vuota e non è composta da soli spaceToken (white space).
+     * @param s stringa di input.
+     * @return  il valore della stringa se null o come è arrivata.
+     */
     public static String setNullForEmptyString(String s){
         if(StringIs.isNullOrEmpty(s)){return null;}
         else{return s;}
     } //setNullforEmptyString
 
     /**
-    * Metodo che assegna attraverso un meccanismo di "mapping" ad ogni valore
-    * distinto del parametro in questione un numero (la frequenza) prendeno il
-    * valore con la massima frequenza abbiamo ricavato il valore più diffuso
-    * per tale parametro.
-    * @param al lista dei valori per il determianto parametro del GeoDocument.
-    * @param <T> generic variable.
-    * @return  il valore più diffuso per tale parametro.
-    */
-    public static <T> T getMoreCommonParameter(List<T> al){
+     * Metodo che assegna attraverso un meccanismo di "mapping" ad ogni valore
+     * distinto del parametro in questione un numero (la frequenza) prendeno il
+     * valore con la massima frequenza abbiamo ricavato il valore più diffuso
+     * per tale parametro.
+     * @param al lista dei valori per il determianto parametro del GeoDocument.
+     * @param <T> generic variable.
+     * @return  il valore più diffuso per tale parametro.
+     */
+    /*public static <T> T getMoreCommonParameter(List<T> al){
        Map<T,Integer> map = new HashMap<>();
         for (T anAl : al) {
             Integer count = map.get(anAl);
@@ -420,7 +409,7 @@ public class StringKit<T> {
                keyParameter = key;
            }
        }return keyParameter;
-    }//getMoreCommonParameter
+    }//getMoreCommonParameter*/
 
     /**
      * Metodo che "taglia" la descrizione dell'edificio al minimo indispensabile.
@@ -433,25 +422,26 @@ public class StringKit<T> {
         while (st.hasMoreTokens()) {
             content = st.nextToken();
             if(!StringIs.isNullOrEmpty(content)){
-                 break;
+                break;
             }
         }
         return content;
     }
 
     /**
-     * Method for convert a cstrin to a OutputStream and print to a file.
+     * Method for convert a strinG to a OutputStream and print to a file.
      * @param content string to print on the file.
      * @param outputPathFileName file where i put the stream.
      */
-    public void copyStringToFile(String content, File outputPathFileName) {
+    public static File copyStringToFile(String content, File outputPathFileName) {
         try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(outputPathFileName, true)))) {
             out.print(content);
             out.flush();
             //out.close();
         }catch (IOException e) {
-            //exception handling left as an exercise for the reader
+            SystemLog.exception(e,StringKit.class);
         }
+        return outputPathFileName;
     }
 
     /**
@@ -459,7 +449,7 @@ public class StringKit<T> {
      * @return string print to the console.
      * @throws IOException throw error if any occurred.
      */
-    public String readConsole() throws IOException {
+    public static String readConsole() throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         //System.out.print("Enter String");
         String input;
@@ -498,14 +488,12 @@ public class StringKit<T> {
 
     /**
      * Method to  count the elements characters of a string.
-     * @param text the string phrase to analyze.
      * @return string of int where the first element is the number of words,the second is the number of characters
      * and the third is the number of lines.
      * @throws IOException throw if any error is occurred.
      */
     public static int[] countElementOfAString(String text) throws IOException {
         int i=0,j=0,k=0;
-
         BufferedReader br = new BufferedReader(new InputStreamReader(convertStringToInputStream(text)));
         String s;
         s = br.readLine();//Enter File Name:
@@ -534,13 +522,13 @@ public class StringKit<T> {
      */
     public static <T> void convertObjectToSerializable(T object,String nameTempSer){
         try{
-            try (FileOutputStream fileOut = new FileOutputStream("/tmp/"+nameTempSer+".ser"); 
-                    ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            try (FileOutputStream fileOut = new FileOutputStream("/tmp/"+nameTempSer+".ser");
+                 ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
                 out.writeObject(object);
             }
             SystemLog.console("Serialized data is saved in /tmp/" + nameTempSer + ".ser");
         }catch(IOException i){
-           SystemLog.exception(i);
+            SystemLog.exception(i);
         }
     }
 
@@ -554,8 +542,8 @@ public class StringKit<T> {
     @SuppressWarnings("unchecked")
     public static <T> T convertSerializableToObject(T object,String nameTempSer){
         try{
-            try (FileInputStream fileIn = new FileInputStream("/tmp/"+nameTempSer+".ser"); 
-                    ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            try (FileInputStream fileIn = new FileInputStream("/tmp/"+nameTempSer+".ser");
+                 ObjectInputStream in = new ObjectInputStream(fileIn)) {
                 object = (T) in.readObject();
             }
         }catch(IOException i)
@@ -627,27 +615,6 @@ public class StringKit<T> {
     }
 
     /**
-     * Method to read a properties file.
-     * @param file file.
-     * @param thisClass the reference class.
-     * @return map of properties.
-     */
-    public static Map<String,String> readPropertiesFile(File file,Class<?> thisClass){
-        Map<String,String> map = new HashMap<>();
-        Properties prop = new Properties();
-        InputStream inputStream = thisClass.getClassLoader().getResourceAsStream(file.getAbsolutePath());
-        try {
-            prop.load(inputStream);
-            for(Map.Entry<Object, Object> e : prop.entrySet()) {
-                map.put(e.getKey().toString(),e.getValue().toString());
-            }
-        } catch (IOException e) {
-            SystemLog.exception(e);
-        }
-        return map;
-    }
-
-    /**
      * Method to convert Strng to char.
      * @param string string.
      * @return Array of char.
@@ -662,13 +629,13 @@ public class StringKit<T> {
      * @return he string of the url with protocol.
      */
     public static String convertStringURLToStringURLWithProtocol(String url) {
-       if(StringIs.isURL(url)) {
-           if (!(StringIs.isURLWithProtocol(url))) {
-               url = "http://" + url;
-               if (StringIs.isURL(url)) return url;
-           }
-           return url;
-       }
+        if(StringIs.isURL(url)) {
+            if (!(StringIs.isURLWithProtocol(url))) {
+                url = "http://" + url;
+                if (StringIs.isURL(url)) return url;
+            }
+            return url;
+        }
         return null;
     }
 

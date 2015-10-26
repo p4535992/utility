@@ -1,6 +1,6 @@
 package com.github.p4535992.util.bean;
 
-import com.github.p4535992.util.file.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;

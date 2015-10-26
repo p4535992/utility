@@ -1,6 +1,6 @@
-package com.github.p4535992.util.string.pattern;
+package com.github.p4535992.util.regex.pattern;
 
-import com.github.p4535992.util.collection.CollectionKit;
+import sun.misc.LRUCache;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -257,6 +257,207 @@ public class Patterns {
             = Pattern.compile("(values)(\\s*[(])((.*?)|\\s*)(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
     public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3 =
             Pattern.compile("(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
+
+
+
+    //---------------------------------------
+    // Utility for StringUtil
+    //---------------------------------------
+    public static final Pattern IS_INT = Pattern.compile("(\\d)+");
+    public static final Pattern IS_NUMERIC = Pattern.compile("(\\-|\\+)?\\d+(\\.\\d+)?");
+
+    /**
+     * Method copied from the default Scanner code og java.
+     * http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/6-b14/sun/misc/LRUCache.java#LRUCache
+     */
+
+    // Size of internal character buffer
+    private static final int BUFFER_SIZE = 1024; // change to 1024;
+    // Boolean is true if source is done
+    private static boolean sourceClosed = false;
+    // Boolean indicating more input is required
+    private static boolean needInput = false;
+    // Boolean indicating if a delim has been skipped this operation
+    private static boolean skipped = false;
+    // A store of a position that the scanner may fall back to
+    private static int savedScannerPosition = -1;
+    // A cache of the last primitive type scanned
+    private static Object typeCache = null;
+    // Boolean indicating if a match result is available
+    private static boolean matchValid = false;
+    // Boolean indicating if this scanner has been closed
+    private static boolean closed = false;
+    // The current radix used by this scanner
+    private static int radix = 10;
+    // The default radix for this scanner
+    private static int defaultRadix = 10;
+
+    // A pattern for java whitespace
+    private static Pattern WHITESPACE_PATTERN = Pattern.compile("\\p{javaWhitespace}+");
+    // A pattern for any token
+    private static Pattern FIND_ANY_PATTERN = Pattern.compile("(?s).*");
+    // A pattern for non-ASCII digits
+    private static Pattern NON_ASCII_DIGIT = Pattern.compile("[\\p{javaDigit}&&[^0-9]]");
+
+    private static String Digits     = "(\\p{Digit}+)";
+    private static String HexDigits  = "(\\p{XDigit}+)";
+
+    private static String digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+    private static String non0Digit = "[\\p{javaDigit}&&[^0]]";
+    private static int SIMPLE_GROUP_INDEX = 5;
+
+    private static String groupSeparator = "\\,";
+    private static String decimalSeparator = "\\.";
+    private static String nanString = "NaN";
+    private static String infinityString = "Infinity";
+    private static String positivePrefix = "";
+    private static String negativePrefix = "\\-";
+    private static String positiveSuffix = "";
+    private static String negativeSuffix = "";
+
+
+
+    // an exponent is 'e' or 'E' followed by an optionally
+    // signed decimal integer.
+    private static final String Exp        = "[eE][+-]?"+Digits;
+    private static final String fpRegex    =
+            ("[\\x00-\\x20]*"+  // Optional leading "whitespace"
+                    "[+-]?(" + // Optional sign character
+                    "NaN|" +           // "NaN" string
+                    "Infinity|" +      // "Infinity" string
+
+                    // A decimal floating-point string representing a finite positive
+                    // number without a leading sign has at most five basic pieces:
+                    // Digits . Digits ExponentPart FloatTypeSuffix
+                    //
+                    // Since this method allows integer-only strings as input
+                    // in addition to strings of floating-point literals, the
+                    // two sub-patterns below are simplifications of the grammar
+                    // productions from the Java Language Specification, 2nd
+                    // edition, section 3.10.2.
+
+                    // Digits ._opt Digits_opt ExponentPart_opt FloatTypeSuffix_opt
+                    "((("+Digits+"(\\.)?("+Digits+"?)("+Exp+")?)|"+
+
+                    // . Digits ExponentPart_opt FloatTypeSuffix_opt
+                    "(\\.("+Digits+")("+Exp+")?)|"+
+
+                    // Hexadecimal strings
+                    "((" +
+                    // 0[xX] HexDigits ._opt BinaryExponent FloatTypeSuffix_opt
+                    "(0[xX]" + HexDigits + "(\\.)?)|" +
+
+                    // 0[xX] HexDigits_opt . HexDigits BinaryExponent FloatTypeSuffix_opt
+                    "(0[xX]" + HexDigits + "?(\\.)" + HexDigits + ")" +
+
+                    ")[pP][+-]?" + Digits + "))" +
+                    "[fFdD]?))" +
+                    "[\\x00-\\x20]*");// Optional trailing "whitespace"
+
+    public static final Pattern IS_DOUBLE = Pattern.compile(fpRegex);
+
+
+    private static Pattern floatPattern;
+    private static Pattern decimalPattern;
+
+    private static void  buildFloatAndDecimalPattern() {
+        // \\p{javaDigit} may not be perfect, see above
+        String digit = "([0-9]|(\\p{javaDigit}))";
+        String exponent = "([eE][+-]?"+digit+"+)?";
+        String groupedNumeral = "("+non0Digit+digit+"?"+digit+"?("+groupSeparator+digit+digit+digit+")+)";
+        // Once again digit++ is used for performance, as above
+        String numeral = "(("+digit+"++)|"+groupedNumeral+")";
+        String decimalNumeral = "("+numeral+"|"+numeral +decimalSeparator + digit + "*+|"+ decimalSeparator +digit + "++)";
+        String nonNumber = "(NaN|"+nanString+"|Infinity|"+infinityString+")";
+        String positiveFloat = "(" + positivePrefix + decimalNumeral +positiveSuffix + exponent + ")";
+        String negativeFloat = "(" + negativePrefix + decimalNumeral +negativeSuffix + exponent + ")";
+        String decimal = "(([-+]?" + decimalNumeral + exponent + ")|"+positiveFloat + "|" + negativeFloat + ")";
+        String hexFloat = "[-+]?0[xX][0-9a-fA-F]*\\.[0-9a-fA-F]+([pP][-+]?[0-9]+)?";
+        String positiveNonNumber = "(" + positivePrefix + nonNumber +positiveSuffix + ")";
+        String negativeNonNumber = "(" + negativePrefix + nonNumber + negativeSuffix + ")";
+        String signedNonNumber = "(([-+]?"+nonNumber+")|" + positiveNonNumber + "|" + negativeNonNumber + ")";
+        floatPattern = Pattern.compile(decimal + "|" + hexFloat + "|" + signedNonNumber);
+        decimalPattern = Pattern.compile(decimal);
+    }
+
+    private static Pattern integerPattern;
+
+    private static String  buildIntegerPatternString() {
+        String radixDigits = digits.substring(0, radix);
+        // \\p{javaDigit} is not guaranteed to be appropriate
+        // here but what can we do? The final authority will be
+        // whatever parse method is invoked, so ultimately the
+        // Scanner will do the right thing
+        String digit = "((?i)["+radixDigits+"]|\\p{javaDigit})";
+        String groupedNumeral = "("+non0Digit+digit+"?"+digit+"?("+groupSeparator+digit+digit+digit+")+)";
+        // digit++ is the possessive form which is necessary for reducing
+        // backtracking that would otherwise cause unacceptable performance
+        String numeral = "(("+ digit+"++)|"+groupedNumeral+")";
+        String javaStyleInteger = "([-+]?(" + numeral + "))";
+        String negativeInteger = negativePrefix + numeral + negativeSuffix;
+        String positiveInteger = positivePrefix + numeral + positiveSuffix;
+        return "("+ javaStyleInteger + ")|(" + positiveInteger + ")|(" + negativeInteger + ")";
+    }
+
+    // A cache of the last few recently used Patterns
+    private static LRUCache<String,Pattern> patternCache =new LRUCache<String,Pattern>(7) {
+        protected Pattern create(String s) {
+            return Pattern.compile(s);
+        }
+
+        protected boolean  hasName(Pattern p, String s) {
+            return p.pattern().equals(s);
+        }
+    };
+
+    public static final Pattern IS_INTEGER = isInteger();
+
+    public static Pattern isInteger() {
+        if (integerPattern == null) {integerPattern = patternCache.forName(buildIntegerPatternString());}
+        return integerPattern;
+    }
+
+    public static final Pattern IS_FLOAT = isFloat();
+
+    public static Pattern isFloat(){
+        if (floatPattern == null) {buildFloatAndDecimalPattern();}
+        return floatPattern;
+    }
+
+    public static final Pattern IS_DECIMAL = isDecimal();
+
+    public static Pattern isDecimal(){
+        if (decimalPattern == null) {buildFloatAndDecimalPattern();}
+        return decimalPattern;
+    }
+
+    private static volatile Pattern separatorPattern;
+    private static volatile Pattern linePattern;
+    private static final String LINE_SEPARATOR_PATTERN = "\r\n|[\n\r\u2028\u2029\u0085]";
+    private static final String LINE_PATTERN = ".*("+LINE_SEPARATOR_PATTERN+")|.+$";
+
+    public static Pattern IS_SEPARATOR() {
+        Pattern sp = separatorPattern;
+        if (sp == null) separatorPattern = sp = Pattern.compile(LINE_SEPARATOR_PATTERN);
+        return sp;
+    }
+    public static Pattern  IS_LINE() {
+        Pattern lp = linePattern;
+        if (lp == null) linePattern = lp = Pattern.compile(LINE_PATTERN);
+        return lp;
+    }
+
+
+
+    private static volatile Pattern boolPattern;
+    private static final String BOOLEAN_PATTERN = "true|false";
+    public static Pattern IS_BOOLEAN() {
+        Pattern bp = boolPattern;
+        if (bp == null) boolPattern = bp = Pattern.compile(BOOLEAN_PATTERN,Pattern.CASE_INSENSITIVE);
+        return bp;
+    }
+
+
 
     /**
      * Do not create this static utility class.

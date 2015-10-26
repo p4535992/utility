@@ -1,6 +1,6 @@
 package com.github.p4535992.util.string.impl;
 
-import com.github.p4535992.util.string.pattern.Patterns;
+import com.github.p4535992.util.regex.pattern.Patterns;
 
 /**
  * Created by 4535992 on 21/10/2015.
@@ -66,7 +66,7 @@ public class StringIs {
     }
 
     /**
-     * Method to check if a s tring is a url address web or not.
+     * Method to check if a string is a url address web or not.
      * @param url the string address web.
      * @return if tru is a url address web.
      */
@@ -75,7 +75,7 @@ public class StringIs {
     }
 
     /**
-     * Method to check if a s tring is a url address web or not.
+     * Method to check if a string is a url address web or not.
      * @param url the string address web.
      * @return if tru is a url address web.
      */
@@ -85,13 +85,51 @@ public class StringIs {
 
     /**
      * Method for check if a string rappresent a numeric value.
-     * @param str string rapresentative of a number.
-     * @return booleanvalue if the string rappresent a number or not.
+     * @param str string rappresentative of a number.
+     * @return boolean value if the string rappresent a number or not.
      */
     public static boolean isNumeric(String str) {
         //match a number with optional '-' and decimal.
         str = str.replace(",",".").replace(" ",".");
-        return str.matches("(\\-|\\+)?\\d+(\\.\\d+)?");
+        return Patterns.IS_NUMERIC.matcher(str).matches();
+    }
+
+    /**
+     * Method for check if a string rappresent a int value.
+     * @param str string rappresentative of a number.
+     * @return boolean value if the string rappresent a number or not.
+     */
+    public static boolean isInt(String str) {
+        return Patterns.IS_INT.matcher(str).matches();
+    }
+
+    /**
+     * Method for check if a string rappresent a Double value.
+     * @param str string rapresentative of a number.
+     * @return boolean value if the string rappresent a number or not.
+     */
+    public static boolean isDouble(String str) {
+        return Patterns.IS_DOUBLE.matcher(str).matches();
+    }
+
+    /**
+     * Method for check if a string rappresent a Float value.
+     * @param str string rapresentative of a number.
+     * @return boolean value if the string rappresent a number or not.
+     */
+    public static boolean isFloat(String str) {
+        return Patterns.IS_FLOAT.matcher(str).matches();
+    }
+
+    /**
+     * Method for check if a string rappresent a Float value.
+     * @param str string rapresentative of a number.
+     * @return boolean value if the string rappresent a number or not.
+     */
+    public static boolean isDecimal(String str) {
+       /* try {Float.parseFloat(str);return true;
+        } catch (NumberFormatException e) {return false;}*/
+        return Patterns.IS_DECIMAL.matcher(str).matches();
     }
 
     /**
