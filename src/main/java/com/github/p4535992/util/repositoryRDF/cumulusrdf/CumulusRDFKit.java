@@ -1,4 +1,5 @@
 package com.github.p4535992.util.repositoryRDF.cumulusrdf;
+import com.github.p4535992.util.log.SystemLog;
 import edu.kit.aifb.cumulus.store.CumulusStoreException;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -49,10 +50,14 @@ public class CumulusRDFKit{
      * @return the OpenRDF Repository.
      * @throws SailException throw if any error with the repository is occurred.
      */
-    public org.openrdf.repository.Repository connectToCassandraRepository(String hosts,String keyspace,boolean isQuadStore) throws SailException {
+    public org.openrdf.repository.Repository connectToCassandraRepository(String hosts,String keyspace,boolean isQuadStore)  {
         Store crdf = setNewCumulusStore(hosts,keyspace,isQuadStore);
         Sail sail = new CumulusRDFSail(crdf);
-        sail.initialize();
+        try {
+            sail.initialize();
+        } catch (SailException e) {
+            SystemLog.exception(e,CumulusRDFKit.class);
+        }
         return  new SailRepository(sail);
     }
 

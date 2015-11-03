@@ -24,6 +24,7 @@ import java.util.zip.ZipInputStream;
 /**
  * Created by 4535992 on 23/10/2015.
  */
+@SuppressWarnings( "deprecation" )
 public class OneBusKit {
 
     protected OneBusKit() {
@@ -108,7 +109,7 @@ public class OneBusKit {
         }
     }
 
-    // Other methods
+
     private static HibernateGtfsFactory createHibernateGtfsFactory(String resource) {
 
         Configuration config = new Configuration();

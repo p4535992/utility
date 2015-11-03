@@ -1,9 +1,11 @@
 package com.github.p4535992.util.repositoryRDF.sesame;
 
+import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator;
+import com.github.p4535992.util.string.StringUtil;
 import com.github.p4535992.util.string.impl.StringIs;
 import info.aduna.iteration.Iterations;
 
@@ -53,6 +55,8 @@ import java.util.zip.GZIPInputStream;
 @SuppressWarnings("unused")
 public class Sesame28Kit {
 
+    private static String nameClass;
+
     protected Sesame28Kit() {}
 
     private static Sesame28Kit instance = null;
@@ -60,14 +64,18 @@ public class Sesame28Kit {
     public static Sesame28Kit getInstance(){
         if(instance == null) {
             instance = new Sesame28Kit();
+            //nameClass = instance.getClass().getSimpleName()+"::";
             //help with very large repository....
             System.setProperty("entityExpansionLimit", "1000000");
+            VERIFY = true;
+            STOP_ON_ERROR = true;
+            PRESERVE_BNODES = true;
         }
         return instance;
     }
 
-    private String PATH_FOLDER_REPOSITORY, SESAMESERVER,TYPE_REPOSITORY,ID_REPOSITORY,USER_REPOSITORY,PASSWORD_REPOSITORY;
-    private boolean PARALLEL_LOAD,VERIFY,STOP_ON_ERROR,PRESERVE_BNODES,SHOWSTATS,UPDATES,PRINT_RESULT_QUERY;
+    private static boolean VERIFY,STOP_ON_ERROR,PRESERVE_BNODES;
+    private boolean SHOWSTATS,UPDATES,PRINT_RESULT_QUERY;
     //output parameter
     private String OUTPUTFILE,OUTPUTFORMAT,URL_SESAME,URL_REPOSITORIES,URL_REPOSITORY_ID;
     //other parameter
@@ -79,9 +87,7 @@ public class Sesame28Kit {
     // The repository manager
     protected static RepositoryManager mRepositoryManager;
     protected static RemoteRepositoryManager mRemoteRepositoryManager;
-    // From repositoryManager.getRepository(...) - the actual repository we will work with
-    public static Repository mRepository;
-    // From repositoryManager.getRepository(...) - the actual repository we will work with
+    protected static Repository mRepository;
     protected static RepositoryConnection mRepositoryConnection;
     protected static String  mRepositoryLocation;
     protected static String  mRepositoryName;
@@ -91,6 +97,7 @@ public class Sesame28Kit {
     private static final Pattern TOKEN_PATTERN = Pattern.compile("\\{%[\\p{Print}&&[^\\}]]+%\\}");
     private static final String URI_DEFAULT_SESAME_WORKBENCH =
             "http://localhost:8080/openrdf-workbench/repositories/NONE/repositories";
+    private static String[] types = new String[]{"http","inferencing","native","memory","owlim"};
 
     public void setOutput(String outputPathfile,String outputformat,boolean printResultQuery){
         this.OUTPUTFILE = outputPathfile;
@@ -106,29 +113,6 @@ public class Sesame28Kit {
         this.SHOWSTATS = showOnConsole;
     }
 
-    public void setParameterLocalRepository(
-            String TYPE_REPOSITORY,String PATH_FOLDER_STORAGE,String PATH_FOLDER_REPOSITORY,
-            String RULESET,String USER_REPOSITORY,String PASSWORD_REPOSITORY
-    ){
-        this.TYPE_REPOSITORY=TYPE_REPOSITORY;
-        //String PATH_FOLDER_STORAGE1 = PATH_FOLDER_STORAGE;
-        this.PATH_FOLDER_REPOSITORY=PATH_FOLDER_REPOSITORY;
-        //this.RULESET=RULESET;
-        this.USER_REPOSITORY= USER_REPOSITORY;
-        this.PASSWORD_REPOSITORY= PASSWORD_REPOSITORY;
-        this.ID_REPOSITORY = new File(PATH_FOLDER_REPOSITORY).getName();
-        // setURLRepository();
-    }
-
-    public void setParameterRemoteRepository(
-            String TYPE_REPOSITORY,String SESAMESERVER,String ID_REPOSITORY,String USER_REPOSITORY,String PASSWORD_REPOSITORY){
-        this.TYPE_REPOSITORY=TYPE_REPOSITORY;
-        this.SESAMESERVER=SESAMESERVER;
-        this.ID_REPOSITORY=ID_REPOSITORY;
-        this.USER_REPOSITORY= USER_REPOSITORY;
-        this.PASSWORD_REPOSITORY= PASSWORD_REPOSITORY;
-        setURLRepository();
-    }
 
     private void setRepositoryConnection() throws RepositoryException {
         if(mRepository!=null){
@@ -140,11 +124,9 @@ public class Sesame28Kit {
     }
 
     public void setRepository(RepositoryManager manager,String repositoryId) throws RepositoryException, RepositoryConfigException {
-        if( mRepositoryManager==null && manager!=null) {
-            Sesame28Kit.mRepositoryManager = manager;
-        }
+        if( mRepositoryManager==null && manager!=null)  mRepositoryManager = manager;
         if (mRepositoryManager != null) {
-            Sesame28Kit.mRepository = mRepositoryManager.getRepository(repositoryId);
+            mRepository = mRepositoryManager.getRepository(repositoryId);
             SystemLog.message("The Repository:"+mRepository.toString()+" is setted!");
         }else{
             SystemLog.warning("Attention, you try to set a Repository on a inexistent RepositoryManager!");
@@ -165,11 +147,9 @@ public class Sesame28Kit {
 
     /**
      * Method to set RepositoryManager.
-     * @param mRepositoryManager the Repository manager.
+     * @param repositoryManager the Repository manager.
      */
-    public void setmRepositoryManager(RepositoryManager mRepositoryManager) {
-        Sesame28Kit.mRepositoryManager = mRepositoryManager;
-    }
+    public void setRepositoryManager(RepositoryManager repositoryManager) {mRepositoryManager = repositoryManager;}
 
     /**
      * Method to get RemoteRepositoryManager.
@@ -181,11 +161,9 @@ public class Sesame28Kit {
 
     /**
      * Method to set RemoteRepositoryManager.
-     * @param mRemoteRepositoryManager the Remote Repository Manager.
+     * @param remoteRepositoryManager the Remote Repository Manager.
      */
-    public void setRemoteRepositoryManager(RemoteRepositoryManager mRemoteRepositoryManager) {
-        Sesame28Kit.mRemoteRepositoryManager = mRemoteRepositoryManager;
-    }
+    public void setRemoteRepositoryManager(RemoteRepositoryManager remoteRepositoryManager) {mRemoteRepositoryManager = remoteRepositoryManager;}
 
     /**
      * Method to get Repository.
@@ -197,10 +175,10 @@ public class Sesame28Kit {
 
      /**
      * Method to set Repository.
-     * @param mRepository the Repository.
+     * @param repository the Repository.
      */
-    public void setRepository(Repository mRepository) {
-        Sesame28Kit.mRepository = mRepository;
+    public void setRepository(Repository repository) {
+        mRepository = repository;
     }
 
     /**
@@ -213,11 +191,9 @@ public class Sesame28Kit {
 
     /**
      * Method to set RepositoryConnection.
-     * @param mRepositoryConnection the Repository Connection.
+     * @param repositoryConnection the Repository Connection.
      */
-    public void setRepositoryConnection(RepositoryConnection mRepositoryConnection) {
-        Sesame28Kit.mRepositoryConnection = mRepositoryConnection;
-    }
+    public void setRepositoryConnection(RepositoryConnection repositoryConnection) {mRepositoryConnection = repositoryConnection;}
 
     /**
      * Method to get RepositoryLocation.
@@ -277,10 +253,10 @@ public class Sesame28Kit {
 
      /**
      * Method to set RepositoryConnectionWrapper.  
-     * @param mRepositoryConnectionWrappper the Repository Connection Wrapper.
+     * @param repositoryConnectionWrappper the Repository Connection Wrapper.
      */
-    public void setRepositoryConnectionWrappper(RepositoryConnectionWrapper mRepositoryConnectionWrappper) {
-        Sesame28Kit.mRepositoryConnectionWrappper = mRepositoryConnectionWrappper;
+    public void setRepositoryConnectionWrappper(RepositoryConnectionWrapper repositoryConnectionWrappper) {
+        mRepositoryConnectionWrappper = repositoryConnectionWrappper;
     }
 
     /**
@@ -297,10 +273,10 @@ public class Sesame28Kit {
      * @return the RepositoryConnectionWrapper.
      */
 
-    public RepositoryConnectionWrapper createNewRepositoryConnectionWrappper(Repository mRepository) {
+    public RepositoryConnectionWrapper createRepositoryConnectionWrappper(Repository mRepository) {
         try {
-            Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
-            Sesame28Kit.mRepositoryConnectionWrappper.setDelegate(mRepository.getConnection());
+            mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository);
+            mRepositoryConnectionWrappper.setDelegate(mRepository.getConnection());
         } catch (RepositoryException e) {
             return null;
         }
@@ -314,8 +290,9 @@ public class Sesame28Kit {
      * @param mRepositoryConnection the RepositoryConnection OpenRDF to Wrapper.
      * @return the RepositoryConnectionWrapper.
      */
-    public RepositoryConnectionWrapper createNewRepositoryConnectionWrappper(Repository mRepository,RepositoryConnection mRepositoryConnection) {
-        Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
+    public RepositoryConnectionWrapper createRepositoryConnectionWrappper(
+            Repository mRepository,RepositoryConnection mRepositoryConnection) {
+        mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
         return mRepositoryConnectionWrappper;
     }
 
@@ -323,20 +300,54 @@ public class Sesame28Kit {
      * Method to get a new OpenRDF Model.
      * @return the OpenRDF Model.
      */
-    public Model createNewModel(){return new LinkedHashModel();}
+    public Model createModel(){return new LinkedHashModel();}
 
     /**
      * Method to get a new OpenRDF Graph.
      * @return the OpenRDF Graph.
      */
-    public Graph createNewGraph(){return new TreeModel();}
+    public Graph createGraph(){return new TreeModel();}
 
     /**
      * Method to get a new OpenRDF ValueFactory.
      * @return the OpenRDF ValueFactory.
      */
-    public ValueFactory createNewValueFactory() {
+    public ValueFactory createValueFactory() {
         return ValueFactoryImpl.getInstance();
+    }
+
+    /**
+     * Method to create a new RepositoryManager.
+     * @param baseDirectory the File base directory where are stored the repositories.
+     * @return the RepositoryManager created.
+     */
+    public RepositoryManager createRepositoryManagerLocal(File baseDirectory){
+        try {
+            // Create a manager for local repositories and initialise it
+            mRepositoryManager = new LocalRepositoryManager(baseDirectory);
+            mRepositoryManager.initialize();
+            return mRemoteRepositoryManager;
+        } catch (RepositoryException e) {
+            SystemLog.exception(e, Sesame28Kit.class);
+            return null;
+        }
+    }
+
+    /**
+     * Method to create a new RepositoryManager.
+     * @param urlRepositoryId the url to the remote repository..
+     * @return the RepositoryManager created.
+     */
+    public RemoteRepositoryManager createNewRepositoryManagerRemote(String urlRepositoryId){
+        try {
+            // Create a manager for local repositories and initialise it
+            mRemoteRepositoryManager = new org.openrdf.repository.manager.RemoteRepositoryManager(urlRepositoryId);
+            mRemoteRepositoryManager.initialize();
+            return mRemoteRepositoryManager;
+        } catch (RepositoryException e) {
+            SystemLog.exception(e, Sesame28Kit.class);
+            return null;
+        }
     }
 
     /**
@@ -345,7 +356,8 @@ public class Sesame28Kit {
      * @param mRepositoryConnection the RepositoryConnection OpenRDF to Wrapper.
      * @return the RepositoryConnectionWrapper.
      */
-    public RepositoryConnectionWrapper setNewRepositoryConnectionWrappper(Repository mRepository,RepositoryConnection mRepositoryConnection) {
+    public RepositoryConnectionWrapper setRepositoryConnectionWrappper(
+            Repository mRepository,RepositoryConnection mRepositoryConnection) {
         Sesame28Kit.mRepositoryConnectionWrappper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
         return mRepositoryConnectionWrappper;
     }
@@ -373,18 +385,6 @@ public class Sesame28Kit {
      */
     public String getURL_REPOSITORY_ID() {return URL_REPOSITORY_ID;}
 
-
-
-    /**
-     * Method to set the URL of the repository.
-     */
-    private void setURLRepository(){
-        this.URL_SESAME = "http://localhost:8080/openrdf-sesame/";
-        this.URL_REPOSITORIES = "http://localhost:8080/openrdf-sesame/repositories/";
-        //this.URL_REPOSITORY_ID = "http://www.openrdf.org/repository/"+ ID_REPOSITORY;
-        this.URL_REPOSITORY_ID = "http://localhost:8080/openrdf-sesame/repositories/"+ ID_REPOSITORY;
-    }
-
     /**
      * Method to set the URL of the repository.
      * @param ID_REPOSITORY the String name of the ID of the repository.
@@ -394,13 +394,6 @@ public class Sesame28Kit {
         this.URL_REPOSITORIES = "http://localhost:8080/openrdf-sesame/repositories/";
         //this.URL_REPOSITORY_ID = "http://www.openrdf.org/repository/"+ ID_REPOSITORY;
         this.URL_REPOSITORY_ID = "http://localhost:8080/openrdf-sesame/repositories/"+ ID_REPOSITORY;
-    }
-
-    /**
-     * Method for Close the currently opened repository. This works for managed and unmanaged repositories.
-     */
-    public void  shutDownRepository() {
-        closeRepository();
     }
 
     /**
@@ -420,10 +413,7 @@ public class Sesame28Kit {
                 // mRepository.shutDown();
                 // SystemLog.message("Repository shut down");
             } catch (RepositoryException e) {
-                SystemLog.exception(e);
-                // TODO: do not throw exception, might still need to disconnect
-                // manager!
-                // throw new SesameManagerException("Could not close Repository: "+e);
+                SystemLog.exception("Could not close Repository: ",e,Sesame28Kit.class);
             }
             mRepositoryConnection = null;
             mRepository = null;
@@ -436,35 +426,19 @@ public class Sesame28Kit {
      * Method for connect to a loacl Sesame Repository with a config turtle file.
      * @return repository manager sesame.
      */
-    public RepositoryManager connectToLocalWithConfigFile(){
-            /*
-            try {
-                // Create a manager for local repositories and initialise it
-                repositoryManager = new LocalRepositoryManager(new File("."));
-                repositoryManager.initialize();
-            } catch (RepositoryException e) {
-                log("");
-                System.exit(-3);
-            }
-            */
-        //repositoryId = parameters.get(PARAM_REPOSITORY);
-        if (ID_REPOSITORY == null) {
+    public Repository connectToLocalWithConfigFile(String repositoryId,String username,String password){
+        if (repositoryId == null) {
             SystemLog.warning("No repository ID specified. When using the '" + URL_REPOSITORY_ID
                     + "' parameter to specify a Sesame server, you must also use the 'null' " +
                     "parameter to specify a repository on that server.");
             System.exit(-5);
         }
         try {
-            // Create a manager for the remote Sesame server and initialise it
-            //org.openrdf.repository.manager.RemoteRepositoryManager remote =
-            //        new org.openrdf.repository.manager.RemoteRepositoryManager(URL_REPOSITORY);
             mRemoteRepositoryManager = new RemoteRepositoryManager(URL_REPOSITORY_ID);
-            if ( USER_REPOSITORY != null || PASSWORD_REPOSITORY != null) {
-                if (USER_REPOSITORY == null)
-                    USER_REPOSITORY = "";
-                if (PASSWORD_REPOSITORY == null)
-                    PASSWORD_REPOSITORY = "";
-                mRemoteRepositoryManager.setUsernameAndPassword(USER_REPOSITORY,PASSWORD_REPOSITORY);
+            if ( username != null || password != null) {
+                if (username == null) username = "";
+                if (password == null) password = "";
+                mRemoteRepositoryManager.setUsernameAndPassword(username,password);
             }
             mRepositoryManager = mRemoteRepositoryManager;
             mRepositoryManager.initialize();
@@ -473,15 +447,13 @@ public class Sesame28Kit {
                     + e.getMessage());
             System.exit(-5);
         }
-
         // Get the repository to use
         try {
-            mRepository = mRepositoryManager.getRepository(ID_REPOSITORY);
-
+            mRepository = mRepositoryManager.getRepository(repositoryId);
             if (mRepository == null) {
-                SystemLog.warning("Unknown repository '" + ID_REPOSITORY + "'");
+                SystemLog.warning("Unknown repository '" + repositoryId + "'");
                 String message = "Please make sure that the value of the 'repository' "
-                        + "parameter (current value '" + ID_REPOSITORY + "') ";
+                        + "parameter (current value '" + repositoryId + "') ";
                 if (URL_REPOSITORY_ID == null) {
                     message += "corresponds to the repository ID given in the configuration file identified by the '"
                             + "CONFIGFILENAME' parameter (current value '????????????')";
@@ -491,16 +463,15 @@ public class Sesame28Kit {
                 SystemLog.warning(message);
                 System.exit(-6);
             }
-
             // Open a connection to this repository
             mRepositoryConnection = mRepository.getConnection();
             //repositoryConnection.setAutoCommit(false);//deprecated
         } catch (OpenRDFException e) {
-            SystemLog.warning("Unable to establish a connection to the repository '" + ID_REPOSITORY + "': "
+            SystemLog.warning("Unable to establish a connection to the repository '" + repositoryId + "': "
                     + e.getMessage());
             System.exit(-7);
         }
-        return mRepositoryManager;
+        return mRepository;
     }
 
     /**
@@ -552,20 +523,21 @@ public class Sesame28Kit {
      * @param preloadFolder e.home.  "./preload".
      * @throws Exception thorw if any error is occurred.
      */
-    public void importIntoRepositoryDirectoryChunked(String preloadFolder) throws Exception {
-        SystemLog.message("===== Load Files (from the '" + preloadFolder + "' parameter) ==========");
-        SystemLog.message("Start the import of the Data on the repository...");
-        final AtomicLong statementsLoaded = new AtomicLong();
-        // Load all the files from the pre-load folder
-        //String preload = preloadFolder;
-        if (preloadFolder == null)
-            SystemLog.message("No pre-load directory/filename provided.");
+    public void importIntoRepositoryDirectoryChunked(String preloadFolder){
+        if(!new File(preloadFolder).exists()) SystemLog.error("The '" + preloadFolder + "' not exists, can't make the import!");
         else {
+            SystemLog.message("===== Load Files (from the '" + preloadFolder + "' parameter) ==========");
+            SystemLog.message("Start the import of the Data on the repository...");
+            final AtomicLong statementsLoaded = new AtomicLong();
+            // Load all the files from the pre-load folder
+            //String preload = preloadFolder;
+                //SystemLog.message("No pre-load directory/filename provided.");
+
             FileUtil.FileWalker.Handler handler = new FileUtil.FileWalker.Handler() {
 
                 @Override
                 public void file(File file) throws Exception {
-                    statementsLoaded.addAndGet( importIntoRepositoryFileChunked(file) );
+                    statementsLoaded.addAndGet(importIntoRepositoryFileChunked(file));
                 }
 
                 @Override
@@ -575,10 +547,16 @@ public class Sesame28Kit {
             };
             FileUtil.FileWalker walker = new FileUtil.FileWalker();
             walker.setHandler(handler);
-            walker.walk(new File(preloadFolder));
+            try {
+                walker.walk(new File(preloadFolder));
+            } catch (Exception e) {
+               SystemLog.exception("Can't go to the other file the methof FileWalker has failed!",e,Sesame28Kit.class);
+                return;
+            }
+
+            SystemLog.message("...end the import of the Data on the repository...");
+            SystemLog.warning("TOTAL: " + statementsLoaded.get() + " statements loaded");
         }
-        SystemLog.message("...end the import of the Data on the repository...");
-        SystemLog.warning("TOTAL: " + statementsLoaded.get() + " statements loaded");
     }
 
     /**
@@ -635,7 +613,7 @@ public class Sesame28Kit {
      * @return The number of implicit statements.
      * @throws Exception throw if any error is occurrred.
      */
-    private long numberOfImplicitStatements() throws Exception {
+    public long numberOfImplicitStatements() throws Exception {
         // Retrieve all inferred statements
         RepositoryResult<Statement> statements = mRepositoryConnection.getStatements(null, null, null, true,
                 new URIImpl("http://www.ontotext.com/implicit"));
@@ -704,7 +682,7 @@ public class Sesame28Kit {
             SystemLog.warning("No query file given in parameter 'null'.");
             return;
         }
-        long startQueries = System.currentTimeMillis();
+        //long startQueries = System.currentTimeMillis();
         // process the query file to get the queries
         String[] queries =collectQueries(queryFile.getAbsolutePath());
         if(queries == null){
@@ -720,8 +698,8 @@ public class Sesame28Kit {
                 executeSingleQuery(query);
             }
         }
-        long endQueries = System.currentTimeMillis();
-        SystemLog.message("Queries run in " + (endQueries - startQueries) + " ms.");
+        //long endQueries = System.currentTimeMillis();
+        //SystemLog.message("Queries run in " + (endQueries - startQueries) + " ms.");
     }
 
     /**
@@ -873,7 +851,7 @@ public class Sesame28Kit {
                 if(PRINT_RESULT_QUERY){
                     writeGraphQueryResultToFile(query, OUTPUTFILE, OUTPUTFORMAT);
                 }
-                long queryBegin = System.nanoTime();
+                //long queryBegin = System.nanoTime();
                 GraphQueryResult result = q.evaluate();
                 int rows = 0;
                 while (result.hasNext()) {
@@ -891,8 +869,8 @@ public class Sesame28Kit {
 
                 }
                 result.close();
-                long queryEnd = System.nanoTime();
-                SystemLog.message(rows + " result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+                //long queryEnd = System.nanoTime();
+                //SystemLog.message(rows + " result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
             }
             //If the Query is a Select or a Describe..........
             if (preparedOperation instanceof TupleQuery) {
@@ -900,7 +878,7 @@ public class Sesame28Kit {
                 if(PRINT_RESULT_QUERY){
                     writeTupleQueryResultToFile(query, OUTPUTFILE, OUTPUTFORMAT);
                 }
-                long queryBegin = System.nanoTime();
+                //long queryBegin = System.nanoTime();
                 TupleQueryResult result = q.evaluate();
                 int rows = 0;
                 while (result.hasNext()) {
@@ -926,15 +904,13 @@ public class Sesame28Kit {
                     rows++;
                 }
                 result.close();
-                long queryEnd = System.nanoTime();
-                SystemLog.message(rows + " result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+                //long queryEnd = System.nanoTime();
+                //SystemLog.message(rows + " result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
             }
         } catch (UpdateExecutionException|QueryEvaluationException e) {
-            //SystemLog.error("An error occurred during query execution: " + e.getMessage());
-            SystemLog.exception(e);
+            SystemLog.exception("An error occurred during query execution", e, Sesame28Kit.class);
         } catch (FileNotFoundException|RepositoryException e){
-            SystemLog.error("An error occurred during the writing of the result of SPARQL query: " + e.getMessage());
-            SystemLog.exception(e);
+            SystemLog.error("An error occurred during the writing of the result of SPARQL query",e,Sesame28Kit.class);
         }
     }
 
@@ -966,16 +942,13 @@ public class Sesame28Kit {
                     retrieved = true;
                     System.out.println(beautifyStatement(iter.next()));
                 }
-                // CLOSE the iterator to avoid memory leaks
                 iter.close();
 
                 if (!retrieved)SystemLog.message("**** Failed to retrieve the statement that was just added. ****");
-
                 // Remove the above statement in a separate transaction
                 SystemLog.message("----- Remove and check --------------------------------");
                 mRepositoryConnection.remove(subj, pred, obj);
                 mRepositoryConnection.commit();
-
                 // Check whether there is some statement matching the subject of the
                 // deleted one
                 iter = mRepositoryConnection.getStatements(subj, null, null, true);
@@ -996,13 +969,15 @@ public class Sesame28Kit {
     /**
      * Export the contents of the repository (explicit, implicit or all statements) to the given filename in
      * the given RDF format.
+     *  This approach to making a backup of a repository by using RepositoryConnection.exportStatements()
+     * will work even for very large remote repositories, because the results are streamed to the client
+     * and passed directly to the RDFHandler.
+     * However, it is not possible to give any indication of progress using this method.
      * @param outputPathFile string path to the output file.
      * @param outputFormat string format for the output file.
      * @param exportType e.home //explicit,implicit,all,specific.
      */
-    public void export(String outputPathFile,String outputFormat,String exportType){
-        //String filename = parameters.get(PARAM_EXPORT_FILE);
-        //String filename = outputPathFile;
+    public File export(String outputPathFile,String outputFormat,String exportType){
         try{
             if (outputPathFile != null) {
                 SystemLog.message("===== Export ====================");
@@ -1011,10 +986,6 @@ public class Sesame28Kit {
                 SystemLog.message("Exporting " + exportType + " statements to " + outputPathFile + " (" + exportFormat.getName() + ")");
                 Writer writer = new BufferedWriter(new FileWriter(outputPathFile), 256 * 1024);
                 RDFWriter rdfWriter = Rio.createWriter(exportFormat, writer);
-                // This approach to making a backup of a repository by using RepositoryConnection.exportStatements()
-                // will work even for very large remote repositories, because the results are streamed to the client
-                // and passed directly to the RDFHandler.
-                // However, it is not possible to give any indication of progress using this method.
                 try {
                     if (exportType == null || exportType.equalsIgnoreCase("explicit"))
                         mRepositoryConnection.exportStatements(null, null, null, false, rdfWriter);
@@ -1024,16 +995,23 @@ public class Sesame28Kit {
                         mRepositoryConnection.exportStatements(null, null, null, true, rdfWriter,
                                 new URIImpl( "http://www.ontotext.com/implicit"));
                     else {
-                        SystemLog.warning("Unknown export type '" + exportType + "' - valid values are: explicit, implicit, all");
+                        SystemLog.warning(
+                                "Unknown export type '" + exportType +
+                                        "' - valid values are: explicit, implicit, all, by default we use 'all'"
+                                ,Sesame28Kit.class);
+                        mRepositoryConnection.exportStatements(null, null, null, true, rdfWriter);
                     }
                 }
                 finally {
                     writer.close();
                 }
+                if(new File(outputPathFile).exists()) return new File(outputPathFile);
             }//end if
         }catch(RepositoryException|UnsupportedRDFormatException|RDFHandlerException|IOException e){
-            SystemLog.exception(e);
+            SystemLog.exception(e,Sesame28Kit.class);
         }
+        SystemLog.warning("Attention the export File of the Sesame reposiotry return a null File Object",Sesame28Kit.class);
+        return null;
     }
 
     /**
@@ -1116,7 +1094,7 @@ public class Sesame28Kit {
      *            The statement to be formatted.
      * @return The beautified statement.
      */
-    public String beautifyStatement(Statement statement){
+    private String beautifyStatement(Statement statement){
         return beautifyRDFValue(statement.getSubject()) + " " + beautifyRDFValue(statement.getPredicate())
                 + " " + beautifyRDFValue(statement.getObject());
     }
@@ -1128,7 +1106,7 @@ public class Sesame28Kit {
      * @param value The value to beautify.
      * @return string to print on a file on to the console.
      */
-    public String beautifyRDFValue(Value value){
+    private String beautifyRDFValue(Value value){
         if (value instanceof URI) {
             URI u = (URI) value;
             String namespace = u.getNamespace();
@@ -1139,7 +1117,6 @@ public class Sesame28Kit {
                 prefix += ":";
             }
             String sReturn = prefix + u.getLocalName();
-            //sReturn = sReturn.replaceAll("|", "").replaceAll("^", "").replaceAll("\n", "").replaceAll("'", "");
             if(sReturn.contains("<") && sReturn.contains(">")){
                 return sReturn;
             }else{
@@ -1262,97 +1239,83 @@ public class Sesame28Kit {
 
     /**
      * Method for open many different repository type of Sesame/Owlim memorized on disk.
-     * @param TYPE_REPOSITORY choose your type of reposiotry ['owlim,'memory','native','inferencing','http'].
-     * @param PATH_FOLDER_STORAGE string to the path folder where are stored your repositories.
-     * @param PATH_FOLDER_REPOSITORY string to the path folder where is stored your specific repository.
-     * @param RULESET just for owlim repsoitory eg 'owlim-se'.
-     * @param USER_REPOSITORY username for the repository sesame.
-     * @param PASSWORD_REPOSITORY password for the repository sesame.
+     * @param typeRepository choose your type of reposiotry ['owlim,'memory','native','inferencing','http'].
+     * @param directory string to the path folder where are stored your repositories.
+     * @param repositoryId string id of the repository.
      * @return repository sesame for the specific connection.
      */
     public Repository connectToLocal(
-            String TYPE_REPOSITORY,String PATH_FOLDER_STORAGE,String PATH_FOLDER_REPOSITORY,
-            String RULESET,String USER_REPOSITORY,String PASSWORD_REPOSITORY){
-        setParameterLocalRepository(
-                TYPE_REPOSITORY, PATH_FOLDER_STORAGE, PATH_FOLDER_REPOSITORY, RULESET, USER_REPOSITORY, PASSWORD_REPOSITORY);
-        return connectToSpecificRepository();
+            String typeRepository,String directory,String repositoryId){
+        return connectToSpecificRepository(typeRepository, directory, repositoryId);
     }
 
     /**
      * Method for open many different repository type of Sesame/Owlim memorized on server.
-     * @param TYPE_REPOSITORY  choose your type of reposiotry ['owlim,'memory','native','inferencing','http'].
-     * @param SESAMESERVER url address to the sesame setver eg http://localhost:8080/openrdf-sesame/.
-     * @param ID_REPOSITORY string id of the repository.
-     * @param USER_REPOSITORY username for the repository sesame.
-     * @param PASSWORD_REPOSITORY password for the repository sesame.
+     * @param typeRepository  choose your type of reposiotry ['owlim,'memory','native','inferencing','http'].
+     * @param sesameServer url address to the sesame setver eg http://localhost:8080/openrdf-sesame/.
+     * @param repositoryId string id of the repository.
      * @return repository sesame for the specific connection.
      */
     public Repository connectToRemote(
-            String TYPE_REPOSITORY,String SESAMESERVER,String ID_REPOSITORY,String USER_REPOSITORY,String PASSWORD_REPOSITORY){
-        setParameterRemoteRepository(TYPE_REPOSITORY,SESAMESERVER,ID_REPOSITORY,USER_REPOSITORY,PASSWORD_REPOSITORY);
-        return connectToSpecificRepository();
+            String typeRepository,String sesameServer,String repositoryId){
+        return connectToSpecificRepository(typeRepository,sesameServer,repositoryId);
     }
 
     /**
      * Method for make the connection to a repository.
      * @return repository sesame for the specific connection.
      */
-    private Repository connectToSpecificRepository(){
+    private Repository connectToSpecificRepository(String typeRepository,String directoryOrServer,String idRepository){
         try{
             mRepository = null;
-            SystemLog.message("Try to open a connection to a repository Sesame of TYPE:"+TYPE_REPOSITORY+" and ID:"+ID_REPOSITORY+"...");
-            File Datadir = new File(PATH_FOLDER_REPOSITORY) ;
-            /*
-            if(TYPE_REPOSITORY.toLowerCase().contains("owlim")){
+            SystemLog.message(
+                    "Try to open a connection to a repository Sesame of TYPE:"+typeRepository+" and ID:"+idRepository+"...");
+            //if(typeRepository.toLowerCase().contains("owlim")){
+                 /*
                  com.ontotext.trree.OwlimSchemaRepository schema = new com.ontotext.trree.OwlimSchemaRepository();
                  schema.setDataDir(Datadir);
-                 schema.setParameter("storage-folder", PATH_FOLDER_STORAGE);
-                 schema.setParameter("repository-type", TYPE_REPOSITORY);
-                 schema.setParameter("ruleset", RULESET);
-                 // wrap it into a Sesame SailRepository
-                 //SailRepository repository = new SailRepository(schema);
-                mRepository  = new org.openrdf.repository.sail.SailRepository(schema);
-            }*/
-            if(TYPE_REPOSITORY.toLowerCase().contains("memory")){
-                //Create and initialize a non-inferencing main-memory repository
-                //the MemoryStore will write its contents to the directory so that
-                //it can restore it when it is re-initialized in a future session
+                 schema.setParameter("storage-folder", directoryOrServer);
+                 schema.setParameter("repository-type", "owlim");
+                 schema.setParameter("ruleset", RULESET);*
+                 mRepository  = new org.openrdf.repository.sail.SailRepository(schema);
+                */
+            //}
+            //Create and initialize a non-inferencing main-memory repository
+            //the MemoryStore will write its contents to the directory so that
+            //it can restore it when it is re-initialized in a future session
+            if(typeRepository.toLowerCase().contains("memory")){
                 mRepository =  new org.openrdf.repository.sail.SailRepository(
-                        new org.openrdf.sail.memory.MemoryStore(Datadir)
+                        new org.openrdf.sail.memory.MemoryStore(new File(directoryOrServer))
                         // .setDataDir(Datadir)
                 );
                 //or
                 /*
-                org.openrdf.sail.memory.MemoryStore memStore=
-                       new org.openrdf.sail.memory.MemoryStore(
-                                     new File(PATH_FOLDER_REPOSITORY)
-                        );
+                MemoryStore memStore= new org.openrdf.sail.memory.MemoryStore(new File(PATH_FOLDER_REPOSITORY) );
                 Repository repo = new org.openrdf.repository.sail.SailRepository(memStore);
                 */
             }
-            else if(TYPE_REPOSITORY.toLowerCase().contains("native")){
-                //Creating a Native RDF Repository
-                //does not keep data in main memory, but instead stores it directly to disk
+            //Creating a Native RDF Repository
+            //does not keep data in main memory, but instead stores it directly to disk
+            else if(typeRepository.toLowerCase().contains("native")){
                 String indexes = "spoc,posc,cosp";
-                mRepository = new org.openrdf.repository.sail.SailRepository(
-                        new org.openrdf.sail.nativerdf.NativeStore(Datadir,indexes)
+                mRepository = new org.openrdf.repository.sail.SailRepository(new NativeStore(new File(directoryOrServer),indexes)
                 );
             }
-            else if(TYPE_REPOSITORY.toLowerCase().contains("inferencing")){
-                //Creating a repository with RDF Schema inferencing
-                //ForwardChainingRDFSInferencer is a generic RDF Schema
-                //inferencer (MemoryStore and NativeStore support it)
-                mRepository = new SailRepository( new ForwardChainingRDFSInferencer(
-                        new org.openrdf.sail.memory.MemoryStore() )
-                );
+            //Creating a repository with RDF Schema inferencing
+            //ForwardChainingRDFSInferencer is a generic RDF Schema
+            //inferencer (MemoryStore and NativeStore support it)
+            else if(typeRepository.toLowerCase().contains("inferencing")){
+                mRepository = new SailRepository( new ForwardChainingRDFSInferencer(new MemoryStore() ));
             }
-            else if(TYPE_REPOSITORY.toLowerCase().contains("http")){
+            else if(typeRepository.toLowerCase().contains("http")){
                 //Accessing a server-side repository
-                mRepository= new HTTPRepository(SESAMESERVER, ID_REPOSITORY);
+                mRepository= new HTTPRepository(directoryOrServer, idRepository);
 
+            } else{
+                SystemLog.warning("Attention type a correct String typeRepository:"
+                        + CollectionKit.convertArrayContentToSingleString(types));
             }
             // wrap it into a Sesame SailRepository
-            // initialize
             if(mRepository != null && !mRepository.isInitialized()){
                 try {
                     mRepository.initialize();
@@ -1365,11 +1328,10 @@ public class Sesame28Kit {
                     // Whatever happens, we want to close the connection when we are done.
                     mRepository.getConnection().close();
                 }
-                return null;
-            }else{
-                return null;
             }
+            return mRepository;
         }catch(RepositoryException e){
+            SystemLog.exception(e,Sesame28Kit.class);
             return null;
         }
     }
@@ -1395,35 +1357,35 @@ public class Sesame28Kit {
      * @param queryString the query sparql SELECT or ASK.
      * @return the List of OpenRDF Statement.
      */
-    public List<Statement> TupleQueryEvalutation(String queryString){
-        List<Statement> list = new ArrayList<>();
+    public List<String[]> TupleQueryEvalutation(String queryString,String[] bindingName){
+        List<String[]> list = new ArrayList<>();
         try {
-            //RepositoryConnection con = repo.getConnection();
-            //repositoryConnection = repo.getConnection();
             if(!(mRepository.isInitialized() && mRepository.getConnection().isOpen())){
                 mRepository.initialize();
                 mRepositoryConnection = mRepository.getConnection();
             }
-            //String queryString = " SELECT ?x ?y WHERE { ?x ?p ?y } ";
             QueryLanguage lang = checkLanguageOfQuery(queryString);
             TupleQuery tupleQuery = mRepositoryConnection.prepareTupleQuery(
                     lang, queryString);
             TupleQueryResult result = tupleQuery.evaluate();
             try {
-                List<String> bindingNames = result.getBindingNames();
-                while (result.hasNext()) {
-                    BindingSet bindingSet = result.next();
-                    Value firstValue = bindingSet.getValue(bindingNames.get(0)); //get X
-                    Value secondValue = bindingSet.getValue(bindingNames.get(1));//get Y
-                    Value thirdValue = bindingSet.getValue(bindingNames.get(2));//get Y
-                    Statement stmt = new StatementImpl(
-                            (Resource)firstValue,
-                            (URI)secondValue,
-                            thirdValue);
-                    list.add(stmt);
-                    // do something interesting with the values here...
+                int L;
+                if(CollectionKit.isArrayEmpty(bindingName)){
+                    L = result.getBindingNames().size();
+                    bindingName = CollectionKit.convertListToArray(result.getBindingNames());
                 }
+                else L = bindingName.length;
 
+                String[] info;
+                while (result.hasNext()) {
+                    info = new String[L];
+                    BindingSet bindingSet = result.next();
+                    for(int i =0; i < info.length;) {
+                        Value firstValue = bindingSet.getValue(bindingName[i]); //get ?x
+                        info[i] = firstValue.stringValue();
+                    }
+                    list.add(info);
+                }
             } finally {
                 result.close();
             }
@@ -1441,16 +1403,13 @@ public class Sesame28Kit {
     public List<Statement> GraphQueryEvalutation(String queryString){
         List<Statement> list = new ArrayList<>();
         try {
-            //org.openrdf.repository.RepositoryConnection con = repo.getConnection();
-            //repositoryConnection = repo.getConnection();
             if(!(mRepository.isInitialized() && mRepository.getConnection().isOpen())){
                 mRepository.initialize();
                 mRepositoryConnection = mRepository.getConnection();
             }
-            //String queryString = "CONSTRUCT { ?s ?p ?o } WHERE {?s ?p ?o }";
             QueryLanguage lang = checkLanguageOfQuery(queryString);
             GraphQueryResult result = mRepositoryConnection.prepareGraphQuery(
-                    lang,queryString ).evaluate();
+                    lang,queryString).evaluate();
             try {
                 while (result.hasNext()) {
                     Statement stmt = result.next();
@@ -1474,10 +1433,7 @@ public class Sesame28Kit {
      */
     public Model convertGraphQueryEvalutationToSesameModel(Repository repository,String queryString){
         Model resultModel = new TreeModel();
-        //org.openrdf.repository.RepositoryConnection
-        //repositoryConnection = repo.getConnection();
         try {
-            //String queryString = "CONSTRUCT { ?s ?p ?o } WHERE {?s ?p ?o }";
             QueryLanguage lang = checkLanguageOfQuery(queryString);
             GraphQueryResult result = mRepositoryConnection.prepareGraphQuery(
                     lang,queryString ).evaluate();
@@ -1491,6 +1447,8 @@ public class Sesame28Kit {
         }
         return resultModel;
     }
+
+
 
     /**
      * Method to print the query result of Graph Query on a Sesame Repository.
@@ -1507,9 +1465,7 @@ public class Sesame28Kit {
             RDFWriter writer = Rio.createWriter(stringToRDFFormat(outputFormat), fileOut);
             QueryLanguage lang = checkLanguageOfQuery(queryString);
             mRepositoryConnection.prepareGraphQuery(lang, queryString).evaluate(writer);
-            //query.evaluate(writer);
             SystemLog.message("... the file " + nameFileOut + " is been written!!!");
-            //connection.prepareGraphQuery(QueryLanguage.SPARQL,sparql).evaluate(writer);
         } catch (FileNotFoundException|RepositoryException|MalformedQueryException|RDFHandlerException|QueryEvaluationException e) {
             SystemLog.exception(e);
         }
@@ -1549,10 +1505,6 @@ public class Sesame28Kit {
             String nameFileOut = filePath+"."+outputFormat.toLowerCase();
             SystemLog.message("Try to write the query tuple result in the format:" +outputFormat +
                     " int o the file " + nameFileOut + "...");
-            //org.openrdf.rio.RDFWriter writer = org.openrdf.rio.Rio.createWriter(
-            //        org.openrdf.rio.RDFFormat.TURTLE, System.out);
-            //OutputStream out = new FileOutputStream(pathOutputXmlFileName+".xml");
-            //TupleQueryResultHandler writerXML = new SPARQLResultsXMLWriter(out);
             OutputStream out;
             TupleQueryResultHandler trh=null;
             if(filePath==null){
@@ -1673,27 +1625,6 @@ public class Sesame28Kit {
         throw new IllegalArgumentException("The RDF format '" + strFormat + "' is not recognised");
     }
 
-
-    //Field a list of datatype handling strategies
-
-   /* private static final org.openrdf.rio.RDFParser.DatatypeHandling allDatatypeHandling[] =
-            new org.openrdf.rio.RDFParser.DatatypeHandling[] {
-        org.openrdf.rio.RDFParser.DatatypeHandling.IGNORE,
-        org.openrdf.rio.RDFParser.DatatypeHandling.NORMALIZE,
-        org.openrdf.rio.RDFParser.DatatypeHandling.VERIFY
-    };*/
-
-
-    // Method to convert a string to a or.openrdf.rio.RDFFormat
-
-   /* private static org.openrdf.rio.RDFParser.DatatypeHandling stringToDatatypeHandling(String strHandling) {
-        for (org.openrdf.rio.RDFParser.DatatypeHandling handling : allDatatypeHandling) {
-                if (handling.repositoryID().equalsIgnoreCase(strHandling))
-                        return handling;
-        }
-        throw new IllegalArgumentException("Datatype handling strategy for parsing '" + strHandling + "' is not recognised");
-    }*/
-
     /**
      * Method for import to the repository a very large file of triple
      * pre-chunked for the import.
@@ -1709,7 +1640,6 @@ public class Sesame28Kit {
             //RDFFormat format = RDFFormat.forFileName(file.getName());
             RDFFormat format = convertFileNameToRDFFormat(file.getName());
             if (format == null) {
-                System.out.println();
                 SystemLog.warning("Unknown RDF format for file: " + file);
                 return 0;
             }
@@ -1718,14 +1648,7 @@ public class Sesame28Kit {
 
             URI context = null;
             if (!format.equals(RDFFormat.NQUADS) && !format.equals(RDFFormat.TRIG) && !format.equals(RDFFormat.TRIX)) {
-                //String contextParam = CONTEXT;
-                //if (CONTEXT == null) {
-                //    context = new URIImpl(file.toURI().toString());
-                //} else {
-                //    if (CONTEXT.length() > 0) {
                 context = new URIImpl(CONTEXT);
-                //    }
-                //}
             }
             InputStream reader = null;
             try {
@@ -1735,31 +1658,21 @@ public class Sesame28Kit {
                     reader = new BufferedInputStream(new FileInputStream(file), 256 * 1024);
                 }
                 // create a parser home.home.initializer.org.p4535992.mvc.config with preferred settings
-           /* boolean verifyData = VERIFY;
-            boolean stopAtFirstError = STOP_ON_ERROR;
-            boolean preserveBnodeIds = PRESERVE_BNODES;*/
-                //NEW METHOD
+
                 //RioSetting settings = new RioS
                 RioSetting<Boolean> verifyDataSet = BasicParserSettings.VERIFY_DATATYPE_VALUES;
                 RioSetting<Boolean> stopAtFirstErrorSet = BasicParserSettings.FAIL_ON_UNKNOWN_DATATYPES;
                 RioSetting<Boolean> preserveBnodeIdsSet = BasicParserSettings.PRESERVE_BNODE_IDS;
-
-           /* RioConfig configs = new RioConfig();
-            configs.set(verifyDataSet,VERIFY);
-            configs.set(stopAtFirstErrorSet,STOP_ON_ERROR);
-            configs.set(preserveBnodeIdsSet,PRESERVE_BNODES);*/
 
                 //ParserConfig config = new ParserConfig(verifyData, stopAtFirstError, preserveBnodeIds, RDFParser.DatatypeHandling.VERIFY);
                 ParserConfig config = new ParserConfig();
                 config.set(verifyDataSet, VERIFY);
                 config.set(stopAtFirstErrorSet, STOP_ON_ERROR);
                 config.set(preserveBnodeIdsSet, PRESERVE_BNODES);
-            /*RDFParser.DatatypeHandling datatypeHandling =  org.openrdf.rio.RDFParser.DatatypeHandling.NORMALIZE;*/
+
                 long chunkSize = Long.parseLong(CHUNK_SIZE);
                 long start = System.currentTimeMillis();
                 // set the parser configuration for our connection
-            /*ParserConfig home.home.initializer.org.p4535992.mvc.config = new ParserConfig(verifyData, stopAtFirstError, preserveBnodeIds, datatypeHandling);*/
-
                 mRepositoryConnection.setParserConfig(config);
                 RDFParser parser = Rio.createParser(format);
                 parser.setParserConfig(config);
@@ -1771,11 +1684,11 @@ public class Sesame28Kit {
                 mRepositoryConnection.commit();
                 mRepositoryConnection.begin();
 
-                //Mitac hack: use parallel update
-//            if (PARALLEL_LOAD) {
-//                URI up = new URIImpl("http://www.ontotext.com/useParallelInsertion");
-//                mRepositoryConnection.add(up, up, up);
-//            }
+                //Mitac hack: use parallel update for owlim repository
+                /*if (PARALLEL_LOAD) {
+                    URI up = new URIImpl("http://www.ontotext.com/useParallelInsertion");
+                    mRepositoryConnection.add(up, up, up);
+                }*/
                 parser.parse(reader, context == null ? dumyBaseUrl.toString() : context.toString());
                 mRepositoryConnection.commit();
                 long statementsLoaded = handler.getStatementCount();
@@ -1803,12 +1716,14 @@ public class Sesame28Kit {
      * Method for try to create a repository programmatically intead from the web interface
      * @param model Sesame model.
      * @param repositoryNode resource where put the sesame model.
-     * @param repositoryID string id of the repository.
+     * @param directory String path to the folder.
+     * @param repositoryID String id of the repository.
+     *
      */
-    public static void createSesameRepository(Model model,Resource repositoryNode,String repositoryID) {
+    public static void createSesameRepository(Model model,Resource repositoryNode,String directory,String repositoryID) {
         try{
             // Create a manager for local repositories
-            RepositoryManager repositoryManager = new LocalRepositoryManager(new File("."));
+            RepositoryManager repositoryManager = new LocalRepositoryManager(new File(directory));
             repositoryManager.initialize();
             // Create a configuration object from the configuration graph
             // and add it to the repositoryManager
@@ -1925,7 +1840,6 @@ public class Sesame28Kit {
      * @return list of statement.
      */
     public static List<Statement> findSpecificStatement(Statement statement,boolean remove,boolean includeInfered){
-        // Retrieve all statements about Alice and put them in a list
         RepositoryResult<Statement> statements;
         List<Statement> about = new ArrayList<>();
         try {
@@ -1936,8 +1850,7 @@ public class Sesame28Kit {
                 statements = mRepositoryConnection.getStatements(null, null, null, includeInfered);
             }
             about = Iterations.addAll(statements, new ArrayList<Statement>());
-            if(remove){
-                // Then, remove them from the repository
+            if(remove){ // Then, remove them from the repository
                 mRepositoryConnection.remove(about);
             }
         } catch (RepositoryException e) {
@@ -1946,28 +1859,42 @@ public class Sesame28Kit {
         return about;
     }
 
-
-    //*****************************************************************************************************
     /**
      * Connect to a managed repository located at the given location
      * and connect to the repository with the given repositoryID.
-     * The repository connection is assumed to be remote if it starts with
-     * http:// or https://, otherwise the location is assumed to be a local
-     * directory repositoryID.
-     *
      * @param repositoryLocation string file path to the repository location.
      * @param repositoryID repsoitory name/ID .
      * @return repository manager.
      */
     public RepositoryManager connectToRepository(String repositoryLocation, String repositoryID) {
-        // connect to location and get the manager
         closeRepository();
         connectToLocation(repositoryLocation);
         openRepository(repositoryID);
         return mRepositoryManager;
     }
+
+    /**
+     * Connect to a managed repository located at the given location.
+     * and connect to the repository with the given repositoryID.
+     * @param repositoryLocation URL path to the repository location.
+     * @param repositoryID repsoitory name/ID .
+     * @return repository manager.
+     */
     public RepositoryManager connectToRepository(URL repositoryLocation, String repositoryID) {
-        // connect to location and get the manager
+        closeRepository();
+        connectToLocation(repositoryLocation);
+        openRepository(repositoryID);
+        return mRepositoryManager;
+    }
+
+    /**
+     * Connect to a managed repository located at the given location
+     * and connect to the repository with the given repositoryID.
+     * @param repositoryLocation URL path to the repository location.
+     * @param repositoryID repsoitory name/ID .
+     * @return repository manager.
+     */
+    public RepositoryManager connectToRepository(File repositoryLocation, String repositoryID) {
         closeRepository();
         connectToLocation(repositoryLocation);
         openRepository(repositoryID);
@@ -1977,53 +1904,72 @@ public class Sesame28Kit {
     /**
      * Connect to a managed repository location.
      * The repository connection is assumed to be remote if it starts with
-     * http:// or https://, otherwise the location is assumed to be a local
-     * directory repositoryID.
-     *
-     * @param repositoryLocation string file path to the repository location.
+     * http:// or https://, otherwise the location is assumed to be a local directory repositoryID.
+     * @param urlOrDirectory String file path to the repository location.
      * @return repository manager.
      */
-    public RepositoryManager connectToLocation(String repositoryLocation) {
-        // if the location starts with http:// it will be assumed that this
-        // is a remote location, otherwise it will be regarded as a directory
-        // repositoryID.
-        SystemLog.message("Calling SesameManager.connectToLocation with String: " + repositoryLocation);
-        if(StringIs.isURL(repositoryLocation)) {
-            connectToRemoteLocation(repositoryLocation);
-        } else {
-            connectToLocalLocation(repositoryLocation);
+    public RepositoryManager connectToLocation(String urlOrDirectory) {
+        SystemLog.message("Calling SesameManager.connectToLocation with String: " + urlOrDirectory);
+        if(StringUtil.isURL(urlOrDirectory)) {
+            connectToRemoteLocation(urlOrDirectory);
+        } else if(new File(urlOrDirectory).exists()){
+            connectToLocalLocation(urlOrDirectory);
+        } else{
+            SystemLog.warning("Sesame28Kit::connectToLocation -> Not exists the url or the File with path:"+urlOrDirectory);
         }
         return mRepositoryManager;
     }
 
-    public RepositoryManager connectToLocation(URL repositoryLocation) {
-        // if the location starts with http:// it will be assumed that this
-        // is a remote location, otherwise it will be regarded as a directory
-        // repositoryID.
-        SystemLog.message("Calling SesameManager.connectToLocation with URL: " + repositoryLocation);
-        SystemLog.message("Protocol is: " + repositoryLocation.getProtocol());
-        if(StringIs.isURL(repositoryLocation.toString())) {
-            connectToRemoteLocation(repositoryLocation.toString());
-        } else {
-            connectToLocalLocation(repositoryLocation);
+    /**
+     * Connect to a managed repository location.
+     * The repository connection is assumed to be remote if it starts with
+     * http:// or https://, otherwise the location is assumed to be a local directory repositoryID.
+     * @param urlOrDirectory URL path to the repository location.
+     * @return repository manager.
+     */
+    public RepositoryManager connectToLocation(URL urlOrDirectory) {
+        SystemLog.message("Calling SesameManager.connectToLocation with URL: " + urlOrDirectory);
+        try {
+            if (StringUtil.isURL(urlOrDirectory.toString())) {
+                connectToRemoteLocation(urlOrDirectory.toString());
+            } else if (FileUtil.convertURLToFile(urlOrDirectory).exists()) {
+                connectToLocalLocation(urlOrDirectory);
+            } else {
+                SystemLog.warning("Sesame28Kit::connectToLocation -> Not exists the url or the File with path:" + urlOrDirectory);
+            }
+        }catch(URISyntaxException|MalformedURLException e){
+            SystemLog.exception("Sesame28Kit::connectToLocation",e,Sesame28Kit.class);
+        }
+        return mRepositoryManager;
+    }
+
+    /**
+     * Connect to a managed repository location.
+     * The repository connection is assumed to be remote if it starts with
+     * http:// or https://, otherwise the location is assumed to be a local directory repositoryID.
+     * @param urlOrDirectory File path to the repository location.
+     * @return repository manager.
+     */
+    public RepositoryManager connectToLocation(File urlOrDirectory) {
+        SystemLog.message("Calling SesameManager.connectToLocation with URL: " + urlOrDirectory);
+        if(urlOrDirectory.exists()){
+            connectToLocalLocation(urlOrDirectory);
+        } else{
+            SystemLog.warning("Sesame28Kit::connectToLocation -> Not exists the url or the File with path:"+urlOrDirectory);
         }
         return mRepositoryManager;
     }
 
     /**
      * Connect to a remote managed repository location.
-     *
      * @param url string to the url service.
      * @return reposiotry manager.
      */
-    public RepositoryManager connectToRemoteLocation(String url) {
+    private RepositoryManager connectToRemoteLocation(String url) {
         isManagedRepository = true;
         SesameClient sesameClient = new SesameClientImpl();
         sesameClient.createSparqlSession(url,url);
-//        HTTPClient httpClient = new HTTPClient();
-//        httpClient.setQueryURL(url);
-//        httpClient.setUpdateURL(url);
-        RemoteRepositoryManager mgr = new RemoteRepositoryManager(url);
+        mRemoteRepositoryManager =  new RemoteRepositoryManager(url);
         try {
             URL javaurl = new URL(url);
             String userpass = javaurl.getUserInfo();
@@ -2032,24 +1978,24 @@ public class Sesame28Kit {
                 if(userpassfields.length != 2) {
                     SystemLog.error("URL has login data but not username and password");
                 } else {
-                    mgr.setUsernameAndPassword(userpassfields[0], userpassfields[1]);
+                    mRemoteRepositoryManager.setUsernameAndPassword(userpassfields[0], userpassfields[1]);
                 }
             }
         } catch(MalformedURLException ex) {
             SystemLog.error("Problem processing remote URL: "+ex);
         }
-        setRepositoryManager(mgr, url);
+        setRepositoryManager(mRemoteRepositoryManager, url);
         return mRepositoryManager;
     }
 
     /**
      * Method to Connect to a local repository location at the given directory.
      * If mustexist is true, it is an error if the directory is not found.
-     * @param filePathToDirectory string file path to the folder/file with all the repositeries.
+     * @param directory string file path to the folder/file with all the repositeries.
      * @return Repository Manager.
      */
-    public RepositoryManager  connectToLocalLocation(String filePathToDirectory) {
-        return connectToLocalLocation(new File(filePathToDirectory));
+    private RepositoryManager  connectToLocalLocation(String directory) {
+        return connectToLocalLocation(new File(directory));
     }
 
     /**
@@ -2057,7 +2003,7 @@ public class Sesame28Kit {
      * @param directory string file path to the folder with all the repositeries.
      * @return Repository Manager.
      */
-    public RepositoryManager connectToLocalLocation(File directory) {
+    private RepositoryManager connectToLocalLocation(File directory) {
         try {
             return connectToLocalLocation(FileUtil.convertFileToURL(directory));
         } catch (MalformedURLException e) {
@@ -2068,33 +2014,29 @@ public class Sesame28Kit {
 
     /**
      *  Method to Connect to a local repository location at the given directory.
-     * @param dirname url location of the directory.
+     * @param directory url location of the directory.
      * @return Repository Manager.
      */
-    public RepositoryManager connectToLocalLocation(URL dirname) {
+    private RepositoryManager connectToLocalLocation(URL directory) {
         isManagedRepository = true;
-        SystemLog.message("Called connectToLocalLocation to " + dirname);
-        File directory = null;
+        SystemLog.message("Called connectToLocalLocation to " + directory);
+        File dir = null;
         try {
-            directory = new File(dirname.toURI());
+            dir = new File(directory.toURI());
         } catch (URISyntaxException ex) {
-            SystemLog.error("Specified URL is invalid: "+dirname,ex);
+            SystemLog.error("Specified URL is invalid: "+directory,ex);
         }
-        if(directory!=null) {
-            if (!directory.exists()) {
-                SystemLog.error("Specified path does not exist: " +
-                        directory.getAbsolutePath());
+        if(dir!=null) {
+            if (!dir.exists()) {
+                SystemLog.error("Specified path does not exist: " +dir.getAbsolutePath());
             }
-            if (!directory.isDirectory()) {
-                SystemLog.error("Specified path is not a directory: " +
-                        directory.getAbsolutePath());
+            if (!dir.isDirectory()) {
+                SystemLog.error("Specified path is not a directory: " + dir.getAbsolutePath());
             }
         }else{
-            SystemLog.error("Specified URL is invalid: "+dirname);
+            SystemLog.error("Specified URL is invalid: "+directory);
         }
-        if (directory != null) {
-            setRepositoryManager(new LocalRepositoryManager(directory), directory.toString());
-        }
+        if (dir != null)  setRepositoryManager(new LocalRepositoryManager(dir), dir.toString());
         return mRepositoryManager;
     }
 
@@ -2127,8 +2069,9 @@ public class Sesame28Kit {
      * @return the Repository OpenRDF object.
      */
     public Repository connectToHTTPRepository(String sesameServer,String repositoryID){
-        //String sesameServer = "http://localhost:8080/openrdf-sesame/";
         if(!sesameServer.endsWith(File.separator))sesameServer = sesameServer + File.separator;
+        if(repositoryID.startsWith(File.separator)) repositoryID = repositoryID.substring(1,repositoryID.length());
+        if(repositoryID.endsWith(File.separator)) repositoryID = repositoryID.substring(0,repositoryID.length()-1);
         return connectToHTTPRepository(sesameServer + repositoryID);
     }
 
@@ -2139,7 +2082,6 @@ public class Sesame28Kit {
      */
     public Repository connectToHTTPRepository(String urlAddressRepositoryId){
         try {
-            //String sesameServer = "http://localhost:8080/openrdf-sesame/";
             mRepository = new HTTPRepository(urlAddressRepositoryId);
             mRepository.initialize();
             setRepositoryConnection();
@@ -2151,15 +2093,30 @@ public class Sesame28Kit {
         return mRepository;
     }
 
-    public Repository connectToNativeRepository(String filePathDirectory,String indexes){
-        return connectToNativeRepository(new File(filePathDirectory),indexes);
+    /**
+     * Method to connect to a aive Repository OpenRDF.
+     * Creating a Native RDF Repository does not keep data in main memory, but instead stores it directly to disk.
+     * @param directory the String path to the directory of Repositories.
+     * @param indexes An index strings, e.g. spoc,posc or spoc,posc,cosp.
+     * @return the OpenRDF Native Repository.
+     */
+    public Repository connectToNativeRepository(String directory,String indexes){
+        if (directory.startsWith(File.separator)) directory = directory.substring(1, directory.length());
+        if (!directory.endsWith(File.separator)) directory = directory + File.separator;
+        return connectToNativeRepository(new File(directory),indexes);
     }
 
+    /**
+     * Method to connect to a aive Repository OpenRDF.
+     * Creating a Native RDF Repository does not keep data in main memory, but instead stores it directly to disk.
+     * @param directory the File directory of Repositories.
+     * @param indexes An index strings, e.g. spoc,posc or spoc,posc,cosp.
+     * @return the OpenRDF Native Repository.
+     */
     public Repository connectToNativeRepository(File directory,String indexes){
+        String sDirectory = directory.getAbsolutePath();
         try{
-            //Creating a Native RDF Repository
-            //does not keep data in main memory, but instead stores it directly to disk
-            if(StringIs.isNullOrEmpty(indexes)){indexes = "spoc,posc,cosp";}
+            if(StringUtil.isNullOrEmpty(indexes)){indexes = "spoc,posc,cosp";}
             mRepository = new SailRepository(new NativeStore(directory,indexes));
             mRepository.initialize();
             setRepositoryConnection();
@@ -2169,6 +2126,12 @@ public class Sesame28Kit {
         return mRepository;
     }
 
+    /**
+     * Method to connect to a Inferencing Repository Sesame.
+     * @param directory the String path to the directory of Repositories.
+     * @param repositoryID the String path to the File of the Id Repository.
+     * @return the OpenRDF Inferencing Repository.
+     */
     public Repository connectToInferencingRepository(String directory,String repositoryID){
         if(directory.startsWith(File.separator)) directory = directory.substring(1, directory.length());
         if(!directory.endsWith(File.separator)) directory = directory + File.separator;
@@ -2177,6 +2140,12 @@ public class Sesame28Kit {
         return connectToInferencingRepository(new File(directory + repositoryID));
     }
 
+    /**
+     * Method to connect to a Inferencing Repository Sesame.
+     * @param directory the File directory of Repositories.
+     * @param repositoryID the String path to the File of the Id Repository.
+     * @return the OpenRDF Inferencing Repository.
+     */
     public Repository connectToInferencingRepository(File directory,String repositoryID){
         String sDirectory = directory.getAbsolutePath();
         if (sDirectory.startsWith(File.separator)) sDirectory = sDirectory.substring(1, sDirectory.length());
@@ -2187,15 +2156,14 @@ public class Sesame28Kit {
     }
 
     /**
-     * Method to connect to a INferencing Repository Sesame.
-     * @param repositoryID the String id Repository.
-     * @return the Repository.
+     * Method to connect to a Inferencing Repository Sesame.
+     * Creating a repository with RDF Schema inferencing ForwardChainingRDFSInferencer is a generic RDF Schema
+     * inferencer (MemoryStore and NativeStore support it)
+     * @param repositoryID the String path to the File of the Id Repository.
+     * @return the OpenRDF Inferencing Repository.
      */
     public Repository connectToInferencingRepository(File repositoryID) {
         try {
-            //Creating a repository with RDF Schema inferencing
-            //ForwardChainingRDFSInferencer is a generic RDF Schema
-            //inferencer (MemoryStore and NativeStore support it)
             mRepository = new SailRepository(new ForwardChainingRDFSInferencer(new MemoryStore(repositoryID)));
             mRepository.initialize();
             setRepositoryConnection();
@@ -2208,7 +2176,6 @@ public class Sesame28Kit {
 
     /**
      * Disconnect from a local or remote repository manager.
-     *
      */
     public void disconnect() {
         closeRepository();
@@ -2268,13 +2235,10 @@ public class Sesame28Kit {
         return mRepositoryConnection;
     }
 
-
-    // create repository from a template, no substitution of variables
-    // also opens the newly created repository
     /**
      * Create a new managed repository at the current remote or local location
      * using the configuration information passed on as a string.
-     *
+     * Create repository from a template, no substitution of variables also opens the newly created repository
      * @param config string file path to the config file.
      */
     public void createRepository(String config) {
@@ -2327,19 +2291,19 @@ public class Sesame28Kit {
     }
 
     /**
-     * Create an unmanaged repository with files stored in the directory
+     * Create an unManaged repository with files stored in the directory
      * given from the configuration passed as a string.
      * @param repositoryDirFile string file path to the directory of repsoisotry.
      * @param configstring string file path to the config file.
      */
-    public void createUnmanagedRepository(File repositoryDirFile, String configstring) {
+    public void createRepositoryUnManaged(File repositoryDirFile, String configstring) {
         isManagedRepository = false;
         SystemLog.message("SesameManager: creating unmanaged repo, dir is " + repositoryDirFile.getAbsolutePath());
         try {
-        /*ValueFactory vf = new MemValueFactory();
-        Graph graph = parseRdf(configstring, vf, RDFFormat.TURTLE);*/
+            /*ValueFactory vf = new MemValueFactory();
+            Graph graph = parseRdf(configstring, vf, RDFFormat.TURTLE);*/
             Model model = Rio.parse(new StringReader(configstring), RepositoryConfigSchema.NAMESPACE, RDFFormat.TURTLE);
-        /*Resource repositoryNode = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE, RepositoryConfigSchema.REPOSITORY);*/
+            /*Resource repositoryNode = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE, RepositoryConfigSchema.REPOSITORY);*/
             Resource repositoryNode = model.filter(null, RDF.TYPE, RepositoryConfigSchema.REPOSITORY).subjectResource();
             RepositoryConfig repConfig = null;
             try {
@@ -2349,31 +2313,30 @@ public class Sesame28Kit {
             } catch (RepositoryConfigException ex) {
                 SystemLog.error("Could not create repository from RDF graph", ex);
             }
-            //if(repConfig!=null){
-                try {
-                    repConfig.validate();
-                } catch (RepositoryConfigException ex) {
-                    SystemLog.error("Could not validate repository", ex);
-                }
 
-                RepositoryImplConfig rpc = repConfig.getRepositoryImplConfig();
-                Repository repo = createRepositoryStack(rpc);
-                if (repo != null) {
-                    repo.setDataDir(repositoryDirFile);
-                    try {
-                        repo.initialize();
-                    } catch (RepositoryException ex) {
-                        SystemLog.error("Could not initialize repository", ex);
-                    }
-                    try {
-                        RepositoryConnection conn = repo.getConnection();
-                        SystemLog.message("Repo dir is " + repo.getDataDir().getAbsolutePath());
-                        SystemLog.message("Repo is writable " + repo.isWritable());
-                    } catch (RepositoryException ex) {
-                        SystemLog.error("Could not get connection for unmanaged repository", ex);
-                    }
+            try {
+                repConfig.validate();
+            } catch (RepositoryConfigException ex) {
+                SystemLog.error("Could not validate repository", ex);
+            }
+
+            RepositoryImplConfig rpc = repConfig.getRepositoryImplConfig();
+            Repository repo = createRepositoryStack(rpc);
+            if (repo != null) {
+                repo.setDataDir(repositoryDirFile);
+                try {
+                    repo.initialize();
+                } catch (RepositoryException ex) {
+                    SystemLog.error("Could not initialize repository", ex);
                 }
-            //}
+                try {
+                    RepositoryConnection conn = repo.getConnection();
+                    SystemLog.message("Repo dir is " + repo.getDataDir().getAbsolutePath());
+                    SystemLog.message("Repo is writable " + repo.isWritable());
+                } catch (RepositoryException ex) {
+                    SystemLog.error("Could not get connection for unmanaged repository", ex);
+                }
+            }
         }catch(RDFParseException ex){
             SystemLog.error("Could not get subject of config RDF",ex);
         }catch(IOException ex){
@@ -2423,7 +2386,7 @@ public class Sesame28Kit {
      * @param config RepositoryImplConfig.
      * @return the created Repository.
      */
-    private Repository createRepositoryStack(RepositoryImplConfig config) {
+    public Repository createRepositoryStack(RepositoryImplConfig config) {
         RepositoryFactory factory = RepositoryRegistry.getInstance().get(config.getType());
         if (factory == null) {
             SystemLog.error("Unsupported repository type: " + config.getType());
@@ -2454,12 +2417,11 @@ public class Sesame28Kit {
 
     /**
      * Method for Substitute variables in a configuration template string.
-     *
      * @param configtemplate string file path to the config file.
      * @param variables map of all variables you wan substitute or update.
      * @return new string file apth to the confic path.
      */
-    public static String substituteConfigTemplate(String configtemplate, Map<String,String> variables) {
+    private String substituteConfigTemplate(String configtemplate, Map<String,String> variables) {
         // replace all variables in the template then do the actual createRepository
         StringBuffer result = new StringBuffer(configtemplate.length()*2);
         Matcher matcher = TOKEN_PATTERN.matcher(configtemplate);
@@ -2489,7 +2451,7 @@ public class Sesame28Kit {
      * @param variables a Map of all the variables you want ot put in that.
      * @return the configTemplate update.
      */
-    public static String updateConfigTemplate(String configtemplate, Map<String,String> variables) {
+    public String updateConfigTemplate(String configtemplate, Map<String,String> variables) {
         return substituteConfigTemplate(configtemplate,variables);
     }
 
@@ -2673,12 +2635,13 @@ public class Sesame28Kit {
      * @param query query a string query SPARQL or SERQL.
      * @return the result of the  ASK query.
      */
-    public BooleanQuery execSparqlAskOnRepository(String query) {
+    public Boolean execSparqlAskOnRepository(String query) {
         if(mRepositoryConnection != null) {
             try {
                 QueryLanguage lang = checkLanguageOfQuery(query);
-                return mRepositoryConnection.prepareBooleanQuery(lang, query);
-            } catch (RepositoryException|MalformedQueryException ex) {
+                BooleanQuery bQuery = mRepositoryConnection.prepareBooleanQuery(lang, query);
+                return bQuery.evaluate();
+            } catch (RepositoryException | MalformedQueryException | QueryEvaluationException ex) {
                 SystemLog.error("Could not prepare BooleanQuery",ex);
             }
         } else {
@@ -2690,35 +2653,36 @@ public class Sesame28Kit {
     /**
      * Method to update the repository where you are connected with a query SPARQL or SERQL.
      * @param query a string query SPARQL or SERQL.
-     * @return the result of update and the reposiotry updated.
      */
-    public Update createUpdateSPARQLQuery(String query) {
+    public void execSparqlUpdateOnRepository(String query) {
         if(mRepositoryConnection != null) {
             try {
                 QueryLanguage lang = checkLanguageOfQuery(query);
-                return mRepositoryConnection.prepareUpdate(lang, query);
-            } catch (RepositoryException|MalformedQueryException ex) {
-                SystemLog.error("Could not prepare an Update operation",ex);
+                Update update =  mRepositoryConnection.prepareUpdate(lang, query);
+                update.execute();
+                mRepositoryConnection.commit();
+                SystemLog.message("Execute Update Query: " + query);
+            } catch (RepositoryException | MalformedQueryException | UpdateExecutionException ex) {
+                SystemLog.error("Could not prepare an Update operation",ex,Sesame28Kit.class);
             }
         } else {
             SystemLog.error("Cannot create an update operation, no connection");
         }
-        return null;
     }
 
     /**
      * Method to get a Collection of all repositoruies on the directory setted on the manager
-     * @return the Set Collection of namses of all repository in the current manager.
+     * @return the Set Collection of names of all repository in the current manager.
      */
     public Set<String> getRepositories() {
         if(mRepositoryManager == null) {
-            SystemLog.warning("You must set the Reposiotry Manager for avoif the empty list!!!");
+            SystemLog.warning("You must set the Repository Manager for avoid the empty list!!!",Sesame28Kit.class);
             return new HashSet<>();
         }
         try {
             return mRepositoryManager.getRepositoryIDs();
         } catch (RepositoryException ex) {
-            SystemLog.error("Could not get repository IDs: ",ex);
+            SystemLog.error("Could not get repository IDs",ex,Sesame28Kit.class);
         }
         return null;
     }
@@ -2811,21 +2775,21 @@ public class Sesame28Kit {
      * @param inputVector java.util.Vector to convert string.
      * @return string of the sesame vector.
      */
-    public String convertVectorToSesameString(java.util.Vector <String> inputVector) {
+    /*public static String convertVectorToSesameString(java.util.Vector <String> inputVector) {
         String subjects = "";
         for(int subIndex = 0;subIndex < inputVector.size();subIndex++)
             subjects = subjects + "(<" + inputVector.elementAt(subIndex) + ">)";
 
         return subjects;
 
-    }
+    }*/
 
     /**
      * Method to remove a jena tripel from a Sesame Repository.
      * @param triple the Jena triple to remove.
      * @param contexts The contexts to add statements to.
      */
-    public static void removeJenatripleFromSesameRepository(com.hp.hpl.jena.graph.Triple triple,Resource contexts) {
+    public void removeJenaTripleFromSesameRepository(com.hp.hpl.jena.graph.Triple triple,Resource contexts) {
         com.hp.hpl.jena.graph.Node s = triple.getSubject() ;
         com.hp.hpl.jena.graph.Node p = triple.getPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getObject() ;
@@ -2842,7 +2806,7 @@ public class Sesame28Kit {
     }
 
     /**
-     * Method to add a jena tripel from a Sesame Repository.
+     * Method to add a jena triple from a Sesame Repository.
      * @param triple the Jena triple to remove.
      * @param contexts The contexts to add statements to.
      */
@@ -2869,7 +2833,7 @@ public class Sesame28Kit {
      * @return the List of jena Triple.
      */
     public List<com.hp.hpl.jena.graph.Triple> findJenaTripleFromSesameRepository(
-            com.hp.hpl.jena.graph.TripleMatch triple,
+            com.hp.hpl.jena.graph.Triple triple,
             org.openrdf.model.Resource contexts) {
 
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
@@ -2936,24 +2900,27 @@ public class Sesame28Kit {
      * @return the OpenRDF Repository.
      */
      public Repository connectToNativeRepository(File dir, String indexes, boolean inferencing){
-         return initWithNative(dir,indexes,inferencing);
+         Sail sailStack;
+         if(indexes == null) {
+             sailStack = new NativeStore(dir);
+         } else {
+             sailStack = new NativeStore(dir, indexes);
+         }
+         if (inferencing) {
+             sailStack = new ForwardChainingRDFSInferencer((NotifyingSail) sailStack);
+             sailStack = new DirectTypeHierarchyInferencer((NotifyingSail) sailStack);
+         }
+         try {
+             mRepository = new SailRepository(sailStack);
+             mRepository.initialize();
+
+         } catch (Exception e) {
+             throw new RuntimeException(e);
+         }
+         //return sesameConnection;
+         return  mRepository;
      }
 
-    /**
-	 * Initialize the Wrapper with a NativeStore as a backend.
-	 * @param dir Data file that the native store will use.
-	 * @param indexes If not null, the store will use the given indexes to speed up queries
-	 * @param inferencing If true (and not null), it will activate rdfs inferencing
-	 */
-    private Repository initWithNative(File dir, String indexes, boolean inferencing) {
-        Sail sailStack;
-        if(indexes == null) {
-            sailStack = new NativeStore(dir);
-        } else {
-            sailStack = new NativeStore(dir, indexes);
-        }
-        return initFromSail(sailStack, inferencing);
-    }
 
     /**
      * Initialize the Wrapper with a MemoryStore as a backend
@@ -2961,16 +2928,21 @@ public class Sesame28Kit {
      * @return the OpenRDF Repository.
      */
     public Repository connectToMemoryRepository(boolean inferencing){
-        return initWithMemory(inferencing);
+        Sail sailStack = new MemoryStore();
+        if (inferencing) {
+            sailStack = new ForwardChainingRDFSInferencer((NotifyingSail) sailStack);
+            sailStack = new DirectTypeHierarchyInferencer((NotifyingSail) sailStack);
+        }
+        try {
+            mRepository = new SailRepository(sailStack);
+            mRepository.initialize();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        //return sesameConnection;
+        return  mRepository;
     }
 
-    /**
-     * Initialize the Wrapper with a MemoryStore as a backend
-     * @param inferencing If true (and not null), it will activate rdfs inferencing
-     */
-    private Repository initWithMemory(boolean inferencing) {
-        return initFromSail(new MemoryStore(), inferencing);
-    }
 
     /**
      * Initialize the Wrapper with a RDBMS as a backend
@@ -2980,20 +2952,8 @@ public class Sesame28Kit {
      * @param password Password for the database user, or null
      * @param inferencing If true (and not null), it will activate rdfs inferencing
      */
-   /* public Repository connectToRDBMS(String driver, String url, String user,
+    /*public Repository connectToRDBMS(String driver, String url, String user,
                                      String password, boolean inferencing){
-        return initWithRDBMS(driver,url,user,password,inferencing);
-    }
-*/
-    /**
-     * Initialize the Wrapper with a RDBMS as a backend
-     * @param driver JDBC driver to use
-     * @param url JDBC connect URL
-     * @param user Username for the database, or null
-     * @param password Password for the database user, or null
-     * @param inferencing If true (and not null), it will activate rdfs inferencing
-     */
-   /* private Repository initWithRDBMS(String driver, String url, String user, String password, boolean inferencing) {
         Sail sailStack;
         if(user == null) {
             sailStack = new RdbmsStore(driver, url);
@@ -3003,17 +2963,6 @@ public class Sesame28Kit {
         return initFromSail(sailStack, inferencing);
     }*/
 
-    /**
-     * Method to Initialize the Wrapper with a connection to a remote HTTP repository
-     * @param url the url of Repository.
-     * @param user the username onthe repository.
-     * @param password the password on the repository.
-     * @return the Repository.
-     * @throws RepositoryException throw if the repository not exists.
-     */
-    public Repository connectToHTTPRepository(String url, String user, String password) throws RepositoryException {
-        return initWithHttp(url,user,password);
-    }
 
     /**
      * Method to Initialize the Wrapper with a connection to a remote HTTP repository
@@ -3021,19 +2970,22 @@ public class Sesame28Kit {
      * @param user the username onthe repository.
      * @param password the password on the repository.
      * @return the Repository.
-     * @throws RepositoryException
      */
-    private Repository initWithHttp(String url, String user, String password) throws RepositoryException {
-        HTTPRepository httpRepository = new HTTPRepository(url);
-        if(user != null) {
-            httpRepository.setUsernameAndPassword(user, password);
+    public Repository connectToHTTPRepository(String url, String user, String password){
+        try {
+            HTTPRepository httpRepository = new HTTPRepository(url);
+            if (user != null) {
+                httpRepository.setUsernameAndPassword(user, password);
+            }
+            httpRepository.initialize();
+            mRepository = httpRepository;
+            setRepositoryConnection();
+            return mRepository;
+        }catch (RepositoryException e) {
+            SystemLog.exception(e,Sesame28Kit.class);
+            return null;
         }
-        httpRepository.initialize();
-        mRepository = httpRepository;
-        setRepositoryConnection();
-        return mRepository;
     }
-
 
     /**
      * Load data from file. This is a thin wrapper on the
@@ -3064,32 +3016,6 @@ public class Sesame28Kit {
         return true;
     }
 
-
-    /**
-     * Method utuility: Initialize all the repository work on local mameory.
-     * @param sailStack the Sail Object.
-     * @param inferencing If true (and not null), it will activate rdfs inferencing
-     * @return the Repository.
-     */
-    protected Repository initFromSail(Sail sailStack, boolean inferencing) {
-        if (inferencing) {
-            if(sailStack instanceof NotifyingSail) {
-                sailStack = new ForwardChainingRDFSInferencer((NotifyingSail) sailStack);
-                sailStack = new DirectTypeHierarchyInferencer((NotifyingSail) sailStack);
-            } else {
-                throw new RuntimeException("Cannot create inferencing: Incompatible Sail type.");
-            }
-        }
-        try {
-            mRepository = new SailRepository(sailStack);
-            mRepository.initialize();
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        //return sesameConnection;
-        return  mRepository;
-    }
 
     //////////////////////////////////////////////////////////////
     //OTHER NEW METHODS
@@ -3122,7 +3048,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Model.
      */
     public Model convertRepositoryToModel(Repository repository,Integer limit){
-        Model model = createNewModel();
+        Model model = createModel();
         RepositoryConnection conn ;
         try {
             conn = repository.getConnection();
@@ -3216,7 +3142,7 @@ public class Sesame28Kit {
      * @return the Long execution time for evaluate the query.
      */
     public Long getExecutionQueryTime(String query){
-        return getExecutionQueryTime(convertStringQueryToOperation(query));
+        return getExecutionQueryTime(convertQueryToOperation(query));
     }
 
 
@@ -3235,11 +3161,6 @@ public class Sesame28Kit {
      * @return the Long execution time for evaluate the query.
      */
     public Long getExecutionQueryTime(Operation preparedOperation){
-        //Deprecated methods...
-        /*long queryBegin = System.nanoTime();
-        GraphQueryResult gs = graphQuery.evaluate();
-        long queryEnd = System.nanoTime();
-        return (queryEnd - queryBegin) / 1000000;*/
         long timeConnection = 150; //all the connection to a repository in a tomcat server are around the 250ms.
         if (preparedOperation == null) {
             SystemLog.setIsERROR(true);
@@ -3462,8 +3383,6 @@ public class Sesame28Kit {
         return calculate;
     }
 
-
-
     /**
      * Method utility for calculate the execution time.
      * @param time the input long time of the execution query.
@@ -3491,7 +3410,7 @@ public class Sesame28Kit {
      * @param query the String of the Query to analyze.
      * @return the OpenRDF Operation.
      */
-    public Operation convertStringQueryToOperation(String query){
+    public Operation convertQueryToOperation(String query){
         return prepareOperation(query);
     }
 
@@ -3502,7 +3421,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Operation.
      */
     public Operation convertQueryToOperation(Query query){
-        return convertStringQueryToOperation(query.toString());
+        return convertQueryToOperation(query.toString());
     }
 
 
@@ -3514,7 +3433,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(URI uriSubject,URI uriPredicate, URI uriObject){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(uriSubject,uriPredicate,uriObject);
     }
 
@@ -3526,7 +3445,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(URI uriSubject,URI uriPredicate,Object literalObject){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(uriSubject,uriPredicate,createLiteral(literalObject));
     }
 
@@ -3538,7 +3457,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(String uriSubject,String uriPredicate, String uriObject){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(
                 factory.createURI(uriSubject),
                 factory.createURI(uriPredicate),
@@ -3554,7 +3473,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(String uriSubject,String uriPredicate,Object literalObject){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(
                 factory.createURI(uriSubject),
                 factory.createURI(uriPredicate),
@@ -3571,7 +3490,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(URI uriSubject,URI uriPredicate, URI uriObject,URI context){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(uriSubject,uriPredicate,uriObject,context);
     }
 
@@ -3584,7 +3503,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(URI uriSubject,URI uriPredicate,Object literalObject,URI context){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(uriSubject,uriPredicate,createLiteral(literalObject),context);
     }
 
@@ -3597,7 +3516,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(String uriSubject,String uriPredicate, String uriObject,String context){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(
                 factory.createURI(uriSubject),
                 factory.createURI(uriPredicate),
@@ -3615,7 +3534,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Statement Object.
      */
     public Statement createStatement(String uriSubject,String uriPredicate,Object literalObject,String context){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         return factory.createStatement(
                 factory.createURI(uriSubject),
                 factory.createURI(uriPredicate),
@@ -3630,7 +3549,7 @@ public class Sesame28Kit {
      * @return the OpenRDF Literal Object.
      */
     public Literal createLiteral(Object literalObject){
-        ValueFactory factory = createNewValueFactory();
+        ValueFactory factory = createValueFactory();
         if(literalObject instanceof String) return factory.createLiteral((String) literalObject);
         if(literalObject instanceof Boolean) return factory.createLiteral((Boolean) literalObject);
         if(literalObject instanceof Byte) return factory.createLiteral((Byte) literalObject);
@@ -3643,6 +3562,17 @@ public class Sesame28Kit {
         if(literalObject instanceof Date) return factory.createLiteral((Date) literalObject);
         return null;
     }
+
+    /**
+     * Method to create a Resource OpenRDF.
+     * @param uri the String URI.
+     * @return the OpenRDF resource.
+     */
+    public Resource createResource(String uri){
+        ValueFactory valueFactory = createValueFactory();
+        return valueFactory.createURI(uri);
+    }
+
 
 }
 

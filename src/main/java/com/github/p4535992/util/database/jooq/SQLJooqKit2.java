@@ -3,6 +3,7 @@ package com.github.p4535992.util.database.jooq;
 import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.database.sql.SQLHelper;
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringUtil;
 import com.github.p4535992.util.string.impl.StringIs;
 import com.github.p4535992.util.string.impl.StringKit;
 import org.jooq.*;
@@ -71,6 +72,39 @@ public class SQLJooqKit2 {
     }
 
     /**
+     * Method to convert a DialectDB to a SQLDialect of JOOQ.
+     * @param dialectDb String name of a dialectDb.
+     * @return the SQLDialect of JOOQ.
+     */
+    public static SQLDialect convertDialectDBToSQLDialectJOOQ(String dialectDb){
+        return convertStringToSQLDialectJOOQ(dialectDb);
+
+    }
+
+    /**
+     * Method to convert a String to a SQLDialect of JOOQ.
+     * @param sqlDialect the String name of the SQLDialect.
+     * @return the SQLDialect of JOOQ.
+     */
+    public static SQLDialect convertStringToSQLDialectJOOQ(String sqlDialect) {
+        sqlDialect = SQLHelper.convertDialectDatabaseToTypeNameId(sqlDialect);
+        switch (sqlDialect.toLowerCase()) {
+            case "cubrid":return SQLDialect.CUBRID;
+            case "derby": return SQLDialect.DERBY;
+            case "firebird": return SQLDialect.FIREBIRD;
+            case "h2": return SQLDialect.H2;
+            case "hsqldb": return SQLDialect.HSQLDB;
+            case "mariadb": return SQLDialect.MARIADB;
+            case "mysql": return SQLDialect.MYSQL;
+            case "postgres": return SQLDialect.POSTGRES;
+            case "postgres93": return SQLDialect.POSTGRES_9_3;
+            case "postgres94": return SQLDialect.POSTGRES_9_4;
+            case "sqlite": return SQLDialect.SQLITE;
+            default: return SQLDialect.DEFAULT;
+        }
+    }
+
+    /**
      * Methoc getSQLDialect JooQ from Connection.
      * @param conn the Connection java SQL.
      * @return the JooQ SQLDialect.
@@ -80,7 +114,7 @@ public class SQLJooqKit2 {
         if(conn!=null) {
             try {
                 m = conn.getMetaData();
-                return SQLHelper.convertDialectDBToSQLDialectJOOQ(m.getDatabaseProductName());
+                return convertDialectDBToSQLDialectJOOQ(m.getDatabaseProductName());
             } catch (SQLException e) {
                 SystemLog.exception(e);
                 return null;
@@ -133,12 +167,12 @@ public class SQLJooqKit2 {
         Map<Field<String>,?> map = convertArraysToMapJOOQField(columns, values, types);
         Query iQuery = dslContext.insertInto(table).set(map);
         if(preparedStatement){
-            String query = StringKit.toStringInline(iQuery.toString());
+            String query = StringUtil.toInline(iQuery.toString());
             query = JOOQSupport.getQueryInsertValuesParam(query, columns);
             //return StringKit.toStringInline(iQuery.getSQL(ParamType.NAMED_OR_INLINED));
-            return StringKit.toStringInline(query);
+            return StringUtil.toInline(query);
         }
-        else return StringKit.toStringInline(iQuery.toString());
+        else return StringUtil.toInline(iQuery.toString());
     }
 
 

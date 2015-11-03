@@ -159,7 +159,13 @@ public class SQLQuery {
         return builder.toString();
     }
 
-
+    /**
+     * Method to create a SQL String to delete all duplicate record for a specific key.
+     * @param yourTable the name of the table.
+     * @param nameKeyColumn the key column to analyze.
+     * @param cols the Array of columns to check.
+     * @return the Delete all duplicates from a Table String SQL.
+     */
     public static String deleteDuplicateRecord(String yourTable,String nameKeyColumn,String[] cols){
         return
         "WHILE EXISTS (SELECT COUNT(*) FROM "+yourTable+" GROUP BY "+
@@ -173,6 +179,21 @@ public class SQLQuery {
         "        HAVING COUNT(*) > 1\n" +
         "    )\n" +
         "END";
+    }
+
+    /**
+     * Method to create a SQL String to delete all duplicate record for a specific key.
+     * @param yourTable the name of the table.
+     * @param cols the Array of columns to check.
+     * @return the Delete all duplicates from a Table String SQL.
+     */
+    public String deleteDuplicateRecord(String yourTable,String[] cols){
+        return "WITH "+yourTable+" AS ( " +
+                "SELECT ROW_NUMBER() OVER(PARTITION BY "+CollectionKit.convertArrayContentToSingleString(cols)+
+                " ORDER BY "+CollectionKit.convertArrayContentToSingleString(cols)+") AS ROW " +
+                "FROM "+yourTable+") " +
+                "DELETE FROM "+yourTable+" " +
+                "WHERE ROW > 1;";
     }
 
     public static String prepareSelectQuery(String mySelectTable,
@@ -268,10 +289,26 @@ public class SQLQuery {
         return  bQuery.toString();
     }
 
+    /**
+     * Method to create a String Query Insert Into.
+     * @param myInsertTable the name of the table where insert.
+     * @param columns the Array of columns of the table.
+     * @param values the Array of values of the the columns.
+     * @param types the array of SQL Types of the Values.
+     * @return the String Insert Into SQL.
+     */
     public static String prepareInsertIntoQuery(String myInsertTable,String[] columns, Object[] values, Integer[] types) {
         return prepareInsertIntoQuery(myInsertTable, columns, values, CollectionKit.convertIntegersToInt(types));
     }
 
+    /**
+     * Method to create a String Query Insert Into.
+     * @param myInsertTable the name of the table where insert.
+     * @param columns the Array of columns of the table.
+     * @param values the Array of values of the the columns.
+     * @param types the array of SQL Types of the Values.
+     * @return the String Insert Into SQL.
+     */
     public static String prepareInsertIntoQuery(String myInsertTable,String[] columns, Object[] values, int[] types){
         StringBuilder bQuery = new StringBuilder();
         try {
@@ -292,10 +329,8 @@ public class SQLQuery {
                     bQuery.append("?");
                 } else {
                     if(values[i]== null || Objects.equals(values[i].toString(), "NULL")){
-                        //if(SQLHelper.convertSQLTypes2JavaClass(types[i]).getName().equals(Integer.class.getName())){
                         values[i] = null;
-                    }
-                    else if (values[i]!=null && values[i] instanceof String) {
+                    }else if (values[i]!=null && values[i] instanceof String) {
                         values[i] = "'" + values[i].toString().replace("'", "''") + "'";
                     }else if (values[i]!=null && values[i] instanceof java.net.URL) {
                         values[i] = "'" + values[i].toString().replace("'", "''") + "'";
@@ -317,6 +352,13 @@ public class SQLQuery {
     }
 
 
+    /**
+     * Method to create a String Query Insert Into.
+     * @param myInsertTable the name of the table where insert.
+     * @param columns the Array of columns of the table.
+     * @param values the Array of values of the the columns.
+     * @return the String Insert Into SQL.
+     */
     public static String prepareInsertIntoQuery(String myInsertTable,String[] columns,Object[] values){
         StringBuilder bQuery = new StringBuilder();
         try {
@@ -375,14 +417,16 @@ public class SQLQuery {
        /* query ="ALTER IGNORE TABLE "+mySelectTable+" ADD UNIQUE INDEX idx_name ("+
                 StringKit.convertArrayContentToSingleString(columns) +" );";*/
         StringBuilder bQuery = new StringBuilder();
-        bQuery.append("DELETE ");
-        bQuery.append("table1 FROM ").append(myDeleteTable).append(" table1,").append(myDeleteTable).append(" table2");
+        bQuery.append("DELETE FROM ").append(myDeleteTable);
         bQuery.append(" WHERE ");
         for(int i=0; i< columns.length; i++){
             if(Arrays.asList(columns_where).contains(columns[i])){
-                bQuery.append("table1.").append(columns[i]).append("= table2.").append(columns[i]);
+                bQuery.append(myDeleteTable).append(".").append(columns[i]).append("=")
+                        .append(myDeleteTable).append(".").append(values_where[i]);
                 if (condition != null && i < columns.length - 1) {
                     bQuery.append(" ").append(condition.toUpperCase()).append(" ");
+                }else{
+                    bQuery.append(" AND ");
                 }
             }
         }

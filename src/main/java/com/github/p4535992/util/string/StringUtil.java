@@ -51,9 +51,9 @@ public class StringUtil {
 
     public static boolean isNullOrEmpty(String text) { return StringIs.isNullOrEmpty(text);}
 
-    public static String cleanStringHTML(String stringHtml){return StringKit.cleanStringHTML(stringHtml);}
+    public static String cleanHTML(String stringHtml){return StringKit.cleanStringHTML(stringHtml);}
 
-    public static String toStringInline(String stringText){return StringKit.toStringInline(stringText);}
+    public static String toInline(String stringText){return StringKit.toStringInline(stringText);}
 
     public static String collapseSpaces(String argStr) {return StringKit.collapseSpaces(argStr);}
 

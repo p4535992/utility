@@ -4,6 +4,9 @@ import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.string.impl.StringIs;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -1786,6 +1789,54 @@ public class Jena2Kit {
     }
 
     /**
+     * Method to create a Jena Triple Match.
+     * @param subject the Jena Node of the Subject.
+     * @param predicate the Jena Node of the Predicate.
+     * @param object the Jena Node of the Object.
+     * @return the Jena TripleMatch.
+     */
+    public static TripleMatch createTripleMatch(Node subject,Node predicate,Node object){
+        return new Triple(subject,predicate,object);
+    }
+
+    /**
+     * Method to create a Jena Triple Match.
+     * @param triple the Jena Triple Object.
+     * @return the Jena TripleMatch.
+     */
+    public static TripleMatch createTripleMatch(Triple triple){ return triple;}
+
+    /**
+     * Method to convert a Jena TripleMatch to the Jena Triple.
+     * @param tm the Jena TripleMatch.
+     * @return the Jena triple.
+     */
+    public static Triple convertTripleMatchToTriple(TripleMatch tm){ return tm.asTriple();}
+
+    /**
+     * Method to convert a Jena TripleMatch to the Jena Subject Node.
+     * @param tm the Jena TripleMatch.
+     * @return the Jena Node.
+     */
+    public static Node convertTripleMatchToSubjectNode(TripleMatch tm){return tm.getMatchSubject();}
+
+    /**
+     * Method to convert a Jena TripleMatch to the Jena Predicate Node.
+     * @param tm the Jena TripleMatch.
+     * @return the Jena Node.
+     */
+    public static Node convertTripleMatchToPredicateNode(TripleMatch tm){return tm.getMatchPredicate();}
+
+    /**
+     * Method to convert a Jena TripleMatch to the Jena Object Node.
+     * @param tm the Jena TripleMatch.
+     * @return the Jena Node.
+     */
+    public static Node convertTripleMatchToObjectNode(TripleMatch tm){return tm.getMatchObject();}
+
+
+
+    /**
      * Method for load a file in the resource folder like a inpustream.
      * @param filename string of path to the file.
      * @param thisClass this class.
@@ -1865,6 +1916,8 @@ public class Jena2Kit {
             graph.add(triple);
         }*/
     }
+
+
 
 
     //----------------------------------------

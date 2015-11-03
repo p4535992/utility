@@ -821,8 +821,13 @@ public final class ReflectionKit3 {
         return method.getReturnType();
     }
 
-    private static Field[] getFieldsClass(Class<?> aClass){
-        return aClass.getDeclaredFields();
+    /**
+     * Method very simple to get all declared fields.
+     * @param clazz the class where search teh field.
+     * @return the Array of Declared Field.
+     */
+    public static Field[] getFieldsClass(Class<?> clazz){
+        return clazz.getDeclaredFields();
     }
 
     /**
@@ -1231,9 +1236,6 @@ public final class ReflectionKit3 {
      * @return the class if found otherwise a null.
      */
     public static Class<?> getClassFromPath(String pakage,String clazz){
-        //String pack = this.getClass().getPackage().getName()+".interceptor";
-        //String sclazz = cl.getSimpleName()+"Interceptor";
-        //String full = pack+"."+sclazz;
         try {
             return Class.forName(pakage+"."+clazz);
         } catch (ClassNotFoundException e) {
@@ -1276,6 +1278,23 @@ public final class ReflectionKit3 {
         return clazz.getSuperclass().getName();
     }
 
+
+    /**
+     * Method to get the name of the current method,.
+     * Input: Thread.currentThread().getStackTrace()
+     * @param e the Array of TraceElement.
+     * @return the String Name of the current Method.
+     */
+    public static String nameOfMethod(StackTraceElement e[]){
+        boolean doNext = false;
+        for (StackTraceElement s : e) {
+            if (doNext) {
+                return s.getMethodName();
+            }
+            doNext = s.getMethodName().equals("getStackTrace");
+        }
+        return "??????::";
+    }
 
     //OTHER METHODS
     /*public static Class createNewClass(String annotatedClassName,String pathPackageToAnnotatedClass)
@@ -1324,6 +1343,8 @@ public final class ReflectionKit3 {
         ParameterizedType pt = (ParameterizedType) t;
         return (Class) pt.getActualTypeArguments()[0];
     }
+
+
 
     //-----------------------------------------------------------------------
     // ADDED

@@ -1,5 +1,7 @@
 package com.github.p4535992.util.repositoryRDF;
 
+import org.openrdf.repository.Repository;
+
 import java.io.File;
 
 /**
@@ -7,6 +9,7 @@ import java.io.File;
  */
 public interface IRepositoryRDF {
 
+    public Repository connectTo();
 
 
 

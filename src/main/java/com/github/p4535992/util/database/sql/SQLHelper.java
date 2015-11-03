@@ -1,16 +1,18 @@
 package com.github.p4535992.util.database.sql;
 
+import com.github.p4535992.util.database.sql.performance.ConnectionWrapper;
+import com.github.p4535992.util.database.sql.performance.JDBCLogger;
+import com.github.p4535992.util.database.sql.performance.StatementWrapper;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtil;
 import com.github.p4535992.util.string.impl.StringIs;
-import org.jooq.SQLDialect;
+
 
 import java.lang.reflect.Field;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Date;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Created by 4535992 on 14/05/2015.
@@ -219,46 +221,23 @@ public class SQLHelper {
     }
 
     /**
-     * Method to convert a DialectDB to a SQLDialect of JOOQ.
-     * @param dialectDb String name of a dialectDb.
-     * @return the SQLDialect of JOOQ.
+     * Method to get a Connection from a List to possible choice.
+     * @param dialectDB the String of the dialectDb.
+     * @param host String name of the host where is the server.
+     * @param port String number of the port where the server communicate.
+     * @param database string name of the database.
+     * @param username string username.
+     * @param password string password.
+     * @return the connection.
      */
-    public static SQLDialect convertDialectDBToSQLDialectJOOQ(String dialectDb){
-        return convertStringToSQLDialectJOOQ(dialectDb);
-
-    }
-
-    /**
-     * Method to convert a String to a SQLDialect of JOOQ.
-     * @param sqlDialect the String name of the SQLDialect.
-     * @return the SQLDialect of JOOQ.
-     */
-    public static SQLDialect convertStringToSQLDialectJOOQ(String sqlDialect) {
-        sqlDialect = convertDialectDatabaseToTypeNameId(sqlDialect);
-        switch (sqlDialect.toLowerCase()) {
-            case "cubrid":return SQLDialect.CUBRID;
-            case "derby": return SQLDialect.DERBY;
-            case "firebird": return SQLDialect.FIREBIRD;
-            case "h2": return SQLDialect.H2;
-            case "hsqldb": return SQLDialect.HSQLDB;
-            case "mariadb": return SQLDialect.MARIADB;
-            case "mysql": return SQLDialect.MYSQL;
-            case "postgres": return SQLDialect.POSTGRES;
-            case "postgres93": return SQLDialect.POSTGRES_9_3;
-            case "postgres94": return SQLDialect.POSTGRES_9_4;
-            case "sqlite": return SQLDialect.SQLITE;
-            default: return SQLDialect.DEFAULT;
-        }
-    }
-
     public static Connection chooseAndGetConnection(String dialectDB,
                                 String host,String port,String database,String username,String password){
-        if(StringIs.isNullOrEmpty(username) || StringIs.isNullOrEmpty(password)){
+        if(StringUtil.isNullOrEmpty(username) || StringUtil.isNullOrEmpty(password)){
             username = "root";
             password = "";
         }
-        if(!StringIs.isNullOrEmpty(port) || !StringIs.isNumeric(port)) port = "";
-        if(StringIs.isNullOrEmpty(dialectDB)){
+        if(!StringUtil.isNullOrEmpty(port) || !StringUtil.isNumeric(port)) port = "";
+        if(StringUtil.isNullOrEmpty(dialectDB)){
             SystemLog.warning("No connection database type detected fro this type.");
             return null;
         }else dialectDB = convertDialectDatabaseToTypeNameId(dialectDB);
@@ -363,11 +342,34 @@ public class SQLHelper {
      * @param password string password.
      * @return the connection.
      */
-    public static Connection getMySqlConnection(
-            String hostAndDatabase,String username,String password) {
+    public static Connection getMySqlConnection( String hostAndDatabase,String username,String password) {
         String[] split = hostAndDatabase.split("/");
-        hostAndDatabase = hostAndDatabase.replace("/"+split[split.length-1],"");
+        //localhost:3306/geodb
+        if(hostAndDatabase.startsWith("/")) hostAndDatabase = split[1];
+        else hostAndDatabase = split[0];
         return getMySqlConnection(hostAndDatabase,null,split[split.length-1],username,password);
+    }
+
+    public static Connection getMySqlConnection(String fullUrl) {
+        //jdbc:mysql://localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
+        if(fullUrl.toLowerCase().contains("jdbc:mysql://")) fullUrl = fullUrl.replace("jdbc:mysql://","");
+        //localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
+        String[] split = fullUrl.split("\\?");
+        String hostAndDatabase = split[0];//localhost:3306/geodb
+        Pattern pat = Pattern.compile("(\\&|\\?)?(user|username)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
+        String username = StringUtil.find(fullUrl,pat);
+        if(Objects.equals(username, "?")) username = "root";
+        pat = Pattern.compile("(\\&|\\?)?(pass|password)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
+        String password = StringUtil.find(fullUrl,pat);
+        if(Objects.equals(password, "?")) password ="";
+        split = hostAndDatabase.split("/");
+        String database = split[split.length-1];
+        hostAndDatabase = hostAndDatabase.replace(database,"");
+        pat = Pattern.compile("([0-9])+", Pattern.CASE_INSENSITIVE);
+        String port = StringUtil.find(hostAndDatabase,pat);
+        if(Objects.equals(port, "?")) port = null;
+        else  hostAndDatabase = hostAndDatabase.replace(port, "").replace(":","").replace("/","");
+        return getMySqlConnection(hostAndDatabase,port,database,username,password);
     }
 
     /**
@@ -439,7 +441,7 @@ public class SQLHelper {
      * @param database string name of the database.
      * @param table the String name of the Table.
      * @param columnNamePattern the String Pattern name of the columnss to get.
-     * @return
+     * @return the Map of all columns.
      * @throws SQLException
      * @throws InstantiationException
      * @throws IllegalAccessException
@@ -490,13 +492,26 @@ public class SQLHelper {
      */
     public static void closeConnection() throws SQLException{ conn.close();}
 
+    /**
+     * Method to set a New Connection.
+     * @param classDriverName
+     * @param dialectDB
+     * @param host
+     * @param port
+     * @param database
+     * @param user
+     * @param pass
+     * @return
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     */
     public static Connection setNewConnection(String classDriverName,String dialectDB,
                                            String host,String port,String database,String user,String pass) throws ClassNotFoundException, SQLException {
         //"org.hsqldb.jdbcDriver","jdbc:hsqldb:data/tutorial"
         Class.forName(classDriverName); //load driver//"com.sql.jdbc.Driver"
         String url = (dialectDB  + host + ":" + port + "/" + database); //"jdbc:sql://localhost:3306/jdbctest"
         conn = DriverManager.getConnection(url, user, pass);
-        System.out.println("Got Connection.");
+        SystemLog.message("SQLHelper::SetNewConnection -> Set a new Connection.", SQLHelper.class);
         return conn;
     }
 
@@ -520,23 +535,34 @@ public class SQLHelper {
         //stmt.executeUpdate(sql);
     }
 
-    public static void checkData(String sql) throws Exception {
-        java.sql.ResultSet rs = stmt.executeQuery(sql);
-        java.sql.ResultSetMetaData metadata = rs.getMetaData();
-        for (int i = 0; i < metadata.getColumnCount(); i++) {
-            System.out.print("\t"+ metadata.getColumnLabel(i + 1));
-        }
-        System.out.println("\n----------------------------------");
-        while (rs.next()) {
+    /**
+     * Method to print hte result of a query.
+     * @param sql the String SQL.
+     * @throws Exception thow if any error is occurred.
+     */
+    public static void checkData(String sql){
+        ResultSet rs = null;
+        try {
+            rs = stmt.executeQuery(sql);
+
+            java.sql.ResultSetMetaData metadata = rs.getMetaData();
             for (int i = 0; i < metadata.getColumnCount(); i++) {
-                Object value = rs.getObject(i + 1);
-                if (value == null) {
-                    System.out.print("\t       ");
-                } else {
-                    System.out.print("\t"+value.toString().trim());
-                }
+                SystemLog.messageInline("\t" + metadata.getColumnLabel(i + 1));
             }
-            System.out.println("");
+            SystemLog.messageInline("\n----------------------------------");
+            while (rs.next()) {
+                for (int i = 0; i < metadata.getColumnCount(); i++) {
+                    Object value = rs.getObject(i + 1);
+                    if (value == null) {
+                        SystemLog.messageInline("\t       ");
+                    } else {
+                        SystemLog.messageInline("\t" + value.toString().trim());
+                    }
+                }
+                SystemLog.message("");
+            }
+        } catch (SQLException e) {
+            SystemLog.exception("SQLHelper::checkData",e,SQLHelper.class);
         }
     }
 
@@ -554,6 +580,58 @@ public class SQLHelper {
             SystemLog.exception(e);
             return null;
         }
+    }
+
+    public static Vector getATable(String tablename, Connection connection)
+            throws SQLException
+    {
+        String sqlQuery = "SELECT * FROM " + tablename;
+        Statement statement = connection.createStatement(  );
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+        int numColumns = resultSet.getMetaData(  ).getColumnCount(  );
+        String[  ] aRow;
+        Vector allRows = new Vector(  );
+        while(resultSet.next(  ))
+        {
+            aRow = new String[numColumns];
+            for (int i = 0; i < numColumns; i++)
+                //ResultSet access is 1-based, arrays are 0-based
+                aRow[i] = resultSet.getString(i+1);
+            allRows.addElement(aRow);
+        }
+        return allRows;
+    }
+
+    public static Long getExcecutionTime(String sql){
+        long startTime = 0,endTime = 0;
+        try {
+            stmt = conn.createStatement();
+            startTime = System.currentTimeMillis();
+            ResultSet rs = stmt.executeQuery(sql);
+            endTime   = System.currentTimeMillis();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return endTime - startTime;
+    }
+
+    public static Long getExcecutionTime(String sql,Connection conn){
+        long startTime = 0,endTime = 0;
+        //Connection dbConnection = getConnectionFromDriver(  );
+        ConnectionWrapper dbConnection = new ConnectionWrapper(conn);
+
+        try {
+            Statement stmt = dbConnection.createStatement();
+            startTime = System.currentTimeMillis();
+            ResultSet rs = stmt.executeQuery(sql);
+            endTime   = System.currentTimeMillis();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        Long calculate = endTime - startTime;
+        Long calculate2 = JDBCLogger.getTime();
+        if(calculate < calculate2) return calculate;
+        else return calculate2;
     }
 
 

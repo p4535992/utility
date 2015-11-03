@@ -841,7 +841,7 @@ public class StringKit<T> {
     public static String convertObjectToString(Object object){
         if(object instanceof URL) return object.toString();
         if(object instanceof URI) return object.toString();
-        return (String)object;
+        return String.valueOf(object);
     }
 
     /**

@@ -9,6 +9,7 @@ import com.github.p4535992.util.string.impl.StringKit;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -454,12 +455,34 @@ public class FileUtil {
     public static URL convertFileToURL(String filePath)throws MalformedURLException{return convertFileToURL(new File(filePath));}
 
     /**
-     * Merthod to convert a URI to a File.
+     * Method to convert a URI to a File.
      * @param uri the URI to convert.
      * @return the File.
      * @throws MalformedURLException throw if any error is occurred.
      */
     public static File convertURIToFile(URI uri) throws MalformedURLException {return new File(uri.toURL().getFile());}
+
+    /**
+     * Method to convert a URI to a File.
+     * @param url the URL to convert.
+     * @return the File.
+     * @throws MalformedURLException throw if any error is occurred.
+     * @throws URISyntaxException throw if any error is occurred.
+     */
+    public static File convertURLToFile(URL url) throws URISyntaxException, MalformedURLException {
+        return convertURIToFile(url.toURI());
+    }
+
+    /**
+     * Method to convert a URI to a File.
+     * @param url the URL to convert.
+     * @return the File.
+     * @throws MalformedURLException throw if any error is occurred.
+     * @throws URISyntaxException throw if any error is occurred.
+     */
+    public static File convertURLToFile(String url) throws URISyntaxException, MalformedURLException {
+        return convertURIToFile(new URL(url).toURI());
+    }
 
     /**
      * Method to convert a URI to Stream.

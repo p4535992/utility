@@ -31,7 +31,7 @@ public class Test_Sesame {
         sesame.setOutput("C:\\Users\\tenti\\Documents\\GitHub\\EAT\\utility\\src\\test\\java\\util\\testSesame.ttl", "ttl", true);
         //sesame.setURLRepositoryId("km4city04");
         Repository rep = sesame.connectToHTTPRepository("http://localhost:8080/openrdf-sesame/repositories/km4city04");
-        RepositoryConnectionWrapper wrap = sesame.createNewRepositoryConnectionWrappper(rep);
+        RepositoryConnectionWrapper wrap = sesame.createRepositoryConnectionWrappper(rep);
         QueryLanguage sparql = sesame.stringToQueryLanguage("SPARQL");
         //String query = (SparqlKit.preparePrefix()+SPARQL).replaceAll("[\uFEFF-\uFFFF]", "").trim();
         //String query2 = new String(query.getBytes(), "UTF-8").replaceAll("[\uFEFF-\uFFFF]", "").trim();

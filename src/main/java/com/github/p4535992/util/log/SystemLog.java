@@ -45,6 +45,7 @@ public class SystemLog<T> {
     private static boolean isDEBUG=false;
     private static boolean isERROR;
     private static boolean isPRINT = true;
+    private static boolean isInline = false;
 
     private static boolean isLogOff = false;
     private static boolean isLog4j = false;
@@ -78,10 +79,13 @@ public class SystemLog<T> {
 
     public static void setIsLog4j(boolean isLog4j) {SystemLog.isLog4j = isLog4j;}
 
-    public static boolean isLogSlf4j() {return isSlf4j;}
+    public static boolean isSlf4j() {return isSlf4j;}
 
-    public static void setIsLogSlf4j(boolean isSlf4j) {SystemLog.isSlf4j = isSlf4j;}
+    public static void setIsSlf4j(boolean isSlf4j) {SystemLog.isSlf4j = isSlf4j;}
 
+    public static boolean isInline() { return isInline; }
+
+    public static void setIsInline(boolean isInline) { SystemLog.isInline = isInline; }
 
     /** Default {@code DateFormat} instance, used when custom one not set. */
     private static DateFormat df;
@@ -162,8 +166,13 @@ public class SystemLog<T> {
         try {
             if (logEntry != null) {
                 if (isLogOff) {
-                    if (isERROR) System.err.println(logEntry);
-                    else System.out.println(logEntry);
+                    if(isInline){
+                        if (isERROR) System.err.print(logEntry);
+                        else System.out.print(logEntry);
+                    }else {
+                        if (isERROR) System.err.println(logEntry);
+                        else System.out.println(logEntry);
+                    }
                 } else {
                     if (LOGFILE == null || !LOGFILE.exists()) new SystemLog();
                     //if(!logging){ log = new SystemLog();}
@@ -180,8 +189,13 @@ public class SystemLog<T> {
                     }
                     sb.append(level.toString());
                     sb.append(logEntry);
-                    if (isERROR) System.err.println(sb.toString());
-                    else System.out.println(sb.toString());
+                    if(isInline){
+                        if (isERROR) System.err.print(sb.toString());
+                        else System.out.print(sb.toString());
+                    }else {
+                        if (isERROR) System.err.println(sb.toString());
+                        else System.out.println(sb.toString());
+                    }
                     if (isPRINT) {
                         try (PrintWriter pWriter = new PrintWriter(new BufferedWriter(new FileWriter(LOGFILE.getAbsolutePath(), true)))) {
                             //try{
@@ -215,6 +229,7 @@ public class SystemLog<T> {
         else System.out.println(logEntry);
     }
 
+    public static void messageInline(String logEntry){isInline=true; message(logEntry,null);}
     public static void message(String logEntry){message(logEntry,null);}
     public static void message(String logEntry,Class<?> thisClass){
         level = Level.OUT;
@@ -250,7 +265,9 @@ public class SystemLog<T> {
     }
 
     public static void warning(String logEntry){warning(logEntry,null,null);}
+    public static void warning(String logEntry,Class<?> thisClass){warning(logEntry,null,thisClass);}
     public static void warning(Throwable th){warning(th.getMessage() + "," + th.getLocalizedMessage(), th, null);}
+    public static void warning(Throwable th,Class<?> thisClass){warning(th.getMessage() + "," + th.getLocalizedMessage(), th, thisClass);}
     public static void warning(String logEntry,Throwable th,Class<?> thisClass){
         level = Level.WARN;
         isERROR=true;

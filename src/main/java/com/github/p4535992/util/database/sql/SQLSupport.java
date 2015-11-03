@@ -142,9 +142,6 @@ public class SQLSupport<T>{
         SQLSupport support = new SQLSupport();
         String attributeAnnotationKey ="name";
         try {
-            //Map<String,Class<?>> l = ReflectionKit.inspectAndLoadGetterObject(object);
-            //Integer size = object.getClass().getDeclaredFields().length;
-            //Annotation annotation = object.getClass().getAnnotation(javax.persistence.Column.class);
             Field[] fields = ReflectionKit.getFieldsByAnnotation(object.getClass(),Column.class);
             Object[] values = new Object[fields.length];
             int[] types = new int[fields.length];
@@ -153,13 +150,10 @@ public class SQLSupport<T>{
             //Field[] fields = object.getClass().getDeclaredFields();
             int i = 0;
             for (Method method: methods) {
-                //Method method = methods.get(i);
-                //Method method = ReflectionKit.getMethodByNameAndParam(object, entry.getKey().toString(), null);
                 if(method!=null){
                     values[i] = ReflectionKit.invokeGetterMethod(object, method);
                     Class<?> clazz = fields[i].getType();
                     types[i] = SQLHelper.convertClass2SQLTypes(clazz);
-                    //System.out.println(method+","+values[i]+","+types[i]);
                     i++;
                 }
             }
@@ -176,7 +170,6 @@ public class SQLSupport<T>{
                                 Object[] obj = (Object[]) list.get(j)[k];
                                 int g = 0;
                                 while (g < obj.length) {
-                                    //attributeAnnotationKey = "name"
                                     if (obj[g].equals(attributeAnnotationKey)) {
                                         columns[i] = obj[++g].toString();
                                         flag = true;
@@ -193,7 +186,6 @@ public class SQLSupport<T>{
                     }
                     i++;
                 }//if list.size() > 0
-
             }//for each ssc
         support = new SQLSupport(columns,values,types);
         }catch(IllegalAccessException|NoSuchMethodException|
@@ -218,7 +210,8 @@ public class SQLSupport<T>{
         return CollectionKit.convertListToArray(types);
     }
 
-    public static String[] getArrayColumns(Class<?> clazz, Class<? extends Annotation> aClass,String attributeNameColumnAnnotation) throws NoSuchFieldException {
+    public static String[] getArrayColumns(Class<?> clazz, Class<? extends Annotation> aClass,String attributeNameColumnAnnotation)
+            throws NoSuchFieldException {
         List<List<Object[]>> test4 = ReflectionKit.getAnnotationsFields(clazz,aClass);
         int j,i,x;
         boolean found;

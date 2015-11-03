@@ -408,28 +408,33 @@ public class JenaAndSesame {
      */
     public Model convertOpenRDFModelToJenaModel(org.openrdf.model.Model theModel){
         Model jenaModel = ModelFactory.createDefaultModel();
-        for(org.openrdf.model.Statement stmt: theModel){
+        try {
+            for (org.openrdf.model.Statement stmt : theModel) {
                 Node node = NodeUtils.asNode(stmt.getObject().stringValue());
                 RDFNode rdfNode;
-                if(node.isURI()){
+                if (node.isURI()) {
                     try {
                         rdfNode = ResourceFactory.createTypedLiteral(new URI(stmt.getObject().stringValue()));
-                    }catch (URISyntaxException e) {
-                        if(node.isLiteral()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
-                        else if(node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
+                    } catch (URISyntaxException e) {
+                        if (node.isLiteral())
+                            rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                        else if (node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
                         else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
                     }
-                }
-                else if(node.isLiteral()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
-                else if(node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
+                } else if (node.isLiteral())
+                    rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                else if (node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
                 else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
                 //RDFNode rdfNode = jenaModel.asRDFNode(node);
-                Statement ss =  ResourceFactory.createStatement(
+                Statement ss = ResourceFactory.createStatement(
                         ResourceFactory.createResource(stmt.getSubject().toString()),
-                        ResourceFactory.createProperty(stmt.getPredicate().getNamespace(),stmt.getPredicate().getLocalName()),
+                        ResourceFactory.createProperty(stmt.getPredicate().getNamespace(), stmt.getPredicate().getLocalName()),
                         rdfNode);
                 jenaModel.add(ss);
 
+            }
+        }catch(java.lang.NullPointerException ne){
+            SystemLog.exception("JenaAndSesame::convertOpenRDFModelToJenaModel",ne,JenaAndSesame.class);
         }
         return jenaModel;
         //return asJenaModel(theModel);
