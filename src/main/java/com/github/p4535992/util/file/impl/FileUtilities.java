@@ -1,6 +1,5 @@
 package com.github.p4535992.util.file.impl;
 
-import com.github.p4535992.util.encoding.EncodingUtil;
 import com.github.p4535992.util.file.SimpleParameters;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.impl.StringIs;
@@ -24,8 +23,7 @@ import static java.util.Arrays.*;
  * @version 2015-07-07.
  */
 @SuppressWarnings("unused")
-public class FileUtil {
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileUtil.class);
+public class FileUtilities {
     private static String fullPath;
     private static char pathSeparator = File.separatorChar;
     private static char extensionSeparator = '.';
@@ -34,20 +32,16 @@ public class FileUtil {
      * Constructor .
      * @param f file of input
      */
-    public FileUtil(File f) {
-        FileUtil.fullPath = f.getAbsolutePath();
-        //FileUtil.pathSeparator = '/';
-        //FileUtil.extensionSeparator = '.';
+    public FileUtilities(File f) {
+        FileUtilities.fullPath = f.getAbsolutePath();
     }
 
     /**
      * Constructor.
      * @param filePath string of the path to the file
      */
-    public FileUtil(String filePath) {
-        FileUtil.fullPath = filePath;
-        //FileUtil.pathSeparator = '/';
-        //FileUtil.extensionSeparator = '.';
+    public FileUtilities(String filePath) {
+        FileUtilities.fullPath = filePath;
     }
 
     /**
@@ -56,10 +50,10 @@ public class FileUtil {
      * @param separator path separator
      * @param extension extension separator (usually '.')
      */
-    public FileUtil(String str, char separator, char extension) {
-        FileUtil.fullPath = str;
-        FileUtil.pathSeparator = separator;
-        FileUtil.extensionSeparator = extension;
+    public FileUtilities(String str, char separator, char extension) {
+        FileUtilities.fullPath = str;
+        FileUtilities.pathSeparator = separator;
+        FileUtilities.extensionSeparator = extension;
     }
 
     /**
@@ -67,112 +61,63 @@ public class FileUtil {
      * @param f file of input
      * @return string of the extension of the file
      */
-    public static String extension(File f) {return extension(f.getAbsolutePath());}
-
-    /**
-     * Method for get the extension from a file.
-     * @param f file of input
-     * @return string of the extension of the file
-     */
-    public static String getExtension(File f) {return extension(f);}
+    public static String getExtension(File f) {return getExtension(f.getAbsolutePath());}
 
     /**
      * Method for get the extension from a file.
      * @param fullPath string of the path to the file
      * @return string of the extension of the file
      */
-    public static String extension(String fullPath) {
-        int dot = fullPath.lastIndexOf(extensionSeparator);
-        return fullPath.substring(dot + 1);
+    public static String getExtension(String fullPath) {
+        return fullPath.substring(fullPath.lastIndexOf(extensionSeparator) + 1);
     }
 
     /**
-     * Method for get the extension from a file.
-     * @param fullPath string of the path to the file
-     * @return string of the extension of the file
-     */
-    public static String getExtension(String fullPath) {return extension(fullPath);}
-
-    /**
      * Method for get the filename without extension.
      * @param f file of input
      * @return name of the file without the extension
      */
-    public static String filenameNoExt(File f) {return filenameNoExt(f.getAbsolutePath());}
-
-    /**
-     * Method for get the filename without extension.
-     * @param f file of input
-     * @return name of the file without the extension
-     */
-    public static String getFilenameWithoutExt(File f) {return filenameNoExt(f);}
+    public static String getFilenameWithoutExt(File f) {
+            return getFilenameWithoutExt(f.getAbsolutePath());
+    }
 
     /**
      * Method for get the filename without extension.
      * @param fullPath string of the path to the file
      * @return name of the file without the extension
      */
-    public static String filenameNoExt(String fullPath) {
+    public static String getFilenameWithoutExt(String fullPath) {
         int dot = fullPath.lastIndexOf(extensionSeparator);
         int sep = fullPath.lastIndexOf(pathSeparator);
         return fullPath.substring(sep + 1, dot);
     }
 
     /**
-     * Method for get the filename without extension.
-     * @param fullPath string of the path to the file
-     * @return name of the file without the extension
-     */
-    public static String getFilenameWithoutExt(String fullPath) {return filenameNoExt(fullPath);}
-
-    /**
      * Method for get the name of the file (with extensions).
      * @return name of the file
      */
-    public static String filename() {return new File(fullPath).getName();}
-
-    /**
-     * Method for get the name of the file (with extensions).
-     * @return name of the file
-     */
-    public static String getFilename() {return filename();}
+    public static String getFilename() {return new File(fullPath).getName();}
 
     /**
      * Method for get the name of the file (with extensions).
      * @param f file of input
      * @return name of the file
      */
-    public static String filename(File f) {return f.getName();}
-
-    /**
-     * Method for get the name of the file (with extensions).
-     * @param f file of input
-     * @return name of the file
-     */
-    public static String getFilename(File f) {return filename(f);}
+    public static String getFilename(File f) {return f.getName();}
 
     /**
      * Method for get the name of the file (with extensions).
      * @param fullPath string of the path to the file
      * @return name of the file
      */
-    public static String filename(String fullPath) {
+    public static String getFilename(String fullPath) {
         String name;
-        if (fullPath.contains(File.separator)) {
-            name = fullPath.replace(FileUtil.path(fullPath), "");
-        }else{
-            name = fullPath;
-        }
+        if (fullPath.contains(File.separator)) name = fullPath.replace(FileUtilities.getPath(fullPath), "");
+        else name = fullPath;
+
         name = name.replace(File.separator, "");
         return name;
     }
-
-    /**
-     * Method for get the name of the file (with extensions).
-     * @param fullPath string of the path to the file
-     * @return name of the file
-     */
-    public static String getFilename(String fullPath) {return filename(fullPath);}
 
 
     /**
@@ -191,28 +136,14 @@ public class FileUtil {
      * @param file File object.
      * @return the local path to the file in the project.
      */
-    public static String localPath(File file){return localPath("", file.getAbsolutePath());}
-
-    /**
-     * Method or get the local path in the project.
-     * @param file File object.
-     * @return the local path to the file in the project.
-     */
-    public static String getLocalPath(File file){ return localPath(file);}
+    public static String getLocalPath(File file){ return getLocalPath("", file.getAbsolutePath());}
 
     /**
      * Method for get the local path in the project.
      * @param absolutePath string of the absolute path to the file in the project.
      * @return the local path to the file in the project
      */
-    public static String localPath(String absolutePath){return localPath("", absolutePath);}
-
-    /**
-     * Method for get the local path in the project.
-     * @param absolutePath string of the absolute path to the file in the project.
-     * @return the local path to the file in the project
-     */
-    public static String getLocalPath(String absolutePath){return localPath(absolutePath);}
+    public static String getLocalPath(String absolutePath){return getLocalPath("", absolutePath);}
 
     /**
      * Method for get the local path in the project.
@@ -220,65 +151,31 @@ public class FileUtil {
      * @param localPath string of the absolute path to the file in the project.
      * @return the local path to the file in the project
      */
-    public static String localPath(String basePath,String localPath){
+    public static String getLocalPath(String basePath,String localPath){
         basePath = basePath.replace(System.getProperty("user.dir"),"");
         return basePath+File.separator+localPath;
     }
 
     /**
-     * Method for get the local path in the project.
-     * @param basePath string of the absolute path to the direcotry of the project.
-     * @param localPath string of the absolute path to the file in the project.
-     * @return the local path to the file in the project
-     */
-    public static String getLocalPath(String basePath,String localPath){return localPath(basePath, localPath);}
-
-    /**
      * Method for get the path of a file.
      * @return the path to the file
      */
-    public static String path() {return fullPath.substring(0, fullPath.lastIndexOf(File.separator));}
-
-    /**
-     * Method for get the path of a file.
-     * @return the path to the file
-     */
-    public static String getPath() {return path();}
+    public static String getPath() {return fullPath.substring(0, fullPath.lastIndexOf(File.separator));}
 
     /**
      * Method for get the path of a file.
      * @param f file of input
      * @return the path to the file
      */
-    public static String path(File f) {
-        return path(f.getAbsolutePath());
-    }
-
-    /**
-     * Method for get the path of a file.
-     * @param f file of input
-     * @return the path to the file
-     */
-    public static String getPath(File f) {return path(f);}
+    public static String getPath(File f) {return getPath(f.getAbsolutePath());}
 
     /**
      * Method for get the path of a file.
      * @param fullPath string of the path to the file
      * @return the path to the file
      */
-    public static String path(String fullPath) {
-        //int sep = fullPath.lastIndexOf(pathSeparator);
-        //String path = fullPath.substring(0, sep);
-        //String fullPath = f.getAbsolutePath();
-        return fullPath.substring(0, fullPath.lastIndexOf(File.separator));
-    }
-
-    /**
-     * Method for get the path of a file.
-     * @param fullPath string of the path to the file
-     * @return the path to the file
-     */
-    public static String getPath(String fullPath) {return  path(fullPath);}
+    public static String getPath(String fullPath) {
+        return fullPath.substring(0, fullPath.lastIndexOf(File.separator));}
 
 
     /**
@@ -287,7 +184,8 @@ public class FileUtil {
      * @return the new File object.
      * @throws IOException throw if the output location not exists!.
      */
-    public static File createFile(String fullPath) throws IOException {return createFile(new File(fullPath));}
+    public static File createFile(String fullPath) throws IOException {
+        return createFile(new File(fullPath));}
 
 
     /**
@@ -298,7 +196,6 @@ public class FileUtil {
      */
     public static File createFile(File file) throws IOException {
         if(file.createNewFile()){
-            //System.out.println("File is created!");
             return file;
         }
         return null;
@@ -372,7 +269,7 @@ public class FileUtil {
      * @param directory file of the directory/folder.
      * @return list of files in the directory.
      */
-    public static List<File> readDirectory(File directory){
+    public static List<File> readDirectory(File directory) {
         return readDirectory(directory.getAbsolutePath());
     }
 
@@ -434,7 +331,7 @@ public class FileUtil {
      * @param filePath the String to the File to convert.
      * @return the URI.
      */
-    public static URI convertFileToUri(String filePath){
+    public static URI convertFileToUri(String filePath) {
         return convertFileToUri(new File(filePath));
     }
 
@@ -647,8 +544,8 @@ public class FileUtil {
     public static File convertStringToTempFile(String content,String fullPath){
         try {
             File file = File.createTempFile(
-                    filename(fullPath),
-                    extension(fullPath),
+                    getFilename(fullPath),
+                    getExtension(fullPath),
                     getDirectoryFile(fullPath)
             );
             // Delete temp file when program exits.
@@ -754,62 +651,6 @@ public class FileUtil {
         return map;
     }
 
-    /*static public File downloadFileFromHTTPRequest(HttpServletRequest request,File destinationDir) {
-        // Download the file to the upload file folder
-
-        *//*File destinationDir = new File(
-                ServletContextParameterMap.getParameterValue(ContextParameter.USER_DIRECTORY_PATH) + USER_UPLOAD_DIR);*//*
-        //logger.debug("File upload destination directory: " + destinationDir.getAbsolutePath());
-        if (!destinationDir.isDirectory()) {
-            destinationDir.mkdir();
-        }
-
-        org.apache.commons.fileupload.disk.DiskFileItemFactory fileItemFactory =
-                new org.apache.commons.fileupload.disk.DiskFileItemFactory();
-
-        // Set the size threshold, above which content will be stored on disk.
-        fileItemFactory.setSizeThreshold(1 * 1024 * 1024); //1 MB
-
-        //Set the temporary directory to store the uploaded files of size above threshold.
-        fileItemFactory.setRepository(destinationDir);
-
-        ServletFileUpload uploadHandler = new ServletFileUpload(fileItemFactory);
-
-        File uploadedFile = null;
-        try {
-            // Parse the request
-            @SuppressWarnings("rawtypes")
-            List items = uploadHandler.parseRequest(request);
-            @SuppressWarnings("rawtypes")
-            Iterator itr = items.iterator();
-            while (itr.hasNext()) {
-                org.apache.commons.fileupload.FileItem item =
-                        (org.apache.commons.fileupload.FileItem) itr.next();
-
-                // Ignore Form Fields.
-                if (item.isFormField()) {
-                    // Do nothing
-                } else {
-                    //Handle Uploaded files. Write file to the ultimate location.
-                    uploadedFile = new File(destinationDir, item.getName());
-                    if (item instanceof DiskFileItem) {
-                        org.apache.commons.fileupload.disk.DiskFileItem t =
-                                (org.apache.commons.fileupload.disk.DiskFileItem)item;
-                        if (!t.getStoreLocation().renameTo(uploadedFile))
-                            item.write(uploadedFile);
-                    }
-                    else
-                        item.write(uploadedFile);
-                }
-            }
-        } catch (org.apache.commons.fileupload.FileUploadException ex) {
-            logger.error("Error encountered while parsing the request", ex);
-        } catch (Exception ex) {
-            logger.error("Error encountered while uploading file", ex);
-        }
-        return uploadedFile;
-    }*/
-
     /**
      * Method to copy a file.
      * @param destination the String destination for the copy of the file.
@@ -817,34 +658,17 @@ public class FileUtil {
      * @throws IOException throw if any error is occurrred.
      */
     public static void copyFiles(File destination, File source) throws IOException {
-        if (!destination.exists()) {
-            createFile(destination);
-            //destination.createNewFile();
-        }
+        if (!destination.exists()) createFile(destination);
         OutputStream out;
         try (InputStream in = new FileInputStream(source)) {
             out = new FileOutputStream(destination);
             byte[] buf = new byte[1024];
             int len;
-            while ((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
+            while ((len = in.read(buf)) > 0) { out.write(buf, 0, len);}
         }
         out.close();
         SystemLog.message("Done copying contents of " + source.getName() + " to " + destination.getName());
     }
-
-    /**
-     * Method to convert a File to a String with encoding.
-     * @param file the File to read.
-     * @param encoding the String name of the encoding you use.
-     * @return the String of the content of the file you read.
-     * @throws IOException thro if any error is occurred.
-     */
-     /* public static String convertFileToString(File file, String encoding) throws IOException {
-        return EncodingUtil.getStringFileWithEncoding(file, encoding);
-     }
-     */
 
     /**
      * Method to convert a resource file to a Stream.
@@ -852,10 +676,10 @@ public class FileUtil {
      * @return the Stream of the File.
      * @throws IOException throw if the File is not found or the Output directory not exists.
      */
-    public static  InputStream convertResourceFileToStream(String pathToFile) throws IOException{
+    public static InputStream convertResourceFileToStream(String pathToFile) throws IOException{
         // JDK7 try-with-resources ensures to close stream automatically
-        try (InputStream is = FileUtil.class.getResourceAsStream(pathToFile)) {
-            int Byte;       // Byte because byte is keyword!
+        try (InputStream is = FileUtilities.class.getResourceAsStream(pathToFile)) {
+            int Byte; // Byte because byte is keyword!
             while ((Byte = is.read()) != -1 ) {
                 System.out.print((char) Byte);
             }
@@ -872,7 +696,7 @@ public class FileUtil {
      * @param pathToFile String path to the File.
      * @return the Stream of the File.
      */
-    public static  InputStream convertFileToStream(String pathToFile){
+    public static InputStream convertFileToStream(String pathToFile){
         try {
             return new FileInputStream(new File(pathToFile));
         } catch (FileNotFoundException e) {
@@ -905,15 +729,12 @@ public class FileUtil {
         try(OutputStream outputStream = new FileOutputStream(new File(filePathOutput))) {
             int read;
             byte[] bytes = new byte[1024];
-            while ((read = inStream.read(bytes)) != -1) {
-                outputStream.write(bytes, 0, read);
-            }
+            while ((read = inStream.read(bytes)) != -1) { outputStream.write(bytes, 0, read);}
         } catch (IOException e) {
             SystemLog.exception(e);
         }
-        if(new File(filePathOutput).exists()) {
-            return new File(filePathOutput);
-        }else{
+        if(new File(filePathOutput).exists()) return new File(filePathOutput);
+        else{
             SystemLog.warning("The file:"+ new File(filePathOutput).getAbsolutePath() +" not exists!!!");
             return null;
         }
@@ -935,7 +756,6 @@ public class FileUtil {
                     String line = scanner.nextLine();
                     result.append(line).append("\n");
                 }
-                //scanner.close();
             } catch (IOException e) {
                 SystemLog.exception(e);
             }
@@ -973,69 +793,57 @@ public class FileUtil {
      * @param name string name of the class
      * @return the full name package+class
      */
-    public static String resolveName(String name) {
-        if (StringIs.isNullOrEmpty(name)) {
-            return name;
-        }
+    private static String resolveName(String name) {
+        if (StringIs.isNullOrEmpty(name))  return name;
         if (!name.startsWith("/")) {
-            Class<?> c = FileUtil.class;
-            while (c.isArray()) {
-                c = c.getComponentType();
-            }
-            String baseName = c.getName();
+            Class<?> clazz = FileUtilities.class;
+            while (clazz.isArray()) { clazz = clazz.getComponentType();}
+            String baseName = clazz.getName();
             int index = baseName.lastIndexOf('.');
-            if (index != -1) {
-                name = baseName.substring(0, index).replace('.', '/')
-                        +"/"+name;
-            }
+            if (index != -1)  name = baseName.substring(0, index).replace('.', '/')+"/"+name;
         } else {
             name = name.substring(1);
         }
         return name;
     }
 
-
     /**
      * Method for compress file of triple before upload to thte repository make
      * the upload more faster.
      * @param file file of input
-     * @return inputstream of the file
-     * @throws IOException file not found
+     * @return InputStream of the file
      */
-    public static InputStream compressFileForUpload(File file) throws IOException{
-        return  new GZIPInputStream(new FileInputStream(file));
+    public static GZIPInputStream convertFileToGZIPInputStream(File file){
+        try {
+            return  new GZIPInputStream(new FileInputStream(file));
+        } catch (IOException e) {
+            SystemLog.exception(e,FileUtilities.class);
+            return null;
+        }
     }
 
     /**
-     * Method for compress file of triple before upload to thte repository
+     * Method for compress file of triple before upload to the repository
      * make the upload more faster.
      * @param filePathToFile string of the path tot the file
-     * @return inputstream of the file
-     * @throws IOException file not found
+     * @return InputStream of the file
      */
-    public static InputStream compressFileForUpload(String filePathToFile) throws IOException{
-        File file = new File(filePathToFile);
-        return compressFileForUpload(file);
+    public static GZIPInputStream convertFileToGZIPInputStream(String filePathToFile){
+        return convertFileToGZIPInputStream(new File(filePathToFile));
     }
 
     /**
      * Method for check is a file is a directory/folder.
      * @param file the file to inspect.
-     * @return if true is a direcotry else ia simple file.
+     * @return if true is a directory else ia simple file.
      */
     public static boolean isDirectory(File file){
-        if(file.exists()){
-            if(file.isFile()){
-                return false;
-            }else{
-                if(file.isDirectory()){
-                    return true;
-                }
-            }
+        if(file.exists()) {
+            return !file.isFile() && file.isDirectory();
         }else{
             SystemLog.warning("The file:"+file.getAbsolutePath()+" not exists!");
+            return false;
         }
-        return false;
     }
 
     /**
@@ -1152,6 +960,146 @@ public class FileUtil {
         }
         return fileName;
     }
+
+    /**
+     * Locate the specific file.
+     * Return the (URL decoded) abolute pathname to the file or null.
+     * @param findFile  the String name of file to search.
+     * @return the String path to the file.
+     * @throws java.io.FileNotFoundException throw if any error is occurrred.
+     */
+    public static String locateFile (String findFile,String basePath) throws FileNotFoundException {
+        URL url;
+        String fullPathName;
+        StringBuffer decodedPathName;
+        int pos, len, start;
+        if (findFile == null)throw new FileNotFoundException("locateFile: null file name");
+        if (findFile.startsWith(basePath)) return findFile.substring(basePath.length());
+        if ((fullPathName = locateByProperty(findFile)) != null)return fullPathName;
+        if ((url = locateByResource(findFile)) != null) {
+          /*
+           * The URL that we receive from getResource /might/ have ' '
+           * (space) characters converted to "%20" strings.  However,
+           * it doesn't have other URL encoding (e.g '+' characters are
+           * kept intact), so we'll just convert all "%20" strings to
+           * ' ' characters and hope for the best.
+           */
+            fullPathName = url.getFile();
+            //pos = 0;
+            len = fullPathName.length();
+            start = 0;
+            decodedPathName = new StringBuffer();
+
+            while ((pos = fullPathName.indexOf("%20", start)) != -1) { //pct = %20
+                decodedPathName.append(fullPathName.substring(start, pos));
+                decodedPathName.append(' ');
+                start = pos + 3; //pct.length = 3
+            }
+
+            if (start < len)decodedPathName.append(fullPathName.substring(start, len));
+            fullPathName=decodedPathName.toString();
+            if (platformIsWindows())fullPathName = fullPathName.substring(1, fullPathName.length());
+            return fullPathName;
+        }
+        throw new FileNotFoundException("locateFile: file not found: " + findFile);
+    }
+
+    /**
+     * Locate the specific file.
+     * Return the file name in URL form or null.
+     * @param findFile  the String name of file to search.
+     * @param basePath the string prefix of the findFile e.g. "abs://"
+     * @return the String path to the file.
+     * @throws java.io.FileNotFoundException throw if any error is occurrred.
+     */
+    public static URL locateURL (String findFile,String basePath) throws FileNotFoundException {
+        URL url;
+        String fullPathName;
+        if (findFile == null) throw new FileNotFoundException("locateURL: null file name");
+        try {
+            if (findFile.startsWith(basePath)) {
+                return (new URL("file:/" + findFile.substring(basePath.length())));
+            }
+            if ((fullPathName = locateByProperty(findFile)) != null) {
+                if(platformIsWindows())url = new URL("file:/" + fullPathName);
+                else url = new URL("file:" + fullPathName);
+                return url;
+            }
+        }catch (MalformedURLException e) {
+            System.err.println("locateURL: URL creation problem");
+            throw new FileNotFoundException("locateURL: URL creation problem");
+        }
+        if ((url = locateByResource(findFile)) != null)return url;
+        throw new FileNotFoundException("locateURL: file not found: " + findFile);
+    }
+
+    /**
+     * Search for a file using the properties: user.dir, user.home, java.home
+     * Returns absolute path name or null.
+     * @param findFile  the String name of file to search.
+     * @return the String path to the file.
+     */
+    private static synchronized String locateByProperty(String findFile) {
+        String fullPathName = null;
+        String dir;
+        File f = null;
+        if (findFile == null) return null;
+
+        try {
+            // System.err.println("Searching in user.dir for: " + findFile);
+            dir = System.getProperty("user.dir");
+            if (dir != null) {
+                fullPathName = dir + File.separatorChar + findFile;
+                f = new File(fullPathName);
+            }
+            if (f != null && f.exists()) {
+                // System.err.println("Found in user.dir");
+                return fullPathName;
+            }
+            dir = System.getProperty("user.home");
+            if (dir != null) {
+                fullPathName = dir + File.separatorChar + findFile;
+                f = new File(fullPathName);
+            }
+            if (f != null && f.exists()) {
+                // System.err.println("Found in user.home");
+                return fullPathName;
+            }
+            dir = System.getProperty("java.home");
+            if (dir != null) {
+                fullPathName = dir + File.separatorChar + findFile;
+                f = new File(fullPathName);
+            }
+            if (f != null && f.exists()){
+                // System.err.println("Found in java.home");
+                return fullPathName;
+            }
+        }
+        catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * Search for a file using the properties: user.dir, user.home, java.home
+     * Returns URL or null.
+     * @param findFile  the String name of file to search.
+     * @return the String path to the file.
+     */
+    private static URL locateByResource(String findFile){
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        URL url = loader.getResource(findFile);
+        if (url == null)  url = FileUtilities.class.getResource("/" + findFile);
+        // System.err.println("Search succeeded via getResource()");
+        return url;
+    }
+
+    /**
+    * Check the file separator to see if we're on a Windows platform.
+    * @return  boolean True if the platform is Windows, false otherwise.
+    */
+    private static boolean platformIsWindows() {return File.separatorChar == '\\';}
 
     /**
      * Method to convert a MultipartFile to a File

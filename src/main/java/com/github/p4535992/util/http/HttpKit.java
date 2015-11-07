@@ -1,5 +1,7 @@
 package com.github.p4535992.util.http;
 
+import com.github.p4535992.util.http.impl.HttpUtil;
+import com.github.p4535992.util.http.impl.URLUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.impl.StringIs;
 import org.jsoup.Jsoup;
@@ -33,7 +35,7 @@ public class HttpKit {
 
     public URL resolveURL(URL base, String target){
         try {
-            return URLUtil.resolveURL(base,target);
+            return URLUtil.resolveURL(base, target);
         } catch (MalformedURLException e) {
             SystemLog.warning("The "+base+ File.separator+target+" is not a correct url !!!");
             return null;
@@ -97,7 +99,7 @@ public class HttpKit {
     }
 
     public  boolean isSameDomainName(URL url1,URL url2){
-            return URLUtil.isSameDomainName(url1,url2);
+        return URLUtil.isSameDomainName(url1,url2);
     }
 
     public String[] getHostSegments(String url){

@@ -1,4 +1,4 @@
-package com.github.p4535992.util.http;
+package com.github.p4535992.util.http.impl;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -26,94 +26,67 @@ public class HttpUtility {
 	private String charset;
 	private OutputStream outputStream;
 	private PrintWriter writer;
+
 	/**
 	 * Makes an HTTP request using GET method to the specified URL.
-	 * 
-	 * @param requestURL
-	 *            the URL of the remote server.
+	 * @param requestURL the URL of the remote server.
 	 * @return An HttpURLConnection object.
-	 * @throws IOException
-	 *             thrown if any I/O org.p4535992.mvc.error occurred.
+	 * @throws IOException thrown if any I/O org.p4535992.mvc.error occurred.
 	 */
 	public static HttpURLConnection sendGetRequest(String requestURL)
 			throws IOException {
 		URL url = new URL(requestURL);
 		httpConn = (HttpURLConnection) url.openConnection();
 		httpConn.setUseCaches(false);
-
 		httpConn.setDoInput(true); // true if we want to read server's response
 		httpConn.setDoOutput(false); // false indicates this is a GET request
-
 		return httpConn;
 	}
 
 	/**
 	 * Makes an HTTP request using POST method to the specified URL.
-	 * 
-	 * @param requestURL
-	 *            the URL of the remote server.
-	 * @param params
-	 *            A map containing POST data in form of key-value pairs.
+	 * @param requestURL the URL of the remote server.
+	 * @param params A map containing POST data in form of key-value pairs.
 	 * @return An HttpURLConnection object.
-	 * @throws IOException
-	 *             thrown if any I/O error occurred.
+	 * @throws IOException thrown if any I/O error occurred.
 	 */
-	public static HttpURLConnection sendPostRequest(String requestURL,
-			Map<String, String> params) throws IOException {
+	public static HttpURLConnection sendPostRequest(String requestURL,Map<String, String> params) throws IOException {
 		URL url = new URL(requestURL);
 		httpConn = (HttpURLConnection) url.openConnection();
 		httpConn.setUseCaches(false);
-
 		httpConn.setDoInput(true); // true indicates the server returns response
-
-		StringBuffer requestParams = new StringBuffer();
-
+		StringBuilder requestParams = new StringBuilder();
 		if (params != null && params.size() > 0) {
-
 			httpConn.setDoOutput(true); // true indicates POST request
-
 			// creates the params string, encode them using URLEncoder
-			Iterator<String> paramIterator = params.keySet().iterator();
-			while (paramIterator.hasNext()) {
-				String key = paramIterator.next();
+			for (String key : params.keySet()) {
 				String value = params.get(key);
 				requestParams.append(URLEncoder.encode(key, "UTF-8"));
-				requestParams.append("=").append(
-						URLEncoder.encode(value, "UTF-8"));
+				requestParams.append("=").append(URLEncoder.encode(value, "UTF-8"));
 				requestParams.append("&");
 			}
-
 			// sends POST data
-			OutputStreamWriter writer = new OutputStreamWriter(
-					httpConn.getOutputStream());
+			OutputStreamWriter writer = new OutputStreamWriter(httpConn.getOutputStream());
 			writer.write(requestParams.toString());
 			writer.flush();
 		}
-
 		return httpConn;
 	}
 
 	/**
 	 * Returns only one line from the server's response. 
-         * This method should be used if the server returns only a single line of String.
-	 * 
+	 * This method should be used if the server returns only a single line of String.
 	 * @return a String of the server's response.
-	 * @throws IOException
-	 *             thrown if any I/O error occurred.
+	 * @throws IOException  thrown if any I/O error occurred.
 	 */
 	public static String readSingleLineRespone() throws IOException {
-		InputStream inputStream = null;
-		if (httpConn != null) {
-			inputStream = httpConn.getInputStream();
-		} else {
-			throw new IOException("Connection is not established.");
-		}
-		BufferedReader reader = new BufferedReader(new InputStreamReader(
-				inputStream));
+		InputStream inputStream;
+		if (httpConn != null) inputStream = httpConn.getInputStream();
+		else throw new IOException("Connection is not established.");
 
+		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 		String response = reader.readLine();
 		reader.close();
-
 		return response;
 	}
 
@@ -126,33 +99,25 @@ public class HttpUtility {
 	 *             thrown if any I/O error occurred.
 	 */
 	public static String[] readMultipleLinesRespone() throws IOException {
-		InputStream inputStream = null;
-		if (httpConn != null) {
-			inputStream = httpConn.getInputStream();
-		} else {
-			throw new IOException("Connection is not established.");
-		}
+		InputStream inputStream;
+		if (httpConn != null)inputStream = httpConn.getInputStream();
+		else throw new IOException("Connection is not established.");
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(
-				inputStream));
-		List<String> response = new ArrayList<String>();
-
-		String line = "";
+		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		List<String> response = new ArrayList<>();
+		String line;
 		while ((line = reader.readLine()) != null) {
 			response.add(line);
 		}
 		reader.close();
-
-		return response.toArray(new String[0]);
+		return response.toArray(new String[response.size()]);
 	}
 	
 	/**
 	 * Closes the connection if opened.
 	 */
 	public static void disconnect() {
-		if (httpConn != null) {
-			httpConn.disconnect();
-		}
+		if (httpConn != null) httpConn.disconnect();
 	}
 
 	/**
@@ -165,22 +130,18 @@ public class HttpUtility {
 	public void MultipartUtility(String requestURL, String charset)
 			throws IOException {
 		this.charset = charset;
-
 		// creates a unique boundary based on time stamp
 		boundary = "===" + System.currentTimeMillis() + "===";
-
 		URL url = new URL(requestURL);
 		httpConn = (HttpURLConnection) url.openConnection();
 		httpConn.setUseCaches(false);
 		httpConn.setDoOutput(true);	// indicates POST method
 		httpConn.setDoInput(true);
-		httpConn.setRequestProperty("Content-Type",
-				"multipart/form-data; boundary=" + boundary);
+		httpConn.setRequestProperty("Content-Type","multipart/form-data; boundary=" + boundary);
 		httpConn.setRequestProperty("User-Agent", "CodeJava Agent");
 		httpConn.setRequestProperty("Test", "Bonjour");
 		outputStream = httpConn.getOutputStream();
-		writer = new PrintWriter(new OutputStreamWriter(outputStream, charset),
-				true);
+		writer = new PrintWriter(new OutputStreamWriter(outputStream, charset),true);
 	}
 
 	/**
@@ -189,11 +150,9 @@ public class HttpUtility {
 	 * @param value field value.
 	 */
 	public void addFormField(String name, String value) {
-		writer.append("--" + boundary).append(LINE_FEED);
-		writer.append("Content-Disposition: form-data; name=\"" + name + "\"")
-				.append(LINE_FEED);
-		writer.append("Content-Type: text/plain; charset=" + charset).append(
-				LINE_FEED);
+		writer.append("--").append(boundary).append(LINE_FEED);
+		writer.append("Content-Disposition: form-data; name=\"").append(name).append("\"").append(LINE_FEED);
+		writer.append("Content-Type: text/plain; charset=").append(charset).append(LINE_FEED);
 		writer.append(LINE_FEED);
 		writer.append(value).append(LINE_FEED);
 		writer.flush();
@@ -208,22 +167,17 @@ public class HttpUtility {
 	public void addFilePart(String fieldName, File uploadFile)
 			throws IOException {
 		String fileName = uploadFile.getName();
-		writer.append("--" + boundary).append(LINE_FEED);
-		writer.append(
-				"Content-Disposition: form-data; name=\"" + fieldName
-						+ "\"; filename=\"" + fileName + "\"")
-				.append(LINE_FEED);
-		writer.append(
-				"Content-Type: "
-						+ URLConnection.guessContentTypeFromName(fileName))
-				.append(LINE_FEED);
+		writer.append("--").append(boundary).append(LINE_FEED);
+		writer.append("Content-Disposition: form-data; name=\"").append(fieldName)
+				.append("\"; filename=\"").append(fileName).append("\"").append(LINE_FEED);
+		writer.append("Content-Type: ").append(URLConnection.guessContentTypeFromName(fileName)).append(LINE_FEED);
 		writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
 		writer.append(LINE_FEED);
 		writer.flush();
 
 		FileInputStream inputStream = new FileInputStream(uploadFile);
 		byte[] buffer = new byte[4096];
-		int bytesRead = -1;
+		int bytesRead;
 		while ((bytesRead = inputStream.read(buffer)) != -1) {
 			outputStream.write(buffer, 0, bytesRead);
 		}
@@ -240,7 +194,7 @@ public class HttpUtility {
 	 * @param value - value of the header field.
 	 */
 	public void addHeaderField(String name, String value) {
-		writer.append(name + ": " + value).append(LINE_FEED);
+		writer.append(name).append(": ").append(value).append(LINE_FEED);
 		writer.flush();
 	}
 
@@ -251,18 +205,16 @@ public class HttpUtility {
 	 * @throws IOException thrown if any I/O error occurred.
 	 */
 	public List<String> finish() throws IOException {
-		List<String> response = new ArrayList<String>();
-
+		List<String> response = new ArrayList<>();
 		writer.append(LINE_FEED).flush();
-		writer.append("--" + boundary + "--").append(LINE_FEED);
+		writer.append("--").append(boundary).append("--").append(LINE_FEED);
 		writer.close();
-
 		// checks server's status code first
 		int status = httpConn.getResponseCode();
 		if (status == HttpURLConnection.HTTP_OK) {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
 					httpConn.getInputStream()));
-			String line = null;
+			String line;
 			while ((line = reader.readLine()) != null) {
 				response.add(line);
 			}
@@ -271,7 +223,62 @@ public class HttpUtility {
 		} else {
 			throw new IOException("Server returned non-OK status: " + status);
 		}
-
 		return response;
 	}
+
+	/*static public File downloadFileFromHTTPRequest(HttpServletRequest request,File destinationDir) {
+        // Download the file to the upload file folder
+
+        *//*File destinationDir = new File(
+                ServletContextParameterMap.getParameterValue(ContextParameter.USER_DIRECTORY_PATH) + USER_UPLOAD_DIR);*//*
+        //logger.debug("File upload destination directory: " + destinationDir.getAbsolutePath());
+        if (!destinationDir.isDirectory()) {
+            destinationDir.mkdir();
+        }
+
+        org.apache.commons.fileupload.disk.DiskFileItemFactory fileItemFactory =
+                new org.apache.commons.fileupload.disk.DiskFileItemFactory();
+
+        // Set the size threshold, above which content will be stored on disk.
+        fileItemFactory.setSizeThreshold(1 * 1024 * 1024); //1 MB
+
+        //Set the temporary directory to store the uploaded files of size above threshold.
+        fileItemFactory.setRepository(destinationDir);
+
+        ServletFileUpload uploadHandler = new ServletFileUpload(fileItemFactory);
+
+        File uploadedFile = null;
+        try {
+            // Parse the request
+            @SuppressWarnings("rawtypes")
+            List items = uploadHandler.parseRequest(request);
+            @SuppressWarnings("rawtypes")
+            Iterator itr = items.iterator();
+            while (itr.hasNext()) {
+                org.apache.commons.fileupload.FileItem item =
+                        (org.apache.commons.fileupload.FileItem) itr.next();
+
+                // Ignore Form Fields.
+                if (item.isFormField()) {
+                    // Do nothing
+                } else {
+                    //Handle Uploaded files. Write file to the ultimate location.
+                    uploadedFile = new File(destinationDir, item.getName());
+                    if (item instanceof DiskFileItem) {
+                        org.apache.commons.fileupload.disk.DiskFileItem t =
+                                (org.apache.commons.fileupload.disk.DiskFileItem)item;
+                        if (!t.getStoreLocation().renameTo(uploadedFile))
+                            item.write(uploadedFile);
+                    }
+                    else
+                        item.write(uploadedFile);
+                }
+            }
+        } catch (org.apache.commons.fileupload.FileUploadException ex) {
+            logger.error("Error encountered while parsing the request", ex);
+        } catch (Exception ex) {
+            logger.error("Error encountered while uploading file", ex);
+        }
+        return uploadedFile;
+    }*/
 }

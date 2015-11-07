@@ -1,5 +1,6 @@
 package com.github.p4535992.util.http;
 
+import com.github.p4535992.util.http.impl.HttpUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.impl.StringKit;
 import org.apache.http.HttpHost;

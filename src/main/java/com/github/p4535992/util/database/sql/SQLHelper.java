@@ -1,16 +1,20 @@
 package com.github.p4535992.util.database.sql;
 
+import com.github.p4535992.util.collection.CollectionKit;
+import com.github.p4535992.util.database.jooq.SQLJooqKit2;
 import com.github.p4535992.util.database.sql.performance.ConnectionWrapper;
 import com.github.p4535992.util.database.sql.performance.JDBCLogger;
-import com.github.p4535992.util.database.sql.performance.StatementWrapper;
+import com.github.p4535992.util.file.impl.FileCSV;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtil;
 import com.github.p4535992.util.string.impl.StringIs;
+import com.opencsv.CSVReader;
 
 
+import java.io.File;
+import java.io.FileReader;
 import java.lang.reflect.Field;
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -494,14 +498,14 @@ public class SQLHelper {
 
     /**
      * Method to set a New Connection.
-     * @param classDriverName
-     * @param dialectDB
-     * @param host
-     * @param port
-     * @param database
-     * @param user
-     * @param pass
-     * @return
+     * @param classDriverName hte class package driver to use e.g. com.sql.jdbc.Driver.
+     * @param dialectDB the dialect of the database e.g. jdbc:sql.
+     * @param host the host where is allocate the database.
+     * @param port the port to communicate with the database.
+     * @param database the String name of the database.
+     * @param user the String of the username.
+     * @param pass the String of the password.
+     * @return the new SQL Connection
      * @throws ClassNotFoundException
      * @throws SQLException
      */
@@ -520,9 +524,7 @@ public class SQLHelper {
     }
 
     public static ResultSet executeSQL(String sql) throws Exception {
-        // create the java statement
         stmt = conn.createStatement();
-        // execute the query, and get a java resultset
         return stmt.executeQuery(query);
         //stmt.executeUpdate(sql);
     }
@@ -538,10 +540,9 @@ public class SQLHelper {
     /**
      * Method to print hte result of a query.
      * @param sql the String SQL.
-     * @throws Exception thow if any error is occurred.
      */
     public static void checkData(String sql){
-        ResultSet rs = null;
+        ResultSet rs ;
         try {
             rs = stmt.executeQuery(sql);
 
@@ -582,17 +583,15 @@ public class SQLHelper {
         }
     }
 
-    public static Vector getATable(String tablename, Connection connection)
-            throws SQLException
-    {
+    public static Vector<String[]> getContentOfATable(String tablename, Connection connection)
+            throws SQLException {
         String sqlQuery = "SELECT * FROM " + tablename;
         Statement statement = connection.createStatement(  );
         ResultSet resultSet = statement.executeQuery(sqlQuery);
         int numColumns = resultSet.getMetaData(  ).getColumnCount(  );
         String[  ] aRow;
-        Vector allRows = new Vector(  );
-        while(resultSet.next(  ))
-        {
+        Vector<String[]> allRows = new Vector<>();
+        while(resultSet.next(  )) {
             aRow = new String[numColumns];
             for (int i = 0; i < numColumns; i++)
                 //ResultSet access is 1-based, arrays are 0-based
@@ -619,7 +618,6 @@ public class SQLHelper {
         long startTime = 0,endTime = 0;
         //Connection dbConnection = getConnectionFromDriver(  );
         ConnectionWrapper dbConnection = new ConnectionWrapper(conn);
-
         try {
             Statement stmt = dbConnection.createStatement();
             startTime = System.currentTimeMillis();
@@ -633,6 +631,38 @@ public class SQLHelper {
         if(calculate < calculate2) return calculate;
         else return calculate2;
     }
+
+    public static void importCsvInsertInto(File fileCSV, boolean firstLine,Character separator,
+                                       String nameTable,Connection connection) {
+        String[] columns = FileCSV.getColumns(fileCSV, firstLine);
+        SQLJooqKit2.setConnection(connection);
+        try {
+            CSVReader reader = new CSVReader(new FileReader(fileCSV), separator);
+            //String insertQuery =
+            String insertQuery;
+            //PreparedStatement pstmt = connection.prepareStatement(insertQuery);
+            String[] rowData;
+            while((rowData = reader.readNext()) != null){
+                if (!firstLine) {
+                    String[] values = new String[columns.length];
+                    int[] types = new int[values.length];
+                    for(int i = 0; i < rowData.length; i++){
+                        values[i] = rowData[i];
+                        types[i] = SQLHelper.convertStringToSQLTypes(values[i]);
+                    }
+                    insertQuery = SQLJooqKit2.insert(nameTable, columns,values,types);
+                    SQLHelper.executeSQL(insertQuery,connection);
+                }
+            }
+            //System.out.println("Data Successfully Uploaded");
+        } catch (Exception e) {
+            SystemLog.exception(e,SQLHelper.class);
+        }
+    }
+
+
+
+
 
 
 

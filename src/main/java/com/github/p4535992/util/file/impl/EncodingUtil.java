@@ -1,4 +1,4 @@
-package com.github.p4535992.util.encoding;
+package com.github.p4535992.util.file.impl;
 
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.impl.StringKit;
@@ -22,265 +22,267 @@ import java.util.Scanner;
  */
 @SuppressWarnings("unused")
 public class EncodingUtil {
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EncodingUtil.class);
+
     private static Map<String,String> unicodeCodePoint = new HashMap<>();
-    //private static Map<Character,Character> javaCharLiterals = new HashMap<>();
-    /*private static void set() {
-        javaCharLiterals.put('\u0000', '\0');
-        javaCharLiterals.put('\u0001', '\0');
-        javaCharLiterals.put('\u0002', '\0');
-        javaCharLiterals.put('\u0003', '\0');
-        javaCharLiterals.put('\u0004', '\0');
-        javaCharLiterals.put('\u0005', '\0');
-        javaCharLiterals.put('\u0006', '\0');
-        javaCharLiterals.put('\u0007', '\0');
-        javaCharLiterals.put('\u0008', '\0');
-        javaCharLiterals.put('\u0009', '\0');
-        javaCharLiterals.put('\u000B', '\0');
-        javaCharLiterals.put('\u000C', '\0');
-        javaCharLiterals.put('\u000E', '\0');
-        javaCharLiterals.put('\u000F', '\0');
-        javaCharLiterals.put('\u0010', '\0');
-        javaCharLiterals.put('\u0011', '\0');
-        javaCharLiterals.put('\u0012', '\0');
-        javaCharLiterals.put('\u0013', '\0');
-        javaCharLiterals.put('\u0014', '\0');
-        javaCharLiterals.put('\u0015', '\0');
-        javaCharLiterals.put('\u0016', '\0');
-        javaCharLiterals.put('\u0017', '\0');
-        javaCharLiterals.put('\u0018', '\0');
-        javaCharLiterals.put('\u0019', '\0');
-        javaCharLiterals.put('\u001A', '\0');
-        javaCharLiterals.put('\u001B', '\0');
-        javaCharLiterals.put('\u001C', '\0');
-        javaCharLiterals.put('\u001D', '\0');
-        javaCharLiterals.put('\u001E', '\0');
-        javaCharLiterals.put('\u001F', '\0');
-        javaCharLiterals.put('\u0020', ' ');
-        javaCharLiterals.put('\u0021', '!');
-        javaCharLiterals.put('\u0022', '\'');
-        javaCharLiterals.put('\u0023', '#');
-        javaCharLiterals.put('\u0024', '$');
-        javaCharLiterals.put('\u0025', '%');
-        javaCharLiterals.put('\u0026', '&');
-        javaCharLiterals.put('\u0027', '\'');
-        javaCharLiterals.put('\u0028', '(');
-        javaCharLiterals.put('\u0029', ')');
-        javaCharLiterals.put('\u002A', '*');
-        javaCharLiterals.put('\u002B', '+');
-        javaCharLiterals.put('\u002C', ',');
-        javaCharLiterals.put('\u002D', '-');
-        javaCharLiterals.put('\u002E', '.');
-        javaCharLiterals.put('\u002F', '/');
-        javaCharLiterals.put('\u0030', '0');
-        javaCharLiterals.put('\u0031', '1');
-        javaCharLiterals.put('\u0032', '2');
-        javaCharLiterals.put('\u0033', '3');
-        javaCharLiterals.put('\u0034', '4');
-        javaCharLiterals.put('\u0035', '5');
-        javaCharLiterals.put('\u0036', '6');
-        javaCharLiterals.put('\u0037', '7');
-        javaCharLiterals.put('\u0038', '8');
-        javaCharLiterals.put('\u0039', '9');
-        javaCharLiterals.put('\u003A', ':');
-        javaCharLiterals.put('\u003B', ';');
-        javaCharLiterals.put('\u003C', '<');
-        javaCharLiterals.put('\u003D', '=');
-        javaCharLiterals.put('\u003E', '>');
-        javaCharLiterals.put('\u003F', '?');
-        javaCharLiterals.put('\u0040', '@');
-        javaCharLiterals.put('\u0041', 'A');
-        javaCharLiterals.put('\u0042', 'B');
-        javaCharLiterals.put('\u0043', 'C');
-        javaCharLiterals.put('\u0044', 'D');
-        javaCharLiterals.put('\u0045', 'E');
-        javaCharLiterals.put('\u0046', 'F');
-        javaCharLiterals.put('\u0047', 'G');
-        javaCharLiterals.put('\u0048', 'H');
-        javaCharLiterals.put('\u0049', 'I');
-        javaCharLiterals.put('\u004A', 'J');
-        javaCharLiterals.put('\u004B', 'K');
-        javaCharLiterals.put('\u004C', 'L');
-        javaCharLiterals.put('\u004D', 'M');
-        javaCharLiterals.put('\u004E', 'N');
-        javaCharLiterals.put('\u004F', 'O');
-        javaCharLiterals.put('\u0050', 'P');
-        javaCharLiterals.put('\u0051', 'Q');
-        javaCharLiterals.put('\u0052', 'R');
-        javaCharLiterals.put('\u0053', 'S');
-        javaCharLiterals.put('\u0054', 'T');
-        javaCharLiterals.put('\u0055', '\0');
-        javaCharLiterals.put('\u0056', 'V');
-        javaCharLiterals.put('\u0057', 'W');
-        javaCharLiterals.put('\u0058', 'X');
-        javaCharLiterals.put('\u0059', 'Y');
-        javaCharLiterals.put('\u005A', 'Z');
-        javaCharLiterals.put('\u005B', '[');
-        javaCharLiterals.put('\u005C', '\\');
-        javaCharLiterals.put('\u005D', ']');
-        javaCharLiterals.put('\u005E', '^');
-        javaCharLiterals.put('\u005F', '_');
-        javaCharLiterals.put('\u0060', '`');
-        javaCharLiterals.put('\u0061', 'a');
-        javaCharLiterals.put('\u0062', 'b');
-        javaCharLiterals.put('\u0063', 'c');
-        javaCharLiterals.put('\u0064', 'd');
-        javaCharLiterals.put('\u0065', 'e');
-        javaCharLiterals.put('\u0066', 'f');
-        javaCharLiterals.put('\u0067', 'g');
-        javaCharLiterals.put('\u0068', 'h');
-        javaCharLiterals.put('\u0069', 'i');
-        javaCharLiterals.put('\u006A', 'j');
-        javaCharLiterals.put('\u006B', 'k');
-        javaCharLiterals.put('\u006C', 'l');
-        javaCharLiterals.put('\u006D', 'm');
-        javaCharLiterals.put('\u006E', 'n');
-        javaCharLiterals.put('\u006F', 'o');
-        javaCharLiterals.put('\u0070', 'p');
-        javaCharLiterals.put('\u0071', 'q');
-        javaCharLiterals.put('\u0072', 'r');
-        javaCharLiterals.put('\u0073', 's');
-        javaCharLiterals.put('\u0074', 't');
-        javaCharLiterals.put('\u0075', 'u');
-        javaCharLiterals.put('\u0076', 'v');
-        javaCharLiterals.put('\u0077', 'w');
-        javaCharLiterals.put('\u0078', 'x');
-        javaCharLiterals.put('\u0079', 'y');
-        javaCharLiterals.put('\u007A', 'z');
-        javaCharLiterals.put('\u007B', '{');
-        javaCharLiterals.put('\u007C', '|');
-        javaCharLiterals.put('\u007D', '}');
-        javaCharLiterals.put('\u007E', '~');
-        javaCharLiterals.put('\u007F', '\0');
-        javaCharLiterals.put('\u0080', '\0');
-        javaCharLiterals.put('\u0081', '\0');
-        javaCharLiterals.put('\u0082', '\0');
-        javaCharLiterals.put('\u0083', '\0');
-        javaCharLiterals.put('\u0084', '\0');
-        javaCharLiterals.put('\u0085', '\0');
-        javaCharLiterals.put('\u0087', '\0');
-        javaCharLiterals.put('\u0088', '\0');
-        javaCharLiterals.put('\u0089', '\0');
-        javaCharLiterals.put('\u008A', '\0');
-        javaCharLiterals.put('\u008C', '\0');
-        javaCharLiterals.put('\u008D', '\0');
-        javaCharLiterals.put('\u008E', '\0');
-        javaCharLiterals.put('\u008F', '\0');
-        javaCharLiterals.put('\u0090', '\0');
-        javaCharLiterals.put('\u0091', '\0');
-        javaCharLiterals.put('\u0092', '\0');
-        javaCharLiterals.put('\u0093', '\0');
-        javaCharLiterals.put('\u0094', '\0');
-        javaCharLiterals.put('\u0095', '\0');
-        javaCharLiterals.put('\u0096', '\0');
-        javaCharLiterals.put('\u0097', '\0');
-        javaCharLiterals.put('\u0098', '\0');
-        javaCharLiterals.put('\u0099', '\0');
-        javaCharLiterals.put('\u009A', '\0');
-        javaCharLiterals.put('\u009B', '\0');
-        javaCharLiterals.put('\u009C', '\0');
-        javaCharLiterals.put('\u009D', '\0');
-        javaCharLiterals.put('\u009E', '\0');
-        javaCharLiterals.put('\u009F', '\0');
-        javaCharLiterals.put('\u00A0', '\0');
-        javaCharLiterals.put('\u00A1', '¡');
-        javaCharLiterals.put('\u00A2', '¢');
-        javaCharLiterals.put('\u00A3', '£');
-        javaCharLiterals.put('\u00A4', '¤');
-        javaCharLiterals.put('\u00A5', '¥');
-        javaCharLiterals.put('\u00A6', '¦');
-        javaCharLiterals.put('\u00A7', '§');
-        javaCharLiterals.put('\u00A8', '¨');
-        javaCharLiterals.put('\u00A9', '©');
-        javaCharLiterals.put('\u00AA', 'ª');
-        javaCharLiterals.put('\u00AB', '«');
-        javaCharLiterals.put('\u00AC', '¬');
-        javaCharLiterals.put('\u00AD', '­');
-        javaCharLiterals.put('\u00AE', '®');
-        javaCharLiterals.put('\u00AF', '¯');
-        javaCharLiterals.put('\u00B0', '°');
-        javaCharLiterals.put('\u00B1', '±');
-        javaCharLiterals.put('\u00B2', '²');
-        javaCharLiterals.put('\u00B3', '³');
-        javaCharLiterals.put('\u00B4', '´');
-        javaCharLiterals.put('\u00B5', 'µ');
-        javaCharLiterals.put('\u00B6', '¶');
-        javaCharLiterals.put('\u00B7', '·');
-        javaCharLiterals.put('\u00B8', '¸');
-        javaCharLiterals.put('\u00B9', '¹');
-        javaCharLiterals.put('\u00BA', 'º');
-        javaCharLiterals.put('\u00BB', '»');
-        javaCharLiterals.put('\u00BC', '¼');
-        javaCharLiterals.put('\u00BD', '½');
-        javaCharLiterals.put('\u00BE', '¾');
-        javaCharLiterals.put('\u00BF', '¿');
-        javaCharLiterals.put('\u00C0', 'À');
-        javaCharLiterals.put('\u00C1', 'Á');
-        javaCharLiterals.put('\u00C2', 'Â');
-        javaCharLiterals.put('\u00C3', 'Ã');
-        javaCharLiterals.put('\u00C4', 'Ä');
-        javaCharLiterals.put('\u00C5', 'Å');
-        javaCharLiterals.put('\u00C6', 'Æ');
-        javaCharLiterals.put('\u00C7', 'Ç');
-        javaCharLiterals.put('\u00C8', 'È');
-        javaCharLiterals.put('\u00C9', 'É');
-        javaCharLiterals.put('\u00CA', 'Ê');
-        javaCharLiterals.put('\u00CB', 'Ë');
-        javaCharLiterals.put('\u00CC', 'Ì');
-        javaCharLiterals.put('\u00CD', 'Í');
-        javaCharLiterals.put('\u00CE', 'Î');
-        javaCharLiterals.put('\u00CF', 'Ï');
-        javaCharLiterals.put('\u00D0', 'Ð');
-        javaCharLiterals.put('\u00D1', 'Ñ');
-        javaCharLiterals.put('\u00D2', 'Ò');
-        javaCharLiterals.put('\u00D3', 'Ó');
-        javaCharLiterals.put('\u00D4', 'Ô');
-        javaCharLiterals.put('\u00D5', 'Õ');
-        javaCharLiterals.put('\u00D6', 'Ö');
-        javaCharLiterals.put('\u00D7', '×');
-        javaCharLiterals.put('\u00D8', 'Ø');
-        javaCharLiterals.put('\u00D9', 'Ù');
-        javaCharLiterals.put('\u00DA', 'Ú');
-        javaCharLiterals.put('\u00DB', 'Û');
-        javaCharLiterals.put('\u00DC', 'Ü');
-        javaCharLiterals.put('\u00DD', 'Ý');
-        javaCharLiterals.put('\u00DE', 'Þ');
-        javaCharLiterals.put('\u00DF', 'ß');
-        javaCharLiterals.put('\u00E0', 'à');
-        javaCharLiterals.put('\u00E1', 'á');
-        javaCharLiterals.put('\u00E2', 'â');
-        javaCharLiterals.put('\u00E3', 'ã');
-        javaCharLiterals.put('\u00E4', 'ä');
-        javaCharLiterals.put('\u00E5', 'å');
-        javaCharLiterals.put('\u00E6', 'æ');
-        javaCharLiterals.put('\u00E7', 'ç');
-        javaCharLiterals.put('\u00E8', 'è');
-        javaCharLiterals.put('\u00E9', 'é');
-        javaCharLiterals.put('\u00EA', 'ê');
-        javaCharLiterals.put('\u00EB', 'ë');
-        javaCharLiterals.put('\u00EC', 'ì');
-        javaCharLiterals.put('\u00ED', 'í');
-        javaCharLiterals.put('\u00EE', 'î');
-        javaCharLiterals.put('\u00EF', 'ï');
-        javaCharLiterals.put('\u00F0', 'ð');
-        javaCharLiterals.put('\u00F1', 'ñ');
-        javaCharLiterals.put('\u00F2', 'ò');
-        javaCharLiterals.put('\u00F3', 'ó');
-        javaCharLiterals.put('\u00F4', 'ô');
-        javaCharLiterals.put('\u00F5', 'õ');
-        javaCharLiterals.put('\u00F6', 'ö');
-        javaCharLiterals.put('\u00F7', '÷');
-        javaCharLiterals.put('\u00F8', 'ø');
-        javaCharLiterals.put('\u00F9', 'ù');
-        javaCharLiterals.put('\u00FA', 'ú');
-        javaCharLiterals.put('\u00FB', 'û');
-        javaCharLiterals.put('\u00FC', 'ü');
-        javaCharLiterals.put('\u00FD', 'ý');
-        javaCharLiterals.put('\u00FE', 'þ');
-        javaCharLiterals.put('\u00FF', 'ÿ');
-        javaCharLiterals.put('\uFEFF', '\0');
+    //private static Map<String,String> javaCharLiterals = new HashMap<>();
+    /*private static void setMapUnicodeLiterals() {
+        javaCharLiterals.put("\u0000", "\0");
+        javaCharLiterals.put("\u0001", "\0");
+        javaCharLiterals.put("\u0002", "\0");
+        javaCharLiterals.put("\u0003", "\0");
+        javaCharLiterals.put("\u0004", "\0");
+        javaCharLiterals.put("\u0005", "\0");
+        javaCharLiterals.put("\u0006", "\0");
+        javaCharLiterals.put("\u0007", "\0");
+        javaCharLiterals.put("\u0008", "\0");
+        javaCharLiterals.put("\u0009", "\0");
+        javaCharLiterals.put("\u000B", "\0");
+        javaCharLiterals.put("\u000C", "\0");
+        javaCharLiterals.put("\u000E", "\0");
+        javaCharLiterals.put("\u000F", "\0");
+        javaCharLiterals.put("\u0010", "\0");
+        javaCharLiterals.put("\u0011", "\0");
+        javaCharLiterals.put("\u0012", "\0");
+        javaCharLiterals.put("\u0013", "\0");
+        javaCharLiterals.put("\u0014", "\0");
+        javaCharLiterals.put("\u0015", "\0");
+        javaCharLiterals.put("\u0016", "\0");
+        javaCharLiterals.put("\u0017", "\0");
+        javaCharLiterals.put("\u0018", "\0");
+        javaCharLiterals.put("\u0019", "\0");
+        javaCharLiterals.put("\u001A", "\0");
+        javaCharLiterals.put("\u001B", "\0");
+        javaCharLiterals.put("\u001C", "\0");
+        javaCharLiterals.put("\u001D", "\0");
+        javaCharLiterals.put("\u001E", "\0");
+        javaCharLiterals.put("\u001F", "\0");
+        javaCharLiterals.put("\u0020", " ");
+        javaCharLiterals.put("\u0021", "!");
+        javaCharLiterals.put("\u0022", "'");
+        javaCharLiterals.put("\u0023", "#");
+        javaCharLiterals.put("\u0024", "$");
+        javaCharLiterals.put("\u0025", "%");
+        javaCharLiterals.put("\u0026", "&");
+        javaCharLiterals.put("\u0027", "\"");
+        javaCharLiterals.put("\u0028", "(");
+        javaCharLiterals.put("\u0029", ")");
+        javaCharLiterals.put("\u002A", "*");
+        javaCharLiterals.put("\u002B", "+");
+        javaCharLiterals.put("\u002C", ",");
+        javaCharLiterals.put("\u002D", "-");
+        javaCharLiterals.put("\u002E", ".");
+        javaCharLiterals.put("\u002F", "/");
+        javaCharLiterals.put("\u0030", "0");
+        javaCharLiterals.put("\u0031", "1");
+        javaCharLiterals.put("\u0032", "2");
+        javaCharLiterals.put("\u0033", "3");
+        javaCharLiterals.put("\u0034", "4");
+        javaCharLiterals.put("\u0035", "5");
+        javaCharLiterals.put("\u0036", "6");
+        javaCharLiterals.put("\u0037", "7");
+        javaCharLiterals.put("\u0038", "8");
+        javaCharLiterals.put("\u0039", "9");
+        javaCharLiterals.put("\u003A", ":");
+        javaCharLiterals.put("\u003B", ";");
+        javaCharLiterals.put("\u003C", "<");
+        javaCharLiterals.put("\u003D", "=");
+        javaCharLiterals.put("\u003E", ">");
+        javaCharLiterals.put("\u003F", "?");
+        javaCharLiterals.put("\u0040", "@");
+        javaCharLiterals.put("\u0041", "A");
+        javaCharLiterals.put("\u0042", "B");
+        javaCharLiterals.put("\u0043", "C");
+        javaCharLiterals.put("\u0044", "D");
+        javaCharLiterals.put("\u0045", "E");
+        javaCharLiterals.put("\u0046", "F");
+        javaCharLiterals.put("\u0047", "G");
+        javaCharLiterals.put("\u0048", "H");
+        javaCharLiterals.put("\u0049", "I");
+        javaCharLiterals.put("\u004A", "J");
+        javaCharLiterals.put("\u004B", "K");
+        javaCharLiterals.put("\u004C", "L");
+        javaCharLiterals.put("\u004D", "M");
+        javaCharLiterals.put("\u004E", "N");
+        javaCharLiterals.put("\u004F", "O");
+        javaCharLiterals.put("\u0050", "P");
+        javaCharLiterals.put("\u0051", "Q");
+        javaCharLiterals.put("\u0052", "R");
+        javaCharLiterals.put("\u0053", "S");
+        javaCharLiterals.put("\u0054", "T");
+        javaCharLiterals.put("\u0055", "\0");
+        javaCharLiterals.put("\u0056", "V");
+        javaCharLiterals.put("\u0057", "W");
+        javaCharLiterals.put("\u0058", "X");
+        javaCharLiterals.put("\u0059", "Y");
+        javaCharLiterals.put("\u005A", "Z");
+        javaCharLiterals.put("\u005B", "[");
+        javaCharLiterals.put("\u005C", "\\");
+        javaCharLiterals.put("\u005D", "]");
+        javaCharLiterals.put("\u005E", "^");
+        javaCharLiterals.put("\u005F", "_");
+        javaCharLiterals.put("\u0060", "`");
+        javaCharLiterals.put("\u0061", "a");
+        javaCharLiterals.put("\u0062", "b");
+        javaCharLiterals.put("\u0063", "c");
+        javaCharLiterals.put("\u0064", "d");
+        javaCharLiterals.put("\u0065", "e");
+        javaCharLiterals.put("\u0066", "f");
+        javaCharLiterals.put("\u0067", "g");
+        javaCharLiterals.put("\u0068", "h");
+        javaCharLiterals.put("\u0069", "i");
+        javaCharLiterals.put("\u006A", "j");
+        javaCharLiterals.put("\u006B", "k");
+        javaCharLiterals.put("\u006C", "l");
+        javaCharLiterals.put("\u006D", "m");
+        javaCharLiterals.put("\u006E", "n");
+        javaCharLiterals.put("\u006F", "o");
+        javaCharLiterals.put("\u0070", "p");
+        javaCharLiterals.put("\u0071", "q");
+        javaCharLiterals.put("\u0072", "r");
+        javaCharLiterals.put("\u0073", "s");
+        javaCharLiterals.put("\u0074", "t");
+        javaCharLiterals.put("\u0075", "u");
+        javaCharLiterals.put("\u0076", "v");
+        javaCharLiterals.put("\u0077", "w");
+        javaCharLiterals.put("\u0078", "x");
+        javaCharLiterals.put("\u0079", "y");
+        javaCharLiterals.put("\u007A", "z");
+        javaCharLiterals.put("\u007B", "{");
+        javaCharLiterals.put("\u007C", "|");
+        javaCharLiterals.put("\u007D", "}");
+        javaCharLiterals.put("\u007E", "~");
+        javaCharLiterals.put("\u007F", "\0");
+        javaCharLiterals.put("\u0080", "\0");
+        javaCharLiterals.put("\u0081", "\0");
+        javaCharLiterals.put("\u0082", "\0");
+        javaCharLiterals.put("\u0083", "\0");
+        javaCharLiterals.put("\u0084", "\0");
+        javaCharLiterals.put("\u0085", "\0");
+        javaCharLiterals.put("\u0087", "\0");
+        javaCharLiterals.put("\u0088", "\0");
+        javaCharLiterals.put("\u0089", "\0");
+        javaCharLiterals.put("\u008A", "\0");
+        javaCharLiterals.put("\u008C", "\0");
+        javaCharLiterals.put("\u008D", "\0");
+        javaCharLiterals.put("\u008E", "\0");
+        javaCharLiterals.put("\u008F", "\0");
+        javaCharLiterals.put("\u0090", "\0");
+        javaCharLiterals.put("\u0091", "\0");
+        javaCharLiterals.put("\u0092", "\0");
+        javaCharLiterals.put("\u0093", "\0");
+        javaCharLiterals.put("\u0094", "\0");
+        javaCharLiterals.put("\u0095", "\0");
+        javaCharLiterals.put("\u0096", "\0");
+        javaCharLiterals.put("\u0097", "\0");
+        javaCharLiterals.put("\u0098", "\0");
+        javaCharLiterals.put("\u0099", "\0");
+        javaCharLiterals.put("\u009A", "\0");
+        javaCharLiterals.put("\u009B", "\0");
+        javaCharLiterals.put("\u009C", "\0");
+        javaCharLiterals.put("\u009D", "\0");
+        javaCharLiterals.put("\u009E", "\0");
+        javaCharLiterals.put("\u009F", "\0");
+        javaCharLiterals.put("\u00A0", "\0");
+        javaCharLiterals.put("\u00A1", "¡");
+        javaCharLiterals.put("\u00A2", "¢");
+        javaCharLiterals.put("\u00A3", "£");
+        javaCharLiterals.put("\u00A4", "¤");
+        javaCharLiterals.put("\u00A5", "¥");
+        javaCharLiterals.put("\u00A6", "¦");
+        javaCharLiterals.put("\u00A7", "§");
+        javaCharLiterals.put("\u00A8", "¨");
+        javaCharLiterals.put("\u00A9", "©");
+        javaCharLiterals.put("\u00AA", "ª");
+        javaCharLiterals.put("\u00AB", "«");
+        javaCharLiterals.put("\u00AC", "¬");
+        javaCharLiterals.put("\u00AD", "­");
+        javaCharLiterals.put("\u00AE", "®");
+        javaCharLiterals.put("\u00AF", "¯");
+        javaCharLiterals.put("\u00B0", "°");
+        javaCharLiterals.put("\u00B1", "±");
+        javaCharLiterals.put("\u00B2", "²");
+        javaCharLiterals.put("\u00B3", "³");
+        javaCharLiterals.put("\u00B4", "´");
+        javaCharLiterals.put("\u00B5", "µ");
+        javaCharLiterals.put("\u00B6", "¶");
+        javaCharLiterals.put("\u00B7", "·");
+        javaCharLiterals.put("\u00B8", "¸");
+        javaCharLiterals.put("\u00B9", "¹");
+        javaCharLiterals.put("\u00BA", "º");
+        javaCharLiterals.put("\u00BB", "»");
+        javaCharLiterals.put("\u00BC", "¼");
+        javaCharLiterals.put("\u00BD", "½");
+        javaCharLiterals.put("\u00BE", "¾");
+        javaCharLiterals.put("\u00BF", "¿");
+        javaCharLiterals.put("\u00C0", "À");
+        javaCharLiterals.put("\u00C1", "Á");
+        javaCharLiterals.put("\u00C2", "Â");
+        javaCharLiterals.put("\u00C3", "Ã");
+        javaCharLiterals.put("\u00C4", "Ä");
+        javaCharLiterals.put("\u00C5", "Å");
+        javaCharLiterals.put("\u00C6", "Æ");
+        javaCharLiterals.put("\u00C7", "Ç");
+        javaCharLiterals.put("\u00C8", "È");
+        javaCharLiterals.put("\u00C9", "É");
+        javaCharLiterals.put("\u00CA", "Ê");
+        javaCharLiterals.put("\u00CB", "Ë");
+        javaCharLiterals.put("\u00CC", "Ì");
+        javaCharLiterals.put("\u00CD", "Í");
+        javaCharLiterals.put("\u00CE", "Î");
+        javaCharLiterals.put("\u00CF", "Ï");
+        javaCharLiterals.put("\u00D0", "Ð");
+        javaCharLiterals.put("\u00D1", "Ñ");
+        javaCharLiterals.put("\u00D2", "Ò");
+        javaCharLiterals.put("\u00D3", "Ó");
+        javaCharLiterals.put("\u00D4", "Ô");
+        javaCharLiterals.put("\u00D5", "Õ");
+        javaCharLiterals.put("\u00D6", "Ö");
+        javaCharLiterals.put("\u00D7", "×");
+        javaCharLiterals.put("\u00D8", "Ø");
+        javaCharLiterals.put("\u00D9", "Ù");
+        javaCharLiterals.put("\u00DA", "Ú");
+        javaCharLiterals.put("\u00DB", "Û");
+        javaCharLiterals.put("\u00DC", "Ü");
+        javaCharLiterals.put("\u00DD", "Ý");
+        javaCharLiterals.put("\u00DE", "Þ");
+        javaCharLiterals.put("\u00DF", "ß");
+        javaCharLiterals.put("\u00E0", "à");
+        javaCharLiterals.put("\u00E1", "á");
+        javaCharLiterals.put("\u00E2", "â");
+        javaCharLiterals.put("\u00E3", "ã");
+        javaCharLiterals.put("\u00E4", "ä");
+        javaCharLiterals.put("\u00E5", "å");
+        javaCharLiterals.put("\u00E6", "æ");
+        javaCharLiterals.put("\u00E7", "ç");
+        javaCharLiterals.put("\u00E8", "è");
+        javaCharLiterals.put("\u00E9", "é");
+        javaCharLiterals.put("\u00EA", "ê");
+        javaCharLiterals.put("\u00EB", "ë");
+        javaCharLiterals.put("\u00EC", "ì");
+        javaCharLiterals.put("\u00ED", "í");
+        javaCharLiterals.put("\u00EE", "î");
+        javaCharLiterals.put("\u00EF", "ï");
+        javaCharLiterals.put("\u00F0", "ð");
+        javaCharLiterals.put("\u00F1", "ñ");
+        javaCharLiterals.put("\u00F2", "ò");
+        javaCharLiterals.put("\u00F3", "ó");
+        javaCharLiterals.put("\u00F4", "ô");
+        javaCharLiterals.put("\u00F5", "õ");
+        javaCharLiterals.put("\u00F6", "ö");
+        javaCharLiterals.put("\u00F7", "÷");
+        javaCharLiterals.put("\u00F8", "ø");
+        javaCharLiterals.put("\u00F9", "ù");
+        javaCharLiterals.put("\u00FA", "ú");
+        javaCharLiterals.put("\u00FB", "û");
+        javaCharLiterals.put("\u00FC", "ü");
+        javaCharLiterals.put("\u00FD", "ý");
+        javaCharLiterals.put("\u00FE", "þ");
+        javaCharLiterals.put("\u00FF", "ÿ");
+        javaCharLiterals.put("\uFEFF", "\0");
     }*/
-    /**Map for brute force replace of all unicode escape on the text*/
+    /**
+     * Map for brute force replace of all unicode escape on the text
+     */
     private static void setMapUnicodeEscaped(){
         unicodeCodePoint.put("U+0000","");
         unicodeCodePoint.put("U+0001","");
@@ -548,17 +550,15 @@ public class EncodingUtil {
 	private static Charset ENCODING = StandardCharsets.UTF_8;
 	private static String FIXED_TEXT = "But soft! what code in yonder program breaks?";
 
-	private String quote(String aText){
-           String QUOTE = "'";
-	   return QUOTE + aText + QUOTE;
-	}
-	 	
+	/*private String quote(String aText){
+	   return "'" + aText + "'";
+	}*/
+
 	public EncodingUtil(){
             setMapUnicodeEscaped();
         }
         
-    public EncodingUtil(String FILE_NAME,String OUTPUT_FILE_NAME,Charset ENCODING)
-    {
+    public EncodingUtil(String FILE_NAME,String OUTPUT_FILE_NAME,Charset ENCODING) {
         setMapUnicodeEscaped();
         EncodingUtil.FILE_NAME=FILE_NAME;
         EncodingUtil.OUTPUT_FILE_NAME=OUTPUT_FILE_NAME;
@@ -577,21 +577,21 @@ public class EncodingUtil {
     /**
      * Read small and large file of text
      *  Note: the javadoc of Files.readAllLines says it's intended for small
-     *   files. But its implementation uses buffering, so it's likely good 
+     *   files. But its implementation uses buffering, so it's likely good
      *  even for fairly large files
      * @param aFileName string path to the file you want to read
-     * @return a list of lines 
+     * @return a list of lines
      * @throws IOException file not found
      */
     public static List<String> readSmallTextFile(String aFileName) throws IOException {
-	    Path path = Paths.get(aFileName);
-	    return Files.readAllLines(path, ENCODING);
+        Path path = Paths.get(aFileName);
+        return Files.readAllLines(path, ENCODING);
     }
-	  
-	  
+
+
     public static void writeSmallTextFile(List<String> aLines, String aFileName) throws IOException {
-	    Path path = Paths.get(aFileName);
-	    Files.write(path, aLines, ENCODING);
+        Path path = Paths.get(aFileName);
+        Files.write(path, aLines, ENCODING);
     }
       
 	
@@ -1057,9 +1057,7 @@ public class EncodingUtil {
                 }
             }
             System.exit(0);
-        }
-
-        catch (Exception e) {
+        }catch (Exception e) {
             SystemLog.exception(e);
             System.exit(1);
         }
@@ -1113,31 +1111,6 @@ public class EncodingUtil {
         }
         return DEFAULT_ENCODING;
     }*/
-
-    public static InputStreamReader getInputStreamReader(InputStream is, String encoding) throws IOException {
-        logger.info("Reading stream: using encoding: " + encoding);
-        org.apache.commons.io.input.BOMInputStream bis = new org.apache.commons.io.input.BOMInputStream(is); //So that we can remove the BOM
-        return new InputStreamReader(bis, encoding);
-    }
-
-    public static InputStreamReader getInputStreamReader(File file, String encoding) throws IOException {
-
-        FileInputStream fis = new FileInputStream(file);
-        logger.info("Reading file: " + file + " using encoding: " + encoding);
-        org.apache.commons.io.input.BOMInputStream bis =
-                new org.apache.commons.io.input.BOMInputStream(fis); //So that we can remove the BOM
-        return new InputStreamReader(bis, encoding);
-    }
-
-    public static String getString(File file, String encoding) throws IOException {
-        StringWriter sw = new StringWriter();
-        FileInputStream fis = new FileInputStream(file);
-        logger.info("Reading file: " + file + " using encoding: " + encoding);
-        org.apache.commons.io.IOUtils.copy(fis, sw, encoding);
-
-        return sw.toString();
-    }
-
 
   /*
     Normalizer.normalize(geo.getEdificio(), Normalizer.Form.NFD);

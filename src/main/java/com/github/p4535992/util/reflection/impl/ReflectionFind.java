@@ -1,6 +1,6 @@
 package com.github.p4535992.util.reflection.impl;
 
-import com.github.p4535992.util.file.impl.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtilities;
 import com.github.p4535992.util.log.SystemLog;
 
 import java.io.File;
@@ -89,7 +89,7 @@ public class ReflectionFind {
         if (!directory.exists()) {
             return classes;
         }
-        List<File> files = FileUtil.readDirectory(directory);
+        List<File> files = FileUtilities.readDirectory(directory);
         if(files!= null && files.size()>0){
             for (File file : files) {
                 if (file.isDirectory()) {

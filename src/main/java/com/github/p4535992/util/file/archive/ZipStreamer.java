@@ -1,4 +1,4 @@
-package com.github.p4535992.util.archive;
+package com.github.p4535992.util.file.archive;
 
 import com.github.p4535992.util.log.SystemLog;
 

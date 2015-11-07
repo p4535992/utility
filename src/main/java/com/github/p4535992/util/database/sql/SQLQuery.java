@@ -7,6 +7,7 @@ import com.github.p4535992.util.string.StringUtil;
 import com.github.p4535992.util.string.impl.StringIs;
 
 import java.io.File;
+import java.sql.Connection;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.Objects;
@@ -499,5 +500,42 @@ public class SQLQuery {
         }
         bQuery.append(")\n");
         return bQuery.toString();
+    }
+
+    public static String importCSVBulk(File fileCSV,String nameTable,String database,boolean hasFirstLine,
+                                       String fieldTerminator,String rowTerminator){
+        StringBuilder bQuery = new StringBuilder();
+        String[] columns;
+        if(hasFirstLine) columns = FileCSV.getColumns(fileCSV,true);
+        else  columns = FileCSV.getColumns(fileCSV,false);
+
+        bQuery.append(SQLQuery.createTableToInsertData(database,nameTable,columns));
+        bQuery.append("GO \n");
+        //Insert the content on the table.
+        bQuery.append("BULK INSERT ").append(nameTable)
+                .append(" FROM '").append(fileCSV.getAbsolutePath()).append("'")
+                .append(" WITH ( ").append("FIELDTERMINATOR = '").append(fieldTerminator).append("',")
+                .append("ROWTERMINATOR = '").append(rowTerminator).append("')\n");
+        bQuery.append("GO \n");
+        return bQuery.toString();
+    }
+
+    public static String importCSVLocalLoad(File fileCSV,boolean firstLine,Character fieldSeparator,
+                                            Character linesSeparator,String nameTable){
+        StringBuilder loadQuery = new StringBuilder();
+        try {
+            String[] columns = FileCSV.getColumns(fileCSV,firstLine);
+            loadQuery.append("LOAD DATA LOCAL INFILE '").append(fileCSV.getAbsolutePath())
+                    .append("' INTO TABLE ").append(nameTable).append(" FIELDS TERMINATED BY '")
+                    .append(fieldSeparator).append("'").append(" LINES TERMINATED BY '")
+                    .append(linesSeparator).append(" ( ")
+                    .append(CollectionKit.convertArrayContentToSingleString(columns)).append(") ");
+            SystemLog.query(loadQuery.toString());
+            //SQLHelper.executeSQL(loadQuery,connection);
+        }
+        catch (Exception e){
+            SystemLog.exception(e, SQLQuery.class);
+        }
+        return loadQuery.toString();
     }
 }

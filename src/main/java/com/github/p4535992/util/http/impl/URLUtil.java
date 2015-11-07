@@ -1,4 +1,4 @@
-package com.github.p4535992.util.http;
+package com.github.p4535992.util.http.impl;
 import com.github.p4535992.util.regex.pattern.Patterns;
 
 import java.net.MalformedURLException;
@@ -44,8 +44,6 @@ public class URLUtil {
     if (target.startsWith("?")) target = baseRightMost + target;
     return new URL(base, target);
   }
-
-  //private static Pattern IP_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}(\\d{1,3})");
 
     private static Pattern IP_PATTERN = Patterns.IP_ADDRESS;
   /**
@@ -317,11 +315,8 @@ public class URLUtil {
   }
 
   /**
-   * Returns the lowercased hostname for the url or null if the url is not well
-   * formed.
-   * 
-   * @param url
-   *          The url to check.
+   * Returns the lowercased hostname for the url or null if the url is not well formed.
+   * @param url The url to check.
    * @return String The hostname for the url.
    */
   public static String getHost(String url) {
@@ -336,9 +331,7 @@ public class URLUtil {
    * Returns the page for the url. The page consists of the protocol, host, and
    * path, but does not include the query string. The host is lowercased but the
    * path is not.
-   * 
-   * @param url
-   *          The url to check.
+   * @param url The url to check.
    * @return String The page for the url.
    */
   public static String getPage(String url) {

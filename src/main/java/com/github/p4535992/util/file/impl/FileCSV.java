@@ -13,26 +13,25 @@ import java.util.List;
 public class FileCSV {
 
     public static String[] getColumns(File fileCSV,boolean hasFirstLine){
+        String[] columns = new String[0];
         try {
             //csv file containing data
             //org.jooq.tools.csv.CSVReader reader = new org.jooq.tools.csv.CSVReader(new FileReader(fileCSV));
             CSVReader reader = new CSVReader(new FileReader(fileCSV));
             //List<String[]> content = reader.readAll();
-            String[] header = reader.readNext(); // assuming first read
-            if(hasFirstLine) return header;
-            else{
+            columns = reader.readNext(); // assuming first read
+            if(!hasFirstLine){
                 int columnCount =0;
-                if (header != null)  columnCount = header.length;
-                String[] columns = new String[columnCount];
+                if (columns != null)  columnCount = columns.length;
+                columns = new String[columnCount];
                 for(int  i=0; i< columnCount; i++){
                     columns[i] = "Column#"+i;
                 }
-                return columns;
             }
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
         }
+        return columns;
     }
 
 

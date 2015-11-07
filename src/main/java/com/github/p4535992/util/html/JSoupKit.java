@@ -1,5 +1,5 @@
 package com.github.p4535992.util.html;
-import com.github.p4535992.util.http.HttpUtil;
+import com.github.p4535992.util.http.impl.HttpUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.impl.StringIs;
 

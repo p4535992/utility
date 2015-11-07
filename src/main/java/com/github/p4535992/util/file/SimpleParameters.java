@@ -171,5 +171,40 @@ public class SimpleParameters {
         return mParameters;
     }
 
+    /**
+     * Template method that calls {@link #processLine(String)}.
+     * @param aFile  the file.
+     */
+    /*public final void processLineByLine(File aFile,Charset encoding){
+        if(encoding==null) encoding = StandardCharsets.UTF_8;
+        Path path = Paths.get(aFile.getAbsolutePath());
+        try (Scanner scanner =  new Scanner(path, encoding.name())){
+            while (scanner.hasNextLine()){
+                processLine(scanner.nextLine());
+            }
+        }catch(java.lang.NullPointerException| IOException ne){
+            SystemLog.warning("Can't read the file:"+aFile.getAbsolutePath());
+        }
+    }*/
+
+    /**
+     * Override method for processing lines in different ways.
+     * This simple default implementation expects simple name-value pairs, separated by an
+     * '=' sign. Examples of valid input:
+     * height = 167cm
+     * mass =  65kg
+     * disposition =  "grumpy"
+     * this is the name = this is the value
+     * @param aLine string correspond to a line of the file
+     */
+    /*protected void processLine(String aLine){
+        //use a second Scanner to parse the content of each line
+        Scanner scanner = new Scanner(aLine);
+        scanner.useDelimiter("=");
+        //assumes the line has a certain structure
+        if (scanner.hasNext()) SystemLog.console("Name:"+scanner.next()+",Value:"+scanner.next());
+        else SystemLog.console("Empty or invalid line. Unable to process.");
+    }*/
+
     
 }

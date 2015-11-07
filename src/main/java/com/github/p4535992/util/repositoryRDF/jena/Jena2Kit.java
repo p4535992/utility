@@ -27,7 +27,7 @@ import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
 
 import com.github.p4535992.util.string.impl.StringOutputStreamKit;
-import com.github.p4535992.util.file.impl.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtilities;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.xml.XMLKit;
 
@@ -91,7 +91,7 @@ public class Jena2Kit {
      * @throws IOException throw if any I/O error is occured.
      */
     public static void writeModelToFile(String fullPath,Model model, String outputFormat) throws IOException {
-        fullPath =  FileUtil.path(fullPath) + File.separator + FileUtil.filenameNoExt(fullPath)+"."+outputFormat.toLowerCase();
+        fullPath =  FileUtilities.getPath(fullPath) + File.separator + FileUtilities.getFilenameWithoutExt(fullPath)+"."+outputFormat.toLowerCase();
         SystemLog.message("Try to write the new file of triple from:" + fullPath + "...");
         OUTLANGFORMAT = stringToRiotLang(outputFormat);
         OUTRDFFORMAT = stringToRDFFormat(outputFormat);
@@ -128,7 +128,7 @@ public class Jena2Kit {
      */
 	private static void writeModelToFile1(String fullPath,Model model) throws IOException {
         Charset ENCODING = StandardCharsets.UTF_8;
-        FileUtil.createFile(fullPath);
+        FileUtilities.createFile(fullPath);
         Path path = Paths.get(fullPath);
 	    try (BufferedWriter writer = Files.newBufferedWriter(path,ENCODING)) {
             //org.apache.jena.riot.RDFDataMgr.write(writer, model, OUTLANGFORMAT);
@@ -440,9 +440,9 @@ public class Jena2Kit {
      * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
      public static Model loadFileTripleToModel(File file) throws FileNotFoundException {
-         String filename = FileUtil.filenameNoExt(file);
-         String filepath = FileUtil.path(file);
-         String inputFormat = FileUtil.extension(file);
+         String filename = FileUtilities.getFilenameWithoutExt(file);
+         String filepath = FileUtilities.getPath(file);
+         String inputFormat = FileUtilities.getExtension(file);
          return loadFileTripleToModel(filename,filepath,inputFormat);
      }
 
@@ -467,7 +467,6 @@ public class Jena2Kit {
      * A list of org.apache.jena.riot.RDFFormat file formats used in jena.
      * if you are not using the last version of jena you can found in build:
      * "AWT-EventQueue-0" java.lang.NoSuchFieldError: JSONLD_FLAT
-     * @return all the RDFFormat supported from jena.
      */
  	private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] { 	
         RDFFormat.TURTLE, RDFFormat.TTL,
@@ -683,8 +682,8 @@ public class Jena2Kit {
      */
     private static void convertTo(File file, String outputFormat) throws IOException{
          Model m = loadFileTripleToModel(file);
-         String newName = FileUtil.filenameNoExt(file)+"."+outputFormat.toLowerCase();
-         String newPath = FileUtil.path(file);
+         String newName = FileUtilities.getFilenameWithoutExt(file)+"."+outputFormat.toLowerCase();
+         String newPath = FileUtilities.getPath(file);
          String sparql;
         if(outputFormat.toLowerCase().contains("csv")||outputFormat.toLowerCase().contains("xml")
              ||outputFormat.toLowerCase().contains("json")||outputFormat.toLowerCase().contains("tsv")
@@ -831,7 +830,7 @@ public class Jena2Kit {
         try {
             File inputFile = new File(filePath);
             try (FileInputStream input = new FileInputStream(inputFile)) {
-                m.read(input, FileUtil.convertFileToStringUriWithPrefix(inputFile));
+                m.read(input, FileUtilities.convertFileToStringUriWithPrefix(inputFile));
             }     
         } catch (IOException e) {
             SystemLog.warning("Failed to open " + filePath);

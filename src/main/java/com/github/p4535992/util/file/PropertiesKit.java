@@ -1,6 +1,6 @@
 package com.github.p4535992.util.file;
 
-import com.github.p4535992.util.file.impl.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtilities;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -88,7 +88,7 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
         InputStream inputStream = null;
         Properties prop = new Properties();
         try {
-            String nameFile = FileUtil.filename(fileResourceProperties);
+            String nameFile = FileUtilities.getFilename(fileResourceProperties);
             inputStream = getClass().getClassLoader().getResourceAsStream(nameFile);
             if (inputStream != null) {
                 prop.load(inputStream);

@@ -1,9 +1,7 @@
 package com.github.p4535992.util.gtfs.onebus;
 
-import com.github.p4535992.util.file.impl.FileUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.onebusaway.csv_entities.EntityHandler;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.Route;

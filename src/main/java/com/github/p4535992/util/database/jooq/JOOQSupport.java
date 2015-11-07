@@ -5,7 +5,7 @@ import com.github.p4535992.util.regex.pattern.Patterns;
 import com.github.p4535992.util.string.impl.StringRegex;
 
 /**
- * Created by tenti on 21/10/2015.
+ * Created by 4535992 on 21/10/2015.
  */
 public class JOOQSupport {
 

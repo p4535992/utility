@@ -48,6 +48,8 @@ public class JenaAndVirtuoso {
         SystemLog.message("Connection to the Virtuoso Repository Successed!");
     }
 
+
+
     /**
      * Method to execute a SPARQL query on the virtuoso graph VirtGraph.
      * @param sparql string of the content of the SPARQL Query.

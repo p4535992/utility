@@ -3,14 +3,15 @@ package com.github.p4535992.util.repositoryRDF;
 import com.github.p4535992.util.repositoryRDF.cumulusrdf.CumulusRDFKit;
 import com.github.p4535992.util.repositoryRDF.sesame.Sesame28Kit;
 import com.hp.hpl.jena.graph.Triple;
-import org.openrdf.model.Model;
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
+import org.openrdf.model.*;
 import org.openrdf.query.Operation;
 import org.openrdf.query.Query;
 import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.base.RepositoryConnectionWrapper;
+import org.openrdf.repository.config.RepositoryImplConfig;
 import org.openrdf.repository.manager.RepositoryManager;
 import org.openrdf.rio.RDFFormat;
 
@@ -18,12 +19,15 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Created by 4535992 on 27/10/2015.
  */
+@SuppressWarnings("unused")
 public class RepositoryRDFUtilities {
 
     private static Sesame28Kit s;
@@ -170,11 +174,11 @@ public class RepositoryRDFUtilities {
         return s.convertRepositoryToModel(repository,limit);
     }
 
-    public List<String[]> toSesameResult(String queryString,String[] bindingName){
+    public List<String[]> toSesameTupleResult(String queryString,String[] bindingName){
         return s.TupleQueryEvalutation(queryString, bindingName);
     }
 
-    public List<Statement> toSesameResult(String queryString){
+    public List<Statement> toSesameGraphResult(String queryString){
         return s.GraphQueryEvalutation(queryString);
     }
 
@@ -225,6 +229,133 @@ public class RepositoryRDFUtilities {
     public void importToSesameFileChunked(File fileVerylarge){
         s.importIntoRepositoryFileChunked(fileVerylarge);
     }
+
+    public Model createModel(){ return s.createModel();}
+
+    public Graph createGraph(){return s.createGraph();}
+
+    public RepositoryManager createRepositoryManagerRemote(String urlRepositoryId){
+        return s.createRepositoryManagerRemote(urlRepositoryId);
+    }
+
+    public RepositoryManager createRepositoryManagerLocal(File baseDirectory){
+        return s.createRepositoryManagerLocal(baseDirectory);
+    }
+
+    public boolean createRepository(String pathToTheConfigFile){return s.createRepository(pathToTheConfigFile);}
+
+    public RepositoryConnectionWrapper createRepositoryConnectionWrapper(
+            Repository repository,RepositoryConnection repositoryConnection){
+        return s.createRepositoryConnectionWrapper(repository, repositoryConnection);
+    }
+
+    public RepositoryConnectionWrapper createRepositoryConnectionWrapper(
+            Repository repository){
+        return s.createRepositoryConnectionWrapper(repository);
+    }
+
+    public Repository createRepositoryStack(RepositoryImplConfig repositoryImplConfig){
+        return s.createRepositoryStack(repositoryImplConfig);
+    }
+
+    public Repository createRepositoryUnManaged(File repositoryDirFile,File configFile){
+        return s.createRepositoryUnManaged(repositoryDirFile,configFile);
+    }
+
+    public Statement createStatement(Object subject,Object predicate,Object objectOrUri,Object context){
+        return s.createStatement(subject,predicate,objectOrUri,context);
+    }
+
+    public Literal createLiteral(Object literalObject){
+      return s.createLiteral(literalObject);
+    }
+
+    public Resource createResource(Object uriOrString){
+        return s.createResource(uriOrString);
+    }
+
+    public Value createValue(Object resourceOrLiteral){
+       return s.createValue(resourceOrLiteral);
+    }
+
+    public URI createURI(Object uri){
+       return s.createURI(uri);
+    }
+
+    public Long numberOfExplicitStatements(RepositoryConnection repConn){
+        return s.numberOfExplicitStatements(repConn);
+    }
+
+    public Long numberOfExplicitStatements(){
+        return s.numberOfExplicitStatements();
+    }
+
+    public Long numberOfImplicitStatements(RepositoryConnection repConn){
+        return s.numberOfImplicitStatements(repConn);
+    }
+
+    public Long numberOfImplicitStatements(){
+        return s.numberOfImplicitStatements();
+    }
+
+    public Long getExecutionQueryTime(Object queryOrOperation){
+        return s.getExecutionQueryTime(queryOrOperation);
+    }
+
+    public QueryLanguage toQueryLanguage(String queryLanguage){
+        return s.stringToQueryLanguage(queryLanguage);
+    }
+
+    public QueryLanguage checkQueryLanguage(String queryString){
+        return s.checkLanguageOfQuery(queryString);
+    }
+
+    public String updateConfigTemplate(String configTemplate,Map<String,String> variables){
+         return s.updateConfigTemplate(configTemplate,variables);
+    }
+
+    public boolean isRepositoryInitialized(){
+        return s.isRepositoryInitialized();
+    }
+
+    public boolean isRepositoryConnected(){return s.isRepositoryConnected();}
+
+    public boolean isRepositoryActive(){return s.isRepositoryActive();}
+
+    public boolean isRepositoryEmpty(){return s.isRepositoryEmpty(); }
+
+    public void showStatistic(long startupTime){s.showInitializationStatistics(startupTime);}
+
+    public void showStatement(TupleQuery tupleQuery){s.showStatements(tupleQuery);}
+
+    public Map<String,Object> getAllInfoSesame(){
+        Map<String,Object> map = new HashMap<>();
+        map.put("Repository",s.getRepository());
+        map.put("RepositoryConnection",s.getRepositoryConnection());
+        map.put("RepositoryConnectionWrapper",s.getRepositoryConnectionWrapper());
+        map.put("RepositoryManager",s.getRepositoryManager());
+        map.put("RepositoryLocation",s.getRepositoryLocation());
+        map.put("RepositoryName",s.getRepositoryName());
+        map.put("RepositoryProvider",s.getRepositoryProvider());
+        map.put("Prefixes",s.getNamespacePrefixesFromRepository());
+        map.put("Repositories",s.getRepositories());
+        map.put("ServerRepositories",s.getURL_REPOSITORIES());
+        map.put("ServerRepositoryID",s.getURL_REPOSITORY_ID());
+        map.put("ServerSesame",s.getURL_SESAME());
+        return map;
+    }
+
+    public void setURLRepositoryId(String repositoryId){
+        s.setURLRepositoryId(repositoryId);
+    }
+
+    public void setURLRepositoryId(String ID_REPOSITORY,String server,String port){
+        s.setURLRepositoryId(ID_REPOSITORY,server, port);
+    }
+
+
+
+    //--------------------------------------------------------------------
 
 
 

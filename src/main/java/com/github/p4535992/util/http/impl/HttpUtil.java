@@ -1,0 +1,589 @@
+package com.github.p4535992.util.http.impl;
+
+import java.io.*;
+import java.net.*;
+import java.nio.charset.Charset;
+
+import java.util.*;
+
+import com.github.p4535992.util.log.SystemLog;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+@SuppressWarnings("unused")
+public class HttpUtil {
+
+	private static String boundary;
+	private static final String LINE_FEED = "\r\n";
+	private static String charset;
+	private static OutputStream outputStream;
+	private static PrintWriter writer;
+	private static HttpURLConnection httpConn;
+
+	/**
+	 * Send a get request.
+	 * @param url string of the url resource.
+	 * @return response string of the GET method response.
+	 * @throws IOException resource not found.
+	 */
+	static public String get(String url) throws IOException {
+		return get(url, null);
+	}
+
+	/**
+	 * Send a get request.
+	 * @param url         Url as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String get(String url,
+			Map<String, String> headers) throws IOException {
+		return fetch("GET", url, null, headers);
+	}
+
+	/**
+	 * Send a post request.
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String post(String url, String body,
+			Map<String, String> headers) throws IOException {
+		return fetch("POST", url, body, headers);
+	}
+
+	/**
+	 * Send a post request.
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String post(String url, String body) throws IOException {
+		return post(url, body, null);
+	}
+
+	/**
+	 * Post a form with parameters.
+	 * @param url         Url as string.
+	 * @param params      map with parameters/values.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String postForm(String url, Map<String, String> params)
+			throws IOException {
+		return postForm(url, params, null);
+	}
+
+	/**
+	 * Post a form with parameters.
+	 * @param url         Url as string.
+	 * @param params      Map with parameters/values.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String postForm(String url, Map<String, String> params,
+			Map<String, String> headers) throws IOException {
+		// set content type
+		if (headers == null) headers = new HashMap<>();
+		headers.put("Content-Type", "application/x-www-form-urlencoded");
+		// parse parameters
+		String body = "";
+		if (params != null) {
+			boolean first = true;
+			for (String param : params.keySet()) {
+				if (first) first = false;
+				else body += "&";
+				String value = params.get(param);
+				body += URLEncoder.encode(param, "UTF-8") + "=";
+				body += URLEncoder.encode(value, "UTF-8");
+			}
+		}
+		return post(url, body, headers);
+	}
+
+	/**
+	 * Send a put request.
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String put(String url, String body,
+			Map<String, String> headers) throws IOException {
+		return fetch("PUT", url, body, headers);
+	}
+
+	/**
+	 * Send a put request.
+	 * @param url Url as string.
+         * @param body the boy of the html page.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String put(String url, String body) throws IOException {
+		return put(url, body, null);
+	}
+	
+	/**
+	 * Send a delete request.
+	 * @param url         Url as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	static public String delete(String url,
+			Map<String, String> headers) throws IOException {
+		return fetch("DELETE", url, null, headers);
+	}
+	
+	/**
+	 * Send a delete request.
+	 * @param url         Url as string.
+	 * @return response   Response as string.
+	 * @throws IOException resource not found.
+	 */
+	public static String delete(String url) throws IOException {
+		return delete(url, null);
+	}
+	
+	/**
+	 * Append query parameters to given url.
+	 * @param url         Url as string.
+	 * @param params      Map with query parameters.
+	 * @return url        Url with query parameters appended.
+	 * @throws IOException resource not found.
+	 */
+	public static String appendQueryParams(String url,Map<String, String> params) throws IOException {
+		StringBuilder fullUrl = new StringBuilder();
+		fullUrl.append(url);
+		if (params != null) {
+			boolean first = (url.indexOf('?') == -1);
+			for (String param : params.keySet()) {
+				if (first) {
+					fullUrl.append('?');
+					first = false;
+				}
+				else {
+					fullUrl.append('&');
+				}
+				String value = params.get(param);
+				fullUrl.append(URLEncoder.encode(param, "UTF-8")).append('=');
+				fullUrl.append(URLEncoder.encode(value, "UTF-8"));
+			}
+		}
+		return fullUrl.toString();
+	}
+	
+	/**
+	 * Retrieve the query parameters from given url.
+	 * @param url         Url containing query parameters.
+	 * @return params     Map with query parameters.
+	 * @throws IOException resource not found.
+	 */
+	public static Map<String, String> getQueryParams(String url)
+			throws IOException {
+		Map<String, String> params = new HashMap<>();
+		int start = url.indexOf('?');
+		while (start != -1) {
+			// read parameter name
+			int equals = url.indexOf('=', start);
+			String param;
+			if (equals != -1) param = url.substring(start + 1, equals);
+			else param = url.substring(start + 1);
+			// read parameter value
+			String value = "";
+			if (equals != -1) {
+				start = url.indexOf('&', equals);
+				if (start != -1) value = url.substring(equals + 1, start);
+				else value = url.substring(equals + 1);
+			}
+			params.put(URLDecoder.decode(param, "UTF-8"), 
+				URLDecoder.decode(value, "UTF-8"));
+		}
+		return params;
+	}
+
+	/**
+	 * Returns the url without query parameters.
+	 * @param url         Url containing query parameters.
+	 * @return url        Url without query parameters.
+	 * @throws IOException resource not found.
+	 */
+	static public String removeQueryParams(String url) throws IOException {
+		int q = url.indexOf('?');
+		if (q != -1) return url.substring(0, q);
+		else return url;
+	}
+	
+	/**
+	 * Send a request.
+	 * @param method      HTTP method, for example "GET" or "POST".
+	 * @param url         Url as string.
+	 * @param body        Request body as string.
+	 * @param headers     Optional map with headers.
+	 * @return response   Response as string
+	 * @throws IOException resource not found.
+	 */
+	public static String fetch(String method, String url, String body,
+			Map<String, String> headers) throws IOException {
+		// connection
+		URL u = new URL(url);
+		httpConn = (HttpURLConnection)u.openConnection();
+		httpConn.setConnectTimeout(40000);
+		httpConn.setReadTimeout(40000);
+		// method
+		if (method != null) httpConn.setRequestMethod(method);
+		// headers
+		if (headers != null) {
+			for(String key : headers.keySet()) {
+				httpConn.addRequestProperty(key, headers.get(key));
+			}
+		}
+		// body
+		if (body != null) {
+			httpConn.setDoOutput(true);
+			OutputStream os = httpConn.getOutputStream();
+			os.write(body.getBytes());
+			os.flush();
+			os.close();
+		}
+		// response
+		InputStream is = httpConn.getInputStream();
+		String response = streamToString(is);
+		is.close();
+		// handle redirects
+		if (httpConn.getResponseCode() == 301) {
+			String location = httpConn.getHeaderField("Location");
+			return fetch(method, location, body, headers);
+		}
+		return response;
+	}
+	
+	/**
+	 * Read an input stream into a string.
+	 * @param in stream of the resource.
+	 * @return string of the content of the resource.
+	 * @throws IOException resource not found.
+	 */
+	public static String streamToString(InputStream in) throws IOException {
+		StringBuilder out = new StringBuilder();
+		byte[] b = new byte[4096];
+		for (int n; (n = in.read(b)) != -1;) {
+			out.append(new String(b, 0, n));
+		}
+		return out.toString();
+	}
+
+
+	public static void waiter() throws InterruptedException{
+		Random generator = new Random();
+		long stopRndm = (long) (generator.nextFloat() * 1000);
+		stopExecution(stopRndm);
+		Thread.sleep((generator.nextInt(5)*1000 + generator.nextInt(6)*1000));
+		//Thread.sleep((generator.nextInt(6)+5)*1000);
+	}
+        
+	/**
+	* Method for set a waiting from a request to another.
+	* @param millisec input in milliseconds.
+	*/
+	public static void stopExecution(long millisec){
+		long t0,t1;
+		t0 = System.currentTimeMillis();
+		do{t1=System.currentTimeMillis();}
+		while (t1-t0<millisec);
+	}
+        
+	/**
+	* Method for read a resource allocated on a Reader object.
+	* @param rd buffer reader where the resource is allocated.
+	* @return return string of the response.
+	* @throws IOException resource not found.
+	*/
+   private String readAll(Reader rd) throws IOException {
+	 StringBuilder sb = new StringBuilder();
+	 int cp;
+	 while ((cp = rd.read()) != -1) {
+	   sb.append((char) cp);
+	 }
+	 return sb.toString();
+   }
+
+   /**
+	* Method read the json response from a url resource.
+	* @param url string as url.
+	* @return json response from the url resource.
+	* @throws IOException reosurce not found.
+	* @throws JSONException json object error.
+	*/
+   private JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
+	   try (InputStream is = new URL(url).openStream()) {
+		   BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+		   String jsonText = readAll(rd);
+		   return new JSONObject(jsonText);
+	   }
+   }
+
+	/**
+	 * Method to get the authority name of a web page.
+	 * @param url the web adrress to the web page.
+	 * @return the string name of the authority of the web page.
+	 * @throws URISyntaxException throw exception if the web page is not reachable.
+	 */
+   public static String getAuthorityName(String url) throws URISyntaxException{
+		String provider = new URI(url).getHost();
+		StringTokenizer split2 =  new StringTokenizer(provider,".");
+		provider = split2.nextToken().toUpperCase();
+		return provider;
+    }
+
+	//---------------------------------------------------------------------------------------
+
+	/**
+	 * Makes an HTTP request using GET method to the specified URL.
+	 * @param requestURL the URL of the remote server.
+	 * @return An HttpURLConnection object.
+	 * @throws IOException thrown if any I/O org.p4535992.mvc.error occurred.
+	 */
+	public static HttpURLConnection sendGetRequest(String requestURL)
+			throws IOException {
+		URL url = new URL(requestURL);
+		httpConn = (HttpURLConnection) url.openConnection();
+		httpConn.setUseCaches(false);
+		httpConn.setDoInput(true); // true if we want to read server's response
+		httpConn.setDoOutput(false); // false indicates this is a GET request
+		return httpConn;
+	}
+
+	/**
+	 * Makes an HTTP request using POST method to the specified URL.
+	 * @param requestURL the URL of the remote server.
+	 * @param params A map containing POST data in form of key-value pairs.
+	 * @return An HttpURLConnection object.
+	 * @throws IOException thrown if any I/O error occurred.
+	 */
+	public static HttpURLConnection sendPostRequest(String requestURL,Map<String, String> params) throws IOException {
+		URL url = new URL(requestURL);
+		httpConn = (HttpURLConnection) url.openConnection();
+		httpConn.setUseCaches(false);
+		httpConn.setDoInput(true); // true indicates the server returns response
+		StringBuilder requestParams = new StringBuilder();
+		if (params != null && params.size() > 0) {
+			httpConn.setDoOutput(true); // true indicates POST request
+			// creates the params string, encode them using URLEncoder
+			for (String key : params.keySet()) {
+				String value = params.get(key);
+				requestParams.append(URLEncoder.encode(key, "UTF-8"));
+				requestParams.append("=").append(URLEncoder.encode(value, "UTF-8"));
+				requestParams.append("&");
+			}
+			// sends POST data
+			OutputStreamWriter writer = new OutputStreamWriter(httpConn.getOutputStream());
+			writer.write(requestParams.toString());
+			writer.flush();
+		}
+		return httpConn;
+	}
+
+	/**
+	 * Returns only one line from the server's response.
+	 * This method should be used if the server returns only a single line of String.
+	 * @return a String of the server's response.
+	 * @throws IOException  thrown if any I/O error occurred.
+	 */
+	public static String readSingleLineRespone() throws IOException {
+		InputStream inputStream;
+		if (httpConn != null) inputStream = httpConn.getInputStream();
+		else throw new IOException("Connection is not established.");
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		String response = reader.readLine();
+		reader.close();
+		return response;
+	}
+
+	/**
+	 * Returns an array of lines from the server's response. This method should
+	 * be used if the server returns multiple lines of String.
+	 *
+	 * @return an array of Strings of the server's response.
+	 * @throws IOException
+	 *             thrown if any I/O error occurred.
+	 */
+	public static String[] readMultipleLinesRespone() throws IOException {
+		InputStream inputStream;
+		if (httpConn != null)inputStream = httpConn.getInputStream();
+		else throw new IOException("Connection is not established.");
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		List<String> response = new ArrayList<>();
+		String line;
+		while ((line = reader.readLine()) != null) {
+			response.add(line);
+		}
+		reader.close();
+		return response.toArray(new String[response.size()]);
+	}
+
+	/**
+	 * Closes the connection if opened.
+	 */
+	public static void disconnect() {
+		if (httpConn != null) httpConn.disconnect();
+	}
+
+	/**
+	 * This constructor initializes a new HTTP POST request with content type
+	 * is set to multipart/form-data.
+	 * @param requestURL url for the request.
+	 * @param charset charset for encoding the request.
+	 * @throws IOException thrown if any I/O error occurred.
+	 */
+	public void MultipartUtility(String requestURL, String charset)
+			throws IOException {
+		HttpUtil.charset = charset;
+		// creates a unique boundary based on time stamp
+		boundary = "===" + System.currentTimeMillis() + "===";
+		URL url = new URL(requestURL);
+		httpConn = (HttpURLConnection) url.openConnection();
+		httpConn.setUseCaches(false);
+		httpConn.setDoOutput(true);	// indicates POST method
+		httpConn.setDoInput(true);
+		httpConn.setRequestProperty("Content-Type","multipart/form-data; boundary=" + boundary);
+		httpConn.setRequestProperty("User-Agent", "CodeJava Agent");
+		httpConn.setRequestProperty("Test", "Bonjour");
+		outputStream = httpConn.getOutputStream();
+		writer = new PrintWriter(new OutputStreamWriter(outputStream, charset),true);
+	}
+
+	/**
+	 * Adds a form field to the request.
+	 * @param name field name.
+	 * @param value field value.
+	 */
+	public void addFormField(String name, String value) {
+		writer.append("--").append(boundary).append(LINE_FEED);
+		writer.append("Content-Disposition: form-data; name=\"").append(name).append("\"").append(LINE_FEED);
+		writer.append("Content-Type: text/plain; charset=").append(charset).append(LINE_FEED);
+		writer.append(LINE_FEED);
+		writer.append(value).append(LINE_FEED);
+		writer.flush();
+	}
+
+	/**
+	 * Adds a upload file section to the request.
+	 * @param fieldName name attribute in input type="file" name="..." /.
+	 * @param uploadFile a File to be uploaded.
+	 * @throws IOException thrown if any I/O error occurred..
+	 */
+	public void addFilePart(String fieldName, File uploadFile)
+			throws IOException {
+		String fileName = uploadFile.getName();
+		writer.append("--").append(boundary).append(LINE_FEED);
+		writer.append("Content-Disposition: form-data; name=\"").append(fieldName)
+				.append("\"; filename=\"").append(fileName).append("\"").append(LINE_FEED);
+		writer.append("Content-Type: ").append(URLConnection.guessContentTypeFromName(fileName)).append(LINE_FEED);
+		writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
+		writer.append(LINE_FEED);
+		writer.flush();
+
+		FileInputStream inputStream = new FileInputStream(uploadFile);
+		byte[] buffer = new byte[4096];
+		int bytesRead;
+		while ((bytesRead = inputStream.read(buffer)) != -1) {
+			outputStream.write(buffer, 0, bytesRead);
+		}
+		outputStream.flush();
+		inputStream.close();
+
+		writer.append(LINE_FEED);
+		writer.flush();
+	}
+
+	/**
+	 * Adds a header field to the request.
+	 * @param name - name of the header field.
+	 * @param value - value of the header field.
+	 */
+	public void addHeaderField(String name, String value) {
+		writer.append(name).append(": ").append(value).append(LINE_FEED);
+		writer.flush();
+	}
+
+	/**
+	 * Completes the request and receives response from the server.
+	 * @return a list of Strings as response in case the server returned
+	 * status OK, otherwise an exception is thrown.
+	 * @throws IOException thrown if any I/O error occurred.
+	 */
+	public List<String> finish() throws IOException {
+		List<String> response = new ArrayList<>();
+		writer.append(LINE_FEED).flush();
+		writer.append("--").append(boundary).append("--").append(LINE_FEED);
+		writer.close();
+		// checks server's status code first
+		int status = httpConn.getResponseCode();
+		if (status == HttpURLConnection.HTTP_OK) {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					httpConn.getInputStream()));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				response.add(line);
+			}
+			reader.close();
+			httpConn.disconnect();
+		} else {
+			throw new IOException("Server returned non-OK status: " + status);
+		}
+		return response;
+	}
+
+	int tentativi = 0;
+	public boolean isWebPageExists(String url){
+		Document doc;
+		try {
+			try {
+				if (tentativi < 3) {
+					//doc = Jsoup.connect(url).get();
+					//doc = Jsoup.parse(Jsoup.connect(url).ignoreContentType(true).execute().contentType());
+					doc = Jsoup.connect(url).timeout(10 * 1000).get();
+					tentativi = 0;
+					return doc != null;
+				} else {
+					tentativi = 0;
+				}
+			} catch (Exception e) {
+				tentativi++;
+				try {
+					HttpUtil.waiter();
+				} catch (InterruptedException e1) {
+					if (tentativi < 3) isWebPageExists(url);
+				}
+				if (tentativi < 3) isWebPageExists(url);
+			}
+			try {
+				String html = HttpUtil.get(url);
+				doc = Jsoup.parse(html);
+				SystemLog.message("HTTP HAS SUCCEDED!");
+				tentativi = 0;
+				return doc != null;
+			} catch (Exception en) {
+				tentativi = 0;
+				return false;
+			}
+		}finally{
+			tentativi = 0;
+		}
+
+	}
+
+
+}

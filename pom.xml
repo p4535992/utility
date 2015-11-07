@@ -11,7 +11,7 @@
 
     <groupId>com.github.p4535992</groupId>
     <artifactId>utility</artifactId>
-    <version>1.4.1</version>
+    <version>1.4.2</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -178,17 +178,23 @@
             <artifactId>spring-beans</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>${commons-fileupload.commons-fileupload.version}</version>
             <optional>true</optional>
-        </dependency>
+        </dependency>-->
 
         <!-- Added 2015-09-25 -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${org.springframework.version}</version>
             <optional>true</optional>
         </dependency>
         <!-- ============= -->
@@ -501,21 +507,21 @@
             <version>${org.apache.httpcomponents.httpclient.version}</version>
         </dependency>
         <!-- Apache Commons DBCP dependency (for database connection pooling): -->
-        <dependency>
+       <!-- <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-dbcp2</artifactId>
             <version>${org.apache.commons.commons-dbcp2.version}</version>
-        </dependency>
-        <dependency>
+        </dependency>-->
+       <!-- <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${org.apache.commons.commons-lang3.version}</version>
-        </dependency>
-        <dependency>
+        </dependency>-->
+       <!-- <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>${org.apache.commons.commons-codec.version}</version>
-        </dependency>
+        </dependency>-->
 
         <!-- ====================== -->
         <!-- MAVEN PLUGIN DEPENDENCY-->
@@ -562,12 +568,12 @@
                  </exclusion>
              </exclusions>
          </dependency>
-         <dependency>
+         <!--<dependency>
              <groupId>commons-logging</groupId>
              <artifactId>commons-logging</artifactId>
              <version>${commons-logging.version}</version>
              <scope>provided</scope>
-         </dependency>
+         </dependency>-->
 
         <!-- ANDROID -->
      <!--   <dependency>

@@ -1,6 +1,6 @@
 package com.github.p4535992.util.bean;
 
-import com.github.p4535992.util.file.impl.FileUtil;
+import com.github.p4535992.util.file.impl.FileUtilities;
 import com.github.p4535992.util.log.SystemLog;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -34,7 +34,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
 
     public static ApplicationContext tryGetContextSpring(String filePathXml,Class<?> thisClass) throws IOException {
         ApplicationContext context = new GenericApplicationContext();
-        String path = FileUtil.convertFileToStringUriWithPrefix(getResourceAsFile(filePathXml,thisClass));
+        String path = FileUtilities.convertFileToStringUriWithPrefix(getResourceAsFile(filePathXml, thisClass));
         try {
             //This container loads the definitions of the beans from an XML file.
             // Here you do not need to provide the full path of the XML file but
@@ -50,7 +50,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
                     //This container loads the definitions of the beans from an XML file.
                     // Here you need to provide the full path of the XML bean configuration file to the constructor.
                     //You can force with file: property to the class file.
-                    File file = FileUtil.convertResourceToFile(filePathXml, thisClass);
+                    File file = FileUtilities.convertResourceToFile(filePathXml, thisClass);
                     if (!file.exists()) {
                         return null;
                     }
@@ -75,7 +75,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         int i = 0;
         for(String spath : filesPathsXml){
             if(new File(spath).exists()) {
-                String path = FileUtil.convertFileToStringUriWithPrefix(getResourceAsFile(spath,thisClass));
+                String path = FileUtilities.convertFileToStringUriWithPrefix(getResourceAsFile(spath, thisClass));
                 paths[i] = path;
                 i++;
             }

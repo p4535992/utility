@@ -66,25 +66,17 @@ public class FileLocator
         String fullPathName;
         StringBuffer decodedPathName;
         int pos, len, start;
-
-        if (findFile == null)
-            throw new FileNotFoundException("locateFile: null file name");
-
-        if (findFile.startsWith(absolutePath))
-            return findFile.substring(absolutePath.length());
-
-        if ((fullPathName = locateByProperty(findFile)) != null)
-            return fullPathName;
-
-        if ((url = locateByResource(findFile)) != null)
-        {
-  /*
-   * The URL that we receive from getResource /might/ have ' '
-   * (space) characters converted to "%20" strings.  However,
-   * it doesn't have other URL encoding (e.g '+' characters are
-   * kept intact), so we'll just convert all "%20" strings to
-   * ' ' characters and hope for the best.
-   */
+        if (findFile == null)throw new FileNotFoundException("locateFile: null file name");
+        if (findFile.startsWith(absolutePath)) return findFile.substring(absolutePath.length());
+        if ((fullPathName = locateByProperty(findFile)) != null)return fullPathName;
+        if ((url = locateByResource(findFile)) != null) {
+          /*
+           * The URL that we receive from getResource /might/ have ' '
+           * (space) characters converted to "%20" strings.  However,
+           * it doesn't have other URL encoding (e.g '+' characters are
+           * kept intact), so we'll just convert all "%20" strings to
+           * ' ' characters and hope for the best.
+           */
             fullPathName = url.getFile();
             //pos = 0;
             len = fullPathName.length();

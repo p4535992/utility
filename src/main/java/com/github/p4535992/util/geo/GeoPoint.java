@@ -80,9 +80,9 @@ public final class GeoPoint {
         return GeoHashUtils.encode(lat, lon);
     }
 
-    public final String getGeohash() {
+   /* public final String getGeohash() {
         return GeoHashUtils.encode(lat, lon);
-    }
+    }*/
 
     @Override
     public boolean equals(Object o) {
@@ -92,9 +92,7 @@ public final class GeoPoint {
         GeoPoint geoPoint = (GeoPoint) o;
 
         if (Double.compare(geoPoint.lat, lat) != 0) return false;
-        if (Double.compare(geoPoint.lon, lon) != 0) return false;
-
-        return true;
+        else return true;
     }
 
     @Override
