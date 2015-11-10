@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public class StringUtil {
 
-
     public static boolean isEmail(String email) {return StringIs.isEmail(email);}
 
     public static boolean isPhoneNumber(String number) { return StringIs.isPhoneNumber(number);}

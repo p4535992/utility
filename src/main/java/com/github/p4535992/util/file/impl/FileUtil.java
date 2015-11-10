@@ -23,7 +23,7 @@ import static java.util.Arrays.*;
  * @version 2015-07-07.
  */
 @SuppressWarnings("unused")
-public class FileUtilities {
+public class FileUtil {
     private static String fullPath;
     private static char pathSeparator = File.separatorChar;
     private static char extensionSeparator = '.';
@@ -32,16 +32,16 @@ public class FileUtilities {
      * Constructor .
      * @param f file of input
      */
-    public FileUtilities(File f) {
-        FileUtilities.fullPath = f.getAbsolutePath();
+    public FileUtil(File f) {
+        FileUtil.fullPath = f.getAbsolutePath();
     }
 
     /**
      * Constructor.
      * @param filePath string of the path to the file
      */
-    public FileUtilities(String filePath) {
-        FileUtilities.fullPath = filePath;
+    public FileUtil(String filePath) {
+        FileUtil.fullPath = filePath;
     }
 
     /**
@@ -50,10 +50,10 @@ public class FileUtilities {
      * @param separator path separator
      * @param extension extension separator (usually '.')
      */
-    public FileUtilities(String str, char separator, char extension) {
-        FileUtilities.fullPath = str;
-        FileUtilities.pathSeparator = separator;
-        FileUtilities.extensionSeparator = extension;
+    public FileUtil(String str, char separator, char extension) {
+        FileUtil.fullPath = str;
+        FileUtil.pathSeparator = separator;
+        FileUtil.extensionSeparator = extension;
     }
 
     /**
@@ -112,7 +112,7 @@ public class FileUtilities {
      */
     public static String getFilename(String fullPath) {
         String name;
-        if (fullPath.contains(File.separator)) name = fullPath.replace(FileUtilities.getPath(fullPath), "");
+        if (fullPath.contains(File.separator)) name = fullPath.replace(FileUtil.getPath(fullPath), "");
         else name = fullPath;
 
         name = name.replace(File.separator, "");
@@ -678,7 +678,7 @@ public class FileUtilities {
      */
     public static InputStream convertResourceFileToStream(String pathToFile) throws IOException{
         // JDK7 try-with-resources ensures to close stream automatically
-        try (InputStream is = FileUtilities.class.getResourceAsStream(pathToFile)) {
+        try (InputStream is = FileUtil.class.getResourceAsStream(pathToFile)) {
             int Byte; // Byte because byte is keyword!
             while ((Byte = is.read()) != -1 ) {
                 System.out.print((char) Byte);
@@ -796,7 +796,7 @@ public class FileUtilities {
     private static String resolveName(String name) {
         if (StringIs.isNullOrEmpty(name))  return name;
         if (!name.startsWith("/")) {
-            Class<?> clazz = FileUtilities.class;
+            Class<?> clazz = FileUtil.class;
             while (clazz.isArray()) { clazz = clazz.getComponentType();}
             String baseName = clazz.getName();
             int index = baseName.lastIndexOf('.');
@@ -817,7 +817,7 @@ public class FileUtilities {
         try {
             return  new GZIPInputStream(new FileInputStream(file));
         } catch (IOException e) {
-            SystemLog.exception(e,FileUtilities.class);
+            SystemLog.exception(e,FileUtil.class);
             return null;
         }
     }
@@ -1090,7 +1090,7 @@ public class FileUtilities {
     private static URL locateByResource(String findFile){
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         URL url = loader.getResource(findFile);
-        if (url == null)  url = FileUtilities.class.getResource("/" + findFile);
+        if (url == null)  url = FileUtil.class.getResource("/" + findFile);
         // System.err.println("Search succeeded via getResource()");
         return url;
     }

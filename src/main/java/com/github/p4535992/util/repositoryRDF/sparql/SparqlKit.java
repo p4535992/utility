@@ -1,6 +1,7 @@
 package com.github.p4535992.util.repositoryRDF.sparql;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -178,13 +179,86 @@ public class SparqlKit {
     }
 
     /**
-     * Method to prepare a query SPARQL for count the number of triple in a repository.
-     * @return the String of the query SPARQL for count the number of triple.
+     * ;ethod to count triples in the default graph and all triples in
+     * named graphs. To account for them, you would need something like
+     * @return the String of the query SPARQL for get All triple in all graphs.
      */
-    public static String countNumberOfTriple(){
-        return "SELECT (COUNT(*) as ?count) WHERE { ?s ?p ?o .}";
+    public static String getAllTriple(){
+        return "SELECT (COUNT(*) AS ?no) { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }";
     }
 
+    /**
+     * Method to count triples in the default graph and omit triples in named graphs
+     * @return the String of the query SPARQL for get triple in the default graph.
+     */
+    public static String getAllDefaultTriple(){
+        return "SELECT (COUNT(*) AS ?no) { ?s ?p ?o }";
+        //return "SELECT (COUNT(*) as ?count) WHERE { ?s ?p ?o .}";
+    }
+
+    public static String cleanTriple(String uriGraph){
+        /*
+        In the first branch simply select any triples directly off of the root.
+        In the second branch find any triples one/more steps away from the root
+        and the associated triples.  Then in the DELETE template simply delete all
+        the matched triples.
+
+        The second branch uses Joshua Taylor's trick from
+        http://stackoverflow.com/a/26707541/107591 of using a property path via a
+        URI and its negation to find any subject that is reachable by 1 or more
+        steps via any property from your root.  You can then simply grab things
+        that are directly connected to that subject.
+        */
+        return "DELETE { ?s ?p ?o }\n" +
+                "WHERE {\n" +
+                "  {\n" +
+                "    <"+uriGraph+"> ?p ?o .\n" + // Find things directly connected to the root
+                "    BIND(<"+uriGraph+"> AS ?s)\n" +
+                "  }\n" +
+                "  UNION\n" +
+                "  {\n" +
+                "    <"+uriGraph+"> (<>|!<>)+ ?s .\n" + //Find everything indirectly connected to the root
+                "    ?s ?p ?o .\n" +
+                "  }\n" +
+                "}";
+    }
+
+    public static String cleanTriple(String uriGraph,String propertyGraphChild){
+        return "DELETE { ?s ?p ?o }\n" +
+                "WHERE {\n" +
+                "  {\n" +
+                "    <"+uriGraph+"> ?p ?o .\n" + // Find things directly connected to the root
+                "    BIND(<"+uriGraph+"> AS ?s)\n" +
+                "  }\n" +
+                "  UNION\n" +
+                "  {\n" +
+                "    <"+uriGraph+"> :"+propertyGraphChild+"+ ?s .\n" + //Find everything indirectly connected to the root
+                "    ?s ?p ?o .\n" +
+                "  }\n" +
+                "}";
+    }
+
+    /**
+     * Given a root, return me the tree graph associated to that root.
+     * @param uriGraph
+     * @return
+     */
+    public static String getGraph(String uriGraph){
+        return "CONSTRUCT {?s ?p ?o} { GRAPH <"+uriGraph+"> { ?s ?p ?o } }";
+    }
+
+    /**
+     * Given a root, delete the tree graph associated to that root.
+     * @param uriGraph
+     * @return
+     */
+    public static String clearGraph(String uriGraph){
+        return "CLEAR GRAPH <"+uriGraph+">";
+    }
+
+    public static String insertData(String uriGraph,List<String[]> listTriple){
+        return "INSERT DATA { GRAPH <"+uriGraph+"> { ... } }";
+    }
 
 
 }

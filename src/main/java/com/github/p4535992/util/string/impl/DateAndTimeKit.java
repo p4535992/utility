@@ -114,4 +114,32 @@ public class DateAndTimeKit {
         return date;
     }
 
+    /**
+     * Method to convert a date to a ISO date.
+     * @param date date to convert.
+     * @return the dat in format iso.
+     */
+    /*
+    public static String convertDateToIsoDate(Date date) {
+        return isoDate.format(date);
+    }
+    */
+    /**
+     * Method to convert a string date to a  ISO Date.
+     * e.g. 2003-10-29T10:05:35-05:00.
+     * @param string sting of a date eg 2003-10-29.
+     * @return sring of a date in iso date format.
+     */
+    /*
+    public static Date convertStringDateToIsoDate(String string) {
+        Date date = null;
+        string =string.substring(0, 19)+ "GMT"+ string.substring(19);
+        try {
+            date = isoDate.parse(string);
+        } catch (ParseException e) {
+           SystemLog.exception(e);
+        }
+        return date;
+    }*/
+
 }

@@ -1,6 +1,7 @@
 package com.github.p4535992.util.file;
 
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringUtilities;
 import com.github.p4535992.util.string.impl.StringIs;
 import com.github.p4535992.util.string.impl.StringKit;
 
@@ -17,8 +18,6 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Arrays.*;
@@ -131,7 +130,7 @@ public class FileUtilities {
      */
     public static String getFilename(String fullPath) {
         String name;
-        if (fullPath.contains(File.separator)) name = fullPath.replace(FileUtilities.getPath(fullPath), "");
+        if (fullPath.contains(File.separator)) name = fullPath.replace(getPath(fullPath), "");
         else name = fullPath;
 
         name = name.replace(File.separator, "");
@@ -227,26 +226,50 @@ public class FileUtilities {
      * @param fullPathOutput string path to the file you want write the copy.
      * @throws IOException throw if any error is occurrred.
      */
-    public static void copyFile(String fullPathInput, String fullPathOutput) throws IOException {
-        //FileReader in = null;
-        //FileWriter out = null;
-        FileInputStream in = null;
-        FileOutputStream out = null;
-        try {
-            //char...
-            //in = new FileReader(fullPathInput);
-            //out = new FileWriter(fullPathOutput);
-            //bytes...
-            in = new FileInputStream(fullPathInput);
-            out = new FileOutputStream(fullPathOutput);
+    public static void copy(String fullPathInput, String fullPathOutput) throws IOException {
+       copy(new File(fullPathInput),new File(fullPathOutput));
+    }
 
-            int c;
-            while ((c = in.read()) != -1) {
-                out.write(c);
+    /**
+     * Method to copy a file.
+     * @param destination the String destination for the copy of the file.
+     * @param source the String source of the File to copy.
+     * @throws IOException throw if any error is occurrred.
+     */
+    public static void copy(File destination, File source) throws IOException {
+        if (!destination.exists()) createFile(destination);
+        OutputStream out = new FileOutputStream(destination);
+        try (InputStream in = new FileInputStream(source)) {
+           copy(in,out,StandardCharsets.UTF_8);
+        }
+        out.close();
+        SystemLog.message("Done copying contents of " + source.getName() + " to " + destination.getName());
+    }
+
+    public static int copy(InputStream input,OutputStream output, Charset encoding){
+        InputStreamReader in = new InputStreamReader(input, encoding);
+        OutputStreamWriter out = new OutputStreamWriter(output,encoding);
+        long count = copyLarge(in,out);
+        if (count > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return (int) count;
+    }
+
+    public static long copyLarge(Reader input, Writer output){
+        //copyLarge(input, output, new char[DEFAULT_BUFFER_SIZE])
+        char[] buffer = new char[1024 * 4];
+        long count = 0;
+        int n = 0;
+        try {
+            while (-1 != (n = input.read(buffer))) {
+                output.write(buffer, 0, n);
+                count += n;
             }
-        } finally {
-            if (in != null) in.close();
-            if (out != null) out.close();
+            return count;
+        }catch(IOException e){
+            SystemLog.exception(e);
+            return 0;
         }
     }
 
@@ -395,7 +418,7 @@ public class FileUtilities {
      * @param file the File to convert.
      * @return the String URI with prefix.
      */
-    public static String toStringWithPrefix(File file){
+    public static String toString(File file){
         return toStringUriWithPrefix(file.getAbsolutePath());
     }
 
@@ -548,93 +571,6 @@ public class FileUtilities {
         return null;
     }
 
-    /**
-     * Method to read the content of a file line by line.
-     * @param pathToFile the String path to the file to read.
-     * @return the String content ofd the file.
-     */
-    public static String readFile(String pathToFile) {
-        return readFile(new File(pathToFile));
-    }
-
-    /**
-     * Method to read the cotnetn of a file line by line.
-     * @param file the file to read.
-     * @return the String content ofd the file.
-     */
-    public static String readFile(File file) {
-        StringBuilder stringBuilder = new StringBuilder();
-        try
-        {
-            //File file = new File(pathToFile);
-            try (FileReader fileReader = new FileReader(file)) {
-                BufferedReader bufferedReader = new BufferedReader(fileReader);
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    stringBuilder.append(line.trim());
-                    //stringBuilder.append("\r\n");
-                }
-            }
-            //System.out.println("Contents of file:");
-            //System.out.println(stringBuilder.toString());
-        }catch( IOException e){
-            SystemLog.exception(e);
-        }
-        return stringBuilder.toString();
-    }
-
-    /**
-     * Method to read the cotnetn of a file line by line.
-     * @param pathToFile the file to read.
-     * @param separator the Char separator.
-     * @param params map of parameters and value.
-     * @return the String content ofd the file.
-     */
-    public static Map<String,String> readFile(String pathToFile, char separator, SimpleParameters params) {
-        Map<String,String> map = new HashMap<>();
-        try{
-            File file = new File(pathToFile);
-            String[] lines;
-            List<String> linesSupport;
-            try (FileReader fileReader = new FileReader(file)) {
-                BufferedReader br = new BufferedReader(fileReader);
-                String line;
-                linesSupport = new ArrayList<>();
-                while ((line = br.readLine()) != null) {
-                    if(line.trim().length() == 0 || line.contains("#")){
-                        continue;
-                    }
-                    linesSupport.add(line.trim());
-                }
-            }
-            lines = new String[ linesSupport.size()];
-            linesSupport.toArray(lines);
-            params.parseNameValuePairs(lines, separator, true);
-            map = params.getParameters();
-        }catch(IOException e){
-            SystemLog.exception(e);
-        }
-        return map;
-    }
-
-    /**
-     * Method to copy a file.
-     * @param destination the String destination for the copy of the file.
-     * @param source the String source of the File to copy.
-     * @throws IOException throw if any error is occurrred.
-     */
-    public static void copyFile(File destination, File source) throws IOException {
-        if (!destination.exists()) createFile(destination);
-        OutputStream out;
-        try (InputStream in = new FileInputStream(source)) {
-            out = new FileOutputStream(destination);
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = in.read(buf)) > 0) { out.write(buf, 0, len);}
-        }
-        out.close();
-        SystemLog.message("Done copying contents of " + source.getName() + " to " + destination.getName());
-    }
 
     /**
      * Method to convert a resource file to a Stream.
@@ -702,7 +638,7 @@ public class FileUtilities {
      * @param clazz the Class who call this method.
      * @return the Stream of the File..
      */
-    public static String toStringContent(String fileName,Class<?> clazz) {
+    public static String toString(String fileName,Class<?> clazz) {
         try {
             StringBuilder result = new StringBuilder("");
             //Get file from resources folder
@@ -903,24 +839,6 @@ public class FileUtilities {
     }
 
     /**
-     * Saves a string to a file.
-     * @param str string to write on the file.
-     * @param fileName string name of the file.
-     */
-    private static File writeToFile(String str, File fileName) {
-        try {
-            OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8");
-            BufferedWriter bw = new BufferedWriter(fw);
-            try (PrintWriter outWriter = new PrintWriter(bw)) {
-                outWriter.println(str);
-            }
-        } catch (UnsupportedEncodingException|FileNotFoundException e) {
-            SystemLog.exception(e);
-        }
-        return fileName;
-    }
-
-    /**
      * Locate the specific file.
      * Return the (URL decoded) abolute pathname to the file or null.
      * @param findFile  the String name of file to search.
@@ -1062,7 +980,7 @@ public class FileUtilities {
     /**
      * Method to get the String array of the columns of a CSV File.
      * @param fileCSV the File CSV.
-     * @param hasFirstLine if ture the first line of CSV File contains the columns name.
+     * @param hasFirstLine if true the first line of CSV File contains the columns name.
      * @return a String Array of the columns.
      */
     public static String[] getColumns(File fileCSV,boolean hasFirstLine){
@@ -1322,19 +1240,19 @@ public class FileUtilities {
      *   Note: the javadoc of Files.readAllLines says it's intended for small
      *   files. But its implementation uses buffering, so it's likely good
      *   even for fairly large files
-     * @param aFile the file you want to read
+     * @param fileInput the file you want to read
      * @return a list of lines
      */
-    public static List<String> readSmallFile(File aFile,Charset encoding) {
-        if(!aFile.exists()) createFile(aFile);
-        if(encoding==null) encoding = StandardCharsets.UTF_8;
-        Path path = Paths.get(aFile.getAbsolutePath());
+    public static List<String> readSmall(File fileInput,Charset encodingInput) {
+        if(!fileInput.exists()) createFile(fileInput);
+        if(encodingInput==null) encodingInput = StandardCharsets.UTF_8;
+        Path path = Paths.get(fileInput.getAbsolutePath());
         try {
-            return Files.readAllLines(path,  encoding);
+            return Files.readAllLines(path,  encodingInput);
         } catch (IOException e) {
-            encoding = StandardCharsets.UTF_8;
+            encodingInput = StandardCharsets.UTF_8;
             try {
-                return Files.readAllLines(path, encoding);
+                return Files.readAllLines(path, encodingInput);
             } catch (IOException e1) {
                 SystemLog.exception(e1,FileUtilities.class);
                 return null;
@@ -1342,173 +1260,22 @@ public class FileUtilities {
         }
     }
 
+
     /**
      * Method to write Small File.
-     * @param aLines a List of String to write on the File.
-     * @param aFile the File where to write.
-     * @param encoding the Charset Encoding if null is UTF8.
+     * @param content a List of String to write on the File.
+     * @param fileOutput the File where to write.
+     * @param encodingOutput the Charset Encoding if null is UTF8.
      */
-    public static void writeSmallFile(List<String> aLines, File aFile,Charset encoding) {
-        if(!aFile.exists()) createFile(aFile);
-        if(encoding==null) encoding = StandardCharsets.UTF_8;
-        Path path = Paths.get(aFile.getAbsolutePath());
+    public static void writeSmallFile(Collection<String> content, File fileOutput,Charset encodingOutput) {
+        if(!fileOutput.exists()) createFile(fileOutput);
+        if(encodingOutput==null) encodingOutput = StandardCharsets.UTF_8;
+        Path path = Paths.get(fileOutput.getAbsolutePath());
         try {
-            Files.write(path, aLines, encoding);
+            Files.write(path, content, encodingOutput);
         } catch (IOException e) {
-            encoding = StandardCharsets.UTF_8;
-            try {
-                Files.write(path, aLines, encoding);
-            } catch (IOException e1) {
-                SystemLog.exception(e1,FileUtilities.class);
-            }
+            SystemLog.exception(e,FileUtilities.class);
         }
-    }
-
-    public static List<String> parseLargeFile(File aFile,Charset encoding) throws IOException {
-        if(encoding==null) encoding = StandardCharsets.UTF_8;
-        List<String> list = new ArrayList<>();
-        Path path = Paths.get(aFile.getAbsolutePath());
-        try (Scanner scanner =  new Scanner(path, encoding.name())){
-            while (scanner.hasNextLine()){
-                //process each line in some way
-                try{
-                    list.add(scanner.nextLine());
-                }catch( java.util.NoSuchElementException e){
-                    if(!scanner.hasNextLine()) break;
-                }
-            }
-        }
-        return list;
-    }
-
-    public static List<String> readLargeFile(File aFile,Charset encoding) throws IOException {
-        if(encoding==null) encoding = StandardCharsets.UTF_8;
-        List<String> list = new ArrayList<>();
-        Path path = Paths.get(aFile.getAbsolutePath());
-        try (BufferedReader reader = Files.newBufferedReader(path, encoding)) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                //process each line in some way
-                list.add(line);
-            }
-        }
-        return list;
-    }
-
-    public static void writeLargeFile(File aFile, List<String> aLines,Charset encoding){
-        if(encoding==null) encoding = StandardCharsets.UTF_8;
-        Path path = Paths.get(aFile.getAbsolutePath());
-        try (BufferedWriter writer = Files.newBufferedWriter(path, encoding)){
-            for(String line : aLines){
-                writer.write(line);
-                writer.newLine();
-            }
-        }catch(java.lang.NullPointerException|IOException e){
-            SystemLog.warning(e.getMessage(),FileUtilities.class);
-        }
-    }
-
-    public static void writeLargeFileWithoutUnicode(File aFile, List<String> aLines) throws IOException {
-        Path path = Paths.get(aFile.getAbsolutePath());
-        try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path.toString(), true)))) {
-            for(String line : aLines){
-                try{
-                    for (Map.Entry<String, String> entry : unicodeCodePoint.entrySet()) {
-                        try{
-                            String s = entry.getKey().replace("U+","\\u");
-                            if(line.contains(s))line = line.replace(s, entry.getValue());
-                        }catch(java.lang.NullPointerException ne){break;}
-                    }
-                    out.print(line + System.getProperty("line.separator"));
-                    out.flush();
-                }catch(java.lang.NullPointerException ne){break;}
-            }
-        } catch(java.lang.NullPointerException ne){
-            SystemLog.warning("Can't decode the file:"+aFile.getAbsolutePath());
-        }
-    }
-
-    public static void writeLargeFileWithoutUnicode(File aFile, List<String> aLines,Charset encoding){
-        if(encoding==null) encoding = StandardCharsets.UTF_8;
-        Path path = Paths.get(aFile.getAbsolutePath());
-        try (BufferedWriter writer = Files.newBufferedWriter(path, encoding)){
-            for(String line : aLines){
-                try{
-                    for (Map.Entry<String, String> entry : unicodeCodePoint.entrySet()) {
-                        try{
-                            String s = entry.getKey().replace("U+","\\u");
-                            if(line.contains(s))line = line.replace(s,entry.getValue());
-                        }catch(java.lang.NullPointerException ne){
-                            break;
-                        }
-                    } //foreach entry
-                    writer.write(line);
-                    writer.newLine();
-                }catch(java.lang.NullPointerException ne){
-                    break;
-                }
-            }//FOREACH LINE
-        }catch(java.lang.NullPointerException|IOException ne){
-            SystemLog.warning(ne.getMessage(),FileUtilities.class);
-        }
-    }
-
-
-
-    /**
-     * Write fixed content to the given file.
-     */
-    public void write(File aFile,Charset encoding) throws IOException  {
-        SystemLog.message("Try to writing to file named " + aFile.getAbsolutePath() + " with Encoding: " + encoding);
-        Writer out = new OutputStreamWriter(new FileOutputStream(aFile),  encoding);
-    }
-
-    /**
-     * Read the contents of the given file.
-     * @return the String content of the file.
-     * @throws IOException file not found.
-     */
-    public String read(File aFile,Charset encoding) throws IOException {
-        //log("Reading from file.");
-        StringBuilder text = new StringBuilder();
-        String NL = System.getProperty("line.separator");
-        try (Scanner scanner = new Scanner(new FileInputStream(aFile), encoding.name())) {
-            while (scanner.hasNextLine()) {
-                text.append(scanner.nextLine()).append(NL);
-            }
-        }
-        return text.toString();
-    }
-
-    /**
-     * Fetch the entire contents of a text file, and return it in a String.
-     * This style of implementation does not throw Exceptions to the caller.
-     * @param aFile is a file which already exists and can be read.
-     * @return content of the file
-     */
-    public static String read(File aFile) {
-        //...checks on aFile are elided
-        StringBuilder contents = new StringBuilder();
-        try {
-            //use buffering, reading one line at a time
-            //FileReader always assumes default encoding is OK!
-            try (BufferedReader input = new BufferedReader(new FileReader(aFile))) {
-                String line; //not declared within while loop
-                 /*
-                 * readLine is a bit quirky :
-                 * it returns the content of a line MINUS the newline.
-                 * it returns null only for the END of the stream.
-                 * it returns an empty String if two newlines appear in a row.
-                 */
-                while ((line = input.readLine()) != null) {
-                    contents.append(line);
-                    contents.append(System.getProperty("line.separator"));
-                }
-            }
-        }catch (IOException ex){
-            SystemLog.exception(ex,FileUtilities.class);
-        }
-        return contents.toString();
     }
 
     /**
@@ -1647,12 +1414,13 @@ public class FileUtilities {
      * @param fileASCII file of input in ASCII encoding
      * @throws IOException file not found
      */
-    public static void writeFileWithUTF8(File fileASCII) throws IOException{
+    public static File writeToUTF8(File fileASCII) throws IOException{
         List<String> list = toUTF8(fileASCII);
-        File file = new File(fileASCII.getAbsolutePath());
+        File fileUTF8 = new File(fileASCII.getAbsolutePath());
         //fileASCII = new File(filePathASCII);
+        write(list,fileUTF8,StringUtilities.US_ASCII,StringUtilities.UTF_8);
         fileASCII.delete();
-        writeLargeFile(file, list, null);
+        return fileUTF8;
     }
 
     /**
@@ -1660,68 +1428,222 @@ public class FileUtilities {
      * @param fileUTF8 file of input in UTF8 encoding
      * @throws IOException file not found
      */
-    public static void writeFileWithASCII(File fileUTF8) throws IOException{
+    public static File writeToASCII(File fileUTF8) throws IOException{
         List<String> list = toAscii(fileUTF8);
-        File filePathUTF8 = new File(fileUTF8.getAbsolutePath());
+        File fileAscii = new File(fileUTF8.getAbsolutePath());
+        write(list, fileAscii, null, StringUtilities.US_ASCII);
         fileUTF8.delete();
-        //fileASCII = new File(filePathASCII);
-        writeLargeFile(filePathUTF8, list,null);
+        return fileAscii;
     }
 
-    public static void writeFileWithUTF8(String filePathInput,String filePathOutput) {
-        try {
-            FileOutputStream fos = new FileOutputStream(filePathInput);
-            try (Writer out = new OutputStreamWriter(fos, StandardCharsets.UTF_8)) {
-                out.write(filePathOutput);
-            }
-        } catch (IOException e) {
-            SystemLog.exception(e);
-        }
+    public static File writeToANSI(File fileUTF8) {
+        File fileANSI = new File(fileUTF8.getAbsolutePath());
+        write(fileUTF8, fileANSI, StringUtilities.UTF_8, StringUtilities.CP1252);
+        fileUTF8.delete();
+        return fileANSI;
     }
 
-    public static String readLargeFileWithUTF8(String filePathInput) {
-        StringBuilder buffer = new StringBuilder();
-        try {
-            FileInputStream fis = new FileInputStream(filePathInput);
-            InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
-            try (Reader in = new BufferedReader(isr)) {
-                int ch;
-                while ((ch = in.read()) > -1) {
-                    buffer.append((char) ch);
+    /**
+     * Saves a string to a file.
+     * @param str string to write on the file.
+     * @param fileOutput string name of the file.
+     */
+    private static File writeToFile(String str, File fileOutput) {
+        write(Collections.singletonList(str), fileOutput, StringUtilities.DEFAULT_ENCODING, StringUtilities.UTF_8);
+        return fileOutput;
+    }
+
+    public static boolean write(Collection<String> collectionContent,File fileOutput,Charset encodingInput,Charset encodingOutput){
+        boolean replace = false;
+        if(encodingOutput == null) encodingOutput = StandardCharsets.UTF_8;
+        if(encodingOutput.name().toUpperCase().startsWith("UTF")) replace = true;
+        SystemLog.message("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
+        Path path = Paths.get(fileOutput.getAbsolutePath());
+        try (BufferedWriter writer = Files.newBufferedWriter(path, encodingOutput)){
+
+            for(String line : collectionContent){
+                if(replace){
+                    for (Map.Entry<String, String> entry : unicodeCodePoint.entrySet()) {
+                        try{
+                            String s = entry.getKey().replace("U+","\\u");
+                            if(line.contains(s))line = line.replace(s,entry.getValue());
+                        }catch(java.lang.NullPointerException ne){
+                            break;
+                        }
+                    } //foreach entry
                 }
+                //With printwriter..
+                /*try (PrintWriter outWriter = new PrintWriter(writer)) {
+                    outWriter.println(line);
+                }*/
+                writer.write(line + System.getProperty("line.separator"));
+                //writer.newLine();
+                writer.flush();
             }
-            return buffer.toString();
-        } catch (IOException e) {
-            SystemLog.exception(e);
-            return null;
+            return true;
+        }catch(java.lang.NullPointerException|IOException e){
+            SystemLog.warning(e.getMessage(), FileUtilities.class);
+            return false;
         }
     }
 
-    public static File toAnsi(File fileUTF8) {
-        File fileANSI =
-                new File(getPath(fileUTF8)+File.separator+getFilenameWithoutExt(fileUTF8)+"ansi."+getExtension(fileUTF8));
+    public static boolean write(File fileInput,File fileOutput,Charset encodingInput,Charset encodingOutput){
+        boolean replace = false;
+        if(encodingOutput == null) encodingOutput = StandardCharsets.UTF_8;
+        if(encodingInput == null) encodingInput = StringUtilities.toCharset(System.getProperty("file.encoding"));
+        if(encodingOutput.name().toUpperCase().startsWith("UTF")) replace = true;
+        SystemLog.message("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
         try {
             boolean firstLine = true;
-            FileInputStream fis = new FileInputStream(fileUTF8);
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(fis,StandardCharsets.UTF_8))) {
-                FileOutputStream fos = new FileOutputStream(fileANSI);
-                try (Writer w = new BufferedWriter(new OutputStreamWriter(fos, "Cp1252"))) {
-                    for (String s; (s = r.readLine()) != null;) {
+            FileInputStream fis = new FileInputStream(fileInput);
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(fis,encodingInput))) {
+                FileOutputStream fos = new FileOutputStream(fileOutput);
+                try (Writer writer = new BufferedWriter(new OutputStreamWriter(fos, encodingOutput))) {
+                    for (String line; (line = r.readLine()) != null;) {
                         if (firstLine) {
-                            if (s.startsWith("\uFEFF")) {
-                                s = s.substring(1);
+                            if (line.startsWith("\uFEFF")) {
+                                line = line.substring(1);
                             }
                             firstLine = false;
                         }
-                        w.write(s + System.getProperty("line.separator"));
-                        w.flush();
+                        if(replace){
+                            for (Map.Entry<String, String> entry : unicodeCodePoint.entrySet()) {
+                                try{
+                                    String s = entry.getKey().replace("U+","\\u");
+                                    if(line.contains(s))line = line.replace(s,entry.getValue());
+                                }catch(java.lang.NullPointerException ne){
+                                    break;
+                                }
+                            } //foreach entry
+                        }
+                        writer.write(line + System.getProperty("line.separator"));
+                        writer.flush();
                     }
                 }
             }
-            return fileANSI;
+            return true;
         }catch (Exception e) {
+            SystemLog.exception(e);
+            return false;
+        }
+    }
+
+    /**
+     * Method to read the cotnetn of a file line by line.
+     * @param fileInput the file to read.
+     * @param separator the Char separator.
+     * @return the String content ofd the file.
+     */
+    public static Map<String,String> readFile(File fileInput, char separator) {
+        SimpleParameters params = new SimpleParameters();
+        Map<String,String> map = new HashMap<>();
+        try{
+            String[] lines;
+            List<String> linesSupport;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileInput),StandardCharsets.UTF_8))) {
+                String line;
+                linesSupport = new ArrayList<>();
+                while ((line = br.readLine()) != null) {
+                    if(line.trim().length() == 0 || line.contains("#")){
+                        continue;
+                    }
+                    linesSupport.add(line.trim());
+                }
+            }
+            lines = new String[ linesSupport.size()];
+            linesSupport.toArray(lines);
+            params.parseNameValuePairs(lines, separator, true);
+            map = params.getParameters();
+        }catch(IOException e){
+            SystemLog.exception(e);
+        }
+        return map;
+    }
+
+    public static Collection<String> read(File fileInput,Charset encodingInput){
+        if(encodingInput ==null) encodingInput = StandardCharsets.UTF_8;
+        Collection<String> collection = new ArrayDeque<>();
+        try {
+            //FileInputStream fis = new FileInputStream(fileInput);
+            // try (Scanner scanner = new Scanner(new FileInputStream(aFile), encoding.name())) {
+            // try (BufferedReader reader = Files.newBufferedReader(path, encoding)) {
+            //try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileInput),encodingInput))) {
+                //with bytes...
+                /*int ch;
+                while ((ch = in.read()) > -1) {
+                    collection.add((char) ch);
+                }*/
+                //with Scanner...
+                /*while (scanner.hasNextLine()) {
+                    collection.add(scanner.nextLine() + System.getProperty("line.separator"));
+                }*/
+                //with stream for...
+               /* for(String line; (line = in.readLine()) != null;) {
+                    collection.add(line+System.getProperty("line.separator"));
+                }*/
+                //with stream while...
+                String line;
+                while ((line = in.readLine()) != null) {
+                    //process each line in some way
+                    collection.add(line);
+                }
+            }
+            return collection;
+        } catch (IOException e) {
             SystemLog.exception(e);
             return null;
         }
     }
+
+    /**
+     * Method to get the String content of the File.
+     * @param file the File to copy.
+     * @param encoding the encoding of the File you desire.
+     * @return the String of the content of the File.
+     */
+    public static String toString(File file, String encoding){
+        StringWriter sw = new StringWriter();
+        long count = 0;
+        int n = 0;
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            SystemLog.message("Reading file: " + file + " using encoding: " + encoding);
+            //org.apache.commons.io.IOUtils.copy(fis, sw, encoding);
+            InputStreamReader in = new InputStreamReader(fis, StringUtilities.toCharset(encoding));
+            char[] buffer = new char[1024 * 4];
+            while (-1 != (n = in.read(buffer))) {
+                sw.write(buffer, 0, n);
+                count += n;
+            }
+        }catch(IOException e){
+            SystemLog.exception(e);
+            return null;
+        }
+        if (count > Integer.MAX_VALUE) return null;
+        return sw.toString();
+    }
+
+    byte[] getBinaryFileContent(File fileName) throws IOException {
+        BufferedInputStream in = new BufferedInputStream(new FileInputStream(fileName));
+        ByteArrayOutputStream bs = new ByteArrayOutputStream();
+        BufferedOutputStream out = new BufferedOutputStream(bs);
+        byte[] ioBuf = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
+        out.close();
+        in.close();
+        return bs.toByteArray();
+    }
+
+    void writeBinaryFileContent(File fileName, byte[] content) throws IOException {
+        BufferedInputStream in = new BufferedInputStream(new ByteArrayInputStream(content));
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileName));
+        byte[] ioBuf = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
+        out.close();
+        in.close();
+    }
+
 }

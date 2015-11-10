@@ -11,7 +11,7 @@
 
     <groupId>com.github.p4535992</groupId>
     <artifactId>utility</artifactId>
-    <version>1.4.2</version>
+    <version>1.4.3</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>

@@ -291,12 +291,9 @@ public class CollectionKit {
             System.arraycopy(b, 0, c, aLen, bLen);
         }catch(java.lang.ArrayStoreException e){
             List<T> list = new ArrayList<>();
-            for(int i=0; i < a.length; i++){
-                list.add(a[i]);
-            }
-            for(int i=0; i < b.length; i++){
-                list.add(b[i]);
-            }
+            Collections.addAll(list, a);
+            //for(int i=0; i < a.length; i++){list.add(a[i]);}
+            Collections.addAll(list, b);
             c = convertListToArray(list);
         }
         return c;
@@ -489,16 +486,21 @@ public class CollectionKit {
 
     /**
      * Method to convert a Array Collection of Integer to a Array Collection of int.
-     * @param IntegerArray the Array Collection of Integers.
+     * @param integerArray the Array Collection of Integers.
      * @return Array Collection of int.
      */
-    public static int[] convertIntegersToInt(Integer[] IntegerArray) {
-       /* int[] result = new int[IntegerArray.length];
-        for (int i = 0; i < IntegerArray.length; i++) {
-            result[i] = IntegerArray[i].intValue();
+    public static int[] convertIntegersToInt(Integer[] integerArray) {
+        //return org.apache.commons.lang3.ArrayUtils.toPrimitive(integerArray);
+        if (integerArray == null) {
+            return null;
+        } else if (integerArray.length == 0) {
+            return new int[0];
         }
-        return result;*/
-        return org.apache.commons.lang3.ArrayUtils.toPrimitive(IntegerArray);
+        final int[] result = new int[integerArray.length];
+        for (int i = 0; i < integerArray.length; i++) {
+            result[i] = integerArray[i].intValue();
+        }
+        return result;
     }
 
     /**
@@ -507,12 +509,17 @@ public class CollectionKit {
      * @return Array Collection of Integer.
      */
     public static Integer[] convertIntToIntegers(int[] intArray) {
-        /*Integer[] result = new Integer[intArray.length];
-        for (int i = 0; i < intArray.length; i++) {
-            result[i] = Integer.valueOf(intArray[i]);
+        //return org.apache.commons.lang3.ArrayUtils.toObject(intArray);
+        if (intArray == null) {
+            return null;
+        } else if (intArray.length == 0) {
+            return new Integer[0];
         }
-        return result;*/
-        return org.apache.commons.lang3.ArrayUtils.toObject(intArray);
+        final Integer[] result = new Integer[intArray.length];
+        for (int i = 0; i < intArray.length; i++) {
+            result[i] = intArray[i];
+        }
+        return result;
     }
 
     /**
@@ -533,24 +540,23 @@ public class CollectionKit {
 
     /**
      * Sorts a HashMap based on the values with Double data type
-     * @param input hashMAp where order.
-     * @return the hashmap sorted.
+     * @param input hashMap where order.
+     * @return the hashMap sorted.
      */
-    public static HashMap<String, Double> sortHashMap(
-            HashMap<String, Double> input) {
-        Map<String, Double> tempMap = new HashMap<>();
-        for (String wsState : input.keySet()) {
+    public static <T> HashMap<T, Double> sortHashMap(HashMap<T, Double> input) {
+        Map<T, Double> tempMap = new HashMap<>();
+        for (T wsState : input.keySet()) {
             tempMap.put(wsState, input.get(wsState));
         }
-        List<String> mapKeys = new ArrayList<>(tempMap.keySet());
+        List<T> mapKeys = new ArrayList<>(tempMap.keySet());
         List<Double> mapValues = new ArrayList<>(tempMap.values());
-        HashMap<String, Double> sortedMap = new LinkedHashMap<>();
+        HashMap<T, Double> sortedMap = new LinkedHashMap<>();
         TreeSet<Double> sortedSet = new TreeSet<>(mapValues);
         Object[] sortedArray = sortedSet.toArray();
         int size = sortedArray.length;
         for (int i = size - 1; i >= 0; i--) {
-            sortedMap.put(mapKeys.get(mapValues.indexOf(sortedArray[i])),
-                    (Double) sortedArray[i]);
+            sortedMap.put(
+                    mapKeys.get(mapValues.indexOf(sortedArray[i])), (Double) sortedArray[i]);
         }
         return sortedMap;
     }
@@ -707,7 +713,25 @@ public class CollectionKit {
         return map;
     }
 
+    /**
+     * Method to convert a TreeSet to a List.
+     * @param treeSet the treeSet Object.
+     * @param <T> the Generic Type.
+     * @return the List.
+     */
+    public static <T> List<T> toList(TreeSet<T> treeSet){
+        return new ArrayList<>(treeSet);
+    }
 
+    /**
+     * Method to convert a TreeSet to a Array.
+     * @param treeSet the treeSet Object.
+     * @param <T> the Generic Type.
+     * @return the Array.
+     */
+    public static <T> T[] toArray(TreeSet<T> treeSet){
+        return (T[]) treeSet.toArray(new Object[treeSet.size()]);
+    }
 
 
 

@@ -6,6 +6,7 @@ import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.*;
 import com.hp.hpl.jena.rdf.model.impl.StatementImpl;
 import com.hp.hpl.jena.shared.Command;
+import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.util.NodeUtils;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -29,7 +30,9 @@ public class JenaAndVirtuoso {
     private static final String DEFAUL_PASSWORD= "dba";
     private static final String SPARQL_SELECT_ALL ="SELECT * WHERE { GRAPH ?graph { ?s ?p ?o } } limit 100";
 
-    public static virtuoso.jena.driver.VirtGraph graph;
+    public static virtuoso.jena.driver.VirtGraph virtGraph;
+    public static virtuoso.jena.driver.VirtDataset virtDataset;
+    public static virtuoso.jena.driver.VirtModel virtModel;
 
     private static JenaAndVirtuoso instance = null;
     public JenaAndVirtuoso(){}
@@ -44,9 +47,101 @@ public class JenaAndVirtuoso {
      * Method to connect to a virtuoso repository like a Jena Model.
      */
     public void connectToVirtuoso(){
-        graph = new virtuoso.jena.driver.VirtGraph (DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
-        SystemLog.message("Connection to the Virtuoso Repository Successed!");
+        virtGraph = new virtuoso.jena.driver.VirtGraph (DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
+        virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
+        virtDataset = new virtuoso.jena.driver.VirtDataset(DEFAULT_URL_VIRTUOSO,DEFAUL_USERNAME,DEFAUL_PASSWORD);
+        SystemLog.message("Connection to the Virtuoso Repository Success!");
     }
+
+    public void connectToVirtuoso(String serverVirtuoso,String username,String password,String baseModel){
+        virtGraph = new virtuoso.jena.driver.VirtGraph(serverVirtuoso,username,password);
+        virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
+        virtDataset = new virtuoso.jena.driver.VirtDataset(serverVirtuoso,username,password);
+        //OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, baseModel);
+        SystemLog.message("Connection to the Virtuoso Repository Success!");
+    }
+
+    public void connectToVirtuoso(String serverVirtuoso,javax.sql.DataSource dataSource){
+        virtGraph = new virtuoso.jena.driver.VirtGraph(serverVirtuoso,dataSource);
+        virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
+        virtDataset = new virtuoso.jena.driver.VirtDataset(serverVirtuoso,dataSource);
+        SystemLog.message("Connection to the Virtuoso Repository Success!");
+    }
+
+    /**
+     * Metho to convert a conection to Virtuoso server to a Jena Model.
+     * @param serverVirtuoso the String address web of the Virtuoso server e.g. "jdbc:virtuoso://localhost:1111".
+     * @param username the String username e.g. "dba".
+     * @param password the String password e.g. "dba".
+     * @return the Jena Model of the Virtuoso connection.
+     */
+    public static Model convertVirtuosoModelToJenaModel(String serverVirtuoso,String username,String password){
+        return virtuoso.jena.driver.VirtModel.openDatabaseModel("load:test", serverVirtuoso, username, password);
+    }
+
+    /**
+     * Method to convert a Virtuoso Graph to a Jena Model.
+     * @param virtDataset the Virtuoso Driver DataSet.
+     * @param nameGraph the String name of the model to extract e.g. "http://my.graph.name/"
+     * @return the jena Model.
+     */
+    public static Model convertVirtuosoModelToJenaModel(virtuoso.jena.driver.VirtDataset virtDataset,String nameGraph){
+        return virtDataset.getNamedModel(nameGraph);
+    }
+
+    /**
+     * Method to convert a Virtuoso Graph to a Jena Model.
+     * @param virtDataset the Virtuoso Driver DataSet.
+     * @return the jena Model.
+     */
+    public static Model convertVirtuosoModelToJenaModel(virtuoso.jena.driver.VirtDataset virtDataset){
+        return virtDataset.getDefaultModel();
+    }
+
+    /**
+     * Method to convert a Virtuoso Graph to a Jena Model.
+     * @return the jena Model.
+     */
+    public static Model convertVirtuosoModelToJenaModel(){
+        return virtDataset.getDefaultModel();
+    }
+
+    public void addModelToVirtuoso(virtuoso.jena.driver.VirtDataset virtDataset, String baseGraph,Model model){
+        virtDataset.addNamedModel(baseGraph,model);
+    }
+
+    public void addModelToVirtuoso(String baseGraph,Model model){
+        virtDataset.addNamedModel(baseGraph,model);
+    }
+
+    public static DatasetGraph convertVirtGraphToDataSetGraph(){
+        return virtDataset.asDatasetGraph();
+    }
+
+    public static void addRuleSetToVirtuoso(String ruleSetName, String uriGraphRuleSet){
+       virtModel.createRuleSet(ruleSetName,uriGraphRuleSet);
+    }
+
+    public static void removeRuleSetToVirtuoso(String ruleSetName, String uriGraphRuleSet){
+        virtModel.removeRuleSet(ruleSetName, uriGraphRuleSet);
+    }
+
+    public static void removeAllVirtuoso(String ruleSetName, String uriGraphRuleSet){
+        virtModel.removeAll();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -58,7 +153,7 @@ public class JenaAndVirtuoso {
     public Model execSparqlToRepository(String sparql){
         Query query = QueryFactory.create(sparql);
         virtuoso.jena.driver.VirtuosoQueryExecution vqe =
-                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
         ResultSet results = vqe.execSelect();
         /*while (results.hasNext()) {
             QuerySolution result = results.nextSolution();
@@ -78,10 +173,10 @@ public class JenaAndVirtuoso {
      */
     public Model execSparqlSelectAllFromRepository(String urlResourceGraph){
         String rdfFormat = "";
-        graph.read(urlResourceGraph, null);
+        virtGraph.read(urlResourceGraph, null);
         Query sparql = QueryFactory.create("SELECT ?s ?p ?o WHERE { ?s ?p ?o }");
         virtuoso.jena.driver.VirtuosoQueryExecution vqe =
-                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create (sparql, graph);
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create (sparql, virtGraph);
         ResultSet results = vqe.execSelect();
         /*while (results.hasNext()) {
             QuerySolution result = results.nextSolution();
@@ -109,9 +204,9 @@ public class JenaAndVirtuoso {
      */
     @SuppressWarnings("deprecation")
     public void addTriplesToVirtuosoGraph(List<Triple> triples){
-        graph.getBulkUpdateHandler().add(triples);
+        virtGraph.getBulkUpdateHandler().add(triples);
         for(Triple triple: triples){
-            graph.add(triple);
+            virtGraph.add(triple);
         }
     }
 
@@ -119,25 +214,25 @@ public class JenaAndVirtuoso {
      * Method to check if a Virtuoso Graph is empty.
      * @return if true the Virtuoso Graph is empty.
      */
-    public boolean isEmpty(){ return graph.isEmpty();}
+    public boolean isEmpty(){ return virtGraph.isEmpty();}
 
     /**
      * Method to check if a Virtuoso Graph contains a specific Jena Triple Object.
      * @param triple the Jena Triple Object.
      * @return if true the Virtuoso HGraph contains the specific Triple Object.
      */
-    public boolean isContains(Triple triple){return graph.contains(triple);}
+    public boolean isContains(Triple triple){return virtGraph.contains(triple);}
 
     /**
      * Method for count the number of triple in the Virtuoso graph.
      * @return the count of the triple in the virtuoso Graph.
      */
-    public int getCount(){return graph.getCount();}
+    public int getCount(){return virtGraph.getCount();}
 
     /**
      * Method to clear a Virtuoso graph.
      */
-    public void clear(){graph.clear();}
+    public void clear(){virtGraph.clear();}
 
     /**
      * Method to delete Triples from Virtuoso graph.
@@ -148,7 +243,7 @@ public class JenaAndVirtuoso {
        /* for(Triple triple: triples){
             graph.remove(triple);
         }*/
-        graph.getBulkUpdateHandler().delete(triples);
+        virtGraph.getBulkUpdateHandler().delete(triples);
 
     }
 
@@ -213,7 +308,7 @@ public class JenaAndVirtuoso {
      */
     public List<Triple> findTriplesFromVirtuosoGraph(Triple triple){
         List<Triple> found = new ArrayList<>();
-        ExtendedIterator<Triple> iter = graph.find(
+        ExtendedIterator<Triple> iter = virtGraph.find(
                 triple.getSubject(),triple.getPredicate(),triple.getObject());
         for( ; iter.hasNext() ; ){
             found.add(iter.next());
@@ -224,23 +319,23 @@ public class JenaAndVirtuoso {
     /**
      * Method to begin a transaction in a Virtuoso Graph.
      */
-    public void beginTransaction(){ graph.getTransactionHandler().begin(); }
+    public void beginTransaction(){ virtGraph.getTransactionHandler().begin(); }
 
     /**
      * Method to commit a transaction in a Virtuoso Graph.
      */
-    public void commitTransaction(){graph.getTransactionHandler().commit();}
+    public void commitTransaction(){virtGraph.getTransactionHandler().commit();}
 
     /**
      * Method to abort a transaction in a Virtuoso Graph.
      */
-    public void abortTransaction(){ graph.getTransactionHandler().abort();}
+    public void abortTransaction(){ virtGraph.getTransactionHandler().abort();}
 
     /**
      * Method to check a if a Virtuoso Graph is in transaction.
      * @return if true the Virtuoso Graph is in transaction.
      */
-    public boolean isInTransaction(){ return graph.getTransactionHandler().transactionsSupported();}
+    public boolean isInTransaction(){ return virtGraph.getTransactionHandler().transactionsSupported();}
 
     /**
      * Method to execute a command on a Virtuoso Graph.
@@ -248,7 +343,7 @@ public class JenaAndVirtuoso {
      * @return the result of the command executed.
      */
     public Object executeInTransaction(Command command){
-        return graph.getTransactionHandler().executeInTransaction(command);
+        return virtGraph.getTransactionHandler().executeInTransaction(command);
     }
 
     /**
@@ -258,7 +353,7 @@ public class JenaAndVirtuoso {
     public void execSparqlClearOnVirtuosoGraph(String uriGraph){
         String str = "CLEAR GRAPH <"+uriGraph+">";
         virtuoso.jena.driver.VirtuosoUpdateRequest vur =
-                virtuoso.jena.driver.VirtuosoUpdateFactory.create(str, graph);
+                virtuoso.jena.driver.VirtuosoUpdateFactory.create(str, virtGraph);
         vur.exec();
 
     }
@@ -280,7 +375,7 @@ public class JenaAndVirtuoso {
             str += "<" + subject + "> <" + predicate + "> <" + object + "> . }";
         }
         virtuoso.jena.driver.VirtuosoUpdateRequest vur =
-                virtuoso.jena.driver.VirtuosoUpdateFactory.create(str, graph);
+                virtuoso.jena.driver.VirtuosoUpdateFactory.create(str, virtGraph);
         vur.exec();
     }
 
@@ -292,7 +387,7 @@ public class JenaAndVirtuoso {
     public Model execSparqlSelectOnVirtuosoGraph(String uriGraph){
         Query sparql = QueryFactory.create("SELECT * FROM <"+uriGraph+"> WHERE { ?s ?p ?o }");
         virtuoso.jena.driver.VirtuosoQueryExecution vqe =
-                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create (sparql, graph);
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create (sparql, virtGraph);
         ResultSet results = vqe.execSelect();
         return results.getResourceModel();
     }
@@ -306,7 +401,7 @@ public class JenaAndVirtuoso {
     public Model execSparqlDescribeOnVirtuosoGraph(String uriGraph,String uriResource) {
         Query sparql = QueryFactory.create("DESCRIBE <"+uriResource+"> FROM <"+uriGraph+">");
         virtuoso.jena.driver.VirtuosoQueryExecution vqe =
-                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
         return vqe.execDescribe();
         /*Graph g = model.getGraph();
         for (Iterator i = g.find(Node.ANY, Node.ANY, Node.ANY); i.hasNext(); ) {
@@ -325,7 +420,7 @@ public class JenaAndVirtuoso {
         Query sparql = QueryFactory.create("CONSTRUCT { ?x <"+uripredicate+"> ?y } FROM <"+uriGraph+"> ");
                 //"WHERE { ?x <"+uriWherePredicate+"> ?y }");
         virtuoso.jena.driver.VirtuosoQueryExecution vqe =
-                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
+                virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
         return vqe.execConstruct();
         /*Graph g = model.getGraph();
         for (Iterator i = g.find(Node.ANY, Node.ANY, Node.ANY); i.hasNext(); ) {
@@ -342,7 +437,7 @@ public class JenaAndVirtuoso {
     public boolean execSparqlAskOnVirtuosoGraph(String uriGraph,Triple triple) {
         Query sparql = QueryFactory.create("ASK FROM <"+uriGraph+"> " +
                 "WHERE { <"+triple.getSubject()+"> <"+triple.getPredicate()+"> <"+triple.getObject()+"> }");
-        virtuoso.jena.driver.VirtuosoQueryExecution vqe = virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, graph);
+        virtuoso.jena.driver.VirtuosoQueryExecution vqe = virtuoso.jena.driver.VirtuosoQueryExecutionFactory.create(sparql, virtGraph);
         return vqe.execAsk();
     }
 

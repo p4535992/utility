@@ -1,7 +1,7 @@
 package com.github.p4535992.util.repositoryRDF.sesame;
 
 import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.file.impl.FileUtilities;
+import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator;
@@ -536,7 +536,7 @@ public class Sesame28Kit {
             //String preload = preloadFolder;
                 //SystemLog.message("No pre-load directory/filename provided.");
 
-            FileUtilities.FileWalker.Handler handler = new FileUtilities.FileWalker.Handler() {
+            FileUtil.FileWalker.Handler handler = new FileUtil.FileWalker.Handler() {
 
                 @Override
                 public void file(File file) throws Exception {
@@ -548,7 +548,7 @@ public class Sesame28Kit {
                     SystemLog.message("Loading files from: " + directory.getAbsolutePath());
                 }
             };
-            FileUtilities.FileWalker walker = new FileUtilities.FileWalker();
+            FileUtil.FileWalker walker = new FileUtil.FileWalker();
             walker.setHandler(handler);
             try {
                 walker.walk(new File(preloadFolder));
@@ -1569,7 +1569,7 @@ public class Sesame28Kit {
                 // RDFParser rdfParser = Rio.createParser(format);
                 inputStream = documentUrl.openStream();
             }else{
-                urlFile = FileUtilities.convertFileToStringUriWithPrefix(urlFile);
+                urlFile = FileUtil.convertFileToStringUriWithPrefix(urlFile);
                 //documentUrl = new URL("file::///"+FileUtil.convertFileToUri(urlFile));
                 documentUrl = new URL(urlFile);
                 format = stringToRDFFormat(inputFormat) ;
@@ -1920,7 +1920,7 @@ public class Sesame28Kit {
         try {
             if (StringUtil.isURL(urlOrDirectory.toString())) {
                 connectToRemoteLocation(urlOrDirectory.toString());
-            } else if (FileUtilities.convertURLToFile(urlOrDirectory).exists()) {
+            } else if (FileUtil.convertURLToFile(urlOrDirectory).exists()) {
                 connectToLocalLocation(urlOrDirectory);
             } else {
                 SystemLog.warning("Sesame28Kit::connectToLocation -> Not exists the url or the File with path:" + urlOrDirectory);
@@ -1993,7 +1993,7 @@ public class Sesame28Kit {
      */
     private RepositoryManager connectToLocalLocation(File directory) {
         try {
-            return connectToLocalLocation(FileUtilities.convertFileToURL(directory));
+            return connectToLocalLocation(FileUtil.convertFileToURL(directory));
         } catch (MalformedURLException e) {
             SystemLog.error("The URL directory not exists or is erract:" + directory.getAbsolutePath());
             return null;
@@ -2527,7 +2527,7 @@ public class Sesame28Kit {
         try {
             if (!mRepository.isInitialized()) mRepository.initialize();
             if(fileOrDirectory.isDirectory()){
-                List<File> files = FileUtilities.readDirectory(fileOrDirectory);
+                List<File> files = FileUtil.readDirectory(fileOrDirectory);
                 for (File file: files)  {
                     if (!mRepository.isInitialized()) mRepository.initialize();
                     try {

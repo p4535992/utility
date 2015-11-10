@@ -138,7 +138,7 @@ public class StringIs {
      * @return true if the parameter is null or empty.
      */
     public static boolean isNullOrEmpty(String text) {
-        return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty();
+        return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty() ;
     }
 }
 

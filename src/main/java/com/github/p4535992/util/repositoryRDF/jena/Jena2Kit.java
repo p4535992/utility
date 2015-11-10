@@ -7,6 +7,8 @@ import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -27,7 +29,7 @@ import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
 
 import com.github.p4535992.util.string.impl.StringOutputStreamKit;
-import com.github.p4535992.util.file.impl.FileUtilities;
+import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.xml.XMLKit;
 
@@ -91,10 +93,10 @@ public class Jena2Kit {
      * @throws IOException throw if any I/O error is occured.
      */
     public static void writeModelToFile(String fullPath,Model model, String outputFormat) throws IOException {
-        fullPath =  FileUtilities.getPath(fullPath) + File.separator + FileUtilities.getFilenameWithoutExt(fullPath)+"."+outputFormat.toLowerCase();
+        fullPath =  FileUtil.getPath(fullPath) + File.separator + FileUtil.getFilenameWithoutExt(fullPath)+"."+outputFormat.toLowerCase();
         SystemLog.message("Try to write the new file of triple from:" + fullPath + "...");
-        OUTLANGFORMAT = stringToRiotLang(outputFormat);
-        OUTRDFFORMAT = stringToRDFFormat(outputFormat);
+        OUTLANGFORMAT = createToRiotLang(outputFormat);
+        OUTRDFFORMAT = createToRDFFormat(outputFormat);
         OUTFORMAT = outputFormat.toUpperCase();
         try {
             writeModelToFile2(fullPath, model);
@@ -128,7 +130,7 @@ public class Jena2Kit {
      */
 	private static void writeModelToFile1(String fullPath,Model model) throws IOException {
         Charset ENCODING = StandardCharsets.UTF_8;
-        FileUtilities.createFile(fullPath);
+        FileUtil.createFile(fullPath);
         Path path = Paths.get(fullPath);
 	    try (BufferedWriter writer = Files.newBufferedWriter(path,ENCODING)) {
             //org.apache.jena.riot.RDFDataMgr.write(writer, model, OUTLANGFORMAT);
@@ -393,8 +395,8 @@ public class Jena2Kit {
      */
     public static Model loadFileTripleToModel(String filename,String filepath,String inputFormat) throws FileNotFoundException {
         Model m = ModelFactory.createDefaultModel();
-        INLANGFORMAT = stringToRiotLang(inputFormat);
-        INRDFFORMAT = stringToRDFFormat(inputFormat);
+        INLANGFORMAT = createToRiotLang(inputFormat);
+        INRDFFORMAT = createToRDFFormat(inputFormat);
         INFORMAT = INLANGFORMAT.getLabel().toUpperCase();
 
         // use the FileManager to find the input file
@@ -440,9 +442,9 @@ public class Jena2Kit {
      * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
      public static Model loadFileTripleToModel(File file) throws FileNotFoundException {
-         String filename = FileUtilities.getFilenameWithoutExt(file);
-         String filepath = FileUtilities.getPath(file);
-         String inputFormat = FileUtilities.getExtension(file);
+         String filename = FileUtil.getFilenameWithoutExt(file);
+         String filepath = FileUtil.getPath(file);
+         String inputFormat = FileUtil.getExtension(file);
          return loadFileTripleToModel(filename,filepath,inputFormat);
      }
 
@@ -498,7 +500,7 @@ public class Jena2Kit {
      * @return  the RDFDatatype of the uri resource.
      */
     public static RDFDatatype convertStringToRDFDatatype(String uri){
-        return stringToXSDDatatype(uri);
+        return createToXSDDatatype(uri);
     }
 
 
@@ -552,7 +554,7 @@ public class Jena2Kit {
      * @param uri string uri of the XSDDatatype.
      * @return xsdDatatype of the string uri if exists.
      */
-    public static XSDDatatype stringToXSDDatatype(String uri) {
+    public static XSDDatatype createToXSDDatatype(String uri) {
             for (XSDDatatype xsdDatatype : allFormatsOfXSDDataTypes) {
                    if(xsdDatatype.getURI().equalsIgnoreCase("http://www.w3.org/2001/XMLSchema#"+uri)) return xsdDatatype;
                 if(xsdDatatype.getURI().replace("http://www.w3.org/2001/XMLSchema","")
@@ -566,7 +568,7 @@ public class Jena2Kit {
      * @param strFormat string name of the RDFFormat.
      * @return rdfformat the RDFFormat with the same name.
      */
-    public static RDFFormat stringToRDFFormat(String strFormat) {
+    public static RDFFormat createToRDFFormat(String strFormat) {
         if(strFormat.toUpperCase().contains("NT") ||
                 strFormat.toUpperCase().contains("NTRIPLES")|| strFormat.toUpperCase().contains("N3")){
             strFormat="N-Triples";
@@ -587,7 +589,7 @@ public class Jena2Kit {
      * @param strFormat string name of a RDFFormat.
      * @return lang the language Lang for the same name.
      */
- 	public static org.apache.jena.riot.Lang stringToRiotLang(String strFormat) {	
+ 	public static org.apache.jena.riot.Lang createToRiotLang(String strFormat) {
             if(strFormat.toUpperCase().contains("NT") ||
                     strFormat.toUpperCase().contains("NTRIPLES")|| strFormat.toUpperCase().contains("N3")){
                  strFormat="N-Triples";
@@ -649,8 +651,8 @@ public class Jena2Kit {
                 SystemLog.message("... the file of triple Infodoument to:" + fullPathOutputFile + " is been wrote!");
             } else if (outputFormat.toLowerCase().contains("ttl")) {
                 Model resultModel = execSparqlConstructorOnModel(sparql, model);
-                OUTLANGFORMAT = stringToRiotLang(outputFormat);
-                OUTRDFFORMAT = stringToRDFFormat(outputFormat);
+                OUTLANGFORMAT = createToRiotLang(outputFormat);
+                OUTRDFFORMAT = createToRDFFormat(outputFormat);
                 OUTFORMAT = outputFormat.toUpperCase();
                 //Writer writer = new FileWriter(new File(fullPathOutputFile));
                 //model.write(writer, outputFormat);
@@ -682,8 +684,8 @@ public class Jena2Kit {
      */
     private static void convertTo(File file, String outputFormat) throws IOException{
          Model m = loadFileTripleToModel(file);
-         String newName = FileUtilities.getFilenameWithoutExt(file)+"."+outputFormat.toLowerCase();
-         String newPath = FileUtilities.getPath(file);
+         String newName = FileUtil.getFilenameWithoutExt(file)+"."+outputFormat.toLowerCase();
+         String newPath = FileUtil.getPath(file);
          String sparql;
         if(outputFormat.toLowerCase().contains("csv")||outputFormat.toLowerCase().contains("xml")
              ||outputFormat.toLowerCase().contains("json")||outputFormat.toLowerCase().contains("tsv")
@@ -830,7 +832,7 @@ public class Jena2Kit {
         try {
             File inputFile = new File(filePath);
             try (FileInputStream input = new FileInputStream(inputFile)) {
-                m.read(input, FileUtilities.convertFileToStringUriWithPrefix(inputFile));
+                m.read(input, FileUtil.convertFileToStringUriWithPrefix(inputFile));
             }     
         } catch (IOException e) {
             SystemLog.warning("Failed to open " + filePath);
@@ -1001,7 +1003,7 @@ public class Jena2Kit {
     public static String convertModelToString(Model showRDF, String baseURI,String outputFormat) {
         StringOutputStreamKit stringOutput = new StringOutputStreamKit();
         if(!StringIs.isNullOrEmpty(outputFormat)){
-             RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
+             RDFFormat rdfFormat = createToRDFFormat(outputFormat);
              if(rdfFormat==null){outputFormat = "RDF/XML-ABBREV";}
         }else{
             outputFormat = "RDF/XML-ABBREV";
@@ -1264,7 +1266,7 @@ public class Jena2Kit {
         }
         if(!StringIs.isNullOrEmpty(outputFormat)){
             try {
-                RDFFormat rdfFormat = stringToRDFFormat(outputFormat);
+                RDFFormat rdfFormat = createToRDFFormat(outputFormat);
                 outputFormat = rdfFormat.getLang().getName();
             }catch(IllegalArgumentException e) {
                 outputFormat = "RDF/XML-ABBREV";
@@ -1578,35 +1580,6 @@ public class Jena2Kit {
         }
     }
 
-
-    /**
-     * Method to convert a date to a ISO date.
-     * @param date date to convert.
-     * @return the dat in format iso.
-     */
-    /*
-    public static String convertDateToIsoDate(Date date) {
-        return isoDate.format(date);
-    }
-    */
-    /**
-     * Method to convert a string date to a  ISO Date.
-     * e.g. 2003-10-29T10:05:35-05:00.
-     * @param string sting of a date eg 2003-10-29.
-     * @return sring of a date in iso date format.
-     */
-    /*
-    public static Date convertStringDateToIsoDate(String string) {
-        Date date = null;
-        string =string.substring(0, 19)+ "GMT"+ string.substring(19);
-        try {
-            date = isoDate.parse(string);
-        } catch (ParseException e) {
-           SystemLog.exception(e);
-        }
-        return date;
-    }*/
-
     /**
      * Method utility: create new property for a Model.
      * @param model the Jena Model where search the property.
@@ -1617,101 +1590,75 @@ public class Jena2Kit {
         return model.asRDFNode(NodeUtils.asNode(subject));
     }
 
+
     /**
-     * Method utility: create new resource from uri.
-     * @param BASE base uri.
-     * @param localName local name resource uri.
-     * @return resource uri.
+     * Method to create a Jena Resource.
+     * @param stringOrModelGraph the String iri or the Jena Model.
+     * @param localNameOrSubject the String name local Graph or the String iri of the subject.
+     * @return the Jena Resource.
      */
-    public static Resource createResource(String BASE, String localName ) {
-        return ResourceFactory.createResource ( BASE +"/"+ localName );
+    public static Resource createResource(Object stringOrModelGraph, String localNameOrSubject){
+        if(stringOrModelGraph instanceof String){
+            return ResourceFactory.createResource(String.valueOf(stringOrModelGraph) + "/" + localNameOrSubject);
+        }
+        if(stringOrModelGraph instanceof Model){
+            return (Resource) createRDFNode((Model) stringOrModelGraph,localNameOrSubject);
+        }
+        return null;
     }
 
     /**
-     * Method utility: create new resource from Jena Model.
-     * @param model base uri.
-     * @param subject local name resource uri.
-     * @return resource uri.
+     * Method to create a Jena Property.
+     * @param stringOrModelGraph the String iri or the Jena Model.
+     * @param localNameOrSubject the String name local Graph or the String iri of the subject.
+     * @param impl if true use the PredicateImpl to create the predicate.
+     * @return the Jena Predicate.
      */
-    public static Resource createResource( Model model, String subject ){
-        return (Resource) createRDFNode(model, subject);
+    public static Property createProperty(Object stringOrModelGraph, String localNameOrSubject,boolean impl){
+        if(stringOrModelGraph instanceof String){
+            if(impl){
+                if(localNameOrSubject!=null) return new PropertyImpl(String.valueOf(stringOrModelGraph), localNameOrSubject);
+                else return new PropertyImpl(String.valueOf(stringOrModelGraph));
+            }else{
+                if(localNameOrSubject!=null) return ResourceFactory.createProperty(String.valueOf(stringOrModelGraph), localNameOrSubject);
+                else return ResourceFactory.createProperty(String.valueOf(stringOrModelGraph));
+            }
+        }
+        if(stringOrModelGraph instanceof Model)return createRDFNode((Model)stringOrModelGraph, localNameOrSubject).as(Property.class);
+        return null;
     }
 
     /**
-     * Method utility: create new property from uri.
-     * @param BASE base uri.
-     * @param localname local name resource uri.
-     * @return property.
+     * Method to create a Jena Property.
+     * @param stringOrModelGraph the String iri or the Jena Model.
+     * @param localNameOrSubject the String name local Graph or the String iri of the subject.
+     * @return the Jena Predicate.
      */
-    public static Property createProperty(String BASE, String localname ) {
-        return ResourceFactory.createProperty(BASE, localname);
+    public static Property createProperty(Object stringOrModelGraph, String localNameOrSubject){
+        return createProperty(stringOrModelGraph,localNameOrSubject,false);
     }
 
-    /**
-     * Method utility: create new property from uri.
-     * @param uriref resource uri.
-     * @return property.
-     */
-    public static Property createProperty(String uriref) {
-        return ResourceFactory.createProperty(uriref);
-    }
-
-    /**
-     * Method utility: create new property for a Model.
-     * @param model the Jena Model where search the property.
-     * @param subject string of the subject.
-     * @return property.
-     */
-    public static Property createProperty( Model model, String subject ){
-        return createRDFNode(model, subject).as( Property.class );
-    }
-
-
-    /**
-     * Method utility: create new property impl from uri.
-     * @param uriref resource uri.
-     * @return property.
-     */
-    public static Property createPropertyImpl(String uriref) {
-        return new PropertyImpl(uriref);
-    }
-
-    /**
-     * Method utility: create new property impl from uri.
-     * @param BASE base uri.
-     * @param localname local name resource uri.
-     * @return property.
-     */
-    public static Property createPropertyImpl(String BASE, String localname) {
-        return new PropertyImpl(BASE, localname);
-    }
-
-    /**
-     * Method utility: create new plain literal from uri.
-     * @param value string of uri.
-     * @return literal.
-     */
-    public static Literal createLiteralPlain(String value) {
-        return ResourceFactory.createPlainLiteral(value);
-    }
 
     /**
      * Method utility: create new typed literal from uri.
-     * @param value object of uri.
-     * @return literal.
+     * @param stringOrObject  the value of the Jena Literal.
+     * @param datatype the Jena RDFDatatype of the literal.
+     * @return the Jena Literal.
      */
-    public static Literal createLiteralTyped(Object value) {
-        return ResourceFactory.createTypedLiteral ( value );
+    public static Literal createLiteral(Object stringOrObject,RDFDatatype datatype){
+        if(stringOrObject instanceof String){
+            if(datatype!=null)return ResourceFactory.createTypedLiteral(String.valueOf(stringOrObject),datatype);
+            else return ResourceFactory.createPlainLiteral(String.valueOf(stringOrObject));
+        }
+        else  return ResourceFactory.createTypedLiteral(stringOrObject);
     }
-
     /**
      * Method utility: create new typed literal from uri.
-     * @param lexicalform lexicalform of the literal.
-     * @param datatype datatype of the literal.
-     * @return literal.
+     * @param stringOrObject  the value of the Jena Literal.
+     * @return the Jena Literal.
      */
-    public static Literal createLiteralTyped(String lexicalform, RDFDatatype datatype) {
-        return ResourceFactory.createTypedLiteral ( lexicalform, datatype );
+    public static Literal createLiteral(Object stringOrObject){
+        return createLiteral(stringOrObject,null);
     }
 
     /**
@@ -1723,11 +1670,21 @@ public class Jena2Kit {
      * @return Statement.
      */
     public static Statement createStatement( Model model, String subject,String predicate,String object) {
-        //StringTokenizer st = new StringTokenizer( fact );
-        Resource sub = createResource(model, subject);
-        Property pred = createProperty(model, predicate);
-        RDFNode obj = createRDFNode(model, object);
-        return model.createStatement(sub, pred, obj);
+        if(model==null){
+            return ResourceFactory.createStatement(createResource(model, subject), createProperty(model, predicate), createRDFNode(model, object));
+        }
+        return model.createStatement(createResource(model, subject), createProperty(model, predicate), createRDFNode(model, object));
+    }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the irir object.
+     * @return Statement.
+     */
+    public static Statement creaeStatement(String subject,String predicate,String object){
+        return createStatement(null,subject,predicate,object);
     }
 
     /**
@@ -1785,6 +1742,15 @@ public class Jena2Kit {
      */
     public static com.hp.hpl.jena.graph.Graph createGraph(){
         return  com.hp.hpl.jena.sparql.graph.GraphFactory.createDefaultGraph();
+    }
+
+    /**
+     * Method to convert a Jena Model to a Jena Ontology Model.
+     * @param model the Jena Base Model.
+     * @return the Jena Ontology Model.
+     */
+    public static OntModel createOntologyModel(Model model){
+        return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, model);
     }
 
     /**
