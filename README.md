@@ -2,7 +2,7 @@
 ### A MODULE MAVEN WITH MANY UTILITY CLASS FOR MANY PURPOSE###
 ##############################################################
 #########################
-###Last Update: 2015-10-19
+###Last Update: 2015-11-12
 #########################
 Class utility for the third library:
 - Many Useful Class for Play with the JDK version 7
@@ -14,6 +14,8 @@ Class utility for the third library:
 - VirtJena (Sesame Adapter for Virtuoso server)
 - JSoup
 - JOOQ 3
+- HTTP Apache
+- ecc...
 
 Other useful utility on these repository:
 https://github.com/mhgrove/cp-common-utils
@@ -36,7 +38,7 @@ You can the dependency to this github repository With jitpack (https://jitpack.i
  <pre class="prettyprint">&lt;dependency&gt;
   &lt;groupId&gt;com.github.p4535992&lt;/groupId&gt;
   &lt;artifactId&gt;utility&lt;/artifactId&gt;
-  &lt;version&gt;<span id="latest_release">1.4.1</span>&lt;/version&gt;
+  &lt;version&gt;<span id="latest_release">1.4.3</span>&lt;/version&gt;
 &lt;/dependency&gt;  </pre>
 
 <!-- Add this script to update "latest_release" span to latest version -->
