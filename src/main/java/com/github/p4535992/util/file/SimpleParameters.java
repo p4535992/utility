@@ -68,7 +68,6 @@ public class SimpleParameters {
             result.append(key).append('=').append(mParameters.get(key))
                     .append(System.getProperties().get("line.separator"));
         }
-        //SystemLog.message(result.toString());
         return result.toString();
     }
 

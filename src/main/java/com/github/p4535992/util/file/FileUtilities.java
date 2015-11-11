@@ -1557,9 +1557,9 @@ public class FileUtilities {
      * @param separator the Char separator.
      * @return the String content ofd the file.
      */
-    public static Map<String,String> readFile(File fileInput, char separator) {
+    public static SimpleParameters readFile(File fileInput, char separator) {
         SimpleParameters params = new SimpleParameters();
-        Map<String,String> map = new HashMap<>();
+        //Map<String,String> map = new HashMap<>();
         try{
             String[] lines;
             List<String> linesSupport;
@@ -1576,11 +1576,11 @@ public class FileUtilities {
             lines = new String[ linesSupport.size()];
             linesSupport.toArray(lines);
             params.parseNameValuePairs(lines, separator, true);
-            map = params.getParameters();
+            //map = params.getParameters();
         }catch(IOException e){
             SystemLog.exception(e);
         }
-        return map;
+        return params;
     }
 
     public static Collection<String> read(File fileInput,Charset encodingInput){
