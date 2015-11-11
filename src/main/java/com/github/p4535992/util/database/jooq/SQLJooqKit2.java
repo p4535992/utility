@@ -1,11 +1,10 @@
 package com.github.p4535992.util.database.jooq;
 
-import com.github.p4535992.util.collection.CollectionKit;
+import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.database.sql.SQLHelper;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringUtil;
-import com.github.p4535992.util.string.impl.StringIs;
-import com.github.p4535992.util.string.impl.StringKit;
+
+import com.github.p4535992.util.string.StringUtilities;
 import org.jooq.*;
 import org.jooq.impl.*;
 
@@ -167,12 +166,12 @@ public class SQLJooqKit2 {
         Map<Field<String>,?> map = convertArraysToMapJOOQField(columns, values, types);
         Query iQuery = dslContext.insertInto(table).set(map);
         if(preparedStatement){
-            String query = StringUtil.toInline(iQuery.toString());
+            String query = StringUtilities.toStringInline(iQuery.toString());
             query = JOOQSupport.getQueryInsertValuesParam(query, columns);
             //return StringKit.toStringInline(iQuery.getSQL(ParamType.NAMED_OR_INLINED));
-            return StringUtil.toInline(query);
+            return StringUtilities.toStringInline(query);
         }
-        else return StringUtil.toInline(iQuery.toString());
+        else return StringUtilities.toStringInline(iQuery.toString());
     }
 
 
@@ -256,25 +255,25 @@ public class SQLJooqKit2 {
         sQuery.addSelect(fields);
         sQuery.addFrom(table);
         if(conditions!=null && !conditions.isEmpty()) sQuery.addConditions(conditions);
-        if(!StringIs.isNullOrEmpty(limit) && !StringIs.isNullOrEmpty(offset)) {
-            if (StringIs.isNumeric(limit) && StringIs.isNumeric(offset)) {
-                sQuery.addLimit(StringKit.convertStringToInt(offset), StringKit.convertStringToInt(limit));
+        if(!StringUtilities.isNullOrEmpty(limit) && !StringUtilities.isNullOrEmpty(offset)) {
+            if (StringUtilities.isNumeric(limit) && StringUtilities.isNumeric(offset)) {
+                sQuery.addLimit(StringUtilities.toInt(offset), StringUtilities.toInt(limit));
             }
-        }else if(!StringIs.isNullOrEmpty(limit)){
-            if (StringIs.isNumeric(limit)) {
-                sQuery.addLimit(StringKit.convertStringToInt(limit));
+        }else if(!StringUtilities.isNullOrEmpty(limit)){
+            if (StringUtilities.isNumeric(limit)) {
+                sQuery.addLimit(StringUtilities.toInt(limit));
             }
-        }else if(!StringIs.isNullOrEmpty(offset)){
-            if (StringIs.isNumeric(offset)) {
-                sQuery.addLimit(StringKit.convertStringToInt(offset), 1000000);
+        }else if(!StringUtilities.isNullOrEmpty(offset)){
+            if (StringUtilities.isNumeric(offset)) {
+                sQuery.addLimit(StringUtilities.toInt(offset), 1000000);
             }
         }
         if(preparedStatement ) {
             if (conditions==null || conditions.isEmpty()) {
-                return StringKit.toStringInline(sQuery.toString());
+                return StringUtilities.toStringInline(sQuery.toString());
             }else {
-                String query = JOOQSupport.getQueryInsertWhereParam(StringKit.toStringInline(sQuery.toString()));
-                return StringKit.toStringInline(query);
+                String query = JOOQSupport.getQueryInsertWhereParam(StringUtilities.toStringInline(sQuery.toString()));
+                return StringUtilities.toStringInline(query);
             }
         } else{
             /*if(sqlDialect.equals(SQLDialect.MYSQL)) {
@@ -286,7 +285,7 @@ public class SQLJooqKit2 {
                 }
                 return StringKit.toStringInline(sss +" "+ s);
             }*/
-            return StringKit.toStringInline(sQuery.toString());
+            return StringUtilities.toStringInline(sQuery.toString());
         }
     }
 
@@ -334,8 +333,8 @@ public class SQLJooqKit2 {
         //uQuery.addFrom(table);
         if(conditions!=null && !conditions.isEmpty()) uQuery.addConditions(conditions);
 
-        if(preparedStatement)return StringKit.toStringInline(uQuery.getSQL());
-        else return StringKit.toStringInline(uQuery.toString());
+        if(preparedStatement)return StringUtilities.toStringInline(uQuery.getSQL());
+        else return StringUtilities.toStringInline(uQuery.toString());
     }
 
     /**
@@ -349,8 +348,8 @@ public class SQLJooqKit2 {
         Table<Record> table = new TableImpl<>(nameTable);
         DeleteQuery<Record> dQuery = dslContext.deleteQuery(table);
         if(conditions!=null && !conditions.isEmpty()) dQuery.addConditions(conditions);
-        if(preparedStatement)return StringKit.toStringInline(dQuery.getSQL());
-        else return StringKit.toStringInline(dQuery.toString());
+        if(preparedStatement)return StringUtilities.toStringInline(dQuery.getSQL());
+        else return StringUtilities.toStringInline(dQuery.toString());
     }
 
     /**
@@ -395,9 +394,9 @@ public class SQLJooqKit2 {
      * @return a object JOOQ Field.
      */
     public static Field<?> createFieldValue(Object value){
-        if(value instanceof URL) return DSL.val(StringKit.convertObjectToString(value), String.class);
-        if(value instanceof URI) return DSL.val(StringKit.convertObjectToString(value), String.class);
-        if(value instanceof String) return DSL.val(StringKit.convertObjectToString(value), String.class);
+        if(value instanceof URL) return DSL.val(StringUtilities.toString(value), String.class);
+        if(value instanceof URI) return DSL.val(StringUtilities.toString(value), String.class);
+        if(value instanceof String) return DSL.val(StringUtilities.toString(value), String.class);
         if(value instanceof Condition) return DSL.val((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,Boolean.class);
         if(value instanceof Integer) return DSL.val(value,Integer.class);
@@ -429,9 +428,9 @@ public class SQLJooqKit2 {
      * @return a object JOOQ Field.
      */
     public static Field<?> createFieldValue(Object value,DataType<?> dataType){
-        if(value instanceof URL) return DSL.val(StringKit.convertObjectToString(value), dataType);
-        if(value instanceof URI) return DSL.val(StringKit.convertObjectToString(value), dataType);
-        if(value instanceof String) return DSL.val(StringKit.convertObjectToString(value), dataType);
+        if(value instanceof URL) return DSL.val(StringUtilities.toString(value), dataType);
+        if(value instanceof URI) return DSL.val(StringUtilities.toString(value), dataType);
+        if(value instanceof String) return DSL.val(StringUtilities.toString(value), dataType);
         //if(value instanceof Condition) return DSL.field((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,dataType);
         if(value instanceof Integer) return DSL.val(value,dataType);
@@ -634,7 +633,7 @@ public class SQLJooqKit2 {
             fields[i] = field;
             fv[i] = createFieldValueCapture(values[i], types[i]);
         }
-        return CollectionKit.convertTwoArrayToMap(fields,fv);
+        return CollectionUtilities.toMap(fields, fv);
     }
 
     /**
@@ -653,7 +652,7 @@ public class SQLJooqKit2 {
             fields[i] = field;
             fv[i] = createFieldValueCapture(values[i]);
         }
-        return CollectionKit.convertTwoArrayToMap(fields,fv);
+        return CollectionUtilities.toMap(fields, fv);
     }
 
     /*
@@ -702,7 +701,7 @@ public class SQLJooqKit2 {
     @SuppressWarnings("unchecked")
     public static List<Condition> convertToListConditionEqualsWithAND(String[] columns,Object[] values) {
         List<Condition> conds = new ArrayList<>();
-        if (columns != null && !CollectionKit.isArrayEmpty(columns)) {
+        if (columns != null && !CollectionUtilities.isEmpty(columns)) {
             for (int i = 0; i < columns.length; i++) {
                 if (values[i] == null) {
                     conds.add(createFieldValue(columns[i]).isNull());
@@ -784,6 +783,7 @@ public class SQLJooqKit2 {
      * Method to execute and fetch the result of a query .
      * @param sql the String SQL.
      * @return the Result of the Query.
+     * @throws java.sql.SQLException if the query SQL is wrong.
      */
     public static Result<Record> executeAndFetchQuery(String sql) throws SQLException {
         // Or execute that SQL with JDBC, fetching the ResultSet with jOOQ:
@@ -815,17 +815,17 @@ public class SQLJooqKit2 {
         getMySQLConnection("localhost", "3306", "geodb", "siimobility", "siimobility");
         //INSERT
         String query = insert("tabl1",columns,values,types);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         //query = insert("tabl1",columns,values,types,true);
         //System.out.println(StringKit.toStringInline(query));
 
         query = insert("tabl1", columns, values, types, true);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         //SELECT
         query = select("tabl1", columns);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         query = select("tabl1",columns,true);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         Field<String> f1 = (Field<String>) createFieldValue("col1");
         Field<String> f2 = (Field<String>) createFieldValue("col2");
         /*final Condition cond1 = f1.eq(f2);
@@ -840,25 +840,25 @@ public class SQLJooqKit2 {
         cinds = convertToListConditionEqualsWithAND(new String[]{"col1","col2"},new Object[]{null,"43"});
 
         query = select("tabl1", columns, false, cinds);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         query = select("tabl1", columns,true,cinds);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         cinds = convertToListConditionEqualsWithAND(new String[]{"col1","col2"},new Object[]{null,43});
         query = select("tabl1", columns, false, cinds);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         query = select("tabl1", columns,true,cinds);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
 
         //UPDATE
         query = update("tabl1", columns, values);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         query = update("tabl1",columns,values,true);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         query = update("tabl1", columns, values, false, cinds);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
         //DELETE
         query = delete("tabl1",false,cinds);
-        System.out.println(StringKit.toStringInline(query));
+        System.out.println(StringUtilities.toStringInline(query));
 
 
 

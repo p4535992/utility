@@ -1,7 +1,11 @@
 package com.github.p4535992.util.repositoryRDF.jena;
 
-import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.string.impl.StringIs;
+
+import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.regex.pattern.Patterns;
+import com.github.p4535992.util.string.StringUtilities;
+
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;
@@ -28,8 +32,6 @@ import com.hp.hpl.jena.sparql.util.*;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
 
-import com.github.p4535992.util.string.impl.StringOutputStreamKit;
-import com.github.p4535992.util.file.impl.FileUtil;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.xml.XMLKit;
 
@@ -93,7 +95,7 @@ public class Jena2Kit {
      * @throws IOException throw if any I/O error is occured.
      */
     public static void writeModelToFile(String fullPath,Model model, String outputFormat) throws IOException {
-        fullPath =  FileUtil.getPath(fullPath) + File.separator + FileUtil.getFilenameWithoutExt(fullPath)+"."+outputFormat.toLowerCase();
+        fullPath =  FileUtilities.getPath(fullPath) + File.separator + FileUtilities.getFilenameWithoutExt(fullPath)+"."+outputFormat.toLowerCase();
         SystemLog.message("Try to write the new file of triple from:" + fullPath + "...");
         OUTLANGFORMAT = createToRiotLang(outputFormat);
         OUTRDFFORMAT = createToRDFFormat(outputFormat);
@@ -130,7 +132,7 @@ public class Jena2Kit {
      */
 	private static void writeModelToFile1(String fullPath,Model model) throws IOException {
         Charset ENCODING = StandardCharsets.UTF_8;
-        FileUtil.createFile(fullPath);
+        FileUtilities.createFile(fullPath);
         Path path = Paths.get(fullPath);
 	    try (BufferedWriter writer = Files.newBufferedWriter(path,ENCODING)) {
             //org.apache.jena.riot.RDFDataMgr.write(writer, model, OUTLANGFORMAT);
@@ -442,9 +444,9 @@ public class Jena2Kit {
      * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
      public static Model loadFileTripleToModel(File file) throws FileNotFoundException {
-         String filename = FileUtil.getFilenameWithoutExt(file);
-         String filepath = FileUtil.getPath(file);
-         String inputFormat = FileUtil.getExtension(file);
+         String filename = FileUtilities.getFilenameWithoutExt(file);
+         String filepath = FileUtilities.getPath(file);
+         String inputFormat = FileUtilities.getExtension(file);
          return loadFileTripleToModel(filename,filepath,inputFormat);
      }
 
@@ -684,8 +686,8 @@ public class Jena2Kit {
      */
     private static void convertTo(File file, String outputFormat) throws IOException{
          Model m = loadFileTripleToModel(file);
-         String newName = FileUtil.getFilenameWithoutExt(file)+"."+outputFormat.toLowerCase();
-         String newPath = FileUtil.getPath(file);
+         String newName = FileUtilities.getFilenameWithoutExt(file)+"."+outputFormat.toLowerCase();
+         String newPath = FileUtilities.getPath(file);
          String sparql;
         if(outputFormat.toLowerCase().contains("csv")||outputFormat.toLowerCase().contains("xml")
              ||outputFormat.toLowerCase().contains("json")||outputFormat.toLowerCase().contains("tsv")
@@ -832,7 +834,7 @@ public class Jena2Kit {
         try {
             File inputFile = new File(filePath);
             try (FileInputStream input = new FileInputStream(inputFile)) {
-                m.read(input, FileUtil.convertFileToStringUriWithPrefix(inputFile));
+                m.read(input, FileUtilities.toStringUriWithPrefix(inputFile));
             }     
         } catch (IOException e) {
             SystemLog.warning("Failed to open " + filePath);
@@ -913,7 +915,7 @@ public class Jena2Kit {
         try {
             Property p;
             String uri = namespaces.get(prefix);
-            if(!StringIs.isNullOrEmpty(uri)) {
+            if(!StringUtilities.isNullOrEmpty(uri)) {
                 p = model.createProperty(uri, property);
             }else{
                 p = model.createProperty(property);
@@ -970,7 +972,7 @@ public class Jena2Kit {
         if (namespaces.containsValue(namespace)) {
             // find it...
             Iterator<String> keys =
-                    CollectionKit.convertSetToIterator(namespaces.keySet());
+                    CollectionUtilities.toIterator(namespaces.keySet());
             while (keys.hasNext()) {
                 String prefix = keys.next();
                 if (namespace.equals(namespaces.get(prefix))) {
@@ -1001,8 +1003,9 @@ public class Jena2Kit {
      * @return content string of the jena model.
      */
     public static String convertModelToString(Model showRDF, String baseURI,String outputFormat) {
-        StringOutputStreamKit stringOutput = new StringOutputStreamKit();
-        if(!StringIs.isNullOrEmpty(outputFormat)){
+        //StringOutputStreamKit stringOutput = new StringOutputStreamKit();
+        Writer stringOutput = new StringWriter();
+        if(!StringUtilities.isNullOrEmpty(outputFormat)){
              RDFFormat rdfFormat = createToRDFFormat(outputFormat);
              if(rdfFormat==null){outputFormat = "RDF/XML-ABBREV";}
         }else{
@@ -1264,7 +1267,7 @@ public class Jena2Kit {
         if (model == null) {
             return "Null Model.";
         }
-        if(!StringIs.isNullOrEmpty(outputFormat)){
+        if(!StringUtilities.isNullOrEmpty(outputFormat)){
             try {
                 RDFFormat rdfFormat = createToRDFFormat(outputFormat);
                 outputFormat = rdfFormat.getLang().getName();
@@ -1582,12 +1585,19 @@ public class Jena2Kit {
 
     /**
      * Method utility: create new property for a Model.
-     * @param model the Jena Model where search the property.
+     * @param modelOrUri the Jena Model where search the property.
      * @param subject string of the subject.
      * @return RDFNode.
      */
-    public static RDFNode createRDFNode( Model model, String subject ){
-        return model.asRDFNode(NodeUtils.asNode(subject));
+    public static RDFNode createRDFNode(Object modelOrUri, String subject ){
+        Model model;
+        if(modelOrUri instanceof Model){
+            model = (Model) modelOrUri;
+            return model.asRDFNode(NodeUtils.asNode(subject));
+        }else{
+            model = createModel();
+            return model.asRDFNode(NodeUtils.asNode(subject));
+        }
     }
 
 
@@ -1624,7 +1634,7 @@ public class Jena2Kit {
                 else return ResourceFactory.createProperty(String.valueOf(stringOrModelGraph));
             }
         }
-        if(stringOrModelGraph instanceof Model)return createRDFNode((Model)stringOrModelGraph, localNameOrSubject).as(Property.class);
+        if(stringOrModelGraph instanceof Model)return createRDFNode(stringOrModelGraph, localNameOrSubject).as(Property.class);
         return null;
     }
 
@@ -1670,10 +1680,17 @@ public class Jena2Kit {
      * @return Statement.
      */
     public static Statement createStatement( Model model, String subject,String predicate,String object) {
-        if(model==null){
-            return ResourceFactory.createStatement(createResource(model, subject), createProperty(model, predicate), createRDFNode(model, object));
+        if (model == null) {
+            String graphUri = StringUtilities.findWithRegex(subject, Patterns.GET_LAST_PART_OF_URI);
+            if(graphUri==null)return null;
+            graphUri = subject.replace(graphUri,"");
+            return ResourceFactory.createStatement(
+                    createResource(graphUri, subject), createProperty(graphUri, predicate), createRDFNode(graphUri, object));
+        } else {
+            return model.createStatement(
+                    createResource(model, subject), createProperty(model, predicate), createRDFNode(model, object));
+
         }
-        return model.createStatement(createResource(model, subject), createProperty(model, predicate), createRDFNode(model, object));
     }
 
     /**

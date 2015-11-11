@@ -1,23 +1,16 @@
 package com.github.p4535992.util.database.sql;
 
-import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.reflection.ReflectionKit;
+
+import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.log.SystemLog;
-import org.jooq.DataType;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultDataType;
+import com.github.p4535992.util.reflection.ReflectionUtilities;
 
 import javax.persistence.Column;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by 4535992 on 06/05/2015.
@@ -83,9 +76,9 @@ public class SQLSupport<T>{
     @SuppressWarnings("rawtypes")
     protected SQLSupport(List<String> columns,List<Object> values,List<Integer> types){
         //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
-        this.COLUMNS= CollectionKit.convertListToArray(columns);
-        this.VALUES = CollectionKit.convertListToArray(values);
-        this.TYPES = CollectionKit.convertIntegersToInt(CollectionKit.convertListToArray(types));
+        this.COLUMNS= CollectionUtilities.toArray(columns);
+        this.VALUES = CollectionUtilities.toArray(values);
+        this.TYPES = CollectionUtilities.toPrimitive(CollectionUtilities.toArray(types));
     }
 
     @SuppressWarnings("rawtypes")
@@ -105,7 +98,7 @@ public class SQLSupport<T>{
     @SuppressWarnings({"rawtypes","unchecked"})
     public static <T> SQLSupport getInstance(String[] columns,Object[] values,Integer[] types){
         if(instance == null) {
-            instance = new SQLSupport(columns,values,CollectionKit.convertIntegersToInt(types));
+            instance = new SQLSupport(columns,values,CollectionUtilities.toPrimitive(types));
         }
         return instance;
     }
@@ -142,24 +135,25 @@ public class SQLSupport<T>{
         SQLSupport support = new SQLSupport();
         String attributeAnnotationKey ="name";
         try {
-            Field[] fields = ReflectionKit.getFieldsByAnnotation(object.getClass(),Column.class);
+            Field[] fields = ReflectionUtilities.getFieldsByAnnotation(object.getClass(), Column.class);
             Object[] values = new Object[fields.length];
             int[] types = new int[fields.length];
             String[] columns = new String[fields.length];
-            List<Method> methods = ReflectionKit.getGettersClassOrder(object.getClass());
+            Collection<Method> methods = ReflectionUtilities.findGetters(object.getClass(), true);
             //Field[] fields = object.getClass().getDeclaredFields();
             int i = 0;
             for (Method method: methods) {
                 if(method!=null){
-                    values[i] = ReflectionKit.invokeGetterMethod(object, method);
+                    values[i] = ReflectionUtilities.invokeGetter(object, method);
                     Class<?> clazz = fields[i].getType();
                     types[i] = SQLHelper.convertClass2SQLTypes(clazz);
                     i++;
                 }
             }
             i=0;
-            List<List<Object[]>> ssc = ReflectionKit.getAnnotationsFields(object.getClass());
-            for (List<Object[]> list : ssc) {
+            Collection<Collection<Object[]>> ssc = ReflectionUtilities.findInfoAnnotationsFields(object.getClass());
+            for (Collection<Object[]> col : ssc) {
+                List<Object[]> list = (List<Object[]>) col;
                 if(list.size() >0) {
                     int j = 0;
                     boolean flag = false;
@@ -197,27 +191,28 @@ public class SQLSupport<T>{
 
 
     public static Class<?>[] getArrayClassesTypes(Class<?> clazz, Class<? extends Annotation> aClass){
-        return ReflectionKit.getClassesByFieldsByAnnotation(clazz,aClass);
+        return ReflectionUtilities.getClassesByFieldsByAnnotation(clazz,aClass);
     }
 
     public static Integer[] getArrayTypes(Class<?> clazz, Class<? extends Annotation> aClass){
         List<Integer> types = new ArrayList<>();
-        Class<?>[] classes = ReflectionKit.getClassesByFieldsByAnnotation(clazz, aClass);
+        Class<?>[] classes =  ReflectionUtilities.getClassesByFieldsByAnnotation(clazz, aClass);
         //GET TYPES SQL
         for(Class<?> cl: classes){
             types.add(SQLHelper.convertClass2SQLTypes(cl));
         }
-        return CollectionKit.convertListToArray(types);
+        return CollectionUtilities.toArray(types);
     }
 
     public static String[] getArrayColumns(Class<?> clazz, Class<? extends Annotation> aClass,String attributeNameColumnAnnotation)
             throws NoSuchFieldException {
-        List<List<Object[]>> test4 = ReflectionKit.getAnnotationsFields(clazz,aClass);
+        Collection<Collection<Object[]>> test4 = ReflectionUtilities.findInfoAnnotationsFields(clazz,aClass);
         int j,i,x;
         boolean found;
         String[] columns = new String[test4.size()];
         j=0;
-        for(List<Object[]> list : test4){
+        for(Collection<Object[]> col : test4){
+            List<Object[]> list = (List<Object[]>) col;
             i = 0;
             found = false;
             while(i < list.size()){
@@ -240,9 +235,9 @@ public class SQLSupport<T>{
 
     public static <T> T invokeSetterSupport(T iClass, String column, Object value) throws NoSuchFieldException {
         try {
-            Method method = ReflectionKit.findSetterMethod(iClass,column,value);
+            Method method = ReflectionUtilities.findSetter(iClass, column, value);
             Object[] values = new Object[]{value};
-            iClass = ReflectionKit.invokeSetterMethodForObject(iClass, method, values);
+            iClass = ReflectionUtilities.invokeSetter(iClass, method, values);
             return iClass;
         } catch (IllegalAccessException|
                 InvocationTargetException|NoSuchMethodException e) {

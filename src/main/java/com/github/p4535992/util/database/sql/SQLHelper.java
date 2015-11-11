@@ -1,18 +1,17 @@
 package com.github.p4535992.util.database.sql;
 
-import com.github.p4535992.util.collection.CollectionKit;
 import com.github.p4535992.util.database.jooq.SQLJooqKit2;
 import com.github.p4535992.util.database.sql.performance.ConnectionWrapper;
 import com.github.p4535992.util.database.sql.performance.JDBCLogger;
-import com.github.p4535992.util.file.impl.FileCSV;
+import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringUtil;
-import com.github.p4535992.util.string.impl.StringIs;
+import com.github.p4535992.util.string.StringUtilities;
 import com.opencsv.CSVReader;
 
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
@@ -21,7 +20,7 @@ import java.util.regex.Pattern;
 /**
  * Created by 4535992 on 14/05/2015.
  * @author 4535992
- * @version 2015-09-30.
+ * @version 2015-11-10.
  */
 @SuppressWarnings("unused")
 public class SQLHelper {
@@ -75,12 +74,12 @@ public class SQLHelper {
      */
     public static int convertStringToSQLTypes(String value){
         if(value == null) return Types.NULL;
-        if(StringUtil.isFloat(value)) return Types.FLOAT;
-        if(StringUtil.isDouble(value)) return Types.DOUBLE;
-        if(StringUtil.isDecimal(value)) return Types.DECIMAL;
-        if(StringUtil.isInt(value)) return Types.INTEGER;
-        if(StringUtil.isURL(value)) return Types.VARCHAR;
-        if(StringUtil.isNumeric(value)) return Types.NUMERIC;
+        if(StringUtilities.isFloat(value)) return Types.FLOAT;
+        if(StringUtilities.isDouble(value)) return Types.DOUBLE;
+        if(StringUtilities.isDecimal(value)) return Types.DECIMAL;
+        if(StringUtilities.isInt(value)) return Types.INTEGER;
+        if(StringUtilities.isURL(value)) return Types.VARCHAR;
+        if(StringUtilities.isNumeric(value)) return Types.NUMERIC;
         else  return Types.VARCHAR;
     }
 
@@ -236,12 +235,12 @@ public class SQLHelper {
      */
     public static Connection chooseAndGetConnection(String dialectDB,
                                 String host,String port,String database,String username,String password){
-        if(StringUtil.isNullOrEmpty(username) || StringUtil.isNullOrEmpty(password)){
+        if(StringUtilities.isNullOrEmpty(username) || StringUtilities.isNullOrEmpty(password)){
             username = "root";
             password = "";
         }
-        if(!StringUtil.isNullOrEmpty(port) || !StringUtil.isNumeric(port)) port = "";
-        if(StringUtil.isNullOrEmpty(dialectDB)){
+        if(!StringUtilities.isNullOrEmpty(port) || !StringUtilities.isNumeric(port)) port = "";
+        if(StringUtilities.isNullOrEmpty(dialectDB)){
             SystemLog.warning("No connection database type detected fro this type.");
             return null;
         }else dialectDB = convertDialectDatabaseToTypeNameId(dialectDB);
@@ -275,7 +274,7 @@ public class SQLHelper {
         try {
             Class.forName("org.hsqldb.jdbcDriver").newInstance();
             String url = "jdbc:hsqldb:hsql://" + host;
-            if (port != null && StringIs.isNumeric(port)) {
+            if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port; //jdbc:hsqldb:data/database
             }
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
@@ -307,7 +306,7 @@ public class SQLHelper {
                 Class.forName("org.gjt.mm.mysql.Driver").newInstance();
             }
             String url = "jdbc:mysql://" + host;
-            if (port != null && StringIs.isNumeric(port)) {
+            if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
             url += "/"  + database + "?noDatetimeStringSync=true"; //"jdbc:sql://localhost:3306/jdbctest"
@@ -361,16 +360,16 @@ public class SQLHelper {
         String[] split = fullUrl.split("\\?");
         String hostAndDatabase = split[0];//localhost:3306/geodb
         Pattern pat = Pattern.compile("(\\&|\\?)?(user|username)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
-        String username = StringUtil.find(fullUrl,pat);
+        String username = StringUtilities.findWithRegex(fullUrl, pat);
         if(Objects.equals(username, "?")) username = "root";
         pat = Pattern.compile("(\\&|\\?)?(pass|password)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
-        String password = StringUtil.find(fullUrl,pat);
+        String password = StringUtilities.findWithRegex(fullUrl, pat);
         if(Objects.equals(password, "?")) password ="";
         split = hostAndDatabase.split("/");
         String database = split[split.length-1];
         hostAndDatabase = hostAndDatabase.replace(database,"");
         pat = Pattern.compile("([0-9])+", Pattern.CASE_INSENSITIVE);
-        String port = StringUtil.find(hostAndDatabase,pat);
+        String port = StringUtilities.findWithRegex(hostAndDatabase, pat);
         if(Objects.equals(port, "?")) port = null;
         else  hostAndDatabase = hostAndDatabase.replace(port, "").replace(":","").replace("/","");
         return getMySqlConnection(hostAndDatabase,port,database,username,password);
@@ -390,7 +389,7 @@ public class SQLHelper {
             Class.forName("oracle.jdbc.driver.OracleDriver");
             //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
             String url = "jdbc:oracle:thin:@" + host;
-            if (port != null && StringIs.isNumeric(port)) {
+            if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
@@ -412,9 +411,10 @@ public class SQLHelper {
      * @param database string name of the database.
      * @param username string username.
      * @param password string password.
+     * @return the Connection to the H2 database.
      */
     public static Connection getH2RemoteConnection(String host,String port,String database,String username,String password)
-            throws SQLException, ClassNotFoundException{
+    {
         try {
             Class.forName("org.h2.Driver"); //Loading driver connection
             /*
@@ -424,7 +424,7 @@ public class SQLHelper {
             jdbc:h2:tcp://localhost/mem:test
             */
             String url = "jdbc:h2:tcp://" + host;
-            if (port != null && StringIs.isNumeric(port)) {
+            if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
             url += "/~/" + database;
@@ -446,13 +446,10 @@ public class SQLHelper {
      * @param table the String name of the Table.
      * @param columnNamePattern the String Pattern name of the columnss to get.
      * @return the Map of all columns.
-     * @throws SQLException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     * @throws ClassNotFoundException
+     * @throws SQLException throw if any erro with the SQL is occurred.
      */
-    public static Map<String,Integer> getColumns(String host,String database,String table,String columnNamePattern)
-            throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+    public static Map<String,Integer> getColumns(
+            String host,String database,String table,String columnNamePattern) throws SQLException{
         Map<String,Integer> map = new HashMap<>();
         DatabaseMetaData metaData;
         if(conn!=null)metaData = conn.getMetaData();
@@ -460,8 +457,8 @@ public class SQLHelper {
             conn = chooseAndGetConnection(null,host,null,database,null,null);
             if(conn!=null)metaData = conn.getMetaData();
             else{
-                SystemLog.warning("SQLHelper::getColumns -> Can't get the connection for the database",
-                        new Throwable("SQLHelper::getColumns -> Can't get the connection for the database"),SQLHelper.class);
+                SystemLog.warning("Can't get the connection for the database",
+                        new Throwable("Can't get the connection for the database"),SQLHelper.class);
                 return map;
             }
         }
@@ -478,7 +475,7 @@ public class SQLHelper {
      * Method to get the List of all Tables on a Specific connection.
      * @param connection the SQL Connection.
      * @return the List of Name of the Tables.
-     * @throws SQLException throw if any error is occurred.
+     * @throws SQLException throw if any error with the SQL is occurred.
      */
     public static List<String> getTablesFromConnection(Connection connection) throws SQLException {
         List<String> tableNames = new ArrayList<>();
@@ -492,7 +489,7 @@ public class SQLHelper {
 
     /**
      * Method to close the actual connectiom.
-     * @throws SQLException throw if any error is occurred.
+     * @throws SQLException throw if any error with the SQL is occurred.
      */
     public static void closeConnection() throws SQLException{ conn.close();}
 
@@ -506,11 +503,12 @@ public class SQLHelper {
      * @param user the String of the username.
      * @param pass the String of the password.
      * @return the new SQL Connection
-     * @throws ClassNotFoundException
-     * @throws SQLException
+     * @throws SQLException throw if any error with the SQL is occurred.
+     * @throws ClassNotFoundException throw if any error with the Class Driver is occurred.
      */
-    public static Connection setNewConnection(String classDriverName,String dialectDB,
-                                           String host,String port,String database,String user,String pass) throws ClassNotFoundException, SQLException {
+    public static Connection setNewConnection(
+            String classDriverName,String dialectDB,String host,String port,
+            String database,String user,String pass)throws SQLException, ClassNotFoundException {
         //"org.hsqldb.jdbcDriver","jdbc:hsqldb:data/tutorial"
         Class.forName(classDriverName); //load driver//"com.sql.jdbc.Driver"
         String url = (dialectDB  + host + ":" + port + "/" + database); //"jdbc:sql://localhost:3306/jdbctest"
@@ -519,17 +517,34 @@ public class SQLHelper {
         return conn;
     }
 
+    /**
+     * Method to set the Connection to a specific database.
+     * @param connection  the Connection to set.
+     */
     public static void setConnection(Connection connection){
         SQLHelper.conn = connection;
     }
 
-    public static ResultSet executeSQL(String sql) throws Exception {
+    /**
+     * Method to execute a query SQL.
+     * @param sql the Stirng query SQL.
+     * @return the ResukltSet of the Query SQL.
+     * @throws SQLException thorw if any error is occurred during the execution of the query SQL.
+     */
+    public static ResultSet executeSQL(String sql) throws SQLException {
         stmt = conn.createStatement();
         return stmt.executeQuery(query);
         //stmt.executeUpdate(sql);
     }
 
-    public static ResultSet executeSQL(String sql,Connection conn) throws Exception {
+    /**
+     * Method to execute a query SQL.
+     * @param sql the Stirng query SQL.
+     * @param conn the Connection to the Database where execute the query.
+     * @return the ResukltSet of the Query SQL.
+     * @throws SQLException thorw if any error is occurred during the execution of the query SQL.
+     */
+    public static ResultSet executeSQL(String sql,Connection conn) throws SQLException  {
         // create the java statement
         stmt = conn.createStatement();
         // execute the query, and get a java resultset
@@ -583,6 +598,13 @@ public class SQLHelper {
         }
     }
 
+    /**
+     * Method to get a content of a table.
+     * @param tablename the String name of the table.
+     * @param connection the Connection to the Database.
+     * @return the Vector String Arrays of the content.
+     * @throws SQLException throw if the name if the table not exists on the Database.
+     */
     public static Vector<String[]> getContentOfATable(String tablename, Connection connection)
             throws SQLException {
         String sqlQuery = "SELECT * FROM " + tablename;
@@ -601,6 +623,11 @@ public class SQLHelper {
         return allRows;
     }
 
+    /**
+     * Method to get the execution time of a SQL query with the Java API.
+     * @param sql the String SQL Query.
+     * @return the Long value of the time for execute the query.
+     */
     public static Long getExcecutionTime(String sql){
         long startTime = 0,endTime = 0;
         try {
@@ -609,22 +636,28 @@ public class SQLHelper {
             ResultSet rs = stmt.executeQuery(sql);
             endTime   = System.currentTimeMillis();
         }catch (SQLException e) {
-            e.printStackTrace();
+            SystemLog.exception(e,SQLHelper.class);
         }
         return endTime - startTime;
     }
 
+    /**
+     * Method to get the execution time of a SQL query with the Java API.
+     * @param sql the String SQL Query.
+     * @param conn the Connection to the Database where execute the query.
+     * @return the Long value of the time for execute the query.
+     */
     public static Long getExcecutionTime(String sql,Connection conn){
         long startTime = 0,endTime = 0;
         //Connection dbConnection = getConnectionFromDriver(  );
         ConnectionWrapper dbConnection = new ConnectionWrapper(conn);
         try {
-            Statement stmt = dbConnection.createStatement();
+            Statement statement = dbConnection.createStatement();
             startTime = System.currentTimeMillis();
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = statement.executeQuery(sql);
             endTime   = System.currentTimeMillis();
         }catch (SQLException e) {
-            e.printStackTrace();
+            SystemLog.exception(e,SQLHelper.class);
         }
         Long calculate = endTime - startTime;
         Long calculate2 = JDBCLogger.getTime();
@@ -632,9 +665,17 @@ public class SQLHelper {
         else return calculate2;
     }
 
+    /**
+     * Method to import a file CSV to a Database.
+     * @param fileCSV the File CSv to import.
+     * @param firstLine if true the firstline of the file CSV contains the headers of the fields.
+     * @param separator the Cgaracter of the separator field on the CSV file.
+     * @param nameTable the String name of the table.
+     * @param connection the Connection to the Database where execute the query.
+     */
     public static void importCsvInsertInto(File fileCSV, boolean firstLine,Character separator,
                                        String nameTable,Connection connection) {
-        String[] columns = FileCSV.getColumns(fileCSV, firstLine);
+        String[] columns = FileUtilities.getColumns(fileCSV, firstLine);
         SQLJooqKit2.setConnection(connection);
         try {
             CSVReader reader = new CSVReader(new FileReader(fileCSV), separator);
@@ -655,9 +696,9 @@ public class SQLHelper {
                 }
             }
             //System.out.println("Data Successfully Uploaded");
-        } catch (Exception e) {
+        } catch (SQLException |IOException e) {
             SystemLog.exception(e,SQLHelper.class);
-        }
+        } 
     }
 
 

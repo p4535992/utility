@@ -1,7 +1,7 @@
 package com.github.p4535992.util.html;
 import com.github.p4535992.util.http.impl.HttpUtil;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.impl.StringIs;
+import com.github.p4535992.util.string.StringUtilities;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,7 +69,7 @@ public class JSoupKit {
         public static List<List<List<String>>> UniversalExtractor(String htmlContentOrUrl, boolean HTML, String tagName)throws Exception
         {
             org.jsoup.nodes.Document htmldoc;
-            if(StringIs.isURL(htmlContentOrUrl)) {
+            if(StringUtilities.isURL(htmlContentOrUrl)) {
                 try {
                     htmldoc = org.jsoup.Jsoup.connect(htmlContentOrUrl).get();
                 }catch(Exception e) {
@@ -288,17 +288,17 @@ public class JSoupKit {
                         break;
                     case "DL":
                         {
-                            org.jsoup.nodes.Element _CurrentElement = TableElem;
+                            //org.jsoup.nodes.Element _CurrentElement = TableElem; //NOT DELETE
                             //iCurCol = 0; iCurRow = 0;
                             int iMaxCol = 0;
                             //int iCurCol = 0;
                             List<List<String>> dtTable = new ArrayList<>();
                             List<String> Cols = new ArrayList<>();
-                            for (int iRow = 0; iRow < _CurrentElement.children().size(); iRow++)
+                            for (int iRow = 0; iRow < TableElem.children().size(); iRow++)
                             {
-                                if (Objects.equals(_CurrentElement.child(iRow).tagName().toUpperCase(), "DT"))
+                                if (Objects.equals(TableElem.child(iRow).tagName().toUpperCase(), "DT"))
                                 {
-                                    Cols = Extractor6(_CurrentElement.child(iRow), HTML, Cols);
+                                    Cols = Extractor6(TableElem.child(iRow), HTML, Cols);
                                     if (Cols.size() > iMaxCol) iMaxCol = Cols.size();
                                     if (Cols.size() > 0) dtTable.add(Cols);
                                     Cols = new ArrayList<>();
@@ -307,11 +307,11 @@ public class JSoupKit {
                                     //iCurCol = 1;
                                 }
 
-                                if (Objects.equals(_CurrentElement.child(iRow).tagName().toUpperCase(), "DD")
+                                if (Objects.equals(TableElem.child(iRow).tagName().toUpperCase(), "DD")
                                     //&& iCurCol == 1
                                     )
                                 {
-                                    Cols = Extractor6(_CurrentElement.child(iRow), HTML, Cols);
+                                    Cols = Extractor6(TableElem.child(iRow), HTML, Cols);
                                 }
                                 //iCurCol++;
                             }

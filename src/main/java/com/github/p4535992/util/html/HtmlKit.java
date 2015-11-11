@@ -2,8 +2,8 @@ package com.github.p4535992.util.html;
 import com.github.p4535992.util.html.parser.Outliner;
 import com.github.p4535992.util.html.parser.PageSaver;
 import com.github.p4535992.util.html.parser.ParserGetter;
-import com.github.p4535992.util.string.impl.StringIs;
 import com.github.p4535992.util.log.SystemLog;
+import com.github.p4535992.util.string.StringUtilities;
 
 import java.io.*;
 import java.net.URL;
@@ -72,38 +72,25 @@ public class HtmlKit {
     }
 
     public static String toHtml( String string ) {
-        if(StringIs.isNullOrEmpty(string) )
+        if(StringUtilities.isNullOrEmpty(string) )
             return "<html><body></body></html>";
-
         BufferedReader st = new BufferedReader( new StringReader( string ) );
         StringBuilder buf = new StringBuilder( "<html><body>" );
-
-        try
-        {
+        try{
             String str = st.readLine();
-
-            while( str != null )
-            {
-                if( str.equalsIgnoreCase( "<br/>" ) )
-                {
+            while( str != null ){
+                if( str.equalsIgnoreCase( "<br/>" ) ){
                     str = "<br>";
                 }
-
                 buf.append( str );
-
-                if( !str.equalsIgnoreCase( "<br>" ) )
-                {
+                if( !str.equalsIgnoreCase( "<br>" ) ){
                     buf.append( "<br>" );
                 }
-
                 str = st.readLine();
             }
-        }
-        catch( IOException e )
-        {
+        }catch( IOException e ) {
             e.printStackTrace();
         }
-
         buf.append( "</body></html>" );
         string = buf.toString();
         return string;

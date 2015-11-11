@@ -48,9 +48,9 @@ public class CumulusRDFKit{
      * @param hosts the String concatenation of the hosts.
      * @param keyspace the String of the your keySpace.
      * @return the OpenRDF Repository.
-     * @throws SailException throw if any error with the repository is occurred.
      */
-    public org.openrdf.repository.Repository connectToCassandraRepository(String hosts,String keyspace,boolean isQuadStore)  {
+    public org.openrdf.repository.Repository connectToCassandraRepository(
+            String hosts,String keyspace,boolean isQuadStore){
         Store crdf = setNewCumulusStore(hosts,keyspace,isQuadStore);
         Sail sail = new CumulusRDFSail(crdf);
         try {

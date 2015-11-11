@@ -2,8 +2,8 @@ package com.github.p4535992.util.log;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Formatter;
 import java.util.Locale;
 
 /**
@@ -75,7 +75,9 @@ public class PrintLog extends PrintStream {
     //Methods
     //------------------------------------
 
+    @Override
     public void flush() {super.flush();}
+    @Override
     public void close() {
         // Restore the original standard output and standard error.
         // Then close the log file.
@@ -89,15 +91,16 @@ public class PrintLog extends PrintStream {
         }
         super.close();
     }
+    @Override
     public boolean checkError() {return super.checkError();}
 
+    @Override
     public void write(int b) {
         if(logStreamFile!=null) {
             try {
                 logStreamFile.write(b);
             }
-            catch (Exception e)
-            {
+            catch (Exception e){
                 e.printStackTrace();
                 setError();
             }
@@ -105,6 +108,7 @@ public class PrintLog extends PrintStream {
         super.write(b);
     }
 
+    @Override
     public void write(byte buf[], int off, int len) {
         if(logStreamFile!=null) {
             try {
@@ -121,24 +125,33 @@ public class PrintLog extends PrintStream {
     // Methods that do not terminate lines
     //---------------------------------------------------
 
+    @Override
     public void print(boolean b) {
         super.print(b);
     }
+    @Override
     public void print(char c) {
         super.print(c);
     }
+    @Override
     public void print(int i) {
         super.print(i);
     }
+    @Override
     public void print(long l) {
         super.print(l);
     }
+    @Override
     public void print(float f) {
         super.print(f);
     }
+    @Override
     public void print(double d) {super.print(d);}
+    @Override
     public void print(char s[]) {super.print(s);}
+    @Override
     public void print(String s) { super.print(s);}
+    @Override
     public void print(Object obj) {
         super.print(obj);
     }
@@ -147,31 +160,48 @@ public class PrintLog extends PrintStream {
     /* Methods that do terminate lines */
     //---------------------------------------------------
 
+    @Override
     public void println() {super.println();}
+    @Override
     public void println(boolean x) {super.println(x);}
+    @Override
     public void println(char x) { super.println(x);}
+    @Override
     public void println(int x) {super.println(x);}
+    @Override
     public void println(long x) {super.println(x); }
+    @Override
     public void println(float x) {super.println(x); }
+    @Override
     public void println(double x) {super.println(x); }
+    @Override
     public void println(char x[]) {super.println(x); }
+    @Override
     public void println(String x) {super.println(x); }
+    @Override
     public void println(Object x) { super.println(x); }
 
+    @Override
     public PrintLog printf(String format, Object ... args) {
         return (PrintLog) super.printf(format, args);
     }
+    @Override
     public PrintLog printf(Locale l, String format, Object ... args) {
         return (PrintLog) super.printf(l,format, args);
     }
+    @Override
     public PrintLog format(String format, Object ... args) {
         return (PrintLog) super.format(format, args);
     }
+    @Override
     public PrintLog format(Locale l, String format, Object ... args) {
         return (PrintLog) super.format(l,format, args);
     }
+    @Override
     public PrintLog append(CharSequence csq) {return (PrintLog) super.append(csq);}
+    @Override
     public PrintLog append(CharSequence csq, int start, int end) {return (PrintLog) super.append(csq,start,end);}
+    @Override
     public PrintLog append(char c) {return (PrintLog) super.append(c); }
 
     //------------------------------------------------------------------------
@@ -196,6 +226,7 @@ public class PrintLog extends PrintStream {
      * sure to flush System.out and close the file before the JVM shuts down,
      * to be sure that all data written to System.out is actually flushed to the file.
      */
+    @SuppressWarnings("rawtypes")
     public static void start(){
         // Save current settings for later restoring.
         oldStdout = System.out;
@@ -207,7 +238,8 @@ public class PrintLog extends PrintStream {
         System.setOut(stdout);
         System.setErr(stderr);
     }
-
+    
+    @SuppressWarnings("rawtypes")
     public static void start(String fileName) throws FileNotFoundException {
         oldStdout = System.out;
         oldStderr = System.err;
@@ -222,6 +254,7 @@ public class PrintLog extends PrintStream {
         System.setErr(stderr);
     }
 
+    @SuppressWarnings("rawtypes")
     public static void start(File file) throws FileNotFoundException {
         // Save current settings for later restoring.
         oldStdout = System.out;
@@ -257,6 +290,7 @@ public class PrintLog extends PrintStream {
 
     /** A sample test driver.  The file samplelog.txt should contain
      everything that appeared on the console output.
+     * @param args xxx.
      */
     public static void main(String[] args) {
         try {

@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.text.DateFormat;
+import java.util.logging.Logger;
 
 /**
  * Class for print a personal log file.
@@ -54,6 +55,7 @@ public class SystemLog<T> extends OutputStream{
     private static boolean isInline = false;
 
     private static boolean isLogOff = false;
+    private static boolean isLogUtil = false;
     private static boolean isLog4j = false;
     private static boolean isSlf4j = false;
     private static boolean logging = false;
@@ -209,6 +211,7 @@ public class SystemLog<T> extends OutputStream{
      * Writes a message to the log.
      * @param logEntry message to write as a log entry
      */
+    @SuppressWarnings("rawtypes")
     protected static void write(String logEntry) {
         try {
             if (logEntry != null) {
@@ -396,7 +399,7 @@ public class SystemLog<T> extends OutputStream{
     }
 
     public static void abort(int rc){System.exit(rc);}
-    public static void abort(int rc,String logEntry){abort(rc,logEntry,null);}
+    public static void abort(int rc,String logEntry){abort(rc, logEntry, null);}
     public static void abort(int rc, String logEntry,Class<?> thisClass) {
         level = Level.ABORT;
         isERROR=true;
@@ -429,12 +432,21 @@ public class SystemLog<T> extends OutputStream{
         else write(logEntry);
     }
 
-    public static void exception(Exception e){ exception(e.getMessage(), new Throwable(e.getCause()), null);}
-    public static void exception(Exception e,Class<?> clazz){ exception(e.getMessage(), new Throwable(e.getCause()), clazz);}
+    public static void exception(Exception e){ exception(
+            e.getClass().getName() + ": " + e.getMessage(), new Throwable(e.getCause()), null);}
+    public static void exception(Exception e,Class<?> clazz){ exception(
+            e.getClass().getName() + ": " + e.getMessage(), new Throwable(e.getCause()), clazz);}
+    public static void exception(String logEntry){ exception(logEntry, new Throwable(logEntry), null);}
+    public static void exception(String logEntry,Class<?> clazz){ exception(logEntry, new Throwable(logEntry), clazz);}
     public static void exception(String logEntry,Throwable th,Class<?> thisClass){
         level = Level.EXCEP;
         isERROR=true;
         if(thisClass!=null) {
+            if(isLogUtil){
+                logUtil = Logger.getLogger(thisClass.getName());
+                 if(th!=null)logUtil.log(java.util.logging.Level.SEVERE, logEntry, th);
+                 else logUtil.log(java.util.logging.Level.SEVERE, logEntry);           
+            }
             if(isLog4j){
                 log4j = org.apache.log4j.Logger.getLogger(thisClass);
                 if(th!=null)log4j.info(logEntry,th);
@@ -444,7 +456,7 @@ public class SystemLog<T> extends OutputStream{
                 slf4j = org.slf4j.LoggerFactory.getLogger(thisClass);
                 if (th != null) slf4j.info(logEntry, th);
                 else slf4j.info(logEntry);
-            }
+            }         
             else write(logEntry);
         }
         else write(logEntry);

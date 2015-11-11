@@ -221,7 +221,7 @@ public class ResultSetWrapper implements ResultSet
     return realResultSet.getObject(columnIndex);
   }
 
-  public Object getObject(int i, Map map) throws SQLException {
+  public Object getObject(int i, Map<String,Class<?>> map) throws SQLException {
     return realResultSet.getObject(i, map);
   }
 
@@ -229,7 +229,7 @@ public class ResultSetWrapper implements ResultSet
     return realResultSet.getObject(columnName);
   }
 
-  public Object getObject(String colName, Map map) throws SQLException {
+  public Object getObject(String colName, Map<String,Class<?>> map) throws SQLException {
     return realResultSet.getObject(colName, map);
   }
 

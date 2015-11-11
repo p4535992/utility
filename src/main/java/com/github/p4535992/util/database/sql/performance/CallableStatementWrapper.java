@@ -78,7 +78,7 @@ public class CallableStatementWrapper extends PreparedStatementWrapper implement
     return realCallableStatement.getObject(parameterIndex);
   }
 
-  public Object getObject(int i, Map map) throws SQLException {
+  public Object getObject(int i, Map<String,Class<?>> map) throws SQLException {
     return realCallableStatement.getObject(i, map);
   }
 

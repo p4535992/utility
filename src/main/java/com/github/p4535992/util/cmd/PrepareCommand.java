@@ -1,6 +1,6 @@
 package com.github.p4535992.util.cmd;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.impl.StringKit;
+import com.github.p4535992.util.string.StringUtilities;
 import org.apache.commons.exec.*;
 
 import java.io.*;
@@ -56,7 +56,7 @@ public class PrepareCommand {
         int exitVal = 0;
         PrepareCommand rte = new PrepareCommand();
         PrepareCommand.StreamWrapper error, output;
-        File file = new File(StringKit.special.PROJECTDIR+File.separator+fileName);
+        File file = new File(StringUtilities.PROJECT_DIR+File.separator+fileName);
         //Creating a text file (note that this will overwrite the file if it already exists
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         for (String aListString : listString) {
@@ -114,8 +114,8 @@ public class PrepareCommand {
         StringBuilder builder = new StringBuilder();
         builder.append(" -Dexec.args=\"");
         for(Map.Entry<String,String> entry: params.entrySet()){
-            builder.append("--").append(entry.getKey()).append(StringKit.special.NBSP)
-                    .append(entry.getValue()).append(StringKit.special.NBSP);
+            builder.append("--").append(entry.getKey()).append(StringUtilities.NBSP)
+                    .append(entry.getValue()).append(StringUtilities.NBSP);
         }
         builder.append("\"");
         commandLine.addArgument(builder.toString());

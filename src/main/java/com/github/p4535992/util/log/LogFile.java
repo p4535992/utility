@@ -38,6 +38,7 @@ public class LogFile extends PrintStream
 
     /** Starts copying stdout and stderr to a specified file.
      * @param fileName is the name of the desired logfile.
+     * @throws java.io.IOException throw if any error is occurred.
      */
     public static void start(String fileName) throws IOException
     {
@@ -66,18 +67,14 @@ public class LogFile extends PrintStream
     /**
      *  Ceases logging and restores the original settings.
      */
-    public static void stop()
-    {
+    public static void stop(){
         // Restore the original standard output and standard error.
         // Then close the log file.
         System.setOut(oldStdout);
         System.setErr(oldStderr);
-        try
-        {
+        try {
             logfile.close();
-        }
-        catch (Exception e)
-        {
+        }catch (Exception e){
             e.printStackTrace();
         }
     }
@@ -91,14 +88,11 @@ public class LogFile extends PrintStream
      They set the flag by calling setError(). If the client of the print stream
      wants to check if an error occurred, it can call checkError().
      */
-    public void write(int b)
-    {
-        try
-        {
+    @Override
+    public void write(int b){
+        try{
             logfile.write(b);
-        }
-        catch (Exception e)
-        {
+        }catch (Exception e){
             e.printStackTrace();
             setError();
         }
@@ -106,14 +100,11 @@ public class LogFile extends PrintStream
     }
 
     /** Overriding the write() method of PrintStream */
-    public void write(byte buf[], int off, int len)
-    {
-        try
-        {
+    @Override
+    public void write(byte buf[], int off, int len){
+        try{
             logfile.write(buf, off, len);
-        }
-        catch (Exception e)
-        {
+        }catch (Exception e){
             e.printStackTrace();
             setError();
         }
@@ -122,6 +113,7 @@ public class LogFile extends PrintStream
 
     /** A sample test driver.  The file samplelog.txt should contain
      everything that appeared on the console output.
+     * @param args the array of arguments.
      */
     public static void main(String[] args)
     {
@@ -138,13 +130,9 @@ public class LogFile extends PrintStream
             System.out.println(
                     "Let's throw an exception...");
             new Exception().printStackTrace();
-        }
-        catch (Exception e)
-        {
+        }catch (Exception e){
             e.printStackTrace();
-        }
-        finally
-        {
+        }finally{
             // Turn off logging
             LogFile.stop();
         }

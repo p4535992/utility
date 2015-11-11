@@ -8,6 +8,7 @@ import java.io.IOException;
  */
 public class Test_SystemLog {
 
+    @SuppressWarnings("rawtypes")
     public static void main(String[] args) throws IOException {
         SystemLog log = new SystemLog();
         System.out.println("Test 45");

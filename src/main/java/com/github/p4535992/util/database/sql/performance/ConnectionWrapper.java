@@ -17,30 +17,37 @@ public class ConnectionWrapper implements Connection
     realConnection = connection;
   }
 
+  @Override
   public Statement createStatement() throws SQLException {
     return new StatementWrapper(realConnection.createStatement(), this);
   }
 
+  @Override
   public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
     return new StatementWrapper(realConnection.createStatement(resultSetType, resultSetConcurrency), this);
   }
 
+  @Override
   public CallableStatement prepareCall(String sql) throws SQLException {
     return new CallableStatementWrapper(realConnection.prepareCall(sql), this, sql);
   }
 
+  @Override
   public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
     return new CallableStatementWrapper(realConnection.prepareCall(sql, resultSetType, resultSetConcurrency), this, sql);
   }
 
+  @Override
   public PreparedStatement prepareStatement(String sql) throws SQLException {
     return new PreparedStatementWrapper(realConnection.prepareStatement(sql), this, sql);
   }
 
+  @Override
   public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
     return new PreparedStatementWrapper(realConnection.prepareStatement(sql, resultSetType, resultSetConcurrency), this, sql);
   }
 
+  @Override
   public DatabaseMetaData getMetaData() throws SQLException {
     return new DatabaseMetaDataWrapper(realConnection.getMetaData(), this);
   }
@@ -48,31 +55,38 @@ public class ConnectionWrapper implements Connection
 
 
 
+  @Override
   public void clearWarnings() throws SQLException {
     realConnection.clearWarnings();
   }
 
+  @Override
   public void close() throws SQLException {
     realConnection.close();
   }
 
+  @Override
   public void commit() throws SQLException {
     realConnection.commit();
   }
 
+  @Override
   public boolean getAutoCommit() throws SQLException {
     return realConnection.getAutoCommit();
   }
 
+  @Override
   public String getCatalog() throws SQLException {
     return realConnection.getCatalog();
   }
 
+  @Override
   public int getTransactionIsolation() throws SQLException {
     return realConnection.getTransactionIsolation();
   }
 
-  public Map getTypeMap() throws SQLException {
+  @Override
+  public Map<String,Class<?>> getTypeMap() throws SQLException {
     return realConnection.getTypeMap();
   }
 
@@ -216,43 +230,53 @@ public class ConnectionWrapper implements Connection
     return 0;
   }
 
+  @Override
   public SQLWarning getWarnings() throws SQLException {
     return realConnection.getWarnings();
   }
 
+  @Override
   public boolean isClosed() throws SQLException {
     return realConnection.isClosed();
   }
 
+  @Override
   public boolean isReadOnly() throws SQLException {
     return realConnection.isReadOnly();
   }
 
+  @Override
   public String nativeSQL(String sql) throws SQLException {
     return realConnection.nativeSQL(sql);
   }
 
+  @Override
   public void rollback() throws SQLException {
     realConnection.rollback();
   }
 
+  @Override
   public void setAutoCommit(boolean autoCommit) throws SQLException {
     realConnection.setAutoCommit(autoCommit);
   }
 
+  @Override
   public void setCatalog(String catalog) throws SQLException {
     realConnection.setCatalog(catalog);
   }
 
+  @Override
   public void setReadOnly(boolean readOnly) throws SQLException {
     realConnection.setReadOnly(readOnly);
   }
 
+  @Override
   public void setTransactionIsolation(int level) throws SQLException {
     realConnection.setTransactionIsolation(level);
   }
 
-  public void setTypeMap(Map map) throws SQLException {
+  @Override
+  public void setTypeMap(Map<String,Class<?>> map) throws SQLException {
     realConnection.setTypeMap(map);
   }
 

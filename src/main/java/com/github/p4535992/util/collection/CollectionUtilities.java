@@ -1,10 +1,8 @@
 package com.github.p4535992.util.collection;
 
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.reflection.ReflectionKit;
-import com.github.p4535992.util.string.StringUtil;
+import com.github.p4535992.util.reflection.ReflectionUtilities;
 import com.github.p4535992.util.string.StringUtilities;
-import com.github.p4535992.util.string.impl.StringIs;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -18,10 +16,20 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class CollectionUtilities {
 
-    public static boolean isClassCollection(Class c) {
+    /**
+     * Method to check if a Class is a Collection or not.
+     * @param c the Class to inspect.
+     * @return if true the class extend or implememnt Collection.
+     */
+    public static boolean isClassCollection(Class<?> c) {
         return Collection.class.isAssignableFrom(c) || Map.class.isAssignableFrom(c);
     }
 
+    /**
+     * Method to check if a Object is a Collection or not.
+     * @param ob the Object to inspect.
+     * @return if true the class extend or implememnt Collection.
+     */
     public static boolean isCollection(Object ob) {
         return ob instanceof Collection || ob instanceof Map;
         //return ob != null && isClassCollection(ob.getClass());
@@ -251,12 +259,12 @@ public class CollectionUtilities {
      * @return the Array Collection.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T[] toArray(Object collection) {
+    public static <T> T[] toArray(Collection<T> collection) {
         if(isCollection(collection)) {
             if (collection instanceof List) {
                 List<T> list = (List<T>) collection;
                 T[] array = (T[]) Array.newInstance(list.get(0).getClass(), list.size());
-                if(ReflectionKit.isWrapperType(list.get(0).getClass())){ //if is a primitve class
+                if(ReflectionUtilities.isWrapperType(list.get(0).getClass())){ //if is a primitive class
                     for(int i = 0; i < list.size(); i++) array[i] = list.get(i);
                 }else{ //is is not a primitive class
                     list.toArray(array);
@@ -269,7 +277,7 @@ public class CollectionUtilities {
                 //http://www.codemiles.com/collections/convert-treeset-content-to-array-t10599.html#sthash.xTW3pw80.dpuf
                 return (T[]) treeSet.toArray();
             }
-            if(collection instanceof Set) return toArray(toList(collection));
+            if(collection instanceof Set) return (T[])toArray(toList(collection));
             else return (T[]) Array.newInstance(Object.class, 0);
         }else{
             return  (T[]) Array.newInstance(Object.class, 0);
@@ -508,6 +516,7 @@ public class CollectionUtilities {
 
     /**
      * Method to convert a Array Collection of int to a Array Collection of Integer.
+     * @param <T> the generic variable.
      * @param objArray the Array Collection of int.
      * @return Array Collection of Integer.
      */
@@ -544,6 +553,7 @@ public class CollectionUtilities {
 
     /**
      * Sorts a HashMap based on the values with Double data type
+     * @param <T> the generic variable.
      * @param input hashMap where order.
      * @return the hashMap sorted.
      */
@@ -668,7 +678,7 @@ public class CollectionUtilities {
      * @return the String of the content of the array.
      */
     public static <T> String toString(T[] array,char separator){
-        if(StringUtil.isNullOrEmpty(Character.toString(separator))){
+        if(StringUtilities.isNullOrEmpty(Character.toString(separator))){
             String s = Arrays.toString(array);
             s = s.substring(1,s.length()-1);
             return s;

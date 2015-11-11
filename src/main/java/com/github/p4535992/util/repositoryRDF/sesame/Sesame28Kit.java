@@ -1,12 +1,11 @@
 package com.github.p4535992.util.repositoryRDF.sesame;
 
-import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.file.impl.FileUtil;
+import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator;
-import com.github.p4535992.util.string.StringUtil;
-import com.github.p4535992.util.string.impl.StringIs;
+import com.github.p4535992.util.string.StringUtilities;
 import info.aduna.iteration.Iterations;
 
 import org.openrdf.OpenRDFException;
@@ -49,7 +48,7 @@ import java.util.zip.GZIPInputStream;
 /**
  * Class of utility for Sesame Server and Owlim Server
  * @author 4535992.
- * @version 2015-07-02.
+ * @version 2015-11-10.
  * Work with Sesame openrdf version 2.8.0
  */
 @SuppressWarnings("unused")
@@ -427,7 +426,10 @@ public class Sesame28Kit {
     }
 
     /**
-     * Method for connect to a loacl Sesame Repository with a config turtle file.
+     * Method for connect to a local Sesame Repository with a config turtle file.
+     * @param repositoryId the String ID of the Sesame Repository.
+     * @param username the String username of the Sesame Repository.
+     * @param password the String password of the Sesame Repository.
      * @return repository manager sesame.
      */
     public Repository connectToLocalWithConfigFile(String repositoryId,String username,String password){
@@ -536,7 +538,7 @@ public class Sesame28Kit {
             //String preload = preloadFolder;
                 //SystemLog.message("No pre-load directory/filename provided.");
 
-            FileUtil.FileWalker.Handler handler = new FileUtil.FileWalker.Handler() {
+            FileUtilities.FileWalker.Handler handler = new FileUtilities.FileWalker.Handler() {
 
                 @Override
                 public void file(File file) throws Exception {
@@ -548,7 +550,7 @@ public class Sesame28Kit {
                     SystemLog.message("Loading files from: " + directory.getAbsolutePath());
                 }
             };
-            FileUtil.FileWalker walker = new FileUtil.FileWalker();
+            FileUtilities.FileWalker walker = new FileUtilities.FileWalker();
             walker.setHandler(handler);
             try {
                 walker.walk(new File(preloadFolder));
@@ -621,8 +623,8 @@ public class Sesame28Kit {
     public Long numberOfImplicitStatements(RepositoryConnection repConn) {
         try {
             // Retrieve all inferred statements
-            RepositoryResult<Statement> statements = null;
-                statements = repConn.getStatements(null, null, null, true,
+            RepositoryResult<Statement> statements = 
+                    repConn.getStatements(null, null, null, true,
                         new URIImpl("http://www.ontotext.com/implicit"));
             long implicitStatements = 0;
 
@@ -680,9 +682,9 @@ public class Sesame28Kit {
      * @param queryFile file with multiple SPARQL queries.
      */
     private void evaluateQueries(File queryFile){
-        SystemLog.message("===== Query Evaluation ======================");
+        SystemLog.message("===== Query Evaluation ======================",Sesame28Kit.class);
         if (queryFile == null) {
-            SystemLog.warning("No query file given in parameter 'null'.");
+            SystemLog.warning("No query file given in parameter 'null'.",Sesame28Kit.class);
             return;
         }
         //long startQueries = System.currentTimeMillis();
@@ -690,14 +692,14 @@ public class Sesame28Kit {
         String[] queries =collectQueries(queryFile.getAbsolutePath());
         if(queries == null){
             //se non Ã¯Â¿Â½ un file ma una stringa fornita queries = new String[]{queryFile};
-            SystemLog.message("Executing query '" + queryFile + "'");
+            SystemLog.message("Executing query '" + queryFile + "'",Sesame28Kit.class);
             executeSingleQuery(queryFile.getAbsolutePath());
         }else{
             // evaluate each query and print the bindings if appropriate
             for (String querie : queries) {
                 final String name = querie.substring(0, querie.indexOf(":"));
                 final String query = querie.substring(name.length() + 2).trim();
-                SystemLog.message("Executing query '" + name + "'");
+                SystemLog.message("Executing query '" + name + "'",Sesame28Kit.class);
                 executeSingleQuery(query);
             }
         }
@@ -722,20 +724,19 @@ public class Sesame28Kit {
         //RepositoryConnection tempLocalConnection = tempLocalRepository.getConnection();
         try {
             tempLocalConnection.prepareTupleQuery(language, query);
-            SystemLog.message("Query Sesame is a tuple query");
+            SystemLog.message("Query Sesame is a tuple query",Sesame28Kit.class);
             return mRepositoryConnection.prepareTupleQuery(language, query);
-        } catch (Exception e) {
-            //SystemLog.exception(e);
-            SystemLog.sparql(e.getMessage());
+        } catch (RepositoryException | MalformedQueryException e) {       
+            SystemLog.sparql(e.getMessage(),Sesame28Kit.class);
         }
         try {
             tempLocalConnection.prepareBooleanQuery(language, query);
             //BooleanQuery booleanQuery = mRepositoryConnection.prepareBooleanQuery(language, query);
             //if(booleanQuery!=null){ return booleanQuery;}
-            SystemLog.message("Query Sesame is a boolean query");
+            SystemLog.message("Query Sesame is a boolean query",Sesame28Kit.class);
             return mRepositoryConnection.prepareBooleanQuery(language, query);
-        } catch (Exception e) {
-            SystemLog.sparql(e.getMessage());
+        } catch (RepositoryException | MalformedQueryException e) {
+            SystemLog.sparql(e.getMessage(),Sesame28Kit.class);
         }
 
         try {
@@ -744,8 +745,8 @@ public class Sesame28Kit {
             //if(graphQuery!=null){return graphQuery;}
             SystemLog.sparql("Query Sesame is a graph query");
             return mRepositoryConnection.prepareGraphQuery(language, query);
-        } catch (Exception e) {
-            SystemLog.warning(e.getMessage());
+        } catch (RepositoryException | MalformedQueryException e) {
+            SystemLog.warning(e.getMessage(),Sesame28Kit.class);
         }
         return null;
     }
@@ -767,8 +768,8 @@ public class Sesame28Kit {
                         tempLocalConnection.prepareUpdate(language, query);
                         SystemLog.message("Query SPARQL is a update query");
                         return mRepositoryConnection.prepareUpdate(language, query);
-                    } catch (Exception e) {
-                        //SystemLog.warning(e.getMessage());
+                    } catch (RepositoryException | MalformedQueryException e) {
+                        SystemLog.warning(e.getMessage(),Sesame28Kit.class);
                     }
                 }
                 for (QueryLanguage language : queryLanguages) {
@@ -899,7 +900,7 @@ public class Sesame28Kit {
                             try {
                                 System.out.print(beautifyRDFValue(aTuple.getValue()) + "\t");
                             } catch (Exception e) {
-                                SystemLog.exception(e);
+                                SystemLog.exception(e,Sesame28Kit.class);
                             }
                         }
                         System.out.println();
@@ -979,14 +980,16 @@ public class Sesame28Kit {
      * @param outputPathFile string path to the output file.
      * @param outputFormat string format for the output file.
      * @param exportType e.home //explicit,implicit,all,specific.
+     * @return the File of triple extract form the Sesame Repository.
      */
     public File export(String outputPathFile,String outputFormat,String exportType){
         try{
             if (outputPathFile != null) {
-                SystemLog.message("===== Export ====================");
+                SystemLog.message("===== Export ====================",Sesame28Kit.class);
                 RDFFormat exportFormat = stringToRDFFormat(outputFormat);
                 //String type = exportType;
-                SystemLog.message("Exporting " + exportType + " statements to " + outputPathFile + " (" + exportFormat.getName() + ")");
+                SystemLog.message("Exporting " + exportType + " statements to " + 
+                        outputPathFile + " (" + exportFormat.getName() + ")",Sesame28Kit.class);
                 Writer writer = new BufferedWriter(new FileWriter(outputPathFile), 256 * 1024);
                 RDFWriter rdfWriter = Rio.createWriter(exportFormat, writer);
                 try {
@@ -1316,7 +1319,7 @@ public class Sesame28Kit {
 
             } else{
                 SystemLog.warning("Attention type a correct String typeRepository:"
-                        + CollectionKit.convertArrayContentToSingleString(types));
+                        + CollectionUtilities.toString(types));
             }
             // wrap it into a Sesame SailRepository
             if(mRepository != null && !mRepository.isInitialized()){
@@ -1358,6 +1361,7 @@ public class Sesame28Kit {
     /**
      * Method to support the evalutation o the Tuple query
      * @param queryString the query sparql SELECT or ASK.
+     * @param bindingName the Array of String of Filed of the Tuple Query.
      * @return the List of OpenRDF Statement.
      */
     public List<String[]> TupleQueryEvalutation(String queryString,String[] bindingName){
@@ -1373,9 +1377,9 @@ public class Sesame28Kit {
             TupleQueryResult result = tupleQuery.evaluate();
             try {
                 int L;
-                if(CollectionKit.isArrayEmpty(bindingName)){
+                if(CollectionUtilities.isEmpty(bindingName)){
                     L = result.getBindingNames().size();
-                    bindingName = CollectionKit.convertListToArray(result.getBindingNames());
+                    bindingName = CollectionUtilities.toArray(result.getBindingNames());
                 }
                 else L = bindingName.length;
 
@@ -1556,12 +1560,12 @@ public class Sesame28Kit {
      */
     public void convertFileNameToRDFFormat(String urlFile,String inputFormat,String outputFormat) {
         try {
-            if(StringIs.isNullOrEmpty(inputFormat)) inputFormat ="n3";
+            if(StringUtilities.isNullOrEmpty(inputFormat)) inputFormat ="n3";
             // open our input document
             URL documentUrl;
             RDFFormat format;
             InputStream inputStream;
-            if(StringIs.isURL(urlFile)){
+            if(StringUtilities.isURL(urlFile)){
                 documentUrl = new URL(urlFile);
                 //AutoDetecting the file format
                 format = convertFileNameToRDFFormat(documentUrl.toString());
@@ -1569,7 +1573,7 @@ public class Sesame28Kit {
                 // RDFParser rdfParser = Rio.createParser(format);
                 inputStream = documentUrl.openStream();
             }else{
-                urlFile = FileUtil.convertFileToStringUriWithPrefix(urlFile);
+                urlFile = FileUtilities.toStringUriWithPrefix(urlFile);
                 //documentUrl = new URL("file::///"+FileUtil.convertFileToUri(urlFile));
                 documentUrl = new URL(urlFile);
                 format = stringToRDFFormat(inputFormat) ;
@@ -1898,7 +1902,7 @@ public class Sesame28Kit {
      */
     public RepositoryManager connectToLocation(String urlOrDirectory) {
         SystemLog.message("Calling SesameManager.connectToLocation with String: " + urlOrDirectory);
-        if(StringUtil.isURL(urlOrDirectory)) {
+        if(StringUtilities.isURL(urlOrDirectory)) {
             connectToRemoteLocation(urlOrDirectory);
         } else if(new File(urlOrDirectory).exists()){
             connectToLocalLocation(urlOrDirectory);
@@ -1918,9 +1922,9 @@ public class Sesame28Kit {
     public RepositoryManager connectToLocation(URL urlOrDirectory) {
         SystemLog.message("Calling SesameManager.connectToLocation with URL: " + urlOrDirectory);
         try {
-            if (StringUtil.isURL(urlOrDirectory.toString())) {
+            if (StringUtilities.isURL(urlOrDirectory.toString())) {
                 connectToRemoteLocation(urlOrDirectory.toString());
-            } else if (FileUtil.convertURLToFile(urlOrDirectory).exists()) {
+            } else if (FileUtilities.toFile(urlOrDirectory).exists()) {
                 connectToLocalLocation(urlOrDirectory);
             } else {
                 SystemLog.warning("Sesame28Kit::connectToLocation -> Not exists the url or the File with path:" + urlOrDirectory);
@@ -1993,7 +1997,7 @@ public class Sesame28Kit {
      */
     private RepositoryManager connectToLocalLocation(File directory) {
         try {
-            return connectToLocalLocation(FileUtil.convertFileToURL(directory));
+            return connectToLocalLocation(FileUtilities.toURL(directory));
         } catch (MalformedURLException e) {
             SystemLog.error("The URL directory not exists or is erract:" + directory.getAbsolutePath());
             return null;
@@ -2104,7 +2108,7 @@ public class Sesame28Kit {
     public Repository connectToNativeRepository(File directory,String indexes){
         String sDirectory = directory.getAbsolutePath();
         try{
-            if(StringUtil.isNullOrEmpty(indexes)){indexes = "spoc,posc,cosp";}
+            if(StringUtilities.isNullOrEmpty(indexes)){indexes = "spoc,posc,cosp";}
             mRepository = new SailRepository(new NativeStore(directory,indexes));
             mRepository.initialize();
             setRepositoryConnection();
@@ -2228,6 +2232,7 @@ public class Sesame28Kit {
      * using the configuration information passed on as a string.
      * Create repository from a template, no substitution of variables also opens the newly created repository
      * @param config string file path to the config file.
+     * @return if true the Config File has create a new reposiotry on the Sesame Server.
      */
     public boolean createRepository(String config) {
         SystemLog.message("createRepository called");
@@ -2289,6 +2294,7 @@ public class Sesame28Kit {
      * given from the configuration passed as a string.
      * @param repositoryDirFile string file path to the directory of repsoisotry.
      * @param configFile string file path to the config file.
+     * @return the Repository created with the config file.
      */
     public Repository createRepositoryUnManaged(File repositoryDirFile,File configFile) {
         isManagedRepository = false;
@@ -2300,7 +2306,7 @@ public class Sesame28Kit {
             Model model = Rio.parse(new FileReader(configFile), RepositoryConfigSchema.NAMESPACE, RDFFormat.TURTLE);
             /*Resource repositoryNode = org.openrdf.model.util.GraphUtil.getUniqueSubject(graph, RDF.TYPE, RepositoryConfigSchema.REPOSITORY);*/
             Resource repositoryNode = model.filter(null, RDF.TYPE, RepositoryConfigSchema.REPOSITORY).subjectResource();
-            RepositoryConfig repConfig = null;
+            RepositoryConfig repConfig;
             try {
                 /*repConfig = RepositoryConfig.create(model,repositoryNode);*/
                 repConfig = new RepositoryConfig();
@@ -2527,7 +2533,7 @@ public class Sesame28Kit {
         try {
             if (!mRepository.isInitialized()) mRepository.initialize();
             if(fileOrDirectory.isDirectory()){
-                List<File> files = FileUtil.readDirectory(fileOrDirectory);
+                List<File> files = FileUtilities.readDirectory(fileOrDirectory);
                 for (File file: files)  {
                     if (!mRepository.isInitialized()) mRepository.initialize();
                     try {
@@ -3228,17 +3234,14 @@ public class Sesame28Kit {
                     //SystemLog.sparql(">>>>>>>> query finished:" + times[0],Sesame28Kit.class);
                     try {
                         result[0].close();
-                    }
-                    catch (QueryEvaluationException ex) {
+                    }catch (QueryEvaluationException ex) {
                         SystemLog.setIsERROR(true);
                         SystemLog.sparql(ex,Sesame28Kit.class);
                     }
-                }
-                catch (Exception ex) {
+                }catch (QueryEvaluationException ex) {
                     SystemLog.setIsERROR(true);
                     SystemLog.sparql(ex,Sesame28Kit.class);
-                }
-                finally {stop.set(true);}
+                }finally {stop.set(true);}
             }
         };
         Runnable closeRunner = new Runnable() {
@@ -3271,8 +3274,7 @@ public class Sesame28Kit {
                         SystemLog.setIsERROR(true);
                         SystemLog.sparql(ex,Sesame28Kit.class);
                     }
-                }
-                else {
+                }else {
                     stop.set(true);
                 }
             }
@@ -3315,28 +3317,22 @@ public class Sesame28Kit {
                         result[0] = query.evaluate();
                         //SystemLog.sparql(">>>>>>>> query evaluating",Sesame28Kit.class);
                     }
-
                     while (result[0].hasNext()) {
                         //SystemLog.sparql(">>>>>>>> query found result",Sesame28Kit.class);
                         result[0].next();
                     }
-
                     times[0] = System.currentTimeMillis();
                     //SystemLog.sparql(">>>>>>>> query finished:" + times[0],Sesame28Kit.class);
-
                     try {
                         result[0].close();
-                    }
-                    catch (QueryEvaluationException ex) {
+                    }catch (QueryEvaluationException ex) {
                         SystemLog.setIsERROR(true);
                         SystemLog.sparql(ex,Sesame28Kit.class);
                     }
-                }
-                catch (Exception ex) {
+                }catch (QueryEvaluationException ex) {
                     SystemLog.setIsERROR(true);
                     SystemLog.sparql(ex,Sesame28Kit.class);
-                }
-                finally {
+                }finally {
                     stop.set(true);
                 }
             }
@@ -3351,7 +3347,6 @@ public class Sesame28Kit {
                     if (stop.get()) {
                         break;
                     }
-
                     synchronized (result) {
                         if (result[0] != null) {
                             doClose = true;
@@ -3360,23 +3355,19 @@ public class Sesame28Kit {
                     }
                     sleep(100);
                 }
-
                 if (doClose) {
                     sleep(200);
                     try {
                         //SystemLog.sparql("<<<<<<<<< closing query",Sesame28Kit.class);
-
                         result[0].close();
                         times[1] = System.currentTimeMillis();
                         //SystemLog.sparql("<<<<<<<<< query closed",Sesame28Kit.class);
                         stop.set(true);
-                    }
-                    catch (QueryEvaluationException ex) {
+                    }catch (QueryEvaluationException ex) {
                         SystemLog.setIsERROR(true);
                         SystemLog.sparql(ex,Sesame28Kit.class);
                     }
-                }
-                else {
+                }else {
                     stop.set(true);
                 }
             }
@@ -3502,7 +3493,7 @@ public class Sesame28Kit {
     public Value createValue(Object resourceOrLiteral){
         //if(resourceOrLiteral instanceof URI) return (URI) resourceOrLiteral;
         if(resourceOrLiteral instanceof String) {
-            if(StringUtil.isURL(String.valueOf(resourceOrLiteral))) return createURI(resourceOrLiteral);
+            if(StringUtilities.isURL(String.valueOf(resourceOrLiteral))) return createURI(resourceOrLiteral);
             else return createLiteral(resourceOrLiteral);
         }
         if(resourceOrLiteral instanceof Resource) return (Value) resourceOrLiteral;

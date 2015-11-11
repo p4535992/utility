@@ -2,8 +2,6 @@ package com.github.p4535992.util.file;
 
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtilities;
-import com.github.p4535992.util.string.impl.StringIs;
-import com.github.p4535992.util.string.impl.StringKit;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -238,11 +236,10 @@ public class FileUtilities {
      */
     public static void copy(File destination, File source) throws IOException {
         if (!destination.exists()) createFile(destination);
-        OutputStream out = new FileOutputStream(destination);
-        try (InputStream in = new FileInputStream(source)) {
+        try (OutputStream out = new FileOutputStream(destination);
+             InputStream in = new FileInputStream(source)) {
            copy(in,out,StandardCharsets.UTF_8);
         }
-        out.close();
         SystemLog.message("Done copying contents of " + source.getName() + " to " + destination.getName());
     }
 
@@ -418,7 +415,7 @@ public class FileUtilities {
      * @param file the File to convert.
      * @return the String URI with prefix.
      */
-    public static String toString(File file){
+    public static String toStringUriWithPrefix(File file){
         return toStringUriWithPrefix(file.getAbsolutePath());
     }
 
@@ -457,7 +454,7 @@ public class FileUtilities {
      * @param filePath string of the path to the file
      * @return path to the in uri formato with prefix file:///
      */
-    private static String toStringUriWithPrefix(String filePath){
+    public static String toStringUriWithPrefix(String filePath){
         StringBuilder mapfilename = new StringBuilder( filePath ) ;
         for ( int i = 0 ; i < mapfilename.length() ; i++ ) {
             if ( mapfilename.charAt(i) == '\\' )
@@ -686,7 +683,7 @@ public class FileUtilities {
      * @return the full name package+class
      */
     private static String resolveName(String name) {
-        if (StringIs.isNullOrEmpty(name))  return name;
+        if (StringUtilities.isNullOrEmpty(name))  return name;
         if (!name.startsWith("/")) {
             Class<?> clazz = FileUtilities.class;
             while (clazz.isArray()) { clazz = clazz.getComponentType();}
@@ -753,7 +750,7 @@ public class FileUtilities {
                 digest.update(bytesBuffer, 0, bytesRead);
             }
             byte[] hashedBytes = digest.digest();
-            return StringKit.convertByteArrayToHexString(hashedBytes);
+            return StringUtilities.toHexString(hashedBytes);
         } catch (NoSuchAlgorithmException | IOException ex) {
             SystemLog.error("Could not generate hash from file");
             SystemLog.exception(ex);
@@ -842,6 +839,7 @@ public class FileUtilities {
      * Locate the specific file.
      * Return the (URL decoded) abolute pathname to the file or null.
      * @param findFile  the String name of file to search.
+     * @param basePath the String base of the path to the File.
      * @return the String path to the file.
      * @throws java.io.FileNotFoundException throw if any error is occurrred.
      */
@@ -997,7 +995,7 @@ public class FileUtilities {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            SystemLog.exception(e,FileUtilities.class);
         }
         return columns;
     }
@@ -1006,7 +1004,7 @@ public class FileUtilities {
      * Method to convert a MultipartFile to a File
      * @param multiPartFile the MultiPartFile of Spring to convert.
      * @return the File.
-     * @throws IOException
+     * @throws IOException throw if the Multipart File not exists.
      */
     public File toFile(org.springframework.web.multipart.MultipartFile multiPartFile) throws IOException {
         File convFile = new File(multiPartFile.getOriginalFilename());
@@ -1017,8 +1015,9 @@ public class FileUtilities {
     }
 
     /**
-     * Method to 'walk' within many directory under a root directory and load alll files in these..
-     * @param preload the String path to the root directory
+     * Method to 'walk' within many directory under a root directory and load alll files in these.
+     * @param preload the String path to the root directory.
+     * @return the List of File prsent in the Directory preload.
      */
     public static List<File> walk(String preload){
         return walk(new File(preload));
@@ -1027,6 +1026,7 @@ public class FileUtilities {
     /**
      * Method to 'walk' within many directory under a root directory and load alll files in these..
      * @param preload the File root directory
+     * @return the List of File prsent in the Directory preload.
      */
     public static List<File> walk(File preload){
         final List<File> listFiles = new ArrayList<>();
@@ -1241,6 +1241,7 @@ public class FileUtilities {
      *   files. But its implementation uses buffering, so it's likely good
      *   even for fairly large files
      * @param fileInput the file you want to read
+     * @param encodingInput the Charset encoding for the input File.
      * @return a list of lines
      */
     public static List<String> readSmall(File fileInput,Charset encodingInput) {
@@ -1345,7 +1346,7 @@ public class FileUtilities {
             while (line != null) {
                 line = convertUnicodeEscape(line);
                 byte[] bytes = line.getBytes("UTF-8");
-                list.add(StringKit.convertByteArrayToString(bytes));
+                list.add(StringUtilities.toString(bytes));
             }
         }
         return list;
@@ -1412,6 +1413,7 @@ public class FileUtilities {
     /**
      * Method to rewrite a file in the UTF-8 encoding
      * @param fileASCII file of input in ASCII encoding
+     * @return the File converted to UTF8 encoding.
      * @throws IOException file not found
      */
     public static File writeToUTF8(File fileASCII) throws IOException{
@@ -1426,6 +1428,7 @@ public class FileUtilities {
     /**
      * Method to rewrite a file in the ASCII encoding
      * @param fileUTF8 file of input in UTF8 encoding
+     * @return the File converted with ASCII.
      * @throws IOException file not found
      */
     public static File writeToASCII(File fileUTF8) throws IOException{
@@ -1453,7 +1456,27 @@ public class FileUtilities {
         return fileOutput;
     }
 
+    public static boolean write(Collection<String> collectionContent,File fileOutput){
+        return write(collectionContent, fileOutput,null,null);
+    }
+
+    public static boolean write(Collection<String> collectionContent,File fileOutput,Charset encodingOutput){
+        return write(collectionContent, fileOutput,null,encodingOutput);
+    }
+
     public static boolean write(Collection<String> collectionContent,File fileOutput,Charset encodingInput,Charset encodingOutput){
+        if(encodingInput!=null){
+            Collection<String> newCol = new ArrayList<>();
+            for(String s: collectionContent){
+                if(encodingInput.name().equals(StringUtilities.US_ASCII.name())) s = StringUtilities.toASCII(s);
+                if(encodingInput.name().equals(StringUtilities.UTF_8.name())) s = StringUtilities.toUTF8(s);
+                newCol.add(s);
+            }
+            collectionContent.clear();
+            collectionContent.addAll(newCol);
+            newCol.clear();
+            newCol=null;
+        }
         boolean replace = false;
         if(encodingOutput == null) encodingOutput = StandardCharsets.UTF_8;
         if(encodingOutput.name().toUpperCase().startsWith("UTF")) replace = true;
@@ -1624,26 +1647,100 @@ public class FileUtilities {
         return sw.toString();
     }
 
-    byte[] getBinaryFileContent(File fileName) throws IOException {
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(fileName));
-        ByteArrayOutputStream bs = new ByteArrayOutputStream();
-        BufferedOutputStream out = new BufferedOutputStream(bs);
-        byte[] ioBuf = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
-        out.close();
-        in.close();
+    /**
+     * Method to read the Binary Content of a File.
+     * @param fileInput the File to read.
+     * @return the arrays of Bytes of the content of the File.
+     * @throws IOException throw if the File not exists.
+     */
+    public static byte[] readBinaryFileContent(File fileInput) throws IOException {
+        ByteArrayOutputStream bs;
+        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(fileInput))) {
+            bs = new ByteArrayOutputStream();
+            try (BufferedOutputStream out = new BufferedOutputStream(bs)) {
+                byte[] ioBuf = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
+            }
+        }
         return bs.toByteArray();
+        /*//OLD METHOD
+        InputStream IPut = new FileInputStream(fileInput);
+        Vector<byte[]> BytArrsV = new Vector<>();
+        int size=0;
+        byte[] FinalVal = new byte[0];
+        int read=0;
+        try{
+            int i=0;
+            byte[] bbuf = new byte[1024];
+            while ((read  = IPut.read(bbuf, 0, bbuf.length)) > -1){
+                byte[] bbuf2 = new byte[read];
+                for (i=0; i < bbuf2.length; i++){
+                    bbuf2[i] = bbuf[i];
+                }
+                BytArrsV.addElement(bbuf2);
+                size += read;
+            }
+            FinalVal = new byte[size];
+            int j = 0;
+            for (i = 0; i < BytArrsV.size(); i++){
+                byte[] byarr = BytArrsV.elementAt(i);
+                for (int k = 0; k < byarr.length; k++){
+                    FinalVal[j++] = byarr[k];
+                }
+            }
+        }catch(Exception ex){throw ex;
+        }finally{IPut.close();}
+        return FinalVal;
+        */
+    }
+    
+    /**
+     * Convenience method for writing bytes to an OutputStream.
+     * @param fileOutput File to write.
+     * @param bbuf The contents to write to the OutputStream, OPut.
+     * @throws IOException Probably an IO Exception if any.
+     */
+    public static void writeBinaryFileContent(File fileOutput, byte[] bbuf) throws IOException {
+        /* try{OPut.write(bbuf, 0, bbuf.length);OPut.flush();
+        }catch(Exception ex){SystemLog.exception(ex,StringUtilities.class);}
+        finally{ OPut.close();}
+         */ 
+        try (BufferedInputStream in = new BufferedInputStream(new ByteArrayInputStream(bbuf))){ 
+            try(BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileOutput))){
+                byte[] ioBuf = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
+            }
+        }//try
     }
 
-    void writeBinaryFileContent(File fileName, byte[] content) throws IOException {
-        BufferedInputStream in = new BufferedInputStream(new ByteArrayInputStream(content));
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileName));
-        byte[] ioBuf = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
-        out.close();
-        in.close();
+    /**
+     * Method to append a String text to a already existent File.
+     * Important note: This method hasn't been tested yet, and was originally written a long, long time ago.
+     * @param fileToUpdate the File to update.
+     * @param textToAppend the String text to append.
+     * @throws IOException throw if any error is occurred.
+     */
+    public static void appendToFile(File fileToUpdate, String textToAppend) throws IOException {
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(fileToUpdate, true));
+            bw.write(textToAppend);
+            bw.flush();
+        } catch (IOException ioe) {
+            throw ioe;
+        } finally { // always close the file
+            if (bw != null)
+                try {
+                    bw.close();
+                } catch (IOException ioe2) {
+                    // ignore it
+                }
+        }
+
     }
+    
+ 
 
 }

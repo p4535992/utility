@@ -1,14 +1,10 @@
 package com.github.p4535992.util.database.sql;
 
-import com.github.p4535992.util.collection.CollectionKit;
-import com.github.p4535992.util.file.impl.FileCSV;
+import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.log.SystemLog;
-import com.github.p4535992.util.string.StringUtil;
-import com.github.p4535992.util.string.impl.StringIs;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.Types;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -170,13 +166,13 @@ public class SQLQuery {
     public static String deleteDuplicateRecord(String yourTable,String nameKeyColumn,String[] cols){
         return
         "WHILE EXISTS (SELECT COUNT(*) FROM "+yourTable+" GROUP BY "+
-                CollectionKit.convertArrayContentToSingleString(cols)+" HAVING COUNT(*) > 1)\n" +
+                CollectionUtilities.toString(cols)+" HAVING COUNT(*) > 1)\n" +
         "BEGIN\n" +
         "    DELETE FROM "+yourTable+" WHERE "+nameKeyColumn+" IN \n" +
         "    (\n" +
         "        SELECT MIN("+nameKeyColumn+") as [DeleteID]\n" +
         "        FROM "+yourTable+"\n" +
-        "        GROUP BY "+CollectionKit.convertArrayContentToSingleString(cols)+"\n" +
+        "        GROUP BY "+CollectionUtilities.toString(cols)+"\n" +
         "        HAVING COUNT(*) > 1\n" +
         "    )\n" +
         "END";
@@ -190,8 +186,8 @@ public class SQLQuery {
      */
     public String deleteDuplicateRecord(String yourTable,String[] cols){
         return "WITH "+yourTable+" AS ( " +
-                "SELECT ROW_NUMBER() OVER(PARTITION BY "+CollectionKit.convertArrayContentToSingleString(cols)+
-                " ORDER BY "+CollectionKit.convertArrayContentToSingleString(cols)+") AS ROW " +
+                "SELECT ROW_NUMBER() OVER(PARTITION BY "+CollectionUtilities.toString(cols)+
+                " ORDER BY "+CollectionUtilities.toString(cols)+") AS ROW " +
                 "FROM "+yourTable+") " +
                 "DELETE FROM "+yourTable+" " +
                 "WHERE ROW > 1;";
@@ -203,7 +199,7 @@ public class SQLQuery {
         boolean statement = false;
         //PREPARE THE QUERY STRING
         bQuery.append("SELECT ");
-        if(CollectionKit.isArrayEmpty(columns) || (columns.length==1 && columns[0].equals("*"))){
+        if(CollectionUtilities.isEmpty(columns) || (columns.length==1 && columns[0].equals("*"))){
             bQuery.append(" * ");
         }else{
             for(int i = 0; i < columns.length; i++){
@@ -214,7 +210,7 @@ public class SQLQuery {
             }
         }
         bQuery.append(" FROM ").append(mySelectTable).append(" ");
-        if(!CollectionKit.isArrayEmpty(columns_where)) {
+        if(!CollectionUtilities.isEmpty(columns_where)) {
             if(values_where==null){
                 statement = true;
                 //values_where = new Object[columns_where.length];
@@ -253,7 +249,7 @@ public class SQLQuery {
         int f = 0;
         for (int k = 0; k < columns.length; k++) {
             bQuery.append(columns[k]).append("=? ");
-            if(CollectionKit.isArrayEmpty(values)) {
+            if(CollectionUtilities.isEmpty(values)) {
                 if (values[k] == null) {
                     values[f] = "NULL";
                     f++;
@@ -266,7 +262,7 @@ public class SQLQuery {
                 bQuery.append(", ");
             }
         }
-        if(!CollectionKit.isArrayEmpty(columns_where)) {
+        if(!CollectionUtilities.isEmpty(columns_where)) {
             if(values_where==null){
                 statement = true;
             }
@@ -299,7 +295,7 @@ public class SQLQuery {
      * @return the String Insert Into SQL.
      */
     public static String prepareInsertIntoQuery(String myInsertTable,String[] columns, Object[] values, Integer[] types) {
-        return prepareInsertIntoQuery(myInsertTable, columns, values, CollectionKit.convertIntegersToInt(types));
+        return prepareInsertIntoQuery(myInsertTable, columns, values, CollectionUtilities.toPrimitive(types));
     }
 
     /**
@@ -506,8 +502,8 @@ public class SQLQuery {
                                        String fieldTerminator,String rowTerminator){
         StringBuilder bQuery = new StringBuilder();
         String[] columns;
-        if(hasFirstLine) columns = FileCSV.getColumns(fileCSV,true);
-        else  columns = FileCSV.getColumns(fileCSV,false);
+        if(hasFirstLine) columns = FileUtilities.getColumns(fileCSV, true);
+        else  columns = FileUtilities.getColumns(fileCSV,false);
 
         bQuery.append(SQLQuery.createTableToInsertData(database,nameTable,columns));
         bQuery.append("GO \n");
@@ -524,12 +520,12 @@ public class SQLQuery {
                                             Character linesSeparator,String nameTable){
         StringBuilder loadQuery = new StringBuilder();
         try {
-            String[] columns = FileCSV.getColumns(fileCSV,firstLine);
+            String[] columns = FileUtilities.getColumns(fileCSV,firstLine);
             loadQuery.append("LOAD DATA LOCAL INFILE '").append(fileCSV.getAbsolutePath())
                     .append("' INTO TABLE ").append(nameTable).append(" FIELDS TERMINATED BY '")
                     .append(fieldSeparator).append("'").append(" LINES TERMINATED BY '")
                     .append(linesSeparator).append(" ( ")
-                    .append(CollectionKit.convertArrayContentToSingleString(columns)).append(") ");
+                    .append(CollectionUtilities.toString(columns)).append(") ");
             SystemLog.query(loadQuery.toString());
             //SQLHelper.executeSQL(loadQuery,connection);
         }

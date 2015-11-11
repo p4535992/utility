@@ -1,7 +1,5 @@
 package com.github.p4535992.util.regex.pattern;
 
-import sun.misc.LRUCache;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -319,8 +317,8 @@ public class Patterns {
 
     // an exponent is 'e' or 'E' followed by an optionally
     // signed decimal integer.
-    private static final String Exp        = "[eE][+-]?"+Digits;
-    private static final String fpRegex    =
+    private static String Exp        = "[eE][+-]?"+Digits;
+    private static String fpRegex    =
             ("[\\x00-\\x20]*"+  // Optional leading "whitespace"
                     "[+-]?(" + // Optional sign character
                     "NaN|" +           // "NaN" string
@@ -400,20 +398,25 @@ public class Patterns {
     }
 
     // A cache of the last few recently used Patterns
-    private static LRUCache<String,Pattern> patternCache =new LRUCache<String,Pattern>(7) {
+    /*
+    private static final sun.misc.LRUCache<String,Pattern> patternCache =
+            new sun.misc.LRUCache<String,Pattern>(7) {
+        @Override
         protected Pattern create(String s) {
             return Pattern.compile(s);
         }
-
+        @Override
         protected boolean  hasName(Pattern p, String s) {
             return p.pattern().equals(s);
         }
     };
+    */
 
     public static final Pattern IS_INTEGER = isInteger();
 
     public static Pattern isInteger() {
-        if (integerPattern == null) {integerPattern = patternCache.forName(buildIntegerPatternString());}
+        //if (integerPattern == null) {integerPattern = patternCache.forName(buildIntegerPatternString());}
+        if (integerPattern == null) {integerPattern = Pattern.compile(buildIntegerPatternString(),Pattern.CASE_INSENSITIVE);}
         return integerPattern;
     }
 
@@ -457,6 +460,8 @@ public class Patterns {
         return bp;
     }
 
+
+    public static final Pattern  GET_LAST_PART_OF_URI = Pattern.compile("([^/\\#])+(?=/$|$)",Pattern.CASE_INSENSITIVE);
 
 
     /**

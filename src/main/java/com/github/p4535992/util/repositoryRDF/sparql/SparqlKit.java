@@ -240,8 +240,8 @@ public class SparqlKit {
 
     /**
      * Given a root, return me the tree graph associated to that root.
-     * @param uriGraph
-     * @return
+     * @param uriGraph the String Uri of the Graph.
+     * @return the String SPARQL Query.
      */
     public static String getGraph(String uriGraph){
         return "CONSTRUCT {?s ?p ?o} { GRAPH <"+uriGraph+"> { ?s ?p ?o } }";
@@ -249,13 +249,19 @@ public class SparqlKit {
 
     /**
      * Given a root, delete the tree graph associated to that root.
-     * @param uriGraph
-     * @return
+     * @param uriGraph the String Uri of the Graph.
+     * @return the String SPARQL Query.
      */
     public static String clearGraph(String uriGraph){
         return "CLEAR GRAPH <"+uriGraph+">";
     }
 
+    /**
+     * Method to insert data in a specific Graph.
+     * @param uriGraph the String Uri of the Graph.
+     * @param listTriple the list of Triple to insert.
+     * @return the String SPARQL Query.
+     */
     public static String insertData(String uriGraph,List<String[]> listTriple){
         return "INSERT DATA { GRAPH <"+uriGraph+"> { ... } }";
     }

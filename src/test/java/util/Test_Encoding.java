@@ -6,8 +6,8 @@
 
 package util;
 
+import com.github.p4535992.util.file.FileUtilities;
 
-import com.github.p4535992.util.file.impl.EncodingUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -26,16 +26,16 @@ public class Test_Encoding {
                 //s.getBytes("UTF-16")
 		//treat as a small file
 		List<String> lines;
-		File f = new File("");
+		File f = new File("output");
                 //lines = text.readSmallTextFile(FILE_NAME);
                 //log(lines);
                 //lines.add("This is a line added in code.");
                 //text.writeSmallTextFile(lines, FILE_NAME);
                 
                 //treat as a large file - use some buffering
-                lines = EncodingUtil.convertUnicodeEscapeToUTF8(f);
+                lines = FileUtilities.toUTF8(f);
                 //lines = readLargerTextFileWithReturn(FileUtil.filename(f));                     
-                EncodingUtil.writeLargerTextFileWithReplace2("output", lines);
+                FileUtilities.write(lines,f);
             }
             
           //main
