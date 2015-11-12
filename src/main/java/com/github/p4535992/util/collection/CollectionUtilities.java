@@ -4,6 +4,7 @@ import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionUtilities;
 import com.github.p4535992.util.string.StringUtilities;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -903,6 +904,22 @@ public class CollectionUtilities {
         return Array.getLength(array);
     }
 
+    public static <T> T[] subarray(T[] array,int offset,int length){
+        if (array == null) {
+            throw new NullPointerException();
+        } else if ((offset < 0) || (offset > array.length) || (length < 0) ||
+                ((offset + length) > array.length) || ((offset + length) < 0)) {
+            throw new IndexOutOfBoundsException();
+        } else if (length == 0) {
+            return null;
+        }
+        T[] newArray = (T[]) Array.newInstance(Object.class, length);
+        for (int i = 0 ; i < length ; i++) {
+            newArray[i] = array[offset + i];
+        }
+        return newArray;
+
+    }
 
 
 }

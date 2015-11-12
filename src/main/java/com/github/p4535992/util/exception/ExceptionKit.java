@@ -1,9 +1,13 @@
 package com.github.p4535992.util.exception;
 
+import com.github.p4535992.util.log.SystemLog;
 import org.slf4j.Logger;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,6 +86,106 @@ public class ExceptionKit extends  RuntimeException{
                 System.out.println("i: "+i+", freeMemory: "+Runtime.getRuntime().freeMemory()/(1024*1024));
             }
         }
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+    //Exception managed
+    //------------------------------------------------------------------------------------------------------------------
+    /**
+     * Handle the given reflection exception. Should only be called if no
+     * checked exception is expected to be thrown by the target method.
+     * <p>Throws the underlying RuntimeException or Error in case of an
+     * InvocationTargetException with such a root cause. Throws an
+     * IllegalStateException with an appropriate message else.
+     * @param ex the reflection exception to handle
+     */
+    public static void handleReflectionException(Exception ex) {
+        if (ex instanceof NoSuchMethodException) {
+            throw new IllegalStateException("Method not found: " + ex.getMessage());
+        }
+        if (ex instanceof IllegalAccessException) {
+            throw new IllegalStateException("Could not access method: " + ex.getMessage());
+        }
+        if (ex instanceof InvocationTargetException) {
+            handleInvocationTargetException((InvocationTargetException) ex);
+        }
+        if (ex instanceof RuntimeException) {
+            throw (RuntimeException) ex;
+        }
+        throw new UndeclaredThrowableException(ex);
+    }
+
+    /**
+     * Handle the given invocation target exception. Should only be called if no
+     * checked exception is expected to be thrown by the target method.
+     * <p>Throws the underlying RuntimeException or Error in case of such a root
+     * cause. Throws an IllegalStateException else.
+     * @param ex the invocation target exception to handle
+     */
+    public static void handleInvocationTargetException(InvocationTargetException ex) {
+        rethrowRuntimeException(ex.getTargetException());
+    }
+
+    /**
+     * Rethrow the given {@link Throwable exception}, which is presumably the
+     * <em>target exception</em> of an {@link InvocationTargetException}. Should
+     * only be called if no checked exception is expected to be thrown by the
+     * target method.
+     * <p>Rethrows the underlying exception cast to an {@link RuntimeException} or
+     * {@link Error} if appropriate; otherwise, throws an
+     * {@link IllegalStateException}.
+     * @param ex the exception to rethrow
+     * @throws RuntimeException the rethrown exception
+     */
+    public static void rethrowRuntimeException(Throwable ex) {
+        if (ex instanceof RuntimeException) {
+            throw (RuntimeException) ex;
+        }
+        if (ex instanceof Error) {
+            throw (Error) ex;
+        }
+        throw new UndeclaredThrowableException(ex);
+    }
+
+    /**
+     * Rethrow the given {@link Throwable exception}, which is presumably the
+     * <em>target exception</em> of an {@link InvocationTargetException}. Should
+     * only be called if no checked exception is expected to be thrown by the
+     * target method.
+     * <p>Rethrows the underlying exception cast to an {@link Exception} or
+     * {@link Error} if appropriate; otherwise, throws an
+     * {@link IllegalStateException}.
+     * @param ex the exception to rethrow
+     * @throws Exception the rethrown exception (in case of a checked exception)
+     */
+    public static void rethrowException(Throwable ex) throws Exception {
+        if (ex instanceof Exception) {
+            throw (Exception) ex;
+        }
+        if (ex instanceof Error) {
+            throw (Error) ex;
+        }
+        throw new UndeclaredThrowableException(ex);
+    }
+
+    /**
+     * Determine whether the given method explicitly declares the given
+     * exception or one of its superclasses, which means that an exception of
+     * that type can be propagated as-is within a reflective invocation.
+     * @param method the declaring method
+     * @param exceptionType the exception to throw
+     * @return {@code true} if the exception can be thrown as-is;
+     * {@code false} if it needs to be wrapped
+     */
+    public static boolean declaresException(Method method, Class<?> exceptionType) {
+        if(method==null) SystemLog.error("Method must not be null");
+        Class<?>[] declaredExceptions = method.getExceptionTypes();
+        for (Class<?> declaredException : declaredExceptions) {
+            if (declaredException.isAssignableFrom(exceptionType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 

@@ -1,4 +1,4 @@
-package com.github.p4535992.util.log;
+package com.github.p4535992.util.log.other;
 
 import java.io.IOException;
 import java.util.logging.*;

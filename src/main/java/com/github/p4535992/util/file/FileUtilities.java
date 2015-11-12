@@ -1465,6 +1465,7 @@ public class FileUtilities {
     }
 
     public static boolean write(Collection<String> collectionContent,File fileOutput,Charset encodingInput,Charset encodingOutput){
+        boolean replace = false;
         if(encodingInput!=null){
             Collection<String> newCol = new ArrayList<>();
             for(String s: collectionContent){
@@ -1472,18 +1473,16 @@ public class FileUtilities {
                 if(encodingInput.name().equals(StringUtilities.UTF_8.name())) s = StringUtilities.toUTF8(s);
                 newCol.add(s);
             }
+            if(encodingInput.name().equals(StringUtilities.UTF_8.name())) replace = true;
             collectionContent.clear();
             collectionContent.addAll(newCol);
             newCol.clear();
-            newCol=null;
         }
-        boolean replace = false;
         if(encodingOutput == null) encodingOutput = StandardCharsets.UTF_8;
         if(encodingOutput.name().toUpperCase().startsWith("UTF")) replace = true;
         SystemLog.message("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
         Path path = Paths.get(fileOutput.getAbsolutePath());
         try (BufferedWriter writer = Files.newBufferedWriter(path, encodingOutput)){
-
             for(String line : collectionContent){
                 if(replace){
                     for (Map.Entry<String, String> entry : unicodeCodePoint.entrySet()) {
@@ -1555,7 +1554,7 @@ public class FileUtilities {
      * Method to read the cotnetn of a file line by line.
      * @param fileInput the file to read.
      * @param separator the Char separator.
-     * @return the String content ofd the file.
+     * @return the String content Mapped of the file.
      */
     public static SimpleParameters readFile(File fileInput, char separator) {
         SimpleParameters params = new SimpleParameters();

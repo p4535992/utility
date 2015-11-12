@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.text.DateFormat;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 /**
@@ -27,6 +28,7 @@ public class SystemLog<T> extends OutputStream{
     private static java.lang.reflect.ParameterizedType pt;
     private static Class<?> cl ;
     private static String clName ;
+    private static PrintLog printLog;
 
     /** {@code org.slf4j.Logger} */
     private static final org.slf4j.Logger SLF4JLogger = 
@@ -118,7 +120,9 @@ public class SystemLog<T> extends OutputStream{
             SystemLog.logfile =
                     new File(System.getProperty("user.dir")+File.separator
                             + LOGNAME + "_" +  timeStamp + "." + SUFFIX);
-            PrintLog.start(logfile.getAbsolutePath());
+            printLog = new PrintLog(logfile);
+            printLog.start();
+            //PrintLog.start(logfile.getAbsolutePath());
         }catch (Exception ex) {
             java.util.logging.Logger.getLogger(SystemLog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -128,7 +132,9 @@ public class SystemLog<T> extends OutputStream{
         try {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             SystemLog.logfile = new File(PATHFILE + File.separator + LOGNAME + "_" + timeStamp + "." + SUFFIX);
-            PrintLog.start(logfile.getAbsolutePath());
+            printLog = new PrintLog(logfile);
+            printLog.start();
+            //PrintLog.start(logfile.getAbsolutePath());
         }catch (Exception ex) {
             java.util.logging.Logger.getLogger(SystemLog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -139,12 +145,13 @@ public class SystemLog<T> extends OutputStream{
     }
 
 
-   /* *//**
+   /**
      * Now all data written to System.out should be redirected into the file
      * "c:\\data\\system.out.txt". Keep in mind though, that you should make
      * sure to flush System.out and close the file before the JVM shuts down,
      * to be sure that all data written to System.out is actually flushed to the file.
-     *//*
+     */
+   /*
     private void setStream(){
         try{
             if(isPRINT) {
@@ -207,6 +214,353 @@ public class SystemLog<T> extends OutputStream{
 
     }*/
 
+
+
+
+    @Override
+    public void close() throws IOException {
+        // Restore the original standard output and standard error.
+        // Then close the log file.
+        /*System.setOut(oldStdout);
+        System.setErr(oldStderr);
+        if(logStreamFile!=null) logStreamFile.close();*/
+        if(outputStreams != null) {
+            for (OutputStream out : outputStreams) {
+                if(out!=null)out.close();
+            }
+        }
+        printLog.stop();
+    }
+
+    @Override
+    public void flush() throws IOException{
+        for (OutputStream out: outputStreams) {
+            if (out != null) out.flush();
+        }
+    }
+
+    @Override
+    public void write(int b) throws IOException{
+        for (OutputStream out : outputStreams) {
+            if(out!=null)out.write(b);
+        }
+    }
+
+    @Override
+    public void write(byte[] b) throws IOException{
+        for (OutputStream out : outputStreams) {
+            if(out!=null)out.write(b);
+        }
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException{
+        for (OutputStream out : outputStreams) {
+            if(out!=null)out.write(b, off,len);
+        }
+    }
+
+        /*public static void logStackTrace(Exception e, org.slf4j.Logger logger) {
+        logger.debug(e.getMessage());
+        for (StackTraceElement stackTrace : e.getStackTrace()) {
+            logger.error(stackTrace.toString());
+        }
+    }
+
+    public static void logException(Exception e, org.slf4j.Logger logger) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        logger.error(sw.toString());
+    }*/
+
+    /**
+     * Created by 4535992 on 05/11/2015.
+     */
+    public static class PrintLog extends PrintStream {
+
+        private static SimpleDateFormat logTimestamp = new SimpleDateFormat("[HH:mm:ss]");
+
+        //-----------------------------------------------
+        //Constructor
+        //-----------------------------------------------
+
+        public PrintLog(PrintStream out) {
+            super(out);
+        }
+
+        public PrintLog(OutputStream out) {
+            super(out, false);
+        }
+
+        public PrintLog(OutputStream out, boolean autoFlush) {
+            super(out, autoFlush);
+        }
+
+        public PrintLog(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException {
+            super(out,autoFlush,encoding);
+        }
+
+        public PrintLog(String fileName) throws FileNotFoundException {
+            this(new FileOutputStream(fileName),false);
+        }
+
+        public PrintLog(String fileName,String csn) throws FileNotFoundException, UnsupportedEncodingException {
+            super(new FileOutputStream(fileName), false, csn);
+        }
+
+        public PrintLog(File file) throws FileNotFoundException {
+            super(new FileOutputStream(file), false);
+        }
+
+        public PrintLog(File file, String csn)throws FileNotFoundException, UnsupportedEncodingException {
+            super(new FileOutputStream(file), false, csn );
+        }
+
+        //------------------------------------
+        // SETTER
+        //------------------------------------
+
+        public static File setFile(String fileName){
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            return new File(System.getProperty("user.dir")+File.separator +  fileName + "_" +  timeStamp + ".log");
+        }
+
+        public static String setName(String fileName){
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            return System.getProperty("user.dir")+File.separator +  fileName + "_" +  timeStamp + ".log";
+        }
+
+    /*private OutputStream setStream(String fileName) throws FileNotFoundException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        return new FileOutputStream(
+                new File(System.getProperty("user.dir")+File.separator +  fileName + "_" +  timeStamp + ".log"));
+    }*/
+
+        //------------------------------------
+        //Methods
+        //------------------------------------
+
+        @Override
+        public void flush() {super.flush();}
+        @Override
+        public void close() {
+            // Restore the original standard output and standard error.
+            // Then close the log file.
+            System.setOut(oldStdout);
+            System.setErr(oldStderr);
+            try {
+                logStreamFile.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+            }
+            super.close();
+        }
+        @Override
+        public boolean checkError() {return super.checkError();}
+
+        @Override
+        public void write(int b) {
+            if(logStreamFile!=null) {
+                try {
+                    logStreamFile.write(b);
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                    setError();
+                }
+            }
+            super.write(b);
+        }
+
+        @Override
+        public void write(byte buf[], int off, int len) {
+            if(logStreamFile!=null) {
+                try {
+                    logStreamFile.write(buf, off, len);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    setError();
+                }
+            }
+            super.write(buf,off,len);
+        }
+
+        //---------------------------------------------------
+        // Methods that do not terminate lines
+        //---------------------------------------------------
+
+        @Override
+        public void print(boolean b) {
+            super.print(b);
+        }
+        @Override
+        public void print(char c) {
+            super.print(c);
+        }
+        @Override
+        public void print(int i) {
+            super.print(i);
+        }
+        @Override
+        public void print(long l) {
+            super.print(l);
+        }
+        @Override
+        public void print(float f) {
+            super.print(f);
+        }
+        @Override
+        public void print(double d) {super.print(d);}
+        @Override
+        public void print(char s[]) {super.print(s);}
+        @Override
+        public void print(String s) { super.print(s);}
+        @Override
+        public void print(Object obj) {
+            super.print(obj);
+        }
+
+        //---------------------------------------------------
+    /* Methods that do terminate lines */
+        //---------------------------------------------------
+
+        @Override
+        public void println() {super.println();}
+        @Override
+        public void println(boolean x) {super.println(x);}
+        @Override
+        public void println(char x) { super.println(x);}
+        @Override
+        public void println(int x) {super.println(x);}
+        @Override
+        public void println(long x) {super.println(x); }
+        @Override
+        public void println(float x) {super.println(x); }
+        @Override
+        public void println(double x) {super.println(x); }
+        @Override
+        public void println(char x[]) {super.println(x); }
+        @Override
+        public void println(String x) {super.println(x); }
+        @Override
+        public void println(Object x) { super.println(x); }
+
+        @Override
+        public PrintLog printf(String format, Object ... args) {
+            return (PrintLog) super.printf(format, args);
+        }
+        @Override
+        public PrintLog printf(Locale l, String format, Object ... args) {
+            return (PrintLog) super.printf(l,format, args);
+        }
+        @Override
+        public PrintLog format(String format, Object ... args) {
+            return (PrintLog) super.format(format, args);
+        }
+        @Override
+        public PrintLog format(Locale l, String format, Object ... args) {
+            return (PrintLog) super.format(l,format, args);
+        }
+        @Override
+        public PrintLog append(CharSequence csq) {return (PrintLog) super.append(csq);}
+        @Override
+        public PrintLog append(CharSequence csq, int start, int end) {return (PrintLog) super.append(csq,start,end);}
+        @Override
+        public PrintLog append(char c) {return (PrintLog) super.append(c); }
+
+        //------------------------------------------------------------------------
+        //New Methods
+        //------------------------------------------------------------------------
+
+        static PrintStream oldStdout;
+        static PrintStream oldStderr;
+        static OutputStream logStreamFile;
+        static File logFile;
+
+        public static OutputStream getLogStreamFile() {
+            return logStreamFile;
+        }
+
+        public static void setLogStreamFile(OutputStream logStreamFile) {
+            PrintLog.logStreamFile = logStreamFile;
+        }
+
+        /**
+         * Now all data written to System.out should be redirected into the file
+         * "c:\\data\\system.out.txt". Keep in mind though, that you should make
+         * sure to flush System.out and close the file before the JVM shuts down,
+         * to be sure that all data written to System.out is actually flushed to the file.
+         */
+        @SuppressWarnings("rawtypes")
+        public static void start(){
+            // Save current settings for later restoring.
+            oldStdout = System.out;
+            oldStderr = System.err;
+            SystemLog multiOut = new SystemLog(System.out);
+            SystemLog multiErr = new SystemLog(System.err);
+            PrintLog stdout= new PrintLog(multiOut);
+            PrintLog stderr= new PrintLog(multiErr);
+            System.setOut(stdout);
+            System.setErr(stderr);
+        }
+
+        @SuppressWarnings("rawtypes")
+        public static void start(String fileName) throws FileNotFoundException {
+            oldStdout = System.out;
+            oldStderr = System.err;
+            logFile = new File(fileName);
+            logStreamFile = new PrintStream(
+                    new BufferedOutputStream(
+                            new FileOutputStream(fileName)));
+            SystemLog multiOut = new SystemLog(System.out,logStreamFile);
+            SystemLog multiErr = new SystemLog(System.err,logStreamFile);
+            PrintLog stdout= new PrintLog(multiOut);
+            PrintLog stderr= new PrintLog(multiErr);
+            System.setOut(stdout);
+            System.setErr(stderr);
+        }
+
+        @SuppressWarnings("rawtypes")
+        public void start(File file) throws FileNotFoundException {
+            // Save current settings for later restoring.
+            oldStdout = System.out;
+            oldStderr = System.err;
+            logFile = file;
+            logStreamFile = new PrintStream(
+                    new BufferedOutputStream(
+                            new FileOutputStream(file)));
+            SystemLog multiOut = new SystemLog(System.out,logStreamFile);
+            SystemLog multiErr = new SystemLog(System.err,logStreamFile);
+            PrintLog stdout= new PrintLog(multiOut);
+            PrintLog stderr= new PrintLog(multiErr);
+            System.setOut(stdout);
+            System.setErr(stderr);
+        }
+
+        /**
+         *  Ceases logging and restores the original settings.
+         */
+        public void stop(){
+            // Restore the original standard output and standard error.
+            // Then close the log file.
+            System.setOut(oldStdout);
+            System.setErr(oldStderr);
+            try {
+                if (logStreamFile != null) {
+                    logStreamFile.close();
+                }
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    // Logging Methods
+    //------------------------------------------------------------------------------------------------------------------
     /**
      * Writes a message to the log.
      * @param logEntry message to write as a log entry
@@ -215,7 +569,7 @@ public class SystemLog<T> extends OutputStream{
     protected static void write(String logEntry) {
         try {
             if (logEntry != null) {
-            if (isLogOff) {
+                if (isLogOff) {
                     if(isInline){
                         if (isERROR) System.err.print(logEntry);
                         else System.out.print(logEntry);
@@ -260,7 +614,7 @@ public class SystemLog<T> extends OutputStream{
                         }
                     }
                 }//if logOff...
-             }
+            }
         }catch(Exception e){
             e.printStackTrace();
         }finally{
@@ -404,28 +758,46 @@ public class SystemLog<T> extends OutputStream{
         level = Level.ABORT;
         isERROR=true;
         if(thisClass!=null) {
-            if(isLog4j){ log4j = org.apache.log4j.Logger.getLogger(thisClass); log4j.info(logEntry); System.exit(rc);}
-            if(isSlf4j){ slf4j = org.slf4j.LoggerFactory.getLogger(thisClass); slf4j.info(logEntry); System.exit(rc);}
-            else  write(logEntry); System.exit(rc);
+            if(isLogUtil){
+                logUtil = Logger.getLogger(thisClass.getName());
+                logUtil.log(java.util.logging.Level.SEVERE, logEntry);
+            }
+            if(isLog4j){
+                log4j = org.apache.log4j.Logger.getLogger(thisClass);
+                log4j.fatal(logEntry);
+            }
+            if(isSlf4j) {
+                slf4j = org.slf4j.LoggerFactory.getLogger(thisClass);
+                slf4j.error(logEntry);
+            }
+            else  write(logEntry);;
         }
-        else  write(logEntry); System.exit(rc);
+        else  write(logEntry);
+        System.exit(rc);
     }
 
-    public static void throwException(Throwable th){ throwException(th.getMessage(), th, null);}
-    public static void throwException(Exception e){throwException(e.getMessage() + "->" + e.getCause().toString(), null, null);}
+    public static void throwException(Throwable th){
+        throwException( th.getClass().getName() + ": " + th.getMessage(), new Throwable(th.getCause()), th.getClass());}
+    public static void throwException(Exception e){
+        throwException( e.getClass().getName() + ": " + e.getMessage(), new Throwable(e.getCause()), e.getClass());}
     public static void throwException(String logEntry,Throwable th,Class<?> thisClass){
         level = Level.THROW;
         isERROR=true;
         if(thisClass!=null) {
+            if(isLogUtil){
+                logUtil = Logger.getLogger(thisClass.getName());
+                if(th!=null)logUtil.log(java.util.logging.Level.SEVERE, logEntry, th);
+                else logUtil.log(java.util.logging.Level.SEVERE, logEntry);
+            }
             if(isLog4j){
                 log4j = org.apache.log4j.Logger.getLogger(thisClass);
-                if(th!=null)log4j.info(logEntry,th);
-                else log4j.info(logEntry);
+                if(th!=null)log4j.fatal(logEntry, th);
+                else log4j.fatal(logEntry);
             }
             if(isSlf4j) {
                 slf4j = org.slf4j.LoggerFactory.getLogger(thisClass);
-                if (th != null) slf4j.info(logEntry, th);
-                else slf4j.info(logEntry);
+                if (th != null) slf4j.error(logEntry, th);
+                else slf4j.error(logEntry);
             }
             else write(logEntry);
         }
@@ -433,7 +805,7 @@ public class SystemLog<T> extends OutputStream{
     }
 
     public static void exception(Exception e){ exception(
-            e.getClass().getName() + ": " + e.getMessage(), new Throwable(e.getCause()), null);}
+            e.getClass().getName() + ": " + e.getMessage(), new Throwable(e.getCause()), e.getClass());}
     public static void exception(Exception e,Class<?> clazz){ exception(
             e.getClass().getName() + ": " + e.getMessage(), new Throwable(e.getCause()), clazz);}
     public static void exception(String logEntry){ exception(logEntry, new Throwable(logEntry), null);}
@@ -444,19 +816,19 @@ public class SystemLog<T> extends OutputStream{
         if(thisClass!=null) {
             if(isLogUtil){
                 logUtil = Logger.getLogger(thisClass.getName());
-                 if(th!=null)logUtil.log(java.util.logging.Level.SEVERE, logEntry, th);
-                 else logUtil.log(java.util.logging.Level.SEVERE, logEntry);           
+                if(th!=null)logUtil.log(java.util.logging.Level.SEVERE, logEntry, th);
+                else logUtil.log(java.util.logging.Level.SEVERE, logEntry);
             }
             if(isLog4j){
                 log4j = org.apache.log4j.Logger.getLogger(thisClass);
-                if(th!=null)log4j.info(logEntry,th);
-                else log4j.info(logEntry);
+                if(th!=null)log4j.fatal(logEntry,th);
+                else log4j.fatal(logEntry);
             }
             if(isSlf4j) {
                 slf4j = org.slf4j.LoggerFactory.getLogger(thisClass);
-                if (th != null) slf4j.info(logEntry, th);
-                else slf4j.info(logEntry);
-            }         
+                if (th != null) slf4j.error(logEntry, th);
+                else slf4j.error(logEntry);
+            }
             else write(logEntry);
         }
         else write(logEntry);
@@ -465,49 +837,6 @@ public class SystemLog<T> extends OutputStream{
     public static void exceptionAndAbort(Exception e){
         exception(e);
         abort(0);
-    }
-
-
-    @Override
-    public void close() throws IOException {
-        // Restore the original standard output and standard error.
-        // Then close the log file.
-        /*System.setOut(oldStdout);
-        System.setErr(oldStderr);
-        if(logStreamFile!=null) logStreamFile.close();*/
-        if(outputStreams != null) {
-            for (OutputStream out : outputStreams) {
-                out.close();
-            }
-        }
-        PrintLog.stop();
-    }
-
-    @Override
-    public void flush() throws IOException{
-        for (OutputStream out: outputStreams)
-            out.flush();
-    }
-
-    @Override
-    public void write(int b) throws IOException{
-        for (OutputStream out : outputStreams) {
-            out.write(b);
-        }
-    }
-
-    @Override
-    public void write(byte[] b) throws IOException{
-        for (OutputStream out : outputStreams) {
-            out.write(b);
-        }
-    }
-
-    @Override
-    public void write(byte[] b, int off, int len) throws IOException{
-        for (OutputStream out : outputStreams) {
-            out.write(b, off,len);
-        }
     }
 
     public enum Level {
@@ -535,23 +864,6 @@ public class SystemLog<T> extends OutputStream{
             return prefix;
         }
     }
-
-        /*public static void logStackTrace(Exception e, org.slf4j.Logger logger) {
-        logger.debug(e.getMessage());
-        for (StackTraceElement stackTrace : e.getStackTrace()) {
-            logger.error(stackTrace.toString());
-        }
-    }
-
-    public static void logException(Exception e, org.slf4j.Logger logger) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        e.printStackTrace(pw);
-        logger.error(sw.toString());
-    }*/
-
-
-        
 }
 
 

@@ -72,7 +72,7 @@
         <language-level>1.7</language-level>
         <!-- Version of the Maven properties -->
         <maven-eclipse-plugin.version>2.9</maven-eclipse-plugin.version>
-        <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
         <maven-source-plugin.version>2.3</maven-source-plugin.version>
         <maven-javadoc-plugin.version>2.3</maven-javadoc-plugin.version>
         <maven-exec-plugin.version>1.2</maven-exec-plugin.version>
@@ -193,8 +193,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>${org.springframework.version}</version>
+            <artifactId>spring-web</artifactId>          
             <optional>true</optional>
         </dependency>
         <!-- ============= -->

@@ -1,4 +1,4 @@
-package com.github.p4535992.util.log;
+package com.github.p4535992.util.log.other;
 
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtilities;
@@ -241,7 +241,7 @@ public class PrintLog extends PrintStream {
         System.setOut(stdout);
         System.setErr(stderr);
     }
-
+    
     @SuppressWarnings("rawtypes")
     public static void start(String fileName) throws FileNotFoundException {
         oldStdout = System.out;
