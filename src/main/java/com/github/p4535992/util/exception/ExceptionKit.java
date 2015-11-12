@@ -188,5 +188,19 @@ public class ExceptionKit extends  RuntimeException{
         return false;
     }
 
+      /*public static void logStackTrace(Exception e, org.slf4j.Logger logger) {
+        logger.debug(e.getMessage());
+        for (StackTraceElement stackTrace : e.getStackTrace()) {
+            logger.error(stackTrace.toString());
+        }
+    }
+
+    public static void logException(Exception e, org.slf4j.Logger logger) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        logger.error(sw.toString());
+    }*/
+
 
 }

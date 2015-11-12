@@ -1,4 +1,4 @@
-package com.github.p4535992.util.log.other;
+package com.github.p4535992.util.log.formatter;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

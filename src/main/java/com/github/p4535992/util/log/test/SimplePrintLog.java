@@ -1,4 +1,6 @@
-package com.github.p4535992.util.log;
+package com.github.p4535992.util.log.test;
+
+import com.github.p4535992.util.log.SystemLog;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -7,43 +9,41 @@ import java.util.*;
 /**
  * Created by 4535992 on 05/11/2015.
  */
-public class PrintLog extends PrintStream {
-
-    private static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(SystemLog.class);
+public class SimplePrintLog extends PrintStream {
 
     //-----------------------------------------------
     //Constructor
     //-----------------------------------------------
 
-    public PrintLog(PrintStream out) {
+    public SimplePrintLog(PrintStream out) {
         super(out);
     }
 
-    public PrintLog(OutputStream out) {
+    public SimplePrintLog(OutputStream out) {
         super(out, false);
     }
 
-    public PrintLog(OutputStream out, boolean autoFlush) {
+    public SimplePrintLog(OutputStream out, boolean autoFlush) {
         super(out, autoFlush);
     }
 
-    public PrintLog(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException {
+    public SimplePrintLog(OutputStream out, boolean autoFlush, String encoding) throws UnsupportedEncodingException {
         super(out,autoFlush,encoding);
     }
 
-    public PrintLog(String fileName) throws FileNotFoundException {
+    public SimplePrintLog(String fileName) throws FileNotFoundException {
         this(new FileOutputStream(fileName),false);
     }
 
-    public PrintLog(String fileName,String csn) throws FileNotFoundException, UnsupportedEncodingException {
+    public SimplePrintLog(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException {
         super(new FileOutputStream(fileName), false, csn);
     }
 
-    public PrintLog(File file) throws FileNotFoundException {
+    public SimplePrintLog(File file) throws FileNotFoundException {
         super(new FileOutputStream(file), false);
     }
 
-    public PrintLog(File file, String csn)throws FileNotFoundException, UnsupportedEncodingException {
+    public SimplePrintLog(File file, String csn)throws FileNotFoundException, UnsupportedEncodingException {
         super(new FileOutputStream(file), false, csn );
     }
 
@@ -72,12 +72,12 @@ public class PrintLog extends PrintStream {
 
     @Override
     public void write(int b) {
-        super.write(b);//go to SystemLog
+        super.write(b);//go to SimpleLog
     }
 
     @Override
     public void write(byte buf[], int off, int len) {
-        super.write(buf,off,len); //go to SystemLog
+        super.write(buf,off,len);//go to SimpleLog
     }
 
     //---------------------------------------------------
@@ -141,27 +141,27 @@ public class PrintLog extends PrintStream {
     public void println(Object x) { super.println(x); }
 
     @Override
-    public PrintLog printf(String format, Object ... args) {
-        return (PrintLog) super.printf(format, args);
+    public SimplePrintLog printf(String format, Object ... args) {
+        return (SimplePrintLog) super.printf(format, args);
     }
     @Override
-    public PrintLog printf(Locale l, String format, Object ... args) {
-        return (PrintLog) super.printf(l,format, args);
+    public SimplePrintLog printf(Locale l, String format, Object ... args) {
+        return (SimplePrintLog) super.printf(l,format, args);
     }
     @Override
-    public PrintLog format(String format, Object ... args) {
-        return (PrintLog) super.format(format, args);
+    public SimplePrintLog format(String format, Object ... args) {
+        return (SimplePrintLog) super.format(format, args);
     }
     @Override
-    public PrintLog format(Locale l, String format, Object ... args) {
-        return (PrintLog) super.format(l,format, args);
+    public SimplePrintLog format(Locale l, String format, Object ... args) {
+        return (SimplePrintLog) super.format(l,format, args);
     }
     @Override
-    public PrintLog append(CharSequence csq) {return (PrintLog) super.append(csq);}
+    public SimplePrintLog append(CharSequence csq) {return (SimplePrintLog) super.append(csq);}
     @Override
-    public PrintLog append(CharSequence csq, int start, int end) {return (PrintLog) super.append(csq,start,end);}
+    public SimplePrintLog append(CharSequence csq, int start, int end) {return (SimplePrintLog) super.append(csq,start,end);}
     @Override
-    public PrintLog append(char c) {return (PrintLog) super.append(c); }
+    public SimplePrintLog append(char c) {return (SimplePrintLog) super.append(c); }
 
     //------------------------------------------------------------------------
     //New Methods
@@ -192,27 +192,21 @@ public class PrintLog extends PrintStream {
         oldStderr = System.err;
         SystemLog multiOut;
         SystemLog multiErr;
-
-        if(SystemLog.isLog4j) {
-            System.setOut(createLoggingProxyOut(System.out));
-            System.setErr(createLoggingProxyErr(System.err));
+        if(file.getPath().isEmpty()){
+            multiOut = new SystemLog(System.out);
+            multiErr = new SystemLog(System.err);
         }else {
-            if (file.getPath().isEmpty()) {
-                multiOut = new SystemLog(System.out);
-                multiErr = new SystemLog(System.err);
-            } else {
-                logFile = file;
-                logStreamFile = new PrintStream(
-                        new BufferedOutputStream(
-                                new FileOutputStream(file)));
-                multiOut = new SystemLog(System.out, logStreamFile);
-                multiErr = new SystemLog(System.err, logStreamFile);
-            }
-            PrintLog stdout = new PrintLog(multiOut);
-            PrintLog stderr = new PrintLog(multiErr);
-            System.setOut(stdout);
-            System.setErr(stderr);
+            logFile = file;
+            logStreamFile = new PrintStream(
+                    new BufferedOutputStream(
+                            new FileOutputStream(file)));
+            multiOut = new SystemLog(System.out, logStreamFile);
+            multiErr = new SystemLog(System.err, logStreamFile);
         }
+        SimplePrintLog stdout= new SimplePrintLog(multiOut);
+        SimplePrintLog stderr= new SimplePrintLog(multiErr);
+        System.setOut(stdout);
+        System.setErr(stderr);
     }
 
     /**
@@ -221,32 +215,38 @@ public class PrintLog extends PrintStream {
      *  Then close the log file.
      */
     public static void stop(){
+        System.setOut(oldStdout);
+        System.setErr(oldStderr);
         try {
             if (logStreamFile != null) {
                 logStreamFile.close();
             }
-            System.setOut(oldStdout);
-            System.setErr(oldStderr);
         }catch(IOException e){
             e.printStackTrace();
         }
     }
 
-    public static PrintStream createLoggingProxyOut(final PrintStream realPrintStream) {
-        return new PrintStream(realPrintStream) {
-            public void print(final String string) {
-                realPrintStream.print(string);
-                logger.info(string);
-            }
-        };
+
+    /** A sample test driver.  The file samplelog.txt should contain
+     everything that appeared on the console output.
+     * @param args xxx.
+     */
+    public static void main(String[] args) {
+        try {
+            SimplePrintLog.start(new File(System.getProperty("user.dir") + File.separator + "bbbbsamplelog.txt"));
+            System.out.println("Why...");
+            System.err.println("..this..");
+            System.out.println("..work????");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            // Turn off logging
+            com.github.p4535992.util.log.PrintLog.stop();
+        }
     }
 
-    public static PrintStream createLoggingProxyErr(final PrintStream realPrintStream) {
-        return new PrintStream(realPrintStream) {
-            public void print(final String string) {
-                realPrintStream.print(string);
-                logger.error(string);
-            }
-        };
-    }
+
+
 }

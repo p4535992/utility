@@ -30,6 +30,7 @@ public class FileUtilities {
     private static String fullPath;
     private static char pathSeparator = File.separatorChar;
     private static char extensionSeparator = '.';
+    private static String extensionSeparatorS = ".";
     public final static String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();
 
 
@@ -85,6 +86,7 @@ public class FileUtilities {
      * @return string of the extension of the file
      */
     public static String getExtension(String fullPath) {
+        if(!fullPath.contains(extensionSeparatorS)) fullPath = fullPath +". ";
         return fullPath.substring(fullPath.lastIndexOf(extensionSeparator) + 1);
     }
 
@@ -103,6 +105,7 @@ public class FileUtilities {
      * @return name of the file without the extension
      */
     public static String getFilenameWithoutExt(String fullPath) {
+        if(!fullPath.contains(extensionSeparatorS)) fullPath = fullPath +". ";
         int dot = fullPath.lastIndexOf(extensionSeparator);
         int sep = fullPath.lastIndexOf(pathSeparator);
         return fullPath.substring(sep + 1, dot);
