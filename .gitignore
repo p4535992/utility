@@ -49,4 +49,4 @@ target
 /LIB/*
 LIB
 
-.idea/libraries/*
+/.idea/libraries/*
