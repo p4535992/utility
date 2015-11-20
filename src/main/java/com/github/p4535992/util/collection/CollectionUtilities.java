@@ -904,6 +904,7 @@ public class CollectionUtilities {
         return Array.getLength(array);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T[] subarray(T[] array,int offset,int length){
         if (array == null) {
             throw new NullPointerException();

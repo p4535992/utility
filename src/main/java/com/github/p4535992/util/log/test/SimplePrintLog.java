@@ -3,7 +3,6 @@ package com.github.p4535992.util.log.test;
 import com.github.p4535992.util.log.SystemLog;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -63,7 +62,7 @@ public class SimplePrintLog extends PrintStream {
             logStreamFile.close();
         }
         catch (Exception e){
-            e.printStackTrace();
+          
         }
         super.close();
     }
@@ -107,7 +106,7 @@ public class SimplePrintLog extends PrintStream {
     @Override
     public void print(double d) {super.print(d);}
     @Override
-    public void print(char s[]) {super.print(s);}
+    public void print(char s[]) {super.print(Arrays.toString(s));}
     @Override
     public void print(String s) { super.print(s);}
     @Override
@@ -134,7 +133,7 @@ public class SimplePrintLog extends PrintStream {
     @Override
     public void println(double x) {super.println(x); }
     @Override
-    public void println(char x[]) {super.println(x); }
+    public void println(char x[]) {super.println(Arrays.toString(x)); }
     @Override
     public void println(String x) {super.println(x); }
     @Override
@@ -177,6 +176,7 @@ public class SimplePrintLog extends PrintStream {
      * "c:\\data\\system.out.txt". Keep in mind though, that you should make
      * sure to flush System.out and close the file before the JVM shuts down,
      * to be sure that all data written to System.out is actually flushed to the file.
+     * @throws java.io.FileNotFoundException throw if any error is occurred.
      */
     public static void start() throws FileNotFoundException {
         start(new File(""));
@@ -222,7 +222,6 @@ public class SimplePrintLog extends PrintStream {
                 logStreamFile.close();
             }
         }catch(IOException e){
-            e.printStackTrace();
         }
     }
 
@@ -239,7 +238,6 @@ public class SimplePrintLog extends PrintStream {
             System.out.println("..work????");
         }
         catch (Exception e) {
-            e.printStackTrace();
         }
         finally {
             // Turn off logging

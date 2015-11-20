@@ -10,13 +10,9 @@ import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import org.apache.http.HttpResponse;
-import org.apache.jena.riot.web.HttpOp;
 import org.apache.jena.riot.web.HttpResponseHandler;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -74,8 +70,7 @@ public class Fuseki23Kit {
     }
 
     /**
-     * Method to create a new dtaabase onf Fuseki server.
-     * Usage script: curl -u youruser:yourpassword --data "dbType=tdb&dbName=foobar" http://localhost:3030/$/datasets
+     * Method to create a new dtaabase on Fuseki server.
      * @param host the String of the host.
      * @param port the String of the port of Fuseki.
      * @param nameWarFuseki the String of the name of the War.

@@ -1,7 +1,6 @@
 package com.github.p4535992.util.log;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -62,9 +61,7 @@ public class PrintLog extends PrintStream {
         try {
             logStreamFile.close();
         }
-        catch (Exception e){
-            e.printStackTrace();
-        }
+        catch (Exception ignored){}
         super.close();
     }
     @Override
@@ -107,7 +104,7 @@ public class PrintLog extends PrintStream {
     @Override
     public void print(double d) {super.print(d);}
     @Override
-    public void print(char s[]) {super.print(s);}
+    public void print(char s[]) {super.print(Arrays.toString(s));}
     @Override
     public void print(String s) { super.print(s);}
     @Override
@@ -134,7 +131,7 @@ public class PrintLog extends PrintStream {
     @Override
     public void println(double x) {super.println(x); }
     @Override
-    public void println(char x[]) {super.println(x); }
+    public void println(char x[]) {super.println(Arrays.toString(x)); }
     @Override
     public void println(String x) {super.println(x); }
     @Override
@@ -177,6 +174,7 @@ public class PrintLog extends PrintStream {
      * "c:\\data\\system.out.txt". Keep in mind though, that you should make
      * sure to flush System.out and close the file before the JVM shuts down,
      * to be sure that all data written to System.out is actually flushed to the file.
+     * @throws java.io.FileNotFoundException throw if the file of the log append text not exists.
      */
     public static void start() throws FileNotFoundException {
         start(new File(""));
@@ -186,6 +184,7 @@ public class PrintLog extends PrintStream {
         start(new File(fileName));
     }
 
+    @SuppressWarnings("rawtypes")
     public static void start(File file) throws FileNotFoundException {
         // Save current settings for later restoring.
         oldStdout = System.out;
@@ -227,13 +226,12 @@ public class PrintLog extends PrintStream {
             }
             System.setOut(oldStdout);
             System.setErr(oldStderr);
-        }catch(IOException e){
-            e.printStackTrace();
-        }
+        }catch(IOException ignored){}
     }
 
     public static PrintStream createLoggingProxyOut(final PrintStream realPrintStream) {
         return new PrintStream(realPrintStream) {
+            @Override
             public void print(final String string) {
                 realPrintStream.print(string);
                 logger.info(string);
@@ -243,6 +241,7 @@ public class PrintLog extends PrintStream {
 
     public static PrintStream createLoggingProxyErr(final PrintStream realPrintStream) {
         return new PrintStream(realPrintStream) {
+            @Override
             public void print(final String string) {
                 realPrintStream.print(string);
                 logger.error(string);

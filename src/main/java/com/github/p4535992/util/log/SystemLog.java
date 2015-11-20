@@ -16,9 +16,8 @@ import java.util.logging.Logger;
  * href: http://users.csc.calpoly.edu/~jdalbey/SWE/Tools/LogFile.java.
  * @author 4535992.
  * @version 2015-07-14.
- * @param <T> the generic type.
  */
-public class SystemLog<T> extends OutputStream{
+public class SystemLog extends OutputStream{
 
    /* private static java.lang.reflect.Type t;
     private static java.lang.reflect.ParameterizedType pt;
@@ -471,7 +470,7 @@ public class SystemLog<T> extends OutputStream{
                 slf4j = org.slf4j.LoggerFactory.getLogger(thisClass);
                 slf4j.error(logEntry);
             }
-            else  write(logEntry);;
+            else  write(logEntry);
         }
         else  write(logEntry);
         System.exit(rc);
