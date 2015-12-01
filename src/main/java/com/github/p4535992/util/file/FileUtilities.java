@@ -986,7 +986,7 @@ public class FileUtilities {
      */
     public static String[] CSVGetHeaders(File fileCSV,boolean hasFirstLine){
         String[] columns = new String[0];
-        try {
+        try{
             com.opencsv.CSVReader reader = new com.opencsv.CSVReader(new FileReader(fileCSV));
             columns = reader.readNext(); // assuming first read
             if(!hasFirstLine){
@@ -997,8 +997,8 @@ public class FileUtilities {
                     columns[i] = "Column#"+i;
                 }
             }
-        } catch (IOException e) {
-            SystemLog.exception(e,FileUtilities.class);
+        }catch(IOException e){
+            SystemLog.exception("Can't find the CSV File", e, FileUtilities.class);
         }
         return columns;
     }
@@ -1010,17 +1010,22 @@ public class FileUtilities {
      * @return the List of Array of the content of the File comma separated.
      * @throws IOException throw if the file not exists.
      */
-    public static List<String[]> CSVGetContent(File CSV,boolean header) throws IOException {
-        com.opencsv.CSVReader reader1 = new com.opencsv.CSVReader(new FileReader(CSV));
-        List<String[]> content = reader1.readAll();
-        /* List<String[]> myDatas = reader1.readAll();
-        String[] lineI = myDatas.get(i);
-        for (String[] line : myDatas) {
-            for (String value : line) {
-                //do stuff with value
-            }
-        }*/
-        if(header) content.remove(0);
+    public static List<String[]> CSVGetContent(File CSV,boolean header){
+        List<String[]> content = new ArrayList<>();
+        try {
+            com.opencsv.CSVReader reader1 = new com.opencsv.CSVReader(new FileReader(CSV));
+            content = reader1.readAll();
+            /* List<String[]> myDatas = reader1.readAll();
+            String[] lineI = myDatas.get(i);
+            for (String[] line : myDatas) {
+                for (String value : line) {
+                    //do stuff with value
+                }
+            }*/
+            if (header) content.remove(0);
+        }catch(IOException e){
+            SystemLog.exception("Can't find the CSV File", e, FileUtilities.class);
+        }
         return content;
     }
 

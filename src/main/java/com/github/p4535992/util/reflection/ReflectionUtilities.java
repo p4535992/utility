@@ -2688,16 +2688,28 @@ public class ReflectionUtilities {
      * @throws NoSuchMethodException throw if any error is occurred.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T invokeGetter(T MyObject, Method method)
+    public static <T> Object invokeGetter(T MyObject, Method method)
             throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        T MyObject2;
+        Object MyObject2;
         Class<T> aClazz = (Class<T>) MyObject.getClass();
         try{
             //if the method you try to invoke is static...
-            MyObject2 = aClazz.cast(method.invoke(null));
+            MyObject2 = method.invoke(null);
         }catch(NullPointerException ne) {
             //...The method is not static
-            MyObject2 =  aClazz.cast(method.invoke(MyObject));
+            /*if( method.invoke(MyObject) instanceof URL){
+                URL ee = (URL) method.invoke(MyObject);
+                Class<?> clazz = ee.getClass();
+                MyObject2 = clazz.cast(method.invoke(MyObject));
+            }else{
+                MyObject2 = method.invoke(MyObject);
+            }*/
+            try {
+                Class<?> clazz = method.invoke(MyObject).getClass();
+                MyObject2 = clazz.cast(method.invoke(MyObject));
+            }catch(NullPointerException ne1){
+                MyObject2 = method.invoke(MyObject);
+            }
         }
         return MyObject2;
     }
@@ -2712,7 +2724,7 @@ public class ReflectionUtilities {
      * @throws InvocationTargetException throw if any error is occurred.
      * @throws NoSuchMethodException throw if any error is occurred.
      */
-    /*public static Object invokeGetter(Object MyObject,Method method)
+   /* public static Object invokeGetter2(Object MyObject,Method method)
             throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
         Object MyObject2;
         try{

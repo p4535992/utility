@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -765,7 +766,7 @@ public class SQLHelper {
      */
     public static void importCsvInsertInto(File fileCSV, boolean firstLine,Character separator,
                                        String nameTable,Connection connection) {
-        String[] columns = FileUtilities.getColumns(fileCSV, firstLine);
+        String[] columns = FileUtilities.CSVGetHeaders(fileCSV, firstLine);
         SQLJooqKit2.setConnection(connection);
         try {
             CSVReader reader = new CSVReader(new FileReader(fileCSV), separator);
@@ -789,6 +790,78 @@ public class SQLHelper {
         } catch (SQLException |IOException e) {
             SystemLog.exception(e,SQLHelper.class);
         } 
+    }
+
+    /**
+     * Method to get the String name of the host by the String URL of the jdbc driver.
+     * @param url the String of the URL of the jdbc driver.
+     * @return the String name of the host.
+     */
+    public static String getHostFromUrl(String url) {
+        String regexForHostAndPort = "[.\\w]+:\\d+";
+        Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
+        Matcher matcher = hostAndPortPattern.matcher(url);
+        matcher.find();
+        int start = matcher.start();
+        int end = matcher.end();
+        if(start >= 0 && end >= 0) {
+            String hostAndPort = url.substring(start, end);
+            String [] array = hostAndPort.split(":");
+            if(array.length >= 2)
+                return array[0];
+        }
+        throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
+    }
+
+    /**
+     * Method to get the Integer value of the port by the String URL of the jdbc driver.
+     * @param url the String of the URL of the jdbc driver.
+     * @return the String name of the host.
+     */
+    public static Integer getPortFromUrl(String url) {
+        String regexForHostAndPort = "[.\\w]+:\\d+";
+        Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
+        Matcher matcher = hostAndPortPattern.matcher(url);
+        matcher.find();
+        int start = matcher.start();
+        int end = matcher.end();
+        if(start >= 0 && end >= 0) {
+            String hostAndPort = url.substring(start, end);
+            String [] array = hostAndPort.split(":");
+            if(array.length >= 2)
+                return Integer.parseInt(array[1]);
+        }
+        throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
+    }
+
+    /**
+     * Method to get the String value of the username by the String URL of the jdbc driver.
+     * @param url the String of the URL of the jdbc driver.
+     * @return the String name of the host.
+     */
+    public static String getUsernameFromUrl(String url){
+        Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(user|username)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pat.matcher(url  + " ");
+        if(matcher.find())  {
+            String[] find = (matcher.group(0)).split("=");
+            return find[1].substring(0,find[1].length()-1);
+        }
+        throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
+    }
+
+    /**
+     * Method to get the String value of the password by the String URL of the jdbc driver.
+     * @param url the String of the URL of the jdbc driver.
+     * @return the String name of the host.
+     */
+    public static String getPasswordFromUrl(String url){
+        Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(pass|password)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pat.matcher(url + " ");
+        if(matcher.find())  {
+            String[] find = (matcher.group(0)).split("=");
+            return find[1].substring(0,find[1].length()-1);
+        }
+        throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
     }
 
 

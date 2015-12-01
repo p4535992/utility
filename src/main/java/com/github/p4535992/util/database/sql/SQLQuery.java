@@ -502,8 +502,8 @@ public class SQLQuery {
                                        String fieldTerminator,String rowTerminator){
         StringBuilder bQuery = new StringBuilder();
         String[] columns;
-        if(hasFirstLine) columns = FileUtilities.getColumns(fileCSV, true);
-        else  columns = FileUtilities.getColumns(fileCSV,false);
+        if(hasFirstLine) columns = FileUtilities.CSVGetHeaders(fileCSV, true);
+        else  columns = FileUtilities.CSVGetHeaders(fileCSV,false);
 
         bQuery.append(SQLQuery.createTableToInsertData(database,nameTable,columns));
         bQuery.append("GO \n");
@@ -520,7 +520,7 @@ public class SQLQuery {
                                             Character linesSeparator,String nameTable){
         StringBuilder loadQuery = new StringBuilder();
         try {
-            String[] columns = FileUtilities.getColumns(fileCSV,firstLine);
+            String[] columns = FileUtilities.CSVGetHeaders(fileCSV,firstLine);
             loadQuery.append("LOAD DATA LOCAL INFILE '").append(fileCSV.getAbsolutePath())
                     .append("' INTO TABLE ").append(nameTable).append(" FIELDS TERMINATED BY '")
                     .append(fieldSeparator).append("'").append(" LINES TERMINATED BY '")
