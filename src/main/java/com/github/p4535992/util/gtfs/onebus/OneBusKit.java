@@ -134,11 +134,11 @@ public class OneBusKit {
                 continue;
             }
             String filename = entry.getName();
-            if (filename.equals("agency.txt")) {
+            if(filename.equals("agency.txt")) {
 
-            } else if (filename.equals("stops.txt")) {
+            } else if(filename.equals("stops.txt")) {
 
-            } else if (filename.equals("routes.txt")) {
+            } else if(filename.equals("routes.txt")) {
 
             }
         }

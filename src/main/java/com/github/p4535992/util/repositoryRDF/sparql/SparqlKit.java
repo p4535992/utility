@@ -53,7 +53,7 @@ public class SparqlKit {
     public static final String ptop = "http://proton.semanticweb.org/protontop#";
     public static final String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     public static final String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
-    public static final String schema = "http://schema.org/#";
+    public static final String schema = "http://schema.org/";
     public static final String skos="http://www.w3.org/2004/02/skos/core#";
     public static final String swvocab = "http://www.w3.org/2003/06/sw-vocab-status/ns#";
     public static final String time = "http://www.w3.org/2006/time#";
@@ -146,10 +146,14 @@ public class SparqlKit {
      * @return string part of the query with the prefixes.
      */
     public static String preparePrefix(){
-        Map<String,String> map = getDefaultNamespacePrefixes();
+       return preparePrefix("");
+    }
+
+    public static String preparePrefix(String specialCharacter){
         StringBuilder sb = new StringBuilder();
-        for(Map.Entry<String,String> entry : map.entrySet()){
-            sb.append("prefix ").append(entry.getKey()).append(": <").append(entry.getValue()).append("> \n");
+        for(Map.Entry<String,String> entry : getDefaultNamespacePrefixes().entrySet()){
+            sb.append(specialCharacter).append("prefix ")
+                    .append(entry.getKey()).append(": <").append(entry.getValue()).append("> .\n");
         }
         return sb.toString();
     }
@@ -162,9 +166,18 @@ public class SparqlKit {
     public static String preparePrefix(Map<String,String> map){
         StringBuilder sb = new StringBuilder();
         for(Map.Entry<String,String> entry : map.entrySet()){
-            sb.append("prefix ").append(entry.getKey()).append(": <").append(entry.getValue()).append("> \n");
+            sb.append("prefix ").append(entry.getKey()).append(": <").append(entry.getValue()).append("> .\n");
         }
         return sb.toString();
+    }
+
+    public static String preparePrefixLabel(String domainUri){
+        for(Map.Entry<String,String> entry : getDefaultNamespacePrefixes().entrySet()){
+             if(entry.getValue().contains(domainUri)){
+                 return entry.getKey() +":";
+             }
+        }
+        return "";
     }
 
     /**

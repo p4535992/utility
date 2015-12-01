@@ -2,6 +2,7 @@ package com.github.p4535992.util.string;
 
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.regex.pattern.Patterns;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -1258,6 +1259,24 @@ public class StringUtilities {
         return Integer.parseInt((String)object);
     }
 
+    //-------------------------------------------------
+    // MEthod nedd commons lang 3
+    //-------------------------------------------------
+    public static String generateMD5Token(int lengthToken){
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        StringBuilder hexString = new StringBuilder();
+        byte[] data = md.digest(RandomStringUtils.randomAlphabetic(lengthToken).getBytes());
+        for (byte aData : data) {
+            hexString.append(Integer.toHexString((aData >> 4) & 0x0F));
+            hexString.append(Integer.toHexString(aData & 0x0F));
+        }
+        return hexString.toString();
+    }
     
 
 

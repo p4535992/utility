@@ -8,6 +8,7 @@ import com.github.p4535992.util.string.StringUtilities;
 
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
@@ -27,6 +28,7 @@ import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.rdf.model.impl.PropertyImpl;
 import com.hp.hpl.jena.rdf.model.impl.SelectorImpl;
+import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.resultset.RDFOutput;
 import com.hp.hpl.jena.sparql.util.*;
 import com.hp.hpl.jena.vocabulary.RDF;
@@ -43,7 +45,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 
 /**
@@ -94,26 +100,35 @@ public class Jena2Kit {
      * @param outputFormat the output format you want to write the model.
      * @throws IOException throw if any I/O error is occured.
      */
-    public static void writeModelToFile(String fullPath,Model model, String outputFormat) throws IOException {
+    public static void writeModelToFile(String fullPath, Model model, String outputFormat) throws IOException {
         fullPath =  FileUtilities.getPath(fullPath) + File.separator + FileUtilities.getFilenameWithoutExt(fullPath)+"."+outputFormat.toLowerCase();
         SystemLog.message("Try to write the new file of triple from:" + fullPath + "...");
         OUTLANGFORMAT = createToRiotLang(outputFormat);
         OUTRDFFORMAT = createToRDFFormat(outputFormat);
         OUTFORMAT = outputFormat.toUpperCase();
         try {
-            writeModelToFile2(fullPath, model);
+            try (FileWriter out = new FileWriter(fullPath)) {
+                model.write(out, OUTLANGFORMAT.getName());
+            }
         }catch(Exception e1){
             SystemLog.warning("...there is was a problem to try the write the triple file at the first tentative...");
             try {
-                writeModelToFile3(fullPath, model);
+                FileOutputStream outputStream = new FileOutputStream(fullPath);
+                model.write(outputStream, OUTLANGFORMAT.getName());
             }catch(Exception e2){
                 SystemLog.warning("...there is was a problem to try the write the triple file at the second tentative...");
                 try {
-                    writeModelToFile4(fullPath, model);
+                    Writer writer = new FileWriter(new File(fullPath));
+                    model.write(writer, OUTFORMAT);
                 } catch (Exception e3) {
                     SystemLog.warning("...there is was a problem to try the write the triple file at the third tentative...");
                     try {
-                        writeModelToFile1(fullPath, model);//unmappable character exception
+                        Charset ENCODING = StandardCharsets.UTF_8;
+                        FileUtilities.createFile(fullPath);
+                        Path path = Paths.get(fullPath);
+                        try (BufferedWriter writer = Files.newBufferedWriter(path,ENCODING)) {
+                            model.write(writer, null, OUTLANGFORMAT.getName());
+                        }
                     } catch(Exception e4) {
                         SystemLog.error("... exception during the writing of the file of triples:" + fullPath);
                         SystemLog.exception(e4);
@@ -124,64 +139,67 @@ public class Jena2Kit {
         SystemLog.message("... the file of triple to:" + fullPath + " is been wrote!");
     }
 
-    /**
-     * Method  to Write large model jena to file of text.
-     * @param fullPath string of the path to the file.
-     * @param model jena model to write.
-     * @throws IOException throw if any I/O error is occured.
-     */
-	private static void writeModelToFile1(String fullPath,Model model) throws IOException {
-        Charset ENCODING = StandardCharsets.UTF_8;
-        FileUtilities.createFile(fullPath);
-        Path path = Paths.get(fullPath);
-	    try (BufferedWriter writer = Files.newBufferedWriter(path,ENCODING)) {
-            //org.apache.jena.riot.RDFDataMgr.write(writer, model, OUTLANGFORMAT);
-            model.write(writer, null, OUTLANGFORMAT.getName());
-        }
-	  }
-
-    /**
-     * Method  to Write large model jena to file of text.
-     * @param fullPath string of the path to the file.
-     * @param model jena model to write.
-     * @throws IOException throw if any I/O error is occured.
-     */
-    private static void writeModelToFile2(String fullPath,Model model) throws IOException {
-        FileWriter out = new FileWriter(fullPath);
-        try {
-            model.write(out, OUTLANGFORMAT.getName());
-        }
-        finally {
-            try {
-                out.close();
-            }
-            catch (IOException closeException) {
-                // ignore
-            }
-        }
+    public static void write(File file, Model model,String outputFormat) throws FileNotFoundException {
+        FileOutputStream outputStream = new FileOutputStream(file);
+        model.write(outputStream, createToRiotLang(outputFormat).getName());
     }
 
-    /**
-     * Method  to Write large model jena to file of text.
-     * @param fullPath string of the path to the file.
-     * @param model jena model to write.
-     * @throws FileNotFoundException throw if any "File Not Found error" is occured.
-     */
-    private static void writeModelToFile3(String fullPath, Model model) throws FileNotFoundException {
-        FileOutputStream outputStream = new FileOutputStream(fullPath);
-        model.write(outputStream, OUTLANGFORMAT.getName());
-    }
-    /**
-     * Method  to Write large model jena to file of text.
-     * @param fullPath string of the path to the file.
-     * @param model jena model to write.
-     * @throws IOException throw if any I/O error is occured.
-     */
-    private static void writeModelToFile4(String fullPath, com.hp.hpl.jena.rdf.model.Model model)throws IOException{
-        Writer writer = new FileWriter(new File(fullPath));
-        model.write(writer, OUTFORMAT);
+    public static void write(File file, Model model,String outputFormat,String baseUri) throws FileNotFoundException {
+        FileOutputStream outputStream = new FileOutputStream(file);
+        model.write(outputStream, createToRiotLang(outputFormat).getName(), baseUri);
     }
 
+    public static void write(OutputStream stream, Model model,String outputFormat) {
+        model.write(stream, createToRiotLang(outputFormat).getName());
+    }
+
+    public static void write(OutputStream stream, Model model,String outputFormat,String baseUri) {
+        model.write(stream, createToRiotLang(outputFormat).getName(), baseUri);
+    }
+
+    public static void write(Writer writer, Model model,String outputFormat){
+        model.write(writer, createToRiotLang(outputFormat).getName());
+    }
+
+    public static void write(Writer writer, Model model,String outputFormat,String baseUri) {
+        model.write(writer, createToRiotLang(outputFormat).getName(), baseUri);
+    }
+
+    public static void write(OutputStream s,Dataset d,String o){RDFDataMgr.write(s,d,createToRiotLang(o));}
+
+    public static void write(OutputStream s,Dataset d,Lang l){RDFDataMgr.write(s,d,l);}
+
+    public static void write(OutputStream s,Dataset d,RDFFormat f){ RDFDataMgr.write(s, d, f);}
+
+    public static void write(OutputStream s,DatasetGraph d,Lang l){RDFDataMgr.write(s,d,l);}
+
+    public static void write(OutputStream s,DatasetGraph d,RDFFormat f){RDFDataMgr.write(s,d,f);}
+
+    public static void write(OutputStream s,Model m,Lang l){RDFDataMgr.write(s, m, l);}
+
+    public static void write(OutputStream s,Model m,RDFFormat f){RDFDataMgr.write(s,m,f); }
+
+    public static void write(OutputStream s,Graph g,Lang l){RDFDataMgr.write(s,g,l);}
+
+    public static void write(OutputStream s,Graph g,RDFFormat f){RDFDataMgr.write(s,g,f);}
+
+    public static void write(StringWriter s,Dataset d,String o){RDFDataMgr.write(s,d,createToRiotLang(o));}
+
+    public static void write(StringWriter  s,Dataset d,Lang l){RDFDataMgr.write(s,d,l);}
+
+    public static void write(StringWriter  s,Dataset d,RDFFormat f){ RDFDataMgr.write(s,d,f);}
+
+    public static void write(StringWriter  s,DatasetGraph d,Lang l){RDFDataMgr.write(s,d,l);}
+
+    public static void write(StringWriter  s,DatasetGraph d,RDFFormat f){RDFDataMgr.write(s,d,f);}
+
+    public static void write(StringWriter  s,Model m,Lang l){RDFDataMgr.write(s, m, l);}
+
+    public static void write(StringWriter  s,Model m,RDFFormat f){RDFDataMgr.write(s,m,f); }
+
+    public static void write(StringWriter  s,Graph g,Lang l){RDFDataMgr.write(s,g,l);}
+
+    public static void write(StringWriter  s,Graph g,RDFFormat f){RDFDataMgr.write(s,g,f);}
 
     /**
      * Method for execute a CONSTRUCTOR SPARQL on a Jena Model.
@@ -538,8 +556,18 @@ public class Jena2Kit {
      * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
      * return all the XSDDatatype supported from jena.
      */
-    private static final XSDDatatype allFormatsOfXSDDataTypes[] = new XSDDatatype[]{
-            XSDDatatype.XSDstring,XSDDatatype.XSDENTITY,XSDDatatype.XSDID,XSDDatatype.XSDIDREF
+    public static final XSDDatatype allFormatsOfXSDDataTypes[] = new XSDDatatype[]{
+            XSDDatatype.XSDstring,XSDDatatype.XSDENTITY,XSDDatatype.XSDID,XSDDatatype.XSDIDREF,
+            XSDDatatype.XSDanyURI,XSDDatatype.XSDbase64Binary,XSDDatatype.XSDboolean,XSDDatatype.XSDbyte,
+            XSDDatatype.XSDdate,XSDDatatype.XSDdateTime,XSDDatatype.XSDdecimal,XSDDatatype.XSDdouble,
+            XSDDatatype.XSDduration,XSDDatatype.XSDfloat,XSDDatatype.XSDgDay,XSDDatatype.XSDgMonth,
+            XSDDatatype.XSDgMonthDay,XSDDatatype.XSDgYear,XSDDatatype.XSDgYearMonth,XSDDatatype.XSDhexBinary,
+            XSDDatatype.XSDint,XSDDatatype.XSDinteger,XSDDatatype.XSDlanguage,XSDDatatype.XSDlong,
+            XSDDatatype.XSDName,XSDDatatype.XSDNCName,XSDDatatype.XSDnegativeInteger,XSDDatatype.XSDNMTOKEN,
+            XSDDatatype.XSDnonNegativeInteger,XSDDatatype.XSDnonPositiveInteger,XSDDatatype.XSDnormalizedString,
+            XSDDatatype.XSDNOTATION,XSDDatatype.XSDpositiveInteger,XSDDatatype.XSDQName,XSDDatatype.XSDshort,
+            XSDDatatype.XSDtime,XSDDatatype.XSDtoken,XSDDatatype.XSDunsignedByte,XSDDatatype.XSDunsignedInt,
+            XSDDatatype.XSDunsignedLong,XSDDatatype.XSDunsignedShort
     };
 
     /**
@@ -558,8 +586,8 @@ public class Jena2Kit {
      */
     public static XSDDatatype createToXSDDatatype(String uri) {
             for (XSDDatatype xsdDatatype : allFormatsOfXSDDataTypes) {
-                   if(xsdDatatype.getURI().equalsIgnoreCase("http://www.w3.org/2001/XMLSchema#"+uri)) return xsdDatatype;
-                if(xsdDatatype.getURI().replace("http://www.w3.org/2001/XMLSchema","")
+                   if(xsdDatatype.getURI().equalsIgnoreCase(XSDDatatype.XSD+"#"+uri)) return xsdDatatype;
+                if(xsdDatatype.getURI().replace(XSDDatatype.XSD,"")
                         .toLowerCase().contains(uri.toLowerCase())) return xsdDatatype;
             }
             throw new IllegalArgumentException("The XSD Datatype '" + uri + "' is not recognised");
@@ -1586,18 +1614,33 @@ public class Jena2Kit {
     /**
      * Method utility: create new property for a Model.
      * @param modelOrUri the Jena Model where search the property.
-     * @param subject string of the subject.
+     * @param subjectIri string of the subject.
      * @return RDFNode.
      */
-    public static RDFNode createRDFNode(Object modelOrUri, String subject ){
+    public static RDFNode createRDFNode(Object modelOrUri,String subjectIri){
         Model model;
-        if(modelOrUri instanceof Model){
-            model = (Model) modelOrUri;
-            return model.asRDFNode(NodeUtils.asNode(subject));
+        if(isIRI(subjectIri)) {
+            if (modelOrUri != null && modelOrUri instanceof Model) {
+                model = (Model) modelOrUri;
+                return model.asRDFNode(NodeUtils.asNode(subjectIri));
+            } else {
+                model = createModel();
+                return model.asRDFNode(NodeUtils.asNode(subjectIri));
+            }
         }else{
+            SystemLog.error(subjectIri + " is not a IRI normalized!!!");
             model = createModel();
-            return model.asRDFNode(NodeUtils.asNode(subject));
+            return model.asRDFNode(NodeUtils.asNode(subjectIri));
         }
+    }
+
+    /**
+     * Method utility: create new property for a Model.
+     * @param subjectIri string of the subject.
+     * @return RDFNode.
+     */
+    public static RDFNode createRDFNode(Object subjectIri){
+        return createRDFNode(null,String.valueOf(subjectIri));
     }
 
 
@@ -1612,7 +1655,7 @@ public class Jena2Kit {
             return ResourceFactory.createResource(String.valueOf(stringOrModelGraph) + "/" + localNameOrSubject);
         }
         if(stringOrModelGraph instanceof Model){
-            return (Resource) createRDFNode((Model) stringOrModelGraph,localNameOrSubject);
+            return (Resource) createRDFNode(stringOrModelGraph,localNameOrSubject);
         }
         return null;
     }
@@ -1634,7 +1677,7 @@ public class Jena2Kit {
                 else return ResourceFactory.createProperty(String.valueOf(stringOrModelGraph));
             }
         }
-        if(stringOrModelGraph instanceof Model)return createRDFNode(stringOrModelGraph, localNameOrSubject).as(Property.class);
+        if(stringOrModelGraph instanceof Model && isIRI(localNameOrSubject))return createRDFNode(stringOrModelGraph, localNameOrSubject).as(Property.class);
         return null;
     }
 
@@ -1668,7 +1711,7 @@ public class Jena2Kit {
      * @return the Jena Literal.
      */
     public static Literal createLiteral(Object stringOrObject){
-        return createLiteral(stringOrObject,null);
+        return createLiteral(stringOrObject, null);
     }
 
     /**
@@ -1676,32 +1719,123 @@ public class Jena2Kit {
      * @param model the Jena Model.
      * @param subject the iri subject.
      * @param predicate the iri predicate.
-     * @param object the irir object.
+     * @param object the iri object.
      * @return Statement.
      */
     public static Statement createStatement( Model model, String subject,String predicate,String object) {
-        if (model == null) {
-            String graphUri = StringUtilities.findWithRegex(subject, Patterns.GET_LAST_PART_OF_URI);
-            if(graphUri==null)return null;
-            graphUri = subject.replace(graphUri,"");
-            return ResourceFactory.createStatement(
-                    createResource(graphUri, subject), createProperty(graphUri, predicate), createRDFNode(graphUri, object));
-        } else {
-            return model.createStatement(
-                    createResource(model, subject), createProperty(model, predicate), createRDFNode(model, object));
+        return createStatement(model, subject, predicate, object, null);
+    }
 
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param model the Jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @param graphUri the iri of the graph.
+     * @param xsdDatatype the XSDDatatype of the Literal
+     * @return Statement.
+     */
+    public static Statement createStatement(
+            Model model, String subject,String predicate,Object object,String graphUri,XSDDatatype xsdDatatype) {
+
+        if(!StringUtilities.isNullOrEmpty(xsdDatatype.getURI())){
+            if (model == null) {
+                if (StringUtilities.isNullOrEmpty(graphUri)) {
+                    graphUri = StringUtilities.findWithRegex(subject, Patterns.GET_LAST_PART_OF_URI);
+                    if (StringUtilities.isNullOrEmpty(graphUri)) graphUri = null;
+                }
+                if (graphUri != null) graphUri = subject.replace(graphUri, "");
+                    return ResourceFactory.createStatement(
+                        createResource(graphUri, subject), createProperty(graphUri, predicate), createLiteral(object,xsdDatatype));
+            } else {
+                return model.createStatement(
+                        createResource(model, subject), createProperty(model, predicate), createLiteral(object,xsdDatatype));
+            }
+        }else{
+            if (model == null) {
+                if (StringUtilities.isNullOrEmpty(graphUri)) {
+                    graphUri = StringUtilities.findWithRegex(subject, Patterns.GET_LAST_PART_OF_URI);
+                    if (StringUtilities.isNullOrEmpty(graphUri)) graphUri = null;
+                }
+                if (graphUri != null) graphUri = subject.replace(graphUri, "");
+                if (object instanceof String && isIRI(String.valueOf(object))) {
+                    return ResourceFactory.createStatement(
+                            createResource(graphUri, subject), createProperty(graphUri, predicate), createRDFNode(object));
+                } else {
+                    return ResourceFactory.createStatement(
+                            createResource(graphUri, subject), createProperty(graphUri, predicate), createLiteral(object));
+                }
+            } else {
+                if (object instanceof String && isIRI(String.valueOf(object))) {
+                    return model.createStatement(
+                            createResource(model, subject), createProperty(model, predicate), createRDFNode(model, String.valueOf(object)));
+                } else {
+                    return model.createStatement(
+                            createResource(model, subject), createProperty(model, predicate), createLiteral(object));
+                }
+
+            }
         }
+    }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param model the Jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @param graphUri the iri of the graph.
+     * @return Statement.
+     */
+    public static Statement createStatement( Model model, String subject,String predicate,Object object,String graphUri) {
+        return createStatement(model,subject,predicate,object,graphUri,null);
     }
 
     /**
      * Method utility: create statement form a jena Model.
      * @param subject the iri subject.
      * @param predicate the iri predicate.
-     * @param object the irir object.
+     * @param object the iri object.
+     * @param graphUri the iri of the graph.
      * @return Statement.
      */
-    public static Statement creaeStatement(String subject,String predicate,String object){
-        return createStatement(null,subject,predicate,object);
+        public static Statement createStatement(String subject,String predicate,String object,String graphUri){
+            return createStatement(null,subject,predicate,object,graphUri);
+        }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @return Statement.
+     */
+    public static Statement createStatement(String subject,String predicate,String object){
+        return createStatement(null,subject,predicate,object,null);
+    }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @return Statement.
+     */
+    public static Statement createStatement(String subject,String predicate,Object object){
+        return createStatement(null,subject,predicate,object,null);
+    }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @param xsdDatatype the XSDDatatype of the Literal
+     * @return Statement.
+     */
+    public static Statement createStatement(String subject,String predicate,Object object,XSDDatatype xsdDatatype){
+        return createStatement(null,subject,predicate,object,null,xsdDatatype);
     }
 
     /**
@@ -1905,6 +2039,29 @@ public class Jena2Kit {
     //----------------------------------------
     //NEW METHODS
     //----------------------------------------
+
+    /**
+     * Method to check if a String uri is a IRI normalized.
+     * http://stackoverflow.com/questions/9419658/normalising-possibly-encoded-uri-strings-in-java
+     * @param uri the String to verify.
+     * @return if true the String is a valid IRI.
+     */
+    public static Boolean isIRI(String uri){
+        try {
+            IRIFactory factory = IRIFactory.uriImplementation();
+            IRI iri = factory.construct(uri);
+           /* ArrayList<String> a = new ArrayList<>();
+            a.add(iri.getScheme());
+            a.add(iri.getRawUserinfo());
+            a.add(iri.getRawHost());
+            a.add(iri.getRawPath());
+            a.add(iri.getRawQuery());
+            a.add(iri.getRawFragment());*/
+            return true;
+        }catch(Exception e){
+            return false;
+        }
+    }
 
     /**
      * Method to create a JENA Query from a String SPARQL Query.

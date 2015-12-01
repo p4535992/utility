@@ -1,5 +1,5 @@
 
-package com.github.p4535992.util.http;
+package com.github.p4535992.util.http.helper;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;

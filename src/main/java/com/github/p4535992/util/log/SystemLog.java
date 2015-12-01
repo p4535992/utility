@@ -322,8 +322,10 @@ public class SystemLog extends OutputStream{
     }
 
     public static void error(String logEntry){error(logEntry, new Throwable(logEntry), null);}
-    public static void error(String logEntry,Exception ex){error(logEntry+"->"+ex.getMessage(),null,null);}
-    public static void error(String logEntry,Exception ex,Class<?> thisClass){error(logEntry, new Throwable(ex.getCause()),thisClass);}
+    public static void error(String logEntry,Exception e){error(logEntry+"->"+e.getMessage(),null,null);}
+    public static void error(String logEntry,Exception e,Class<?> thisClass){
+        error(logEntry+": "+ e.getClass().getName() + ": " + e.getMessage(), new Throwable(e.getCause()),thisClass);
+    }
     public static void error(String logEntry,Throwable th){error(logEntry,th,null);}
     public static void error(String logEntry,Throwable th,Class<?> thisClass){
         myLevel = MyLevel.ERR;
