@@ -20,6 +20,7 @@ public class TransformerPicker {
         for(Map.Entry<String,Transformer> gtfsFileName : gtfsFilenames().entrySet()){
             if (Objects.equals(gtfsFileName.getKey(), fileName.toLowerCase())){
                 this.transformer = gtfsFileName.getValue();
+                break;
             }
         }
     }
@@ -28,6 +29,7 @@ public class TransformerPicker {
         for(Map.Entry<String,Transformer> gtfsFileName : gtfsFilenames().entrySet()){
             if (Objects.equals(gtfsFileName.getKey(), fileName.toLowerCase())){
                 this.transformer = gtfsFileName.getValue();
+                break;
             }
         }
     }

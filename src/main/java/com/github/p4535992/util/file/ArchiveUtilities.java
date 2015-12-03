@@ -64,6 +64,10 @@ public class ArchiveUtilities {
         return extractFilesFromZipFile(zipFile,nameOfFile).get(0);
     }
 
+    public static List<File> unzip(File zipFilePath, String destDirectory) throws IOException {
+        return unzip(zipFilePath.getAbsolutePath(), destDirectory);
+    }
+
     /**
      * Extracts a zip file specified by the zipFilePath to a directory specified by
      * destDirectory (will be created if does not exists)
@@ -71,19 +75,22 @@ public class ArchiveUtilities {
      * @param destDirectory
      * @throws IOException
      */
-    public void unzip(String zipFilePath, String destDirectory) throws IOException {
+    public static List<File> unzip(String zipFilePath, String destDirectory) throws IOException {
+        List<File> files = new ArrayList<>();
         File destDir = new File(destDirectory);
         if (!destDir.exists()) {
             destDir.mkdir();
         }
-        ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
+        ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(new FileInputStream(zipFilePath)));
         ZipEntry entry = zipIn.getNextEntry();
         // iterates over entries in the zip file
         while (entry != null) {
+            //String entryName = entry.getName();
             String filePath = destDirectory + File.separator + entry.getName();
             if (!entry.isDirectory()) {
                 // if the entry is a file, extracts it
                 extractFile(zipIn, filePath);
+                files.add(new File(destDirectory + File.separator + entry.getName()));
             } else {
                 // if the entry is a directory, make the directory
                 File dir = new File(filePath);
@@ -93,6 +100,7 @@ public class ArchiveUtilities {
             entry = zipIn.getNextEntry();
         }
         zipIn.close();
+        return files;
     }
 
     /**
@@ -101,7 +109,7 @@ public class ArchiveUtilities {
      * @param filePath
      * @throws IOException
      */
-    private void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
+    private static void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
         BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
         byte[] bytesIn = new byte[4096];
         int read;

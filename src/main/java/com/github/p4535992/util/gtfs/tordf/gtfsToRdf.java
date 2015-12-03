@@ -4,6 +4,7 @@ import com.github.p4535992.util.file.ArchiveUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.gtfs.tordf.helper.TransformerPicker;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
+import com.github.p4535992.util.gtfs.tordf.transformer.impl.AbstractTransformer;
 import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
 import com.github.p4535992.util.string.StringUtilities;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -27,7 +28,16 @@ public class gtfsToRdf {
         System.exit(0);
     }*/
 
-    public gtfsToRdf(){}
+    protected gtfsToRdf(){}
+
+    private static gtfsToRdf instance = null;
+
+    public static gtfsToRdf getInstance(){
+        if(instance == null){
+            instance = new gtfsToRdf();
+        }
+        return instance;
+    }
 
     private Map<String,String> setPrefixes(){
         Map<String,String>  map = new HashMap<>();
@@ -46,11 +56,11 @@ public class gtfsToRdf {
     }
 
     private List<List<Statement>> mapper(File zipFile, String baseUri) throws IOException {
-        List<File> files = ArchiveUtilities.extractAllFilesFromZipFile(zipFile);
+        List<File> files = ArchiveUtilities.unzip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
         List<List<Statement>> listStmt = new ArrayList<>();
         for(File file : files){
-            Transformer specificTransformer = (Transformer)
-                    TransformerPicker.getInstance(FileUtilities.getFilenameWithoutExt(file.getAbsolutePath()));
+            String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
+            Transformer specificTransformer = TransformerPicker.getInstance(nameFile).getTransformer();
             List<Statement> stmts = specificTransformer._Transform(file, StringUtilities.UTF_8, baseUri);
             listStmt.add(stmts);
         }
@@ -71,6 +81,14 @@ public class gtfsToRdf {
         Jena2Kit.write(fileOutput,model,outputFormat);
     }
 
+
+    public static void main(String[] args) throws IOException {
+        File zip = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.zip");
+
+        File output = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.n3");
+
+        gtfsToRdf.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output,"n-triples");
+    }
 
 
 

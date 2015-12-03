@@ -22,6 +22,7 @@ public class AgenciesTransformer extends AbstractTransformer {
 
         List<String[]> content = CSVGetContent(data, true);
         String[] columns = CSVGetHeaders(data, true);
+
         int agency_id = Arrays.asList(columns).indexOf("agency_id");
         int agency_name = Arrays.asList(columns).indexOf("agency_name");
         int agency_url = Arrays.asList(columns).indexOf("agency_url");
