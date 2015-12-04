@@ -1,5 +1,6 @@
 package com.github.p4535992.util.gtfs.tordf.transformer.impl;
 
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.rdf.model.Statement;
 
 import java.io.File;
@@ -36,7 +37,8 @@ public class AgenciesTransformer extends AbstractTransformer {
 
             // foaf:name triple
             if (agency_name != -1 && !ne(row[agency_name])) {
-                stmt.add(st(sub,"http://xmlns.com/foaf/0.1/name", row[agency_name] + "^^http://www.w3.org/2001/XMLSchema#string"));
+                //stmt.add(st(sub,"http://xmlns.com/foaf/0.1/name", row[agency_name] + "^^http://www.w3.org/2001/XMLSchema#string"));
+                stmt.add(st(sub,"http://xmlns.com/foaf/0.1/name", row[agency_name], XSDDatatype.XSDstring));
             }
 
             // foaf:page triple

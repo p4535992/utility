@@ -21,6 +21,15 @@ import java.util.regex.Pattern;
 
 /**
  * Created by 4535992 on 14/05/2015.
+ *
+ * jdbcURL #
+ * JDBC connection URL for the database. Refer to your JDBC driver documentation for the format for your database engine. Examples:
+ * MySQL: jdbc:mysql://servername/databasename
+ * PostgreSQL: jdbc:postgresql://servername/databasename
+ * Oracle: jdbc:oracle:thin:@servername:1521:databasename
+ * HSQLDB: jdbc:hsqldb:mem:databasename (in-memory database)
+ * Microsoft SQL Server: jdbc:sqlserver://servername;databaseName=databasename
+ * (due to the semicolon, the URL must be put in quotes when passed as a command-line argument in Linux/Unix shells)
  * @author 4535992
  * @version 2015-11-10.
  */

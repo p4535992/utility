@@ -3,6 +3,7 @@ package com.github.p4535992.util.gtfs.tordf.transformer.impl;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.rdf.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,10 @@ public abstract class AbstractTransformer implements Transformer {
      */
     protected Statement st(String subject,String predicate,Object object){
         return Jena2Kit.createStatement(subject, predicate, object);
+    }
+
+    protected Statement st(String subject,String predicate,Object object,XSDDatatype xsdDatatype){
+        return Jena2Kit.createStatement(subject, predicate, object,xsdDatatype);
     }
 
     /**

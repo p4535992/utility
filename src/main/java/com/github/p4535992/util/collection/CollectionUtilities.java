@@ -923,4 +923,37 @@ public class CollectionUtilities {
     }
 
 
+    //-----------------------------------------------------------------------------
+    // Method Utility for LinkedHashMap
+    // href:
+    //----------------------------------------------------------------------------
+
+    public <K,V> V getValueAt(LinkedHashMap<K,V> map,int i){
+        Map.Entry<K, V>entry = getEntryAt(map, i);
+        if(entry == null) return null;
+        return entry.getValue();
+    }
+
+    public <K,V> Map.Entry<K, V> getEntryAt(LinkedHashMap<K,V> map,int i){
+        // check if negetive index provided
+        Set<Map.Entry<K,V>>entries = map.entrySet();
+        int j = 0;
+
+        for(Map.Entry<K, V>entry : entries)
+            if(j++ == i)return entry;
+
+        return null;
+
+    }
+
+    public <K,V> V getElementAt(LinkedHashMap<K,V> map, int index) {
+        for (Map.Entry entry : map.entrySet()) {
+            if (index-- == 0) {
+                return (V) entry.getValue();
+            }
+        }
+        return null;
+    }
+
+
 }

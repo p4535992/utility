@@ -1513,7 +1513,7 @@ public class Jena2Kit {
         }
         return null;
     }
-    
+
     /*
      * public static void setPropertyObject( Resource resource, Property
      * property, Resource object) { try { StmtIterator iterator =
@@ -1533,9 +1533,7 @@ public class Jena2Kit {
      */
     public static RDFNode findObject(Resource resource,Property property) {
         RDFNode node = findFirstPropertyValue(resource, property);
-        if (node == null) {
-            return null;
-        }
+        if (node == null)  return null;
         return node;
     }
 
@@ -1766,19 +1764,60 @@ public class Jena2Kit {
 
     /**
      * Method utility: create new typed literal from uri.
+     * @param model the Model jean where create the Literal.
+     * @param stringOrObject  the value of the Jena Literal.
+     * @param datatype the Jena RDFDatatype of the literal.
+     * @return the Jena Literal.
+     */
+    private static Literal createLiteralBase(Model model,Object stringOrObject,RDFDatatype datatype){
+        if(model == null) {
+            if (isString(stringOrObject)) {
+                if (datatype != null) return ResourceFactory.createTypedLiteral(toString(stringOrObject), datatype);
+                else return ResourceFactory.createPlainLiteral(toString(stringOrObject));
+            } else {
+                if (datatype != null) return ResourceFactory.createTypedLiteral(toString(stringOrObject), datatype);
+                return ResourceFactory.createTypedLiteral(stringOrObject);
+            }
+        }else{
+            if (isString(stringOrObject)) {
+                if (datatype != null) return model.createTypedLiteral(toString(stringOrObject), datatype);
+                else return model.createLiteral(toString(stringOrObject));
+            } else {
+                if (datatype != null) return model.createTypedLiteral(stringOrObject, datatype);
+                return model.createTypedLiteral(stringOrObject);
+            }
+        }
+    }
+
+    /**
+     * Method utility: create new typed literal from uri.
+     * @param stringOrObject  the value of the Jena Literal.
+     * @param datatype the Jena RDFDatatype of the literal.
+     * @return the Jena Literal.
+     */
+    public static Literal createLiteral(Model model,Object stringOrObject,RDFDatatype datatype){
+        return createLiteralBase(model, stringOrObject, datatype);
+    }
+
+
+    /**
+     * Method utility: create new typed literal from uri.
      * @param stringOrObject  the value of the Jena Literal.
      * @param datatype the Jena RDFDatatype of the literal.
      * @return the Jena Literal.
      */
     public static Literal createLiteral(Object stringOrObject,RDFDatatype datatype){
-        if(isString(stringOrObject)){
-            if(datatype!=null)return ResourceFactory.createTypedLiteral(toString(stringOrObject),datatype);
-            else return ResourceFactory.createPlainLiteral(toString(stringOrObject));
-        }
-        else {
-            if(datatype!=null) return ResourceFactory.createTypedLiteral(toString(stringOrObject),datatype);
-            return ResourceFactory.createTypedLiteral(stringOrObject);
-        }
+        return createLiteralBase(null, stringOrObject, datatype);
+    }
+
+    /**
+     * Method utility: create new typed literal from uri.
+     * @param stringOrObject  the value of the Jena Literal.
+     * @param typeUri the Jena RDFDatatype of the literal.
+     * @return the Jena Literal.
+     */
+    public static Literal createLiteral(Object stringOrObject,String typeUri){
+        return createLiteralBase(null, stringOrObject, convertStringToRDFDatatype(typeUri));
     }
 
     /**
@@ -1787,7 +1826,7 @@ public class Jena2Kit {
      * @return the Jena Literal.
      */
     public static Literal createLiteral(Object stringOrObject){
-        return createLiteral(stringOrObject, null);
+        return createLiteralBase(null, stringOrObject, null);
     }
 
     /**
@@ -1796,7 +1835,7 @@ public class Jena2Kit {
      * @return the Jena Literal.
      */
     public static Literal createLiteral(String stringOrObject){
-        return createLiteral(stringOrObject, null);
+        return createLiteralBase(null, stringOrObject, null);
     }
 
     /**
@@ -2199,16 +2238,13 @@ public class Jena2Kit {
     }
 
     /**
+     * Method to convert a URI os String reference to a resource to a good ID.
      * NOTE: URI string: scheme://authority/path?query#fragment
-     * @param uriResource
-     * @return
+     * @param uriResource the String or URI reference Resource.
+     * @return the String id of the Resource.
      */
     private static String toId(Object uriResource){
         return URI.create(toString(uriResource).replaceAll("\\r\\n|\\r|\\n", " ").replaceAll("\\s+", "_").trim()).toString();
-    }
-
-    private static URI toUri(Object uriResource){
-        return URI.create(String.valueOf(uriResource));
     }
 
     private static String toString(Object uriResource){
@@ -2216,15 +2252,10 @@ public class Jena2Kit {
     }
 
     private static boolean isUri(Object uriResource){
-        if(uriResource instanceof URI){
-            return true;
-        }else{
-            try {
-                URI.create(String.valueOf(uriResource));
-                return true;
-            }catch(Exception e){
-                return false;
-            }
+        if(uriResource instanceof URI)return true;
+        else{
+            try { URI.create(String.valueOf(uriResource));return true;
+            }catch(Exception e){ return false;}
         }
     }
 
