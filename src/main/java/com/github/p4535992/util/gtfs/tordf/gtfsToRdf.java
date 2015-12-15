@@ -23,10 +23,8 @@ import java.util.Map;
  */
 public class gtfsToRdf {
 
-    /*private void die(String msg) {
-        logger.info(msg);
-        System.exit(0);
-    }*/
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(gtfsToRdf.class);
 
     protected gtfsToRdf(){}
 
@@ -82,14 +80,14 @@ public class gtfsToRdf {
     }
 
 
-    public static void main(String[] args) throws IOException {
+    /*public static void main(String[] args) throws IOException {
         File zip = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.zip");
 
         File output = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.n3");
 
         gtfsToRdf.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output,"n-triples");
     }
-
+*/
 
 
 

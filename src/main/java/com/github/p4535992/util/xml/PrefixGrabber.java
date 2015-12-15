@@ -1,23 +1,24 @@
 package com.github.p4535992.util.xml;
 
+import java.util.HashMap;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.util.Hashtable;
 import java.util.jar.Attributes;
 
 /**
   * A SAX ContentHandler to find the prefixes declared on the root element.
- * I don't own any right on this piece of code that belongs to Norman Walsh , i just modified for my purpose
+ * I don't own any right on this piece of code that belongs to Norman Walsh ,
+ * i just modified for my purpose
   * @author Norman Walsh
   * @version $Revision: 1.1 $
   */
 @SuppressWarnings("unused")
 class PrefixGrabber extends DefaultHandler {
-    private final Hashtable<String,String> nsHash = new Hashtable<>();
+    private final HashMap<String,String> nsHash = new HashMap<>();
     private boolean root = true;
 
-    public Hashtable<String,String> getNamespaces() {
+    public HashMap<String,String> getNamespaces() {
         return nsHash;
     }
 

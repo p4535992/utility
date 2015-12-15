@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import static java.util.Arrays.*;
@@ -29,8 +30,8 @@ import static java.util.Arrays.*;
 public class FileUtilities {
     private static String fullPath;
     private static char pathSeparator = File.separatorChar;
-    private static char extensionSeparator = '.';
-    private static String extensionSeparatorS = ".";
+    //private static char extensionSeparator = '.';
+    //private static String extensionSeparatorS = ".";
     public final static String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();
 
 
@@ -70,7 +71,7 @@ public class FileUtilities {
     public FileUtilities(String str, char separator, char extension) {
         FileUtilities.fullPath = str;
         FileUtilities.pathSeparator = separator;
-        FileUtilities.extensionSeparator = extension;
+        //FileUtilities.extensionSeparator = extension;
     }
 
     /**
@@ -86,8 +87,17 @@ public class FileUtilities {
      * @return string of the extension of the file
      */
     public static String getExtension(String fullPath) {
-        if(!fullPath.contains(extensionSeparatorS)) fullPath = fullPath +". ";
-        return fullPath.substring(fullPath.lastIndexOf(extensionSeparator) + 1);
+        if(!fullPath.contains(".")) fullPath = fullPath +". ";
+        return fullPath.substring(fullPath.lastIndexOf('.') + 1);
+
+       /* String fileName = getFilename(fullpath);
+        if (null == fileName)	throw new IllegalArgumentException("fileName can't be null.");
+        String	ext = null;
+        int	index = fileName.lastIndexOf('.');
+        if (index > 0 &&  index < fileName.length() - 1){
+            ext = fileName.substring(index+1).toLowerCase();
+        }
+        return ext;*/
     }
 
     /**
@@ -105,8 +115,8 @@ public class FileUtilities {
      * @return name of the file without the extension
      */
     public static String getFilenameWithoutExt(String fullPath) {
-        if(!fullPath.contains(extensionSeparatorS)) fullPath = fullPath +". ";
-        int dot = fullPath.lastIndexOf(extensionSeparator);
+        if(!fullPath.contains(".")) fullPath = fullPath +". ";
+        int dot = fullPath.lastIndexOf('.');
         int sep = fullPath.lastIndexOf(pathSeparator);
         return fullPath.substring(sep + 1, dot);
     }
@@ -283,6 +293,72 @@ public class FileUtilities {
         return d.mkdirs();
     }
 
+    /**
+     * Recursively traverse a directory hierachy and obtain a list of all
+     * absolute file names.
+     * <p>Regular expression patterns can be provided to explicitly include
+     * and exclude certain file names.
+     *
+     * @param file the directory whose file hierarchy will be traversed
+     * @param included an array of regular expression patterns that will be
+     * used to determine which files should be included; or
+     * <p><code>null</code> if all files should be included
+     * @param excluded an array of regular expression patterns that will be
+     * used to determine which files should be excluded; or
+     * <p><code>null</code> if no files should be excluded
+     * @return the list of absolute file names
+     * @since 1.0
+     */
+    public static ArrayList getFileList(File file, Pattern[] included, Pattern[] excluded){
+        return getFileList(file, included, excluded, true);
+    }
+
+    private static ArrayList<String> getFileList(File file, Pattern[] included, Pattern[] excluded, boolean root){
+        if (null == file)return new ArrayList<>();
+        ArrayList<String> filelist = new ArrayList<>();
+        if (file.isDirectory()){
+            String[] list = file.list();
+            if (null != list){
+                String list_entry;
+                for (String aList : list) {
+                    list_entry = aList;
+                    File next_file = new File(file.getAbsolutePath() + File.separator + list_entry);
+                    ArrayList dir = getFileList(next_file, included, excluded, false);
+                    Iterator dir_it = dir.iterator();
+                    String file_name;
+                    while (dir_it.hasNext()) {
+                        file_name = (String) dir_it.next();
+                        if (root) {
+                            // if the file is not accepted, don't process it further
+                            if (!StringUtilities.isFindWithRegex(file_name, included, excluded)) {
+                                continue;
+                            }
+                        } else {
+                            file_name = file.getName() + File.separator + file_name;
+                        }
+                        int filelist_size = filelist.size();
+                        for (int j = 0; j < filelist_size; j++) {
+                            if ((filelist.get(j)).compareTo(file_name) > 0) {
+                                filelist.add(j, file_name);
+                                break;
+                            }
+                        }
+                        if (filelist.size() == filelist_size) {
+                            filelist.add(file_name);
+                        }
+                    }
+                }
+            }
+        }else if (file.isFile()){
+            String  file_name = file.getName();
+            if (root){
+                if (StringUtilities.isFindWithRegex(file_name, included, excluded)){
+                    filelist.add(file_name);
+                }
+            }else filelist.add(file_name);
+        }
+        return filelist;
+    }
     /**
      * Method to read all file ina direcotry/folder.
      * @param directory file of the directory/folder.

@@ -1,9 +1,7 @@
 package com.github.p4535992.util.json;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -16,8 +14,10 @@ import java.util.List;
  */
 public class GsonKit {
 
-    public static JsonObject getData(String url)
-    {
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(GsonKit.class);
+
+    public static JsonObject getData(String url){
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(url);
         try
@@ -35,15 +35,11 @@ public class GsonKit {
     }
 
     public static String pojoToJson(Object obj){
-        Gson gson = new Gson();
-        String sJson = gson.toJson(obj);
-        return sJson;
+        return new Gson().toJson(obj);
     }
 
     public static Object jsonToPojo(String sJson,Class<?> clazz){
-        Gson gson = new Gson();
-        Object obj = new Gson().fromJson(sJson, clazz);
-        return obj;
+        return new Gson().fromJson(sJson, clazz);
     }
 
 //    public static <T> List jsontToListPojo(List<T> arrayOfObjectJSON){

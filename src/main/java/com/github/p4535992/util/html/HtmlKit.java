@@ -2,7 +2,6 @@ package com.github.p4535992.util.html;
 import com.github.p4535992.util.html.parser.Outliner;
 import com.github.p4535992.util.html.parser.PageSaver;
 import com.github.p4535992.util.html.parser.ParserGetter;
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtilities;
 
 import java.io.*;
@@ -22,6 +21,9 @@ import javax.swing.text.html.parser.ParserDelegator;
  */
 @SuppressWarnings("unused")
 public class HtmlKit {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(HtmlKit.class);
 
     public static void callPageSaver(InputStream is,URL url) throws IOException {
         ParserGetter kit = new ParserGetter();
@@ -64,7 +66,7 @@ public class HtmlKit {
                     String html = "";
                     new ParserDelegator().parse(new StringReader(html), parserCallback, true); //true make ignore the charset
                 } catch (Exception e2) {
-                    SystemLog.exception(e2);
+                   logger.error(e2.getMessage(), e2);
                 }
             }
         }
@@ -394,7 +396,7 @@ public class HtmlKit {
                 elems.add(d1.getElement(i));
             }
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(e.getMessage(),e);
         }
         return elems;
     }
@@ -405,16 +407,10 @@ public class HtmlKit {
 
     /**
      * This method is used to insert HTML block dynamically
-     *
-     * @param source
-     *            the HTML code to be processes
-     * @param replaceNl
-     *            if true '\n' will be replaced by &lt;br
-     * @param replaceTag
-     *            if true '' will be replaced by &lt; and '' will be replaced
-     *            by &gt;
-     * @param replaceQuote
-     *            if true '\"' will be replaced by &quot;
+     * @param source the HTML code to be processes
+     * @param replaceNl  if true '\n' will be replaced by &lt;br
+     * @param replaceTag if true '' will be replaced by &lt; and '' will be replaced by &gt;
+     * @param replaceQuote if true '\"' will be replaced by &quot;
      * @return the formated html block
      */
     public static String formatHtml( String source, boolean replaceNl, boolean replaceTag,boolean replaceQuote ){

@@ -1,6 +1,5 @@
 package com.github.p4535992.util.xml;
 
-
 import com.github.p4535992.util.log.SystemLog;
 import org.jdom2.Document;
 import org.jdom2.Element;

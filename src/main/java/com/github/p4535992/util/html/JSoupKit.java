@@ -1,7 +1,8 @@
 package com.github.p4535992.util.html;
-import com.github.p4535992.util.http.impl.HttpUtil;
-import com.github.p4535992.util.log.SystemLog;
+
+import com.github.p4535992.util.http.HttpUtilities;
 import com.github.p4535992.util.string.StringUtilities;
+import org.jsoup.nodes.Document;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +17,9 @@ import java.util.*;
  */
 @SuppressWarnings("unused")
 public class JSoupKit {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(JSoupKit.class);
     
     //Variable to filter the attributes
     private static boolean filterAttr = false;
@@ -73,8 +77,13 @@ public class JSoupKit {
                 try {
                     htmldoc = org.jsoup.Jsoup.connect(htmlContentOrUrl).get();
                 }catch(Exception e) {
-                    String doc = HttpUtil.get(htmlContentOrUrl);
-                    htmldoc = convertHTMLStringToJsoupDocument(doc);
+                    try {
+                        String doc = HttpUtilities.executeHTTPGetRequest(htmlContentOrUrl);
+                        htmldoc = convertHTMLStringToJsoupDocument(doc);
+                    }catch(Exception e2){
+                        logger.error(e2.getMessage(),e2);
+                        htmldoc = Document.createShell(htmlContentOrUrl);
+                    }
                 }
             }
             else htmldoc = org.jsoup.Jsoup.parse(htmlContentOrUrl);
@@ -492,8 +501,8 @@ public class JSoupKit {
                             .post();
                     htmlContent = doc.outerHtml();
                 } catch (IOException e1) {
-                    SystemLog.error("JSOUP can't convert the url to a string maybe the " +
-                            "web page not exists anymore or can't be reach");
+                    logger.error("JSOUP can't convert the url to a string maybe the " +
+                            "web page not exists anymore or can't be reach", e1);
                     return null;
                 }
             }

@@ -2,7 +2,6 @@ package com.github.p4535992.util.http;
 
 import com.github.p4535992.util.http.impl.HttpUtil;
 import com.github.p4535992.util.http.impl.URLUtil;
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtilities;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -22,6 +21,9 @@ import java.util.Map;
 @SuppressWarnings("unused")
 public class HttpKit {
 
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(HttpKit.class);
+
     private static HttpKit instance = null;
 
     protected HttpKit(){}
@@ -37,7 +39,7 @@ public class HttpKit {
         try {
             return URLUtil.resolveURL(base, target);
         } catch (MalformedURLException e) {
-            SystemLog.warning("The "+base+ File.separator+target+" is not a correct url !!!");
+           logger.error("The "+base+ File.separator+target+" is not a correct url !",e);
             return null;
         }
     }
@@ -47,11 +49,11 @@ public class HttpKit {
             if (StringUtilities.isURL(url)) {
                 return getDomainName(new URL(url));
             } else {
-                SystemLog.warning("The " + url + " is not a correct url !!!");
+                logger.warn("The " + url + " is not a correct url !!!");
                 return null;
             }
         }catch (MalformedURLException|java.lang.NullPointerException e) {
-            SystemLog.warning("The " + url + " is not a correct url !!!");
+            logger.error("The " + url + " is not a correct url !!!", e);
             return null;
         }
 
@@ -66,11 +68,11 @@ public class HttpKit {
             if (StringUtilities.isURL(url)) {
                 return getTopLevelDomainName(new URL(url));
             } else {
-                SystemLog.warning("The " + url + " is not a correct url !!!");
+                logger.warn("The " + url + " is not a correct url !!!");
                 return null;
             }
         }catch (MalformedURLException e) {
-            SystemLog.warning("The " + url + " is not a correct url !!!");
+            logger.error("The " + url + " is not a correct url !!!",e);
             return null;
         }
     }
@@ -79,7 +81,7 @@ public class HttpKit {
         try {
             return URLUtil.getTopLevelDomainName(url);
         } catch (MalformedURLException e) {
-            SystemLog.warning("The " + url + " is not a correct url !!!");
+            logger.error("The " + url + " is not a correct url !!!", e);
             return null;
         }
     }
@@ -89,11 +91,11 @@ public class HttpKit {
             if (StringUtilities.isURL(url1) && StringUtilities.isURL(url2)) {
                 return isSameDomainName(new URL(url1), new URL(url2));
             } else {
-                SystemLog.warning("The " + url1 + " or "+url2+" is not a correct url !!!");
+                logger.warn("The " + url1 + " or " + url2 + " is not a correct url !!!");
                 return false;
             }
         }catch (MalformedURLException e) {
-            SystemLog.warning("The " + url1 + " or "+url2+" is not a correct url !!!");
+            logger.error("The " + url1 + " or " + url2 + " is not a correct url !!!");
             return false;
         }
     }
@@ -107,11 +109,11 @@ public class HttpKit {
             if (StringUtilities.isURL(url)) {
                 return getHostSegments(new URL(url));
             } else {
-                SystemLog.warning("The " + url + " is not a correct url !!!");
+                logger.warn("The " + url + " is not a correct url !!!");
                 return null;
             }
         } catch (MalformedURLException e) {
-            SystemLog.warning("The " + url + " is not a correct url !!!");
+            logger.error("The " + url + " is not a correct url !!!", e);
             return null;
         }
     }
@@ -148,7 +150,7 @@ public class HttpKit {
         try {
             return HttpUtil.get(url, headers);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -157,7 +159,7 @@ public class HttpKit {
         try {
             return HttpUtil.get(url);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -166,7 +168,7 @@ public class HttpKit {
         try {
             return HttpUtil.post(url, body, headers);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -175,7 +177,7 @@ public class HttpKit {
         try {
             return HttpUtil.post(url, body);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -184,7 +186,7 @@ public class HttpKit {
         try {
             return HttpUtil.postForm(url, params);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -193,7 +195,7 @@ public class HttpKit {
         try {
             return HttpUtil.postForm(url, params, headers);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -202,7 +204,7 @@ public class HttpKit {
         try {
             return HttpUtil.put(url, body, headers);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -211,7 +213,7 @@ public class HttpKit {
         try {
             return HttpUtil.put(url, body);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -220,7 +222,7 @@ public class HttpKit {
         try {
             return HttpUtil.delete(url);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -229,7 +231,7 @@ public class HttpKit {
         try {
             return HttpUtil.delete(url, headers);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -238,7 +240,7 @@ public class HttpKit {
         try {
             return HttpUtil.appendQueryParams(url, params);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -247,7 +249,7 @@ public class HttpKit {
         try {
             return HttpUtil.getQueryParams(url);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -256,7 +258,7 @@ public class HttpKit {
         try {
             return HttpUtil.removeQueryParams(url);
         } catch (IOException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -286,7 +288,6 @@ public class HttpKit {
         try{
             String html = HttpUtil.get(url);
             doc = Jsoup.parse(html);
-            SystemLog.message("HTTP GET HA AVUTO SUCCESSO");
             tentativi = 0;
             return doc != null;
         }catch(Exception en){

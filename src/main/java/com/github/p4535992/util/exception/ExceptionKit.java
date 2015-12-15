@@ -188,6 +188,30 @@ public class ExceptionKit extends  RuntimeException{
         return false;
     }
 
+    /**
+     * Obtains the entire stracktrace of an exception and converts it into a
+     * string.
+     *
+     * @param exception the exception whose stacktrace has to be converted
+     * @return the stracktrace, converted into a string
+     * @since 1.0
+     */
+    public static String getExceptionStackTrace(Throwable exception) {
+        if (null == exception)  throw new IllegalArgumentException("exception can't be null;");
+        String stack_trace;
+        StringWriter string_writer = new StringWriter();
+        PrintWriter print_writer = new PrintWriter(string_writer);
+        exception.printStackTrace(print_writer);
+        stack_trace = string_writer.getBuffer().toString();
+        print_writer.close();
+        try {
+            string_writer.close();}
+        // JDK 1.2.2 compatibility
+        catch (Throwable ignored) {}
+
+        return stack_trace;
+    }
+
       /*public static void logStackTrace(Exception e, org.slf4j.Logger logger) {
         logger.debug(e.getMessage());
         for (StackTraceElement stackTrace : e.getStackTrace()) {

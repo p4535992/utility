@@ -5,10 +5,12 @@ import java.util.*;
 
 /**
  * Created by 4535992 on 05/11/2015.
+ * @author 4535992.
  */
 public class PrintLog extends PrintStream {
 
-    private static final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(SystemLog.class);
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(PrintLog.class);
 
     //-----------------------------------------------
     //Constructor

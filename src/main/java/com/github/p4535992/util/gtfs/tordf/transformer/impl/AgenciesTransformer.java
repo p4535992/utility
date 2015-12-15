@@ -17,6 +17,9 @@ import java.util.List;
  */
 public class AgenciesTransformer extends AbstractTransformer {
 
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(AgenciesTransformer.class);
+
     @Override
     public List<Statement> _Transform(File data, Charset encoding, String _feedbaseuri) {
         List<Statement> stmt = new ArrayList<>();

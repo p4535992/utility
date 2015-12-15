@@ -1,12 +1,9 @@
 package com.github.p4535992.util.gtfs.tordf.transformer.impl;
 
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.rdf.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
@@ -26,7 +23,8 @@ import java.util.List;
  */
 public abstract class AbstractTransformer implements Transformer {
 
-    private static Logger logger = LoggerFactory.getLogger(AbstractTransformer.class);
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(AbstractTransformer.class);
 
     @Override
     public List<Statement> _Transform(File data, Charset encoding, String _feedbaseuri) {
@@ -87,7 +85,6 @@ public abstract class AbstractTransformer implements Transformer {
      * @param CSV the File comma separated.
      * @param header if true jump the first line of the content.
      * @return the List of Array of the content of the File comma separated.
-     * @throws IOException throw if the file not exists.
      */
     protected List<String[]> CSVGetContent(File CSV,boolean header){
         List<String[]> content = new ArrayList<>();

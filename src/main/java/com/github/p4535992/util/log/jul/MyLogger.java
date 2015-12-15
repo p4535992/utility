@@ -1,4 +1,4 @@
-package com.github.p4535992.util.log.formatter;
+package com.github.p4535992.util.log.jul;
 
 import java.io.IOException;
 import java.util.logging.*;

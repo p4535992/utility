@@ -16,7 +16,9 @@ import java.util.logging.Logger;
  * href: http://users.csc.calpoly.edu/~jdalbey/SWE/Tools/LogFile.java.
  * @author 4535992.
  * @version 2015-07-14.
+ * @deprecated use {@link org.slf4j.Logger}.
  */
+@Deprecated
 public class SystemLog extends OutputStream{
 
    /* private static java.lang.reflect.Type t;
@@ -116,7 +118,7 @@ public class SystemLog extends OutputStream{
 
     public static SystemLog startWithLog4J(File fileXML){
         isLog4j = true;
-        SystemLog4j.configurationLog4j(fileXML);
+        //SystemLog4j.configurationLog4j(fileXML);
         if(instance == null)instance = start();
         return instance;
     }
@@ -126,7 +128,7 @@ public class SystemLog extends OutputStream{
         isPRINT = true;
         if(instance == null){
             prepareLogFile(fileOutput);
-            SystemLog4j.configurationLog4j(fileXML);
+            //SystemLog4j.configurationLog4j(fileXML);
             instance = new SystemLog();
         }
         return instance ;
@@ -185,7 +187,7 @@ public class SystemLog extends OutputStream{
                 if(out!=null)out.close();
             }
         }
-        if(isLog4j)  SystemLog4j.closeLog4J();
+        //if(isLog4j)  SystemLog4j.closeLog4J();
         PrintLog.stop();
         // Shut down log4j
         isDEBUG = false; isERROR = false; isPRINT = false; isInline = false;  isLogOff = false;
@@ -585,6 +587,13 @@ public class SystemLog extends OutputStream{
             doNext = s.getMethodName().equals("getStackTrace");
         }
         return null;
+    }
+
+    public static void logException(org.slf4j.Logger logger, Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        logger.error(sw.toString());
     }
 }
 

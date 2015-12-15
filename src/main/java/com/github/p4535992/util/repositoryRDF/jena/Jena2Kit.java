@@ -1,9 +1,7 @@
 package com.github.p4535992.util.repositoryRDF.jena;
 
 
-import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.string.StringUtilities;
 
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.xml.XMLKit;
@@ -30,6 +28,7 @@ import com.hp.hpl.jena.vocabulary.RSS;
 
 import java.io.*;
 import java.net.URI;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -47,7 +46,7 @@ import org.apache.jena.riot.RDFFormat;
  * Class utility for Jena
  * Created by 4535992 in 2015-04-28.
  * @author 4535992.
- * @version 2015-09-30.
+ * @version 2015-12-07.
  */
 @SuppressWarnings("unused")
 public class Jena2Kit {
@@ -927,7 +926,7 @@ public class Jena2Kit {
         try {
             Property p;
             String uri = namespaces.get(prefix);
-            if(!StringUtilities.isNullOrEmpty(uri)) {
+            if(!isNullOrEmpty(uri)) {
                 p = model.createProperty(uri, property);
             }else{
                 p = model.createProperty(property);
@@ -983,9 +982,8 @@ public class Jena2Kit {
     public static String findNamespacePrefix(String namespace) {
         if (namespaces.containsValue(namespace)) {
             // find it...
-            Iterator<String> keys =
-                    CollectionUtilities.toIterator(namespaces.keySet());
-            while (keys.hasNext()) {
+            Iterator<String> keys = namespaces.keySet().iterator();
+            while(keys.hasNext()) {
                 String prefix = keys.next();
                 if (namespace.equals(namespaces.get(prefix))) {
                     return prefix;
@@ -1017,7 +1015,7 @@ public class Jena2Kit {
     public static String convertModelToString(Model showRDF, String baseURI,String outputFormat) {
         //StringOutputStreamKit stringOutput = new StringOutputStreamKit();
         Writer stringOutput = new StringWriter();
-        if(!StringUtilities.isNullOrEmpty(outputFormat)){
+        if(!isNullOrEmpty(outputFormat)){
              RDFFormat rdfFormat = createToRDFFormat(outputFormat);
              if(rdfFormat==null){outputFormat = "RDF/XML-ABBREV";}
         }else{
@@ -1266,7 +1264,7 @@ public class Jena2Kit {
         if (model == null) {
             return "Null Model.";
         }
-        if(!StringUtilities.isNullOrEmpty(outputFormat)){
+        if (!isNullOrEmpty(outputFormat)){
             try {
                 RDFFormat rdfFormat = createToRDFFormat(outputFormat);
                 outputFormat = rdfFormat.getLang().getName();
@@ -1633,7 +1631,7 @@ public class Jena2Kit {
      * @return the Jena Resource.
      */
     public static Resource createResource(Object localNameOrUri){
-        return createResource(null,localNameOrUri);
+        return createResource(null, localNameOrUri);
     }
 
     /**
@@ -1947,6 +1945,32 @@ public class Jena2Kit {
     }
 
     /**
+     * Method utility: create statement form a jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @param graphUri  the URI to the graph base of the ontology.
+     * @param xsdDatatype the XSDDatatype of the Literal
+     * @return Statement.
+     */
+    public static Statement createStatement(String subject,String predicate,Object object,String graphUri,XSDDatatype xsdDatatype){
+        return createStatementBase(null, subject, predicate, object, graphUri, xsdDatatype);
+    }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @param graphUri  the URI to the graph base of the ontology.
+     * @param xsdDatatype the XSDDatatype of the Literal
+     * @return Statement.
+     */
+    public static Statement createStatement(String subject,String predicate,Object object,String graphUri,String xsdDatatype){
+        return createStatementBase(null, subject, predicate, object, graphUri, createToXSDDatatype(xsdDatatype));
+    }
+
+    /**
      * Method to create a Jena Dataset for the SPARQL query.
      * @param dftGraphURI the URI of the location of the resource with the triples.
      * @param namedGraphURIs the URI's of all locations with name.
@@ -2207,6 +2231,22 @@ public class Jena2Kit {
         return ModelFactory.createInfModel(reasoner, model);
     }
 
+    /**
+     * Method to convert a dataset to a OntoModel, now you can add some rule to uor TDB Model.
+     * @param dataset the DataSet Jena Object.
+     * @param OwlOrSWRL the Rules to add to the DataSet Jena Object.
+     * @return the Ontology Model.
+     */
+    public static OntModel createOntoModel(Dataset dataset,URL OwlOrSWRL){
+        Model     m = dataset.getDefaultModel(); //the TDB data
+        Model toto =  ModelFactory.createDefaultModel();
+        toto.read(OwlOrSWRL.toString()); // the OWL & SWRL rules inside
+        Model union = ModelFactory.createUnion(m, toto); //Merging both
+        OntModelSpec spec = OntModelSpec.RDFS_MEM_TRANS_INF;
+        //return ModelFactory.createOntologyModel(PelletReasonerFactory.THE_SPEC ,union); // Use Pellet reasonner
+        return ModelFactory.createOntologyModel(spec,union); // Use Pellet reasonner
+    }
+
 
     //--------------------------------
     //Utility private methods
@@ -2260,17 +2300,17 @@ public class Jena2Kit {
     }
 
     private static boolean isStringNoEmpty(Object uriResource){
-        return (uriResource instanceof String && !StringUtilities.isNullOrEmpty(String.valueOf(uriResource)));
+        return (uriResource instanceof String && !isNullOrEmpty(String.valueOf(uriResource)));
     }
 
     private static boolean isStringEmpty(Object uriResource){
-        return (uriResource instanceof String && StringUtilities.isNullOrEmpty(toString(uriResource)));
+        return (uriResource instanceof String && isNullOrEmpty(toString(uriResource)));
     }
 
     private static boolean isStringOrUriEmpty(Object uriResource){
         return (
-                (uriResource instanceof String && StringUtilities.isNullOrEmpty(toString(uriResource))) ||
-                (uriResource instanceof URI && StringUtilities.isNullOrEmpty(toString(uriResource)))
+                (uriResource instanceof String && isNullOrEmpty(toString(uriResource))) ||
+                (uriResource instanceof URI && isNullOrEmpty(toString(uriResource)))
         );
     }
 
@@ -2278,8 +2318,17 @@ public class Jena2Kit {
         return (uriResource instanceof String);
     }
 
-    private static IRI toIri(Object uriResource){
+    public static IRI toIri(Object uriResource){
         return IRIFactory.uriImplementation().construct(toString(uriResource));
+    }
+
+    /**
+     * Method to Returns true if the parameter is null or empty. false otherwise.
+     * @param text string text.
+     * @return true if the parameter is null or empty.
+     */
+    private static boolean isNullOrEmpty(String text) {
+        return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty() ;
     }
 
 

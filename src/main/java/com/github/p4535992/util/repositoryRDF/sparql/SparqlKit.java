@@ -1,8 +1,10 @@
 package com.github.p4535992.util.repositoryRDF.sparql;
 
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by 4535992 on 07/07/2015.
@@ -11,6 +13,18 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public class SparqlKit {
+    
+    private static final org.slf4j.Logger logger =  
+            LoggerFactory.getLogger(SparqlKit.class);
+    
+    private static SparqlKit instance = null;
+    protected SparqlKit(){}
+    public static SparqlKit getInstance(){
+        if(instance == null) {
+            instance = new SparqlKit();
+        }
+        return instance;
+    }
 
     public static final String SPARQL_TYPE = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
     public static final String a = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
@@ -68,15 +82,6 @@ public class SparqlKit {
     public static final String wordnsc = "http://www.w3.org/2006/03/wn/wn20/schema/";
     public static final String xsd = "http://www.w3.org/2001/XMLSchema#";
     public static final String yago = "http://mpii.de/yago/resource/";
-
-    private static SparqlKit instance = null;
-    protected SparqlKit(){}
-    public static SparqlKit getInstance(){
-        if(instance == null) {
-            instance = new SparqlKit();
-        }
-        return instance;
-    }
 
     private static final Map<String,String> namespacePrefixes = new HashMap<>();
 

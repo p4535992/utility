@@ -14,6 +14,9 @@ import java.awt.Color;
  */
 public class Colors {
 
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(Color.class);
+
     /** Don't instantiate this, use only the static methods */
     private Colors() {
     }

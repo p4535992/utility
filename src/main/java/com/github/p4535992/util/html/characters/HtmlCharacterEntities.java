@@ -1,4 +1,4 @@
-package com.github.p4535992.util.html;
+package com.github.p4535992.util.html.characters;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

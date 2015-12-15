@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2009 Ferenc Hechler - ferenc_hechler@users.sourceforge.net
- * http://www.androidsnippets.org/snippets/39/index.html
- */
-
 package com.github.p4535992.util.security.encrypt;
 
 import java.security.SecureRandom;
@@ -17,6 +12,8 @@ import javax.crypto.spec.SecretKeySpec;
  * <pre>
  * String crypto = SimpleCrypto.encrypt(masterpassword, cleartext)
  * ...
+ * Copyright (c) 2009 Ferenc Hechler - ferenc_hechler@users.sourceforge.net
+ * http://www.androidsnippets.org/snippets/39/index.html
  * String cleartext = SimpleCrypto.decrypt(masterpassword, crypto)
  * </pre>
  * @author ferenc.hechler

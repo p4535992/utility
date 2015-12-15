@@ -1,6 +1,5 @@
 package com.github.p4535992.util.image;
 
-import com.github.p4535992.util.log.SystemLog;
 import info.aduna.io.FileUtil;
 
 import javax.imageio.ImageIO;
@@ -22,6 +21,9 @@ import java.util.Iterator;
  */
 @SuppressWarnings("unused")
 public class ImageKit {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(ImageKit.class);
 
     public static void captureScreen(String fileName) throws Exception {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -61,7 +63,7 @@ public class ImageKit {
         try {
             ImageIO.write(bImage, FileUtil.getFileExtension(filePathImage).toUpperCase(),new File(filePathImage));
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(e.getMessage(),e);
         }
     }
 
@@ -77,7 +79,7 @@ public class ImageKit {
             }
             return sb.toString();
         }catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(e.getMessage(), e);
         }
         return null;
     }
@@ -94,7 +96,7 @@ public class ImageKit {
             }
             return sb.toString();
         }catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(e.getMessage(), e);
         }
         return null;
     }
@@ -122,7 +124,7 @@ public class ImageKit {
             GraphicsConfiguration gc = gs.getDefaultConfiguration();
             bimage = gc.createCompatibleImage(image.getWidth(null), image.getHeight(null), transparency);
         } catch (HeadlessException e) {
-            SystemLog.warning(e.getMessage());
+            logger.warn(e.getMessage(), e);
         } //No screen
         if (bimage == null) {
             // Create a buffered image using the default color model
@@ -142,7 +144,7 @@ public class ImageKit {
         try {
             return ImageIO.read(file);
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(e.getMessage(), e);
         }
         return null;
     }
@@ -182,7 +184,7 @@ public class ImageKit {
         try {
             pg.grabPixels();
         } catch (InterruptedException e) {
-            SystemLog.warning(e.getMessage());
+            logger.error(e.getMessage(), e);
         }
         // Get the image's color model
         return pg.getColorModel().hasAlpha();
@@ -228,7 +230,7 @@ public class ImageKit {
             try {
                 Thread.sleep(300);
             } catch (InterruptedException e) {
-                SystemLog.warning(e.getMessage());
+                logger.warn(e.getMessage(),e);
             }
         }
     }

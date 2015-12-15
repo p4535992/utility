@@ -1,8 +1,6 @@
 package com.github.p4535992.util.string;
 
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.regex.pattern.Patterns;
-import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -14,12 +12,10 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * Created by 4535992 on 06/11/2015.
@@ -31,14 +27,15 @@ import java.util.regex.Pattern;
  */
 @SuppressWarnings("unused")
 public class StringUtilities {
+    
+    private static final org.slf4j.Logger logger = 
+            org.slf4j.LoggerFactory.getLogger(StringUtilities.class);
 
-     /*public enum special{
+     public enum special{
         WHITESPACE(0), NBSP(1),NEWLINE(2),PROJECTDIR(3),LINE_FEED(4),LINE_SEP(5),EMPTY_STR(6),
         LT(7),GT(8),AMP(9),QUAT(10),SINGLE_QUAT(11),ESC_LT(12),ESC_GT(13),ESC_AMP(14),CRLF(15);
         private final Integer value;
-        special(Integer value) {
-            this.value = value;
-        }
+        special(Integer value) {this.value = value;}
         @Override
         public String toString() {
             String svalue="";
@@ -63,19 +60,17 @@ public class StringUtilities {
             }
             return svalue;
         }
-    }*/
+    }
 
     /**
      * A regular expression that matches several kinds of whitespace characters, including and newlines.
      */
     public static final String WHITESPACE = "\\s+";
-
     /**
      * A non-breaking space string. Using this instead of a regular space string (" ") will
      * prevent from applying their normal line-breaking behavior.
      */
     public static final String NBSP = "\u00A0";
-
     /**
      * A non-breaking space character. Using this instead of a regular space character (' ')
      * will prevent from applying their normal line-breaking behavior.
@@ -83,6 +78,8 @@ public class StringUtilities {
     public static final char NBSP_CHAR = '\u00A0';
     public static final String LINE_FEED = "\r\n";
     public static final String LINE_SEP = System.getProperty("line.separator");
+    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    public static final String PROJECT_DIR = System.getProperty("user.dir");
     public static final String EMPTY_STR = "";
     public static final String LT = "<";
     public static final String GT = ">";
@@ -94,7 +91,7 @@ public class StringUtilities {
     public static final String ESC_AMP = "&amp;";
     public static final String CRLF = "\r\n";
 
-
+    /*Set of Charset used on java app*/
     public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
     public static final Charset US_ASCII = Charset.forName("US-ASCII");
     public static final Charset UTF_16 = Charset.forName("UTF-16");
@@ -102,9 +99,8 @@ public class StringUtilities {
     public static final Charset UTF_16LE = Charset.forName("UTF-16LE");
     public static final Charset UTF_8 = Charset.forName("UTF-8");
     public static final Charset CP1252 = Charset.forName("Cp1252");
-    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
     public static final Charset DEFAULT_ENCODING = Charset.forName(System.getProperty("file.encoding"));
-    public static final String PROJECT_DIR = System.getProperty("user.dir");
+    
 
     public static Charset toCharset(Charset charset) {
         return charset == null ? Charset.defaultCharset() : charset;
@@ -127,7 +123,6 @@ public class StringUtilities {
     //-------------------------------------------
     /**
      * Uses androids android.util.Patterns.EMAIL_ADDRESS to check if an email address is valid.
-     *
      * @param email Address to check
      * @return true if the <code>email</code> is a valid email address.
      */
@@ -137,7 +132,6 @@ public class StringUtilities {
 
     /**
      * Uses androids android.telephony.PhoneNumberUtils to check if an phone number is valid.
-     *
      * @param number Phone number to check
      * @return true if the <code>number</code> is a valid phone number.
      */
@@ -191,15 +185,6 @@ public class StringUtilities {
     public static boolean isURL(String url){
         return isValidURL(url);
     }
-
-    /**
-     * Method to check if a string is a url address web or not.
-     * @param url the string address web.
-     * @return if tru is a url address web.
-     */
-    /*public static boolean isURLWithProtocol(String url){
-        return url.matches("^(https?|ftp)://.*$");
-    }*/
 
     /**
      * Method for check if a string rappresent a numeric value.
@@ -301,6 +286,59 @@ public class StringUtilities {
     public static String findWithRegex(String text,String expression){
         Pattern pat = Pattern.compile(expression);
         return findWithRegex(text,pat);
+    }
+
+    /**
+     * Checks if the name filters through an including and an excluding
+     * regular expression.
+     * @param name The <code>String</code> that will be filtered.
+     * @param included The regular expressions that needs to succeed.
+     * @param excluded The regular expressions that needs to fail.
+     * @return true if the name filtered through correctly; or false otherwise.
+     */
+    public static boolean isMatch(String name, Pattern included, Pattern excluded){
+        Pattern[] included_array = null;
+        if (included != null)included_array = new Pattern[] {included};
+        Pattern[] excluded_array = null;
+        if (excluded != null)excluded_array = new Pattern[] {excluded};
+        return isMatch(name, included_array, excluded_array);
+    }
+
+    /**
+     * Checks if the name filters through a series of including and excluding
+     * regular expressions.
+     * @param name The String that will be filtered.
+     * @param included An array of regular expressions that need to succeed
+     * @param excluded An array of regular expressions that need to fail
+     * @return true if the name filtered through correctly; or false otherwise.
+     */
+    public static boolean isMatch(String name, Pattern[] included, Pattern[] excluded) {
+        if (null == name)return false;
+        boolean accepted = false;
+        // retain only the includes
+        if (null == included) accepted = true;
+        else {
+            Pattern pattern;
+            for (Pattern anIncluded : included) {
+                pattern = anIncluded;
+                if (pattern != null && pattern.matcher(name).matches()) {
+                    accepted = true;
+                    break;
+                }
+            }
+        }
+        // remove the excludes
+        if (accepted && excluded != null){
+            Pattern pattern;
+            for(Pattern anExcluded : excluded) {
+                pattern = anExcluded;
+                if (pattern != null && pattern.matcher(name).matches()) {
+                    accepted = false;
+                    break;
+                }
+            }
+        }
+        return accepted;
     }
 
     /**
@@ -459,7 +497,7 @@ public class StringUtilities {
         try {
             return new byte[is.available()];
         }catch (IOException e){
-           SystemLog.exception(e);
+           logger.error(e.getMessage(),e);
            return null;
         }
    }
@@ -595,15 +633,13 @@ public class StringUtilities {
                 sb.append(line);
                 line = br.readLine();
             }
-        } catch (IOException io) {
-            SystemLog.warning("Failed to read from Stream");
-            SystemLog.exception(io);
+        } catch (IOException io) {   
+            logger.error("Failed to read from Stream",io);
         } finally {
             try {
                 br.close();
             } catch (IOException ioex) {
-                System.out.println("Failed to close Streams");
-                SystemLog.exception(ioex);
+                logger.error("Failed to close Streams",ioex);
             }
         }
         return sb.toString();
@@ -633,7 +669,9 @@ public class StringUtilities {
 
     }
 
-    private static final char[] hexChar = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+    private static final char[] hexChar = 
+    {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+    
     /**
      * Method for convert a string UTF-8 to HEX
      * @param s string of text you want to convert to HEX
@@ -735,15 +773,24 @@ public class StringUtilities {
      * @return string asuuid.
      */
     public static String createUUID(){ return  java.util.UUID.randomUUID().toString(); }
+    
     /**
      * Metodo che converte una stringa a un'oggetto UUID.
      * @param uuid string uuid.
      * @return java.util.UUID.
      */
     public static java.util.UUID toUUID(String uuid){return java.util.UUID.fromString(uuid); }
+    
+     /**
+     * Metodo che converte una stringa a un'oggetto UUID.
+     * @param uuid Byte array of the uuid.
+     * @return java.util.UUID.
+     */
+    public static java.util.UUID toUUID(byte[] uuid){return java.util.UUID.nameUUIDFromBytes(uuid); }
 
     /**
-     * Methohs remove the symbol if exists in the first and last character of the string
+     * Methohs remove the symbol if exists in the first and last character of the string.
+     * OLD_NAME: removeFirstAndLast;
      * @param stringToUpdate string of input.
      * @param symbol symbol to check.
      * @return the string update.
@@ -771,33 +818,6 @@ public class StringUtilities {
         if(isNullOrEmpty(s)){return null;}
         else{return s;}
     } //setNullforEmptyString
-
-    /**
-     * Metodo che assegna attraverso un meccanismo di "mapping" ad ogni valore
-     * distinto del parametro in questione un numero (la frequenza) prendeno il
-     * valore con la massima frequenza abbiamo ricavato il valore più diffuso
-     * per tale parametro.
-     * @param al lista dei valori per il determianto parametro del GeoDocument.
-     * @param <T> generic variable.
-     * @return  il valore più diffuso per tale parametro.
-     */
-    /*public static <T> T getMoreCommonParameter(List<T> al){
-       Map<T,Integer> map = new HashMap<>();
-        for (T anAl : al) {
-            Integer count = map.get(anAl);
-            map.put(anAl, count == null ? 1 : count + 1);   //auto boxing and count
-        }
-       T keyParameter=null;
-       Integer keyValue =0;
-       for ( Map.Entry<T, Integer> entry : map.entrySet()) {
-           T key = entry.getKey();
-           Integer value = entry.getValue();
-           if(value >= keyValue && setNullForEmptyString(key.toString())!=null && !key.toString().equalsIgnoreCase("null")){
-               keyValue = value;
-               keyParameter = key;
-           }
-       }return keyParameter;
-    }//getMoreCommonParameter*/
 
     /**
      * Metodo che "taglia" la descrizione dell'edificio al minimo indispensabile.
@@ -828,7 +848,7 @@ public class StringUtilities {
             out.flush();
             //out.close();
         }catch (IOException e) {
-            SystemLog.exception(e,StringUtilities.class);
+            logger.error(e.getMessage(),e);
         }
         return outputPathFileName;
     }
@@ -863,13 +883,13 @@ public class StringUtilities {
                 String line = br.readLine();
                 while (line != null) {
                     sbFile.append(line);// append the line of the file
-                    sbFile.append('@');// separate the line with a '@'
+                    sbFile.append('\n');// separate the line with a '@'
                     line = br.readLine();// read the next line of the file
                 }
                 readFile = sbFile.toString();// this string contains the character sequence
             }
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(e.getMessage(),e);
         }
         return  readFile;
     }
@@ -880,27 +900,30 @@ public class StringUtilities {
      * @param text the String text to parse.
      * @return string of int where the first element is the number of words,the second is the number of characters
      * and the third is the number of lines.
-     * @throws IOException throw if any error is occurred.
      */
-    public static int[] countElement(String text) throws IOException {
-        int i=0,j=0,k=0;
-        BufferedReader br = new BufferedReader(new InputStreamReader(toStream(text)));
-        String s;
-        s = br.readLine();//Enter File Name:
-        br=new BufferedReader(new FileReader(s));
-        while((s=br.readLine())!=null)
-        {
-            k++;
-            StringTokenizer st=new StringTokenizer(s," .,:;!?");
-            while(st.hasMoreTokens())
+    public static int[] countElement(String text){
+        try {
+            int i=0,j=0,k=0;
+            BufferedReader br = new BufferedReader(new InputStreamReader(toStream(text)));
+            String s;
+            s = br.readLine();//Enter File Name:
+            br=new BufferedReader(new FileReader(s));
+            while((s=br.readLine())!=null)
             {
-                i++;
-                s=st.nextToken();
-                j+=s.length();
-            }
+                k++;
+                StringTokenizer st=new StringTokenizer(s," .,:;!?");
+                while(st.hasMoreTokens())
+                {
+                    i++;
+                    s=st.nextToken();
+                    j+=s.length();
+                }
+            }   br.close();
+            return new int[]{i,j,k}; //Number of Words:,Number of Characters:,Number of Lines:
+        } catch (IOException ex) {
+            logger.error(ex.getMessage(),ex);
+            return new int[3];
         }
-        br.close();
-        return new int[]{i,j,k}; //Number of Words:,Number of Characters:,Number of Lines:
     }
 
 
@@ -916,9 +939,9 @@ public class StringUtilities {
                  ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
                 out.writeObject(object);
             }
-            SystemLog.console("Serialized data is saved in /tmp/" + nameTempSer + ".ser");
+            logger.info("Serialized data is saved in /tmp/" + nameTempSer + ".ser");
         }catch(IOException i){
-            SystemLog.exception(i);
+            logger.error(i.getMessage(),i);
         }
     }
 
@@ -929,21 +952,14 @@ public class StringUtilities {
      * @param <T> generic type.
      * @return object serializable.
      */
-    @SuppressWarnings("unchecked")
     public static <T> T toObject(T object,String nameTempSer){
         try{
             try (FileInputStream fileIn = new FileInputStream("/tmp/"+nameTempSer+".ser");
                  ObjectInputStream in = new ObjectInputStream(fileIn)) {
                 object = (T) in.readObject();
             }
-        }catch(IOException i)
-        {
-            SystemLog.exception(i);
-            return null;
-        }catch(ClassNotFoundException c)
-        {
-            SystemLog.error(""+object.getClass().getName()+" class not found!!!");
-            SystemLog.exception(c);
+        }catch(IOException|ClassNotFoundException i){
+            logger.error(i.getMessage(),i);
             return null;
         }
         return object;
@@ -957,7 +973,6 @@ public class StringUtilities {
      * @param <T> generic variable.
      * @return object casted to soefic vairable.
      */
-    @SuppressWarnings("unchecked")
     public static <T> T toInstanceOfObject(Object objectToCast,Class<T> clazz) {
         try {
             if (clazz.isInstance(objectToCast)) {
@@ -966,7 +981,7 @@ public class StringUtilities {
                 return (T) objectToCast;
             }
         } catch (ClassCastException e) {
-            SystemLog.exception(e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -977,15 +992,19 @@ public class StringUtilities {
      * @param clazz class.
      * @param <T> generic type.
      * @return string.
-     * @throws JAXBException error.
      */
-    public static <T> String toXml(T object, Class<T> clazz)throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(clazz);
-        Marshaller marshaller = context.createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        StringWriter writer = new StringWriter();
-        marshaller.marshal(object, writer);
-        return writer.toString();
+    public static <T> String toXml(T object, Class<T> clazz){
+        try {
+            JAXBContext context = JAXBContext.newInstance(clazz);
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            StringWriter writer = new StringWriter();
+            marshaller.marshal(object, writer);
+            return writer.toString();
+        } catch (JAXBException ex) {
+            logger.error(ex.getMessage(),ex);
+            return null;
+        }
     }
 
     /**
@@ -994,14 +1013,17 @@ public class StringUtilities {
      * @param clazz class.
      * @param <T> generic type.
      * @return object T.
-     * @throws JAXBException error.
      */
-    @SuppressWarnings("unchecked")
-    public static <T> T toPojo(String xmlStringData, Class<T> clazz)  throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(clazz);
-        StringReader reader = new StringReader(xmlStringData);
-        Unmarshaller unmarshaller = context.createUnmarshaller();
-        return (T) unmarshaller.unmarshal(reader);
+    public static <T> T toPojo(String xmlStringData, Class<T> clazz){
+        try {
+            JAXBContext context = JAXBContext.newInstance(clazz);
+            StringReader reader = new StringReader(xmlStringData);
+            Unmarshaller unmarshaller = context.createUnmarshaller();
+            return (T) unmarshaller.unmarshal(reader);
+        } catch (JAXBException ex) {
+            logger.error(ex.getMessage(),ex);
+            return null;
+        }
     }
 
     /**
@@ -1023,10 +1045,47 @@ public class StringUtilities {
             if (!(isURLWithProtocol(url))) {
                 url = "http://" + url;
                 if (isURL(url)) return url;
+                else{
+                   logger.warn("After add the protocol this is not a URL!");
+                   return null; 
+                }
             }
             return url;
+        }else{
+            logger.warn("Before add the protocol this is not a URL!");
+            return null;
         }
-        return null;
+       
+    }
+
+    /**
+     * Method to normalize a URI.
+     * @param inputUri the URI String of input.
+     * @return the URI Normalized.
+     */
+    public static String normalizeUri(String inputUri) {
+        boolean foundIssue = false;
+        StringBuilder sb = new StringBuilder();
+
+        for(int i = 0; i < inputUri.length(); i++){
+            char value = inputUri.charAt(i);
+            if(value == ' '){
+                if(!foundIssue){
+                    foundIssue = true;
+                    sb.append(inputUri.substring(0, i));
+                }
+                //continue;
+            }else if(value == ',' || value == '`' || value == '\'' ){
+                if(!foundIssue) {
+                    foundIssue = true;
+                    sb.append(inputUri.substring(0, i));
+                }
+                else sb.append('_');
+
+            }else if(foundIssue) sb.append(value);
+        }
+        if(foundIssue) return sb.toString();
+        else return inputUri;
     }
 
     /**
@@ -1040,10 +1099,13 @@ public class StringUtilities {
         try {
             MessageDigest digest = MessageDigest.getInstance(algorithm);
             byte[] hashedBytes = digest.digest(message.getBytes(UTF_8));
+            /*
+            digest.update(hashedBytes);
+            byte[] hashedBytes = digest.digest();
+            */
             return toHexString(hashedBytes);
         } catch (NoSuchAlgorithmException ex) {
-            //throw new HashGenerationException("Could not generate hash from String", ex);
-            SystemLog.exception(ex);
+            logger.error("Could not generate hash from String", ex);  
             return null;
         }
     }
@@ -1058,39 +1120,6 @@ public class StringUtilities {
     private static String hashString(String message, Charset algorithm) {
         return hashString(message,algorithm.name());
     }
-
-   /* public static String generateMD5(String message) {
-        return hashString(message, "MD5");
-    }
-
-    public static String generateSHA1(String message) {
-        return hashString(message, "SHA-1");
-    }
-
-    public static String generateSHA256(String message){
-        return hashString(message, "SHA-256");
-    }*/
-
-    /**
-     * Method to convert a string to a  "MD5", "SHA-1", "SHA-256" hash for very large file.
-     * suitable for large-size message, i.e. large file
-     * @param message the string to convert.
-     * @param algorithm the type has algorithm "MD5", "SHA-1", "SHA-256".
-     * @return the string of the hash.
-     */
-    /*private static String hashStringForLargeFile(String message, String algorithm) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance(algorithm);
-            byte[] inputBytes = message.getBytes("UTF-8");
-            digest.update(inputBytes);
-            byte[] hashedBytes = digest.digest();
-            return convertByteArrayToHexString(hashedBytes);// convert hash bytes to string (usually in hexadecimal form)
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
-            //throw new HashGenerationException("Could not generate hash from String", ex);
-            SystemLog.exception(ex);
-            return null;
-        }
-    }*/
 
     /**
      * Method to convert a array of bytes to a string.
@@ -1118,7 +1147,6 @@ public class StringUtilities {
      * @param arrayBytes array Collection of bytes.
      * @return the string of the hash.
      */
-    @SuppressWarnings("")
     public static String toHexString(byte[] arrayBytes) {
         StringBuilder stringBuffer = new StringBuilder();
         for (byte arrayByte : arrayBytes) {
@@ -1220,7 +1248,7 @@ public class StringUtilities {
         if(isNumeric(numericText)){
             return Integer.parseInt(numericText);
         }else{
-            SystemLog.warning("The string text:"+numericText+" is not a number!!!");
+            logger.warn("The string text:"+numericText+" is not a number!!!");
             return null;
         }
     }
@@ -1234,7 +1262,7 @@ public class StringUtilities {
         if(isNumeric(numericText)){
             return toInt(Integer.parseInt(numericText));
         }else{
-            SystemLog.warning("The string text:"+numericText+" is not a number!!!");
+            logger.warn("The string text:"+numericText+" is not a number!!!");
             return 0;
         }
     }
@@ -1247,6 +1275,7 @@ public class StringUtilities {
     public static String toString(Object object){
         if(object instanceof URL) return object.toString();
         if(object instanceof URI) return object.toString();
+        //TODO add all the other constructor.
         return String.valueOf(object);
     }
 
@@ -1260,7 +1289,7 @@ public class StringUtilities {
     }
 
     //-------------------------------------------------
-    // MEthod nedd commons lang 3
+    // Method need commons lang 3
     //-------------------------------------------------
     public static String generateMD5Token(int lengthToken){
         MessageDigest md;
@@ -1270,12 +1299,343 @@ public class StringUtilities {
             throw new RuntimeException(e);
         }
         StringBuilder hexString = new StringBuilder();
-        byte[] data = md.digest(RandomStringUtils.randomAlphabetic(lengthToken).getBytes());
+        byte[] data = md.digest(
+                org.apache.commons.lang3.RandomStringUtils.randomAlphabetic(lengthToken).getBytes());
         for (byte aData : data) {
             hexString.append(Integer.toHexString((aData >> 4) & 0x0F));
             hexString.append(Integer.toHexString(aData & 0x0F));
         }
         return hexString.toString();
+    }
+
+
+    //-----------------------------------------------------
+    // NEW METHOD 4
+    //-----------------------------------------------------
+
+    /**
+     * Transforms a provided <code>String</code> object into a new string,
+     * using the mapping that are provided through the supplied encoding table.
+     * @param source The string that has to be transformed into a valid string,
+     * using the mappings that are provided through the supplied encoding table.
+     * @param encodingTable A Map object containing the mappings to
+     * transform characters into valid entities. The keys of this map should be
+     * Character objects and the values String objects.
+     * @return The encoded String object.
+     */
+    private static String encode(String source, HashMap encodingTable) {
+        if (null == source) return null;
+        if (null == encodingTable)return source;
+
+        StringBuffer encoded_string = null;
+        char[] string_to_encode_array = source.toCharArray();
+        int last_match = -1;
+        int difference; // = 0;
+        for (int i = 0; i < string_to_encode_array.length; i++) {
+            char char_to_encode = string_to_encode_array[i];
+            if (encodingTable.containsKey(char_to_encode)) {
+                if (null == encoded_string) {
+                    encoded_string = new StringBuffer(source.length());
+                }
+                difference = i - (last_match + 1);
+                if (difference > 0) {
+                    encoded_string.append(string_to_encode_array, last_match + 1, difference);
+                }
+                encoded_string.append(encodingTable.get(char_to_encode));
+                last_match = i;
+            }
+        }
+        if (null == encoded_string)return source;
+        else{
+            difference = string_to_encode_array.length - (last_match + 1);
+            if (difference > 0) {
+                encoded_string.append(string_to_encode_array, last_match + 1, difference);
+            }
+            return encoded_string.toString();
+        }
+    }
+
+    /**
+     * Transforms a provided <code>String</code> object into a new string,
+     * containing only valid Html characters.
+     * @param source The string that has to be transformed into a valid Html string.
+     * @return The encoded String object.
+     */
+    public static String encodeHtml(String source){
+        return encode(source, mHtmlEncodeMap);
+    }
+
+
+
+    //------------------------------------------------------------------------------------------------
+    // MAP
+    //-------------------------------------------------------------------------------------------------
+
+    private static final HashMap<Character,String> mHtmlEncodeMap = new HashMap<>();
+
+    static
+    {
+        // Html encoding mapping according to the HTML 4.0 spec
+        // http://www.w3.org/TR/REC-html40/sgml/entities.html
+
+        // Special characters for HTML
+        mHtmlEncodeMap.put('\u0026', "&amp;");
+        mHtmlEncodeMap.put('\u003C', "&lt;");
+        mHtmlEncodeMap.put('\u003E', "&gt;");
+        mHtmlEncodeMap.put('\u0022', "&quot;");
+
+        mHtmlEncodeMap.put('\u0152', "&OElig;");
+        mHtmlEncodeMap.put('\u0153', "&oelig;");
+        mHtmlEncodeMap.put('\u0160', "&Scaron;");
+        mHtmlEncodeMap.put('\u0161', "&scaron;");
+        mHtmlEncodeMap.put('\u0178', "&Yuml;");
+        mHtmlEncodeMap.put('\u02C6', "&circ;");
+        mHtmlEncodeMap.put('\u02DC', "&tilde;");
+        mHtmlEncodeMap.put('\u2002', "&ensp;");
+        mHtmlEncodeMap.put('\u2003', "&emsp;");
+        mHtmlEncodeMap.put('\u2009', "&thinsp;");
+        mHtmlEncodeMap.put('\u200C', "&zwnj;");
+        mHtmlEncodeMap.put('\u200D', "&zwj;");
+        mHtmlEncodeMap.put('\u200E', "&lrm;");
+        mHtmlEncodeMap.put('\u200F', "&rlm;");
+        mHtmlEncodeMap.put('\u2013', "&ndash;");
+        mHtmlEncodeMap.put('\u2014', "&mdash;");
+        mHtmlEncodeMap.put('\u2018', "&lsquo;");
+        mHtmlEncodeMap.put('\u2019', "&rsquo;");
+        mHtmlEncodeMap.put('\u201A', "&sbquo;");
+        mHtmlEncodeMap.put('\u201C', "&ldquo;");
+        mHtmlEncodeMap.put('\u201D', "&rdquo;");
+        mHtmlEncodeMap.put('\u201E', "&bdquo;");
+        mHtmlEncodeMap.put('\u2020', "&dagger;");
+        mHtmlEncodeMap.put('\u2021', "&Dagger;");
+        mHtmlEncodeMap.put('\u2030', "&permil;");
+        mHtmlEncodeMap.put('\u2039', "&lsaquo;");
+        mHtmlEncodeMap.put('\u203A', "&rsaquo;");
+        mHtmlEncodeMap.put('\u20AC', "&euro;");
+
+        // Character entity references for ISO 8859-1 characters
+        mHtmlEncodeMap.put('\u00A0', "&nbsp;");
+        mHtmlEncodeMap.put('\u00A1', "&iexcl;");
+        mHtmlEncodeMap.put('\u00A2', "&cent;");
+        mHtmlEncodeMap.put('\u00A3', "&pound;");
+        mHtmlEncodeMap.put('\u00A4', "&curren;");
+        mHtmlEncodeMap.put('\u00A5', "&yen;");
+        mHtmlEncodeMap.put('\u00A6', "&brvbar;");
+        mHtmlEncodeMap.put('\u00A7', "&sect;");
+        mHtmlEncodeMap.put('\u00A8', "&uml;");
+        mHtmlEncodeMap.put('\u00A9', "&copy;");
+        mHtmlEncodeMap.put('\u00AA', "&ordf;");
+        mHtmlEncodeMap.put('\u00AB', "&laquo;");
+        mHtmlEncodeMap.put('\u00AC', "&not;");
+        mHtmlEncodeMap.put('\u00AD', "&shy;");
+        mHtmlEncodeMap.put('\u00AE', "&reg;");
+        mHtmlEncodeMap.put('\u00AF', "&macr;");
+        mHtmlEncodeMap.put('\u00B0', "&deg;");
+        mHtmlEncodeMap.put('\u00B1', "&plusmn;");
+        mHtmlEncodeMap.put('\u00B2', "&sup2;");
+        mHtmlEncodeMap.put('\u00B3', "&sup3;");
+        mHtmlEncodeMap.put('\u00B4', "&acute;");
+        mHtmlEncodeMap.put('\u00B5', "&micro;");
+        mHtmlEncodeMap.put('\u00B6', "&para;");
+        mHtmlEncodeMap.put('\u00B7', "&middot;");
+        mHtmlEncodeMap.put('\u00B8', "&cedil;");
+        mHtmlEncodeMap.put('\u00B9', "&sup1;");
+        mHtmlEncodeMap.put('\u00BA', "&ordm;");
+        mHtmlEncodeMap.put('\u00BB', "&raquo;");
+        mHtmlEncodeMap.put('\u00BC', "&frac14;");
+        mHtmlEncodeMap.put('\u00BD', "&frac12;");
+        mHtmlEncodeMap.put('\u00BE', "&frac34;");
+        mHtmlEncodeMap.put('\u00BF', "&iquest;");
+        mHtmlEncodeMap.put('\u00C0', "&Agrave;");
+        mHtmlEncodeMap.put('\u00C1', "&Aacute;");
+        mHtmlEncodeMap.put('\u00C2', "&Acirc;");
+        mHtmlEncodeMap.put('\u00C3', "&Atilde;");
+        mHtmlEncodeMap.put('\u00C4', "&Auml;");
+        mHtmlEncodeMap.put('\u00C5', "&Aring;");
+        mHtmlEncodeMap.put('\u00C6', "&AElig;");
+        mHtmlEncodeMap.put('\u00C7', "&Ccedil;");
+        mHtmlEncodeMap.put('\u00C8', "&Egrave;");
+        mHtmlEncodeMap.put('\u00C9', "&Eacute;");
+        mHtmlEncodeMap.put('\u00CA', "&Ecirc;");
+        mHtmlEncodeMap.put('\u00CB', "&Euml;");
+        mHtmlEncodeMap.put('\u00CC', "&Igrave;");
+        mHtmlEncodeMap.put('\u00CD', "&Iacute;");
+        mHtmlEncodeMap.put('\u00CE', "&Icirc;");
+        mHtmlEncodeMap.put('\u00CF', "&Iuml;");
+        mHtmlEncodeMap.put('\u00D0', "&ETH;");
+        mHtmlEncodeMap.put('\u00D1', "&Ntilde;");
+        mHtmlEncodeMap.put('\u00D2', "&Ograve;");
+        mHtmlEncodeMap.put('\u00D3', "&Oacute;");
+        mHtmlEncodeMap.put('\u00D4', "&Ocirc;");
+        mHtmlEncodeMap.put('\u00D5', "&Otilde;");
+        mHtmlEncodeMap.put('\u00D6', "&Ouml;");
+        mHtmlEncodeMap.put('\u00D7', "&times;");
+        mHtmlEncodeMap.put('\u00D8', "&Oslash;");
+        mHtmlEncodeMap.put('\u00D9', "&Ugrave;");
+        mHtmlEncodeMap.put('\u00DA', "&Uacute;");
+        mHtmlEncodeMap.put('\u00DB', "&Ucirc;");
+        mHtmlEncodeMap.put('\u00DC', "&Uuml;");
+        mHtmlEncodeMap.put('\u00DD', "&Yacute;");
+        mHtmlEncodeMap.put('\u00DE', "&THORN;");
+        mHtmlEncodeMap.put('\u00DF', "&szlig;");
+        mHtmlEncodeMap.put('\u00E0', "&agrave;");
+        mHtmlEncodeMap.put('\u00E1', "&aacute;");
+        mHtmlEncodeMap.put('\u00E2', "&acirc;");
+        mHtmlEncodeMap.put('\u00E3', "&atilde;");
+        mHtmlEncodeMap.put('\u00E4', "&auml;");
+        mHtmlEncodeMap.put('\u00E5', "&aring;");
+        mHtmlEncodeMap.put('\u00E6', "&aelig;");
+        mHtmlEncodeMap.put('\u00E7', "&ccedil;");
+        mHtmlEncodeMap.put('\u00E8', "&egrave;");
+        mHtmlEncodeMap.put('\u00E9', "&eacute;");
+        mHtmlEncodeMap.put('\u00EA', "&ecirc;");
+        mHtmlEncodeMap.put('\u00EB', "&euml;");
+        mHtmlEncodeMap.put('\u00EC', "&igrave;");
+        mHtmlEncodeMap.put('\u00ED', "&iacute;");
+        mHtmlEncodeMap.put('\u00EE', "&icirc;");
+        mHtmlEncodeMap.put('\u00EF', "&iuml;");
+        mHtmlEncodeMap.put('\u00F0', "&eth;");
+        mHtmlEncodeMap.put('\u00F1', "&ntilde;");
+        mHtmlEncodeMap.put('\u00F2', "&ograve;");
+        mHtmlEncodeMap.put('\u00F3', "&oacute;");
+        mHtmlEncodeMap.put('\u00F4', "&ocirc;");
+        mHtmlEncodeMap.put('\u00F5', "&otilde;");
+        mHtmlEncodeMap.put('\u00F6', "&ouml;");
+        mHtmlEncodeMap.put('\u00F7', "&divide;");
+        mHtmlEncodeMap.put('\u00F8', "&oslash;");
+        mHtmlEncodeMap.put('\u00F9', "&ugrave;");
+        mHtmlEncodeMap.put('\u00FA', "&uacute;");
+        mHtmlEncodeMap.put('\u00FB', "&ucirc;");
+        mHtmlEncodeMap.put('\u00FC', "&uuml;");
+        mHtmlEncodeMap.put('\u00FD', "&yacute;");
+        mHtmlEncodeMap.put('\u00FE', "&thorn;");
+        mHtmlEncodeMap.put('\u00FF', "&yuml;");
+
+        // Mathematical, Greek and Symbolic characters for HTML
+        mHtmlEncodeMap.put('\u0192', "&fnof;");
+        mHtmlEncodeMap.put('\u0391', "&Alpha;");
+        mHtmlEncodeMap.put('\u0392', "&Beta;");
+        mHtmlEncodeMap.put('\u0393', "&Gamma;");
+        mHtmlEncodeMap.put('\u0394', "&Delta;");
+        mHtmlEncodeMap.put('\u0395', "&Epsilon;");
+        mHtmlEncodeMap.put('\u0396', "&Zeta;");
+        mHtmlEncodeMap.put('\u0397', "&Eta;");
+        mHtmlEncodeMap.put('\u0398', "&Theta;");
+        mHtmlEncodeMap.put('\u0399', "&Iota;");
+        mHtmlEncodeMap.put('\u039A', "&Kappa;");
+        mHtmlEncodeMap.put('\u039B', "&Lambda;");
+        mHtmlEncodeMap.put('\u039C', "&Mu;");
+        mHtmlEncodeMap.put('\u039D', "&Nu;");
+        mHtmlEncodeMap.put('\u039E', "&Xi;");
+        mHtmlEncodeMap.put('\u039F', "&Omicron;");
+        mHtmlEncodeMap.put('\u03A0', "&Pi;");
+        mHtmlEncodeMap.put('\u03A1', "&Rho;");
+        mHtmlEncodeMap.put('\u03A3', "&Sigma;");
+        mHtmlEncodeMap.put('\u03A4', "&Tau;");
+        mHtmlEncodeMap.put('\u03A5', "&Upsilon;");
+        mHtmlEncodeMap.put('\u03A6', "&Phi;");
+        mHtmlEncodeMap.put('\u03A7', "&Chi;");
+        mHtmlEncodeMap.put('\u03A8', "&Psi;");
+        mHtmlEncodeMap.put('\u03A9', "&Omega;");
+        mHtmlEncodeMap.put('\u03B1', "&alpha;");
+        mHtmlEncodeMap.put('\u03B2', "&beta;");
+        mHtmlEncodeMap.put('\u03B3', "&gamma;");
+        mHtmlEncodeMap.put('\u03B4', "&delta;");
+        mHtmlEncodeMap.put('\u03B5', "&epsilon;");
+        mHtmlEncodeMap.put('\u03B6', "&zeta;");
+        mHtmlEncodeMap.put('\u03B7', "&eta;");
+        mHtmlEncodeMap.put('\u03B8', "&theta;");
+        mHtmlEncodeMap.put('\u03B9', "&iota;");
+        mHtmlEncodeMap.put('\u03BA', "&kappa;");
+        mHtmlEncodeMap.put('\u03BB', "&lambda;");
+        mHtmlEncodeMap.put('\u03BC', "&mu;");
+        mHtmlEncodeMap.put('\u03BD', "&nu;");
+        mHtmlEncodeMap.put('\u03BE', "&xi;");
+        mHtmlEncodeMap.put('\u03BF', "&omicron;");
+        mHtmlEncodeMap.put('\u03C0', "&pi;");
+        mHtmlEncodeMap.put('\u03C1', "&rho;");
+        mHtmlEncodeMap.put('\u03C2', "&sigmaf;");
+        mHtmlEncodeMap.put('\u03C3', "&sigma;");
+        mHtmlEncodeMap.put('\u03C4', "&tau;");
+        mHtmlEncodeMap.put('\u03C5', "&upsilon;");
+        mHtmlEncodeMap.put('\u03C6', "&phi;");
+        mHtmlEncodeMap.put('\u03C7', "&chi;");
+        mHtmlEncodeMap.put('\u03C8', "&psi;");
+        mHtmlEncodeMap.put('\u03C9', "&omega;");
+        mHtmlEncodeMap.put('\u03D1', "&thetasym;");
+        mHtmlEncodeMap.put('\u03D2', "&upsih;");
+        mHtmlEncodeMap.put('\u03D6', "&piv;");
+        mHtmlEncodeMap.put('\u2022', "&bull;");
+        mHtmlEncodeMap.put('\u2026', "&hellip;");
+        mHtmlEncodeMap.put('\u2032', "&prime;");
+        mHtmlEncodeMap.put('\u2033', "&Prime;");
+        mHtmlEncodeMap.put('\u203E', "&oline;");
+        mHtmlEncodeMap.put('\u2044', "&frasl;");
+        mHtmlEncodeMap.put('\u2118', "&weierp;");
+        mHtmlEncodeMap.put('\u2111', "&image;");
+        mHtmlEncodeMap.put('\u211C', "&real;");
+        mHtmlEncodeMap.put('\u2122', "&trade;");
+        mHtmlEncodeMap.put('\u2135', "&alefsym;");
+        mHtmlEncodeMap.put('\u2190', "&larr;");
+        mHtmlEncodeMap.put('\u2191', "&uarr;");
+        mHtmlEncodeMap.put('\u2192', "&rarr;");
+        mHtmlEncodeMap.put('\u2193', "&darr;");
+        mHtmlEncodeMap.put('\u2194', "&harr;");
+        mHtmlEncodeMap.put('\u21B5', "&crarr;");
+        mHtmlEncodeMap.put('\u21D0', "&lArr;");
+        mHtmlEncodeMap.put('\u21D1', "&uArr;");
+        mHtmlEncodeMap.put('\u21D2', "&rArr;");
+        mHtmlEncodeMap.put('\u21D3', "&dArr;");
+        mHtmlEncodeMap.put('\u21D4', "&hArr;");
+        mHtmlEncodeMap.put('\u2200', "&forall;");
+        mHtmlEncodeMap.put('\u2202', "&part;");
+        mHtmlEncodeMap.put('\u2203', "&exist;");
+        mHtmlEncodeMap.put('\u2205', "&empty;");
+        mHtmlEncodeMap.put('\u2207', "&nabla;");
+        mHtmlEncodeMap.put('\u2208', "&isin;");
+        mHtmlEncodeMap.put('\u2209', "&notin;");
+        mHtmlEncodeMap.put('\u220B', "&ni;");
+        mHtmlEncodeMap.put('\u220F', "&prod;");
+        mHtmlEncodeMap.put('\u2211', "&sum;");
+        mHtmlEncodeMap.put('\u2212', "&minus;");
+        mHtmlEncodeMap.put('\u2217', "&lowast;");
+        mHtmlEncodeMap.put('\u221A', "&radic;");
+        mHtmlEncodeMap.put('\u221D', "&prop;");
+        mHtmlEncodeMap.put('\u221E', "&infin;");
+        mHtmlEncodeMap.put('\u2220', "&ang;");
+        mHtmlEncodeMap.put('\u2227', "&and;");
+        mHtmlEncodeMap.put('\u2228', "&or;");
+        mHtmlEncodeMap.put('\u2229', "&cap;");
+        mHtmlEncodeMap.put('\u222A', "&cup;");
+        mHtmlEncodeMap.put('\u222B', "&int;");
+        mHtmlEncodeMap.put('\u2234', "&there4;");
+        mHtmlEncodeMap.put('\u223C', "&sim;");
+        mHtmlEncodeMap.put('\u2245', "&cong;");
+        mHtmlEncodeMap.put('\u2248', "&asymp;");
+        mHtmlEncodeMap.put('\u2260', "&ne;");
+        mHtmlEncodeMap.put('\u2261', "&equiv;");
+        mHtmlEncodeMap.put('\u2264', "&le;");
+        mHtmlEncodeMap.put('\u2265', "&ge;");
+        mHtmlEncodeMap.put('\u2282', "&sub;");
+        mHtmlEncodeMap.put('\u2283', "&sup;");
+        mHtmlEncodeMap.put('\u2284', "&nsub;");
+        mHtmlEncodeMap.put('\u2286', "&sube;");
+        mHtmlEncodeMap.put('\u2287', "&supe;");
+        mHtmlEncodeMap.put('\u2295', "&oplus;");
+        mHtmlEncodeMap.put('\u2297', "&otimes;");
+        mHtmlEncodeMap.put('\u22A5', "&perp;");
+        mHtmlEncodeMap.put('\u22C5', "&sdot;");
+        mHtmlEncodeMap.put('\u2308', "&lceil;");
+        mHtmlEncodeMap.put('\u2309', "&rceil;");
+        mHtmlEncodeMap.put('\u230A', "&lfloor;");
+        mHtmlEncodeMap.put('\u230B', "&rfloor;");
+        mHtmlEncodeMap.put('\u2329', "&lang;");
+        mHtmlEncodeMap.put('\u232A', "&rang;");
+        mHtmlEncodeMap.put('\u25CA', "&loz;");
+        mHtmlEncodeMap.put('\u2660', "&spades;");
+        mHtmlEncodeMap.put('\u2663', "&clubs;");
+        mHtmlEncodeMap.put('\u2665', "&hearts;");
+        mHtmlEncodeMap.put('\u2666', "&diams;");
     }
     
 

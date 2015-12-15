@@ -1,6 +1,5 @@
 package com.github.p4535992.util.json;
 
-import com.github.p4535992.util.log.SystemLog;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +17,9 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class OrgJsonKit {
 
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(OrgJsonKit.class);
+
     public enum JsonKeys {
         name, value, type
     }
@@ -32,13 +34,15 @@ public class OrgJsonKit {
 //        }
 //    }
 
+
+
     public static void writePrettyPrintedJSONObjectToFile(JSONObject json, File jsonFile)
             throws JSONException, IOException {
         String prettyPrintedJSONString = json.toString(4);
         FileWriter writer = new FileWriter(jsonFile);
         writer.write(prettyPrintedJSONString);
         writer.close();
-        SystemLog.message("Done writing JSON Object into a File: " + jsonFile.getAbsolutePath());
+        logger.info("Done writing JSON Object into a File: " + jsonFile.getAbsolutePath());
     }
 
 
@@ -133,7 +137,7 @@ public class OrgJsonKit {
     }
 
     public static String readerToString(Reader reader) {
-        StringBuffer fileData = new StringBuffer(1000);
+        StringBuilder fileData = new StringBuilder(1000);
         BufferedReader bufferedReader = new BufferedReader(reader);
         char[] buf = new char[1024];
         int numRead;
@@ -146,7 +150,7 @@ public class OrgJsonKit {
             bufferedReader.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
         }
         return fileData.toString();
     }
@@ -165,7 +169,7 @@ public class OrgJsonKit {
         JSONObject result = null;
         try {
             result = new JSONObject(tokener);
-        } catch (JSONException e1) {
+        } catch (JSONException ignored) {
             // Don't do anything.
         }
         return result;
@@ -177,8 +181,8 @@ public class OrgJsonKit {
             result = createJSONArray(new JSONTokener(jsonString));
         }
         if (result == null) {
+            logger.warn("Could not parse as JSONObject or JSONArray");
             return null;
-            //logger.error("Could not parse as JSONObject or JSONArray");
         }
         return result;
     }
@@ -198,10 +202,11 @@ public class OrgJsonKit {
             } else if (o instanceof JSONArray) {
                 return ((JSONArray) o).toString(4);
             } else {
+                logger.warn("Is not a JSON");
                 return "not JSON";
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            logger.error("Is not a JSON:"+e.getMessage(),e);
             return "not JSON";
         }
     }
@@ -226,8 +231,10 @@ public class OrgJsonKit {
             JSONObject a1 = (JSONObject) obj1;
             JSONObject a2 = (JSONObject) obj2;
 
-            if(a1.length() != a2.length())
+            if(a1.length() != a2.length()) {
+                //logger.warn("Could not compare the JSONObjects:" + a1.length() + "!=" + a2.length());
                 return false;
+            }
 
             @SuppressWarnings("rawtypes")
             Iterator keys = a1.keys();
@@ -238,10 +245,13 @@ public class OrgJsonKit {
                 try {
                     val2 = a2.get(key);
                 } catch (JSONException e) {
+                    //logger.warn(e.getMessage(), e);
                     return false;
                 }
-                if(!compareJSONObjects(val1, val2))
+                if (!compareJSONObjects(val1, val2)) {
+                    //logger.warn("Could not compare the JSONObjects:"+val1.toString()+","+val2.toString());
                     return false;
+                }
             }
 
         } else if (obj1 instanceof String && obj2 instanceof String) {
@@ -273,7 +283,7 @@ public class OrgJsonKit {
             outFile.close();
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
         }
 
     }

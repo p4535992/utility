@@ -1,16 +1,18 @@
 package com.github.p4535992.util.log;
 
-import org.apache.log4j.*;
-import org.apache.log4j.spi.LoggerFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configurator;
+//import org.apache.log4j.ConsoleAppender;
+//import org.apache.log4j.FileAppender;
+//import org.apache.log4j.Level;
+//import org.apache.logging.log4j.core.Logger;
+//import org.apache.logging.log4j.core.layout.PatternLayout;
+
+import org.slf4j.Logger;
 
 import java.io.File;
-import java.util.Map;
+
 
 /**
- * Created by tenti on 12/11/2015.
+ * Created by 4535992 on 12/11/2015.
  */
 public class SystemLog4j extends SystemLog{
 
@@ -38,7 +40,7 @@ public class SystemLog4j extends SystemLog{
 
         // configures the root logger
         Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(org.apache.log4j.Level.DEBUG);
+        rootLogger.setLevel(org.apache.logging.log4j.Level.DEBUG);
 
         rootLogger.addAppender(createConsoleAppender(layout));
 
@@ -61,6 +63,7 @@ public class SystemLog4j extends SystemLog{
         consoleAppender.setLayout(layout);
         consoleAppender.activateOptions();
         return consoleAppender;
+
     }
 
     protected void configurationLog4JLogger(){
@@ -83,14 +86,6 @@ public class SystemLog4j extends SystemLog{
         LoggerContext context =(LoggerContext)LogManager.getContext();
         Configurator.shutdown(context);
     }
-
-
-
-
-
-
-
-
 
     //APPENDERS
     /*

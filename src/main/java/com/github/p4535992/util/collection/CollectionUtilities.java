@@ -3,8 +3,6 @@ package com.github.p4535992.util.collection;
 import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionUtilities;
 import com.github.p4535992.util.string.StringUtilities;
-
-import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -17,6 +15,8 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class CollectionUtilities {
 
+    
+    
     /**
      * Method to check if a Class is a Collection or not.
      * @param c the Class to inspect.
@@ -228,7 +228,7 @@ public class CollectionUtilities {
     @SuppressWarnings("unchecked")
     public static <T> Iterator<T> toIterator(Object collection){
         if(isCollection(collection)) {
-            if (collection instanceof List) return ((List<T>)collection).iterator();
+            if(collection instanceof List) return ((List<T>)collection).iterator();
             if(collection instanceof Set)   return ((Set<T>)collection).iterator();
             else{
                 return new Iterator<T>() {
@@ -267,7 +267,7 @@ public class CollectionUtilities {
                 T[] array = (T[]) Array.newInstance(list.get(0).getClass(), list.size());
                 if(ReflectionUtilities.isWrapperType(list.get(0).getClass())){ //if is a primitive class
                     for(int i = 0; i < list.size(); i++) array[i] = list.get(i);
-                }else{ //is is not a primitive class
+                }else{ //is is not a primitive class            
                     list.toArray(array);
                 }
                 return array;
@@ -511,7 +511,7 @@ public class CollectionUtilities {
         if (integerArray == null) return null;
         else if (integerArray.length == 0) return new int[0];
         final int[] result = new int[integerArray.length];
-        for (int i = 0; i < integerArray.length; i++) { result[i] = integerArray[i].intValue();}
+        for (int i = 0; i < integerArray.length; i++) { result[i] = integerArray[i];}
         return result;
     }
 

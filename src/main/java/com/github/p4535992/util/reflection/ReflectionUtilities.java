@@ -38,6 +38,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("unused")
 public class ReflectionUtilities {
 
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(ReflectionUtilities.class);
+
     // ---------------------------------------------------------------------
     // Members
     // ---------------------------------------------------------------------
@@ -148,7 +151,7 @@ public class ReflectionUtilities {
             return on(accessible(constructor).newInstance(args));
         }catch (InstantiationException | IllegalAccessException
                 | IllegalArgumentException | InvocationTargetException e) {
-            SystemLog.warning(e);
+            logger.warn("ReflectionUtilities::on ->", e);
             return null;
         }
     }
@@ -166,7 +169,7 @@ public class ReflectionUtilities {
             else return on(method.invoke(object, args));
 
         }catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            SystemLog.warning(e);
+            logger.warn("ReflectionUtilities::on ->", e);
             return null;
         }
     }
@@ -204,7 +207,7 @@ public class ReflectionUtilities {
                 Method method = getSimilarMethod(nameMethod, types);
                 return on(method, object, args);
             } catch (NoSuchMethodException e1) {
-                SystemLog.warning(e);
+                logger.warn("ReflectionUtilities::call ->", e);
                 return null;
             }
         }
@@ -231,7 +234,7 @@ public class ReflectionUtilities {
                     return on(constructor, args);
                 }
             }
-            SystemLog.warning(e);
+            logger.warn("ReflectionUtilities::create ->", e);
             return null;
         }
     }
@@ -253,7 +256,7 @@ public class ReflectionUtilities {
             return on(field.get(object));
         }
         catch (Exception e) {
-            SystemLog.warning(e);
+            logger.warn("ReflectionUtilities::field ->", e);
             return null;
         }
     }
@@ -379,7 +382,7 @@ public class ReflectionUtilities {
             type = type.getSuperclass();
         }
         while (type != null);
-        SystemLog.exception("No similar method " + methodName + " with params " 
+        logger.error("No similar method " + methodName + " with params "
                 + Arrays.toString(types) +
                 " could be found on type " + toClass(methodName) + ".");
         return null;
@@ -530,7 +533,7 @@ public class ReflectionUtilities {
                             return null;
                         }
                     }
-                    SystemLog.warning(e);
+                    logger.warn("ReflectionUtilities::as ->",e);
                     throw e;
                 }
             }
@@ -596,7 +599,7 @@ public class ReflectionUtilities {
     private static Class<?> toClass(String name){
         try {return Class.forName(name);
         } catch (NullPointerException|ClassNotFoundException e) {
-            SystemLog.exception(e,ReflectionUtilities.class);
+            logger.error("ReflectionUtilities::toClass ->" + e);
             return null;
         }
     }
@@ -606,7 +609,7 @@ public class ReflectionUtilities {
      * @param aClass the Class to inpsect.
      * @return the number of Setter and Getter for the specific Class.
      */
-    public static Integer countGetterAndsetter(Class<?> aClass){
+    public static Integer countGetterAndSetter(Class<?> aClass){
         return findGettersAndSetters(aClass).size()/2;
     }
 
@@ -674,7 +677,7 @@ public class ReflectionUtilities {
             if (CollectionUtilities.isEmpty(param)) method = aClass.getMethod(nameOfMethod);//nameOfMethod, null
             else method = aClass.getMethod(nameOfMethod, param);// String.class
         }catch(NoSuchMethodException e){
-            SystemLog.exception(e);
+            logger.error("ReflectionUtils::getMethodByNameAndParam ->",e);
         }
         return method;
     }
@@ -861,9 +864,9 @@ public class ReflectionUtilities {
             Field fieldColumn = getFieldByName(aClass, fieldName);
             Annotation annColumn = fieldColumn.getAnnotation(annotationClass);
             if (annColumn != null) ReflectionUtilities.updateAnnotationValue(annColumn, attributeName, attributeValue);
-            else SystemLog.warning("No annotation for the class whit attribute:"+attributeName);
+            else logger.warn("No annotation for the class whit attribute:"+attributeName);
         }catch(NoSuchFieldException e){
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::updateAnnotationFieldValue -> ",e);
         }
     }
 
@@ -928,9 +931,8 @@ public class ReflectionUtilities {
         try {
             field.set(target, value);
         }catch (IllegalAccessException ex) {
-            //handleReflectionException(ex);
-            SystemLog.exception(
-                    "Unexpected reflection exception - " + ex.getClass().getName() + ": " + ex.getMessage(), ReflectionUtilities.class);
+            logger.error("Unexpected reflection exception - " +
+                    ex.getClass().getName() + ": " + ex.getMessage(), ReflectionUtilities.class);
         }
     }
 
@@ -947,9 +949,9 @@ public class ReflectionUtilities {
         try {
             Field field = toClass(fieldName).getDeclaredField(fieldName);
             if(field!=null)setField(field,target, value);
-            else  SystemLog.exception("The field you try to set is NULL, checlk if the Field name is correct",ReflectionUtilities.class);
+            else  logger.error("The field you try to set is NULL, checlk if the Field name is correct");
         } catch (NullPointerException|NoSuchFieldException e) {
-            SystemLog.exception(e,ReflectionUtilities.class);
+            logger.error("ReflectionUtilities::setField ->",e);
         }
 
     }
@@ -978,7 +980,7 @@ public class ReflectionUtilities {
             field.setAccessible(false);
             return returnValue;
         }catch(SecurityException|NoSuchFieldException|IllegalArgumentException|IllegalAccessException e){
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::getFieldValueByName ->",e);
             return null;
         }
     }
@@ -1018,7 +1020,7 @@ public class ReflectionUtilities {
                 }
             }
         } catch (Exception e) {
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::copyFieldToClass ->",e);
         }
         return targetValue;
     }
@@ -1054,7 +1056,7 @@ public class ReflectionUtilities {
         try {
             resultField = startClass.getDeclaredField(fieldName);
         } catch (NoSuchFieldException | SecurityException e) {
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::getFieldBySuperClass ->",e);
         }
         if (resultField == null) {
             Class<?> parentClass = startClass.getSuperclass();
@@ -1090,7 +1092,7 @@ public class ReflectionUtilities {
                 result = true;
             } catch (IllegalAccessException|IllegalArgumentException|
                     InvocationTargetException ex) {
-                SystemLog.exception(ex);
+                logger.error("ReflectionUtilities::callSetter ->",ex);
             }
         }
         return result;
@@ -1133,7 +1135,7 @@ public class ReflectionUtilities {
         try {
             return Class.forName(pakage+"."+clazz);
         } catch (ClassNotFoundException e) {
-            SystemLog.exception(e);
+            logger.error("Reflection::getClassFromPath ->",e);
         }
         return null;
     }
@@ -1188,48 +1190,11 @@ public class ReflectionUtilities {
         return null;
     }
 
-    //OTHER METHODS
-    /*public static Class createNewClass(String annotatedClassName,String pathPackageToAnnotatedClass)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException {
-        Class cls = Class.forName(pathPackageToAnnotatedClass+"."+annotatedClassName).getConstructor().newInstance().getClass();
-        //You can use reflection : Class.forName(className).getConstructor(String.class).newInstance(arg);
-        SystemLog.message("Create new Class Object con Name: " + cls.getName());
-        return cls;
-    }
-
-    public static Class createNewClass(String pathPackageToAnnotatedClass) throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException{
-        //e.home. oracle.jdbc.driver.OracleDriver#sthash.4rtwgiWJ.dpuf
-        Class cls = Class.forName(pathPackageToAnnotatedClass).getConstructor().newInstance().getClass();
-        SystemLog.message("Create new Class Object con Name: " + cls.getName());
-        return cls;
-    }
-
-    public static Constructor castObjectToSpecificConstructor(Class newClass){
-        Constructor constructor = null;
-        try{
-            constructor = newClass.getConstructor(new Class[]{});
-        }catch(Exception e){
-        }
-        return constructor;
-    }
-
-    public static Object castObjectToSpecificClass(Class newClass,Object MyObject){
-        Object obj2 = new Object();
-        try{
-            obj2 = newClass.cast(MyObject);
-        }catch(Exception e){
-        }
-        return obj2;
-    }
-
-    public static Object castObjectToSpecificObject(Object MyObject,String pathPackageToObjectAnnotated)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchMethodException, IllegalArgumentException, InvocationTargetException{
-        Class clsObjectAnnotated = createNewClass(pathPackageToObjectAnnotated);
-        Constructor cons = castObjectToSpecificConstructor(clsObjectAnnotated);
-        MyObject = (Object)cons.newInstance();
-        return MyObject;
-    }*/
-
+    /**
+     * Method to get the parent class in generic mode.
+     * @param thisClass the current class to inpspect.
+     * @return the Parent Class.
+     */
     public static Class<?> getTheParentGenericClass(Class<?> thisClass){
         Type t = thisClass.getGenericSuperclass();
         ParameterizedType pt = (ParameterizedType) t;
@@ -1460,10 +1425,9 @@ public class ReflectionUtilities {
             return field.get(target);
         }
         catch (IllegalAccessException ex) {
-            //handleReflectionException(ex);
-            SystemLog.exception("Unexpected reflection exception - " 
-                    + ex.getClass().getName() + ": " 
-                    + ex.getMessage(),ReflectionUtilities.class);
+            logger.error("Unexpected reflection exception - "
+                    + ex.getClass().getName() + ": "
+                    + ex.getMessage(), ReflectionUtilities.class);
             return null;
         }
     }
@@ -1485,7 +1449,7 @@ public class ReflectionUtilities {
                 mc.doWith(method);
             }
             catch (IllegalAccessException ex) {
-                SystemLog.exception("Not allowed to access method '" + method.getName() + "': " + ex,ReflectionUtilities.class);
+                logger.error("Not allowed to access method '" + method.getName() + "': " + ex);
             }
         }
     }
@@ -1521,7 +1485,7 @@ public class ReflectionUtilities {
                 mc.doWith(method);
             }
             catch (IllegalAccessException ex) {
-                SystemLog.exception("Not allowed to access method '" + method.getName() + "': " + ex, ReflectionUtilities.class);
+                logger.error("Not allowed to access method '" + method.getName() + "': " + ex, ReflectionUtilities.class);
             }
         }
         if (clazz.getSuperclass() != null) {
@@ -1547,7 +1511,7 @@ public class ReflectionUtilities {
                 fc.doWith(field);
             }
             catch (IllegalAccessException ex) {
-                SystemLog.exception("Not allowed to access field '" + field.getName() + "': " + ex,ReflectionUtilities.class);
+                logger.error("Not allowed to access field '" + field.getName() + "': " + ex, ReflectionUtilities.class);
             }
         }
     }
@@ -1579,7 +1543,7 @@ public class ReflectionUtilities {
                 try {
                     fc.doWith(field);
                 }catch (IllegalAccessException ex) {
-                    SystemLog.exception("Not allowed to access field '" + field.getName() + "': " + ex,ReflectionUtilities.class);
+                    logger.error("Not allowed to access field '" + field.getName() + "': " + ex, ex);
                 }
             }
             targetClass = targetClass.getSuperclass();
@@ -1597,16 +1561,16 @@ public class ReflectionUtilities {
      */
     public static void shallowCopyFieldState(final Object src, final Object dest) {
         if (src == null) {
-            SystemLog.exception("Source for field copy cannot be null",ReflectionUtilities.class);
+            logger.warn("Source for field copy cannot be null");
             return;
         }
         if (dest == null){
-            SystemLog.exception("Destination for field copy cannot be null",ReflectionUtilities.class);
+            logger.warn("Destination for field copy cannot be null");
             return;
         }
         if (!src.getClass().isAssignableFrom(dest.getClass())) {
-            SystemLog.exception("Destination class [" + dest.getClass().getName() +
-                    "] must be same or subclass as source class [" + src.getClass().getName() + "]", ReflectionUtilities.class);
+            logger.warn("Destination class [" + dest.getClass().getName() +
+                    "] must be same or subclass as source class [" + src.getClass().getName() + "]");
         }
         invokeWithFields(src.getClass(), new FieldCallback() {
             @Override
@@ -1640,7 +1604,7 @@ public class ReflectionUtilities {
                 type = type.getSuperclass();
             }
             while (type != null);
-            SystemLog.warning(e);
+            logger.warn("ReflectionUtilities::toField -> ",e);
             throw new Exception(e);
         }
     }
@@ -1768,7 +1732,7 @@ public class ReflectionUtilities {
                     try {
                         return clazz.getMethod(setter, iface);
                     } catch (NoSuchMethodException ex1) {
-                        SystemLog.exception(ex1);
+                        logger.error("ReflectionUtilities::findSetter -> ",ex1);
                     }
                 }
                 clazzField = clazzField.getSuperclass();
@@ -1789,7 +1753,6 @@ public class ReflectionUtilities {
         Class<?> clazzObject = obj.getClass();
         Class<?> clazzField = value.getClass();
         return findGetter(clazzObject, fieldName, clazzField);
-
     }
 
     /**
@@ -1811,7 +1774,7 @@ public class ReflectionUtilities {
                     try {
                         return  clazz.getMethod(getter, iface);
                     } catch (NoSuchMethodException ex1) {
-                        SystemLog.exception(ex1);
+                        logger.error("ReflectionUtilities::findGetter -> ",ex1);
                     }
                 }
                 clazzField = clazzField.getSuperclass();
@@ -1850,7 +1813,7 @@ public class ReflectionUtilities {
                     try {
                         return clazz.getMethod(methodName, iface);
                     } catch (NoSuchMethodException ex1) {
-                        SystemLog.exception(ex1);
+                        logger.error("ReflectionUtilities::findMethod -> ",ex1);
                     }
                 }
                 clazzField = clazzField.getSuperclass();
@@ -1880,14 +1843,23 @@ public class ReflectionUtilities {
      * @return the corresponding Field object, or {@code null} if not found
      */
     public static Field findField(Class<?> clazz, String name, Class<?> type) {
-        if(clazz==null) SystemLog.error("Class must not be null");
-        if(name == null && type == null)  SystemLog.error("Either name or type of the field must be specified");
+        if(clazz==null) {
+            logger.warn("Class must not be null");
+            return null;
+        }
+        if(name==null){
+            logger.warn("Method name must not be null");
+            return null;
+        }
+        if(type == null) {
+            logger.warn("Either name or type of the field must be specified");
+            return null;
+        }
         Class<?> searchType = clazz;
         while (Object.class != searchType && searchType != null) {
             Field[] fields = getDeclaredFields(searchType);
             for (Field field : fields) {
-                if ((name == null || name.equals(field.getName())) &&
-                        (type == null || type.equals(field.getType()))) {
+                if (name.equals(field.getName()) && type.equals(field.getType())){
                     return field;
                 }
             }
@@ -1919,17 +1891,21 @@ public class ReflectionUtilities {
      * @return the Method object, or {@code null} if none found
      */
     public static Method findMethod(Class<?> clazz, String name, Class<?>... paramTypes) {
-        if(clazz==null) SystemLog.error("Class must not be null");
-        if(name==null) SystemLog.error("Method name must not be null");
+        if(clazz==null) {
+            logger.warn("Class must not be null");
+            return null;
+        }
+        if(name==null){
+            logger.warn("Method name must not be null");
+            return null;
+        }
         Class<?> searchType = clazz;
         while (searchType != null) {
             Method[] methods = (searchType.isInterface() ? searchType.getMethods() : getDeclaredMethods(searchType));
             for (Method method : methods) {
-                if (name != null) {
-                    if (name.equals(method.getName()) &&
-                            (paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
-                        return method;
-                    }
+                if (name.equals(method.getName()) &&
+                        (paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
+                    return method;
                 }
             }
             searchType = searchType.getSuperclass();
@@ -2386,7 +2362,7 @@ public class ReflectionUtilities {
                 }
             }
         } catch (NullPointerException|NoSuchMethodException e) {
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::findInfoTypes ->",e);
         }
         return list;
     }
@@ -2434,11 +2410,11 @@ public class ReflectionUtilities {
             Type[] typeArguments = type.getActualTypeArguments();
             for (Type typeArgument : typeArguments) {
                 Class<?> typeArgClass = (Class<?>) typeArgument;
-                System.out.println("typeArgClass = " + typeArgClass);
+                logger.info("typeArgClass = " + typeArgClass);
                 list.add(new String[]{typeArgClass.getName(), getClassReference(typeArgClass)});
             }
         } catch (NullPointerException e) {
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::findInfoTypes ->",e);
         }
         map.put(returnType.getClass(),list);
         return map;
@@ -2563,18 +2539,19 @@ public class ReflectionUtilities {
      * @param method the method to invoke.
      * @param param the param for the method.
      * @return a object update with the result of the method.
-     * @throws IllegalAccessException throw any error if is occurred.
-     * @throws InvocationTargetException throw any error if is occurred.
-     * @throws NoSuchMethodException throw any error if is occurred.
      */
-    public static Object invokeMethod(Object MyObject,Method method,Object[] param)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        try{
-            //MyObject = method.invoke(null, param); //if the method you try to invoke is static...
-            MyObject = method.invoke(param);
-        }catch(NullPointerException ne){
-            //MyObject = method.invoke(MyObject, param); //...if the methos is non-static
-            MyObject = method.invoke(MyObject);
+    public static Object invokeMethod(Object MyObject,Method method,Object[] param){
+        try {
+            try {
+                //MyObject = method.invoke(null, param); //if the method you try to invoke is static...
+                MyObject = method.invoke(param);
+            } catch (NullPointerException ne) {
+                //MyObject = method.invoke(MyObject, param); //...if the methos is non-static
+                MyObject = method.invoke(MyObject);
+            }
+        }catch(IllegalAccessException|InvocationTargetException e){
+            logger.error("ReflectionUtilities::invokeMethod ->",e);
+            return null;
         }
         return MyObject;
     }
@@ -2590,8 +2567,7 @@ public class ReflectionUtilities {
      * @return the returned value from the getter method is exists.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T invokeSetter(T MyObject,String methodName,Object value,Class<?> clazzValue)
-    {
+    public static <T> T invokeSetter(T MyObject,String methodName,Object value,Class<?> clazzValue) {
         try {
             Method method = getMethodByNameAndParam(
                     MyObject.getClass(), methodName, new Class<?>[]{clazzValue});
@@ -2599,7 +2575,7 @@ public class ReflectionUtilities {
             return MyObject;
         } catch (InvocationTargetException|IllegalAccessException|
                 SecurityException|ClassCastException|NullPointerException  e) {
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::invokeSetter ->",e);
         }
         return null;
     }
@@ -2621,7 +2597,7 @@ public class ReflectionUtilities {
             MyObject2 = method.invoke(MyObject);
             return MyObject2;
         } catch (InvocationTargetException|IllegalAccessException|SecurityException  e) {
-            SystemLog.exception(e);
+            logger.error("ReflectionUtilities::invokeGetterClass ->",e);
         }
         return null;
     }
@@ -2634,20 +2610,21 @@ public class ReflectionUtilities {
      * @param value to set with the setter method.
      * @param <T> generic type.
      * @return the return value of the invoke on the getter method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T invokeSetter(T MyObject, Method method, Object value)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
+    public static <T> T invokeSetter(T MyObject, Method method, Object value) {
         T MyObject2;
-        try{
-            //if the method you try to invoke is static...
-            MyObject2 = (T) method.invoke(null, value);
-        }catch(NullPointerException ne) {
-            //...The method is not static
-            MyObject2 = (T) method.invoke(MyObject, value);
+        try {
+            try {
+                //if the method you try to invoke is static...
+                MyObject2 = (T) method.invoke(null, value);
+            } catch (NullPointerException ne) {
+                //...The method is not static
+                MyObject2 = (T) method.invoke(MyObject, value);
+            }
+        }catch(IllegalAccessException|InvocationTargetException e){
+            logger.error("ReflectionUtilities::invokeSetter ->",e);
+            return null;
         }
         return MyObject2;
     }
@@ -2683,20 +2660,17 @@ public class ReflectionUtilities {
      * @param method the getter method.
      * @param <T> generic type.
      * @return the return value of the invoke on the getter method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
      */
     @SuppressWarnings("unchecked")
-    public static <T> Object invokeGetter(T MyObject, Method method)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
+    public static <T> Object invokeGetter(T MyObject, Method method){
         Object MyObject2;
-        Class<T> aClazz = (Class<T>) MyObject.getClass();
-        try{
-            //if the method you try to invoke is static...
-            MyObject2 = method.invoke(null);
-        }catch(NullPointerException ne) {
-            //...The method is not static
+        try {
+            Class<T> aClazz = (Class<T>) MyObject.getClass();
+            try {
+                //if the method you try to invoke is static...
+                MyObject2 = method.invoke(null);
+            } catch (NullPointerException ne) {
+                //...The method is not static
             /*if( method.invoke(MyObject) instanceof URL){
                 URL ee = (URL) method.invoke(MyObject);
                 Class<?> clazz = ee.getClass();
@@ -2704,12 +2678,16 @@ public class ReflectionUtilities {
             }else{
                 MyObject2 = method.invoke(MyObject);
             }*/
-            try {
-                Class<?> clazz = method.invoke(MyObject).getClass();
-                MyObject2 = clazz.cast(method.invoke(MyObject));
-            }catch(NullPointerException ne1){
-                MyObject2 = method.invoke(MyObject);
+                try {
+                    Class<?> clazz = method.invoke(MyObject).getClass();
+                    MyObject2 = clazz.cast(method.invoke(MyObject));
+                } catch (NullPointerException ne1) {
+                    MyObject2 = method.invoke(MyObject);
+                }
             }
+        }catch(IllegalAccessException|InvocationTargetException e){
+            logger.error("ReflectionUtilities::invokeGetter ->",e);
+            return null;
         }
         return MyObject2;
     }
@@ -2744,15 +2722,9 @@ public class ReflectionUtilities {
      * @param param arrays of class for the constructor.
      * @param defaultValues array of object for the constructor.
      * @return T object return from the constructor.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws InstantiationException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws IllegalArgumentException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T invokeConstructor(T MyObject, Class<?>[] param, Object[] defaultValues)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+    public static <T> T invokeConstructor(T MyObject, Class<?>[] param, Object[] defaultValues){
         Class<T> aClazz= (Class<T>)MyObject.getClass();
         return aClazz.cast(invokeConstructor(MyObject.getClass(), param, defaultValues));
     }
@@ -2765,16 +2737,21 @@ public class ReflectionUtilities {
      * @param param arrays of class for the constructor.
      * @param defaultValues array of object for the constructor.
      * @return T object return from the constructor.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws InstantiationException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
      * @throws IllegalArgumentException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
      */
-    public static <T> T invokeConstructor(Class<T> clazz, Class<?>[] param, Object[] defaultValues)
-            throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        Constructor<?> constructor = clazz.getConstructor(param);
-        return clazz.cast(constructor.newInstance(defaultValues));
+    public static <T> T invokeConstructor(Class<T> clazz, Class<?>[] param, Object[] defaultValues){
+        try {
+            if(param == null){
+                return clazz.newInstance();
+            }else {
+                Constructor<?> constructor = clazz.getConstructor(param);
+                return clazz.cast(constructor.newInstance(defaultValues));
+            }
+        }catch(NoSuchMethodException|InstantiationException|IllegalAccessException
+                |IllegalArgumentException|InvocationTargetException e){
+            logger.error("ReflectionUtilities::invokeConstructor ->",e);
+            return null;
+        }
     }
 
     /**
@@ -2784,12 +2761,7 @@ public class ReflectionUtilities {
      * @return T object return from the constructor.
      */
     public static <T> T invokeConstructor(Class<T> clazz) {
-        try {
-            return clazz.newInstance();
-        }catch(IllegalAccessException|InstantiationException e){
-            SystemLog.exception(e);
-        }
-        return null;
+        return invokeConstructor(clazz,null,null);
     }
 
     /**
@@ -2817,8 +2789,7 @@ public class ReflectionUtilities {
         try {
             return method.invoke(target, args);
         }catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-            //handleReflectionException(ex);
-            SystemLog.exception(ex);
+            logger.error("ReflectionUtilities:invokeMethod ->",ex);
         }
         throw new IllegalStateException("Should never get here");
     }
@@ -2848,11 +2819,11 @@ public class ReflectionUtilities {
         try {
             return method.invoke(target, args);
         } catch (IllegalAccessException ex) {
-            SystemLog.exception(ex);
+            logger.error("ReflectionUtilities::invokeJdbcMethod -> ",ex);
         }
         catch (InvocationTargetException ex) {
             if (ex.getTargetException() instanceof SQLException) {
-                SystemLog.throwException(new Throwable(ex.getTargetException()));
+                logger.error("ReflectionUtilities::invokeJdbcMethod -> ",new Throwable(ex.getTargetException()));
             }
         }
         throw new IllegalStateException("Should never get here");
@@ -2980,7 +2951,7 @@ public class ReflectionUtilities {
                 }
             }
         }catch (Throwable ignored){
-            SystemLog.throwException(ignored);
+            logger.warn("ReflectionUtilities::getDeclaredFields ->",ignored);
         }
         return local;
     }

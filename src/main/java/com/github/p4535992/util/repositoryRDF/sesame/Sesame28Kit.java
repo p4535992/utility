@@ -1,12 +1,10 @@
 package com.github.p4535992.util.repositoryRDF.sesame;
 
-import com.github.p4535992.util.collection.CollectionUtilities;
+
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator;
 import com.github.p4535992.util.string.StringUtilities;
-import info.aduna.iteration.Iterations;
 
 import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
@@ -53,6 +51,9 @@ import java.util.zip.GZIPInputStream;
  */
 @SuppressWarnings("unused")
 public class Sesame28Kit {
+    
+    private static final org.slf4j.Logger logger = 
+            org.slf4j.LoggerFactory.getLogger(Sesame28Kit.class);
 
     private static String nameClass;
 
@@ -114,9 +115,9 @@ public class Sesame28Kit {
     private void setRepositoryConnection() throws RepositoryException {
         if(mRepository!=null){
             Sesame28Kit.mRepositoryConnection = mRepository.getConnection();
-            SystemLog.message("The RepositoryConnection:"+mRepositoryConnection.toString()+" is setted!");
+            logger.info("The RepositoryConnection:"+mRepositoryConnection.toString()+" is setted!");
         }else{
-            SystemLog.warning("Attention, you try to set a RepositoryConnection on a inexistent Repository!");
+            logger.warn("Attention, you try to set a RepositoryConnection on a inexistent Repository!");
         }
     }
 
@@ -124,9 +125,9 @@ public class Sesame28Kit {
         if( mRepositoryManager==null && manager!=null)  mRepositoryManager = manager;
         if (mRepositoryManager != null) {
             mRepository = mRepositoryManager.getRepository(repositoryId);
-            SystemLog.message("The Repository:"+mRepository.toString()+" is setted!");
+            logger.info("The Repository:"+mRepository.toString()+" is setted!");
         }else{
-            SystemLog.warning("Attention, you try to set a Repository on a inexistent RepositoryManager!");
+            logger.warn("Attention, you try to set a Repository on a inexistent RepositoryManager!");
         }
     }
 
@@ -324,7 +325,7 @@ public class Sesame28Kit {
             mRepositoryManager.initialize();
             return mRemoteRepositoryManager;
         } catch (RepositoryException e) {
-            SystemLog.exception(e, Sesame28Kit.class);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -341,7 +342,7 @@ public class Sesame28Kit {
             mRemoteRepositoryManager.initialize();
             return mRemoteRepositoryManager;
         } catch (RepositoryException e) {
-            SystemLog.exception(e, Sesame28Kit.class);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -354,10 +355,10 @@ public class Sesame28Kit {
      */
     public RepositoryConnectionWrapper setRepositoryConnectionWrappper(
             Repository mRepository,RepositoryConnection mRepositoryConnection) {
-        Sesame28Kit.mRepositoryConnectionWrapper = new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
+        Sesame28Kit.mRepositoryConnectionWrapper = 
+                new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
         return mRepositoryConnectionWrapper;
     }
-
 
     //------------------------------------------
     // Setter and getter addition
@@ -403,25 +404,25 @@ public class Sesame28Kit {
      * Method for Close the currently opened repository. This works for managed and unmanaged repositories.
      */
     public void  closeRepository() {
-        SystemLog.message("===== Shutting down ==========");
+        logger.info("===== Shutting down ==========");
         if (mRepositoryConnection != null) {
             try {
-                SystemLog.message("Commiting the connection");
+                logger.info("Commiting the connection");
                 //mRepositoryConnection.commit();
-                SystemLog.message("Closing the connection");
+                logger.info("Closing the connection");
                 mRepositoryConnection.close();
-                SystemLog.message("Connection closed");
+                logger.info("Connection closed");
                 // the following is NOT needed as the manager shutDown method
                 // shuts down all repositories
                 // mRepository.shutDown();
                 // SystemLog.message("Repository shut down");
             } catch (RepositoryException e) {
-                SystemLog.exception("Could not close Repository: ",e,Sesame28Kit.class);
+                logger.error("Could not close Repository: ",e,Sesame28Kit.class);
             }
             mRepositoryConnection = null;
             mRepository = null;
             mRepositoryName = null;
-            SystemLog.message("connection, repository and repositoryID set to null");
+            logger.info("connection, repository and repositoryID set to null");
         }
     }
 
@@ -434,7 +435,7 @@ public class Sesame28Kit {
      */
     public Repository connectToLocalWithConfigFile(String repositoryId,String username,String password){
         if (repositoryId == null) {
-            SystemLog.warning("No repository ID specified. When using the '" + URL_REPOSITORY_ID
+            logger.warn("No repository ID specified. When using the '" + URL_REPOSITORY_ID
                     + "' parameter to specify a Sesame server, you must also use the 'null' " +
                     "parameter to specify a repository on that server.");
             System.exit(-5);
@@ -449,15 +450,16 @@ public class Sesame28Kit {
             mRepositoryManager = mRemoteRepositoryManager;
             mRepositoryManager.initialize();
         } catch (RepositoryException e) {
-            SystemLog.warning("Unable to establish a connection with the Sesame server '" + URL_REPOSITORY_ID + "': "
-                    + e.getMessage());
+            logger.error("Unable to establish a connection with the Sesame server '" 
+                    + URL_REPOSITORY_ID + "': "
+                    + e.getMessage(),e);
             System.exit(-5);
         }
         // Get the repository to use
         try {
             mRepository = mRepositoryManager.getRepository(repositoryId);
             if (mRepository == null) {
-                SystemLog.warning("Unknown repository '" + repositoryId + "'");
+                logger.warn("Unknown repository '" + repositoryId + "'");
                 String message = "Please make sure that the value of the 'repository' "
                         + "parameter (current value '" + repositoryId + "') ";
                 if (URL_REPOSITORY_ID == null) {
@@ -466,15 +468,15 @@ public class Sesame28Kit {
                 } else {
                     message += "identifies an existing repository on the Sesame server located at " + URL_REPOSITORY_ID;
                 }
-                SystemLog.warning(message);
+                logger.warn(message);
                 System.exit(-6);
             }
             // Open a connection to this repository
             mRepositoryConnection = mRepository.getConnection();
             //repositoryConnection.setAutoCommit(false);//deprecated
         } catch (OpenRDFException e) {
-            SystemLog.warning("Unable to establish a connection to the repository '" + repositoryId + "': "
-                    + e.getMessage());
+            logger.error("Unable to establish a connection to the repository '" + repositoryId + "': "
+                    + e.getMessage(),e);
             System.exit(-7);
         }
         return mRepository;
@@ -519,7 +521,7 @@ public class Sesame28Kit {
             parser.parse(reader, defaultNamespace);
             return model;
         }catch(RDFParseException|RDFHandlerException|IOException e){
-            SystemLog.exception(e);
+            logger.error(e.getMe);
         }
         return null;
     }
@@ -1319,7 +1321,7 @@ public class Sesame28Kit {
 
             } else{
                 SystemLog.warning("Attention type a correct String typeRepository:"
-                        + CollectionUtilities.toString(types));
+                        + Arrays.toString(types));
             }
             // wrap it into a Sesame SailRepository
             if(mRepository != null && !mRepository.isInitialized()){
@@ -1377,9 +1379,10 @@ public class Sesame28Kit {
             TupleQueryResult result = tupleQuery.evaluate();
             try {
                 int L;
-                if(CollectionUtilities.isEmpty(bindingName)){
+                if(bindingName.length ==0){ //is empty
                     L = result.getBindingNames().size();
-                    bindingName = CollectionUtilities.toArray(result.getBindingNames());
+                    bindingName = new String[result.getBindingNames().size()];
+                    bindingName = result.getBindingNames().toArray(bindingName);
                 }
                 else L = bindingName.length;
 
@@ -1841,7 +1844,8 @@ public class Sesame28Kit {
             }else {
                 statements = mRepositoryConnection.getStatements(null, null, null, includeInfered);
             }
-            about = Iterations.addAll(statements, new ArrayList<Statement>());
+            //about = info.aduna.iteration.Iterations.addAll(statements, new ArrayList<Statement>());
+            about = convertRepositoryResultToListStatements(statements);
             if(remove){ // Then, remove them from the repository
                 mRepositoryConnection.remove(about);
             }
@@ -1849,6 +1853,20 @@ public class Sesame28Kit {
             SystemLog.exception(e);
         }
         return about;
+    }
+    
+    public static List<Statement> convertRepositoryResultToListStatements(
+            RepositoryResult<Statement> iter){
+        List<Statement> collection = new ArrayList<>();
+        try {
+            while (iter.hasNext()) {
+                collection.add(iter.next());
+            }
+            return collection;
+        } catch (RepositoryException ex) {
+            logger.error("Can't convert the RepositoryResult to a List of Statement");
+            return null;
+        }
     }
 
     /**

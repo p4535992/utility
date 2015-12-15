@@ -1,6 +1,4 @@
 package com.github.p4535992.util.gtfs.tordf.transformer.impl;
-
-import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
 import com.hp.hpl.jena.rdf.model.Statement;
 
 import java.io.File;
@@ -16,6 +14,9 @@ import java.util.Objects;
  * @version 2015-11-30.
  */
 public class CalendarDatesTransformer extends AbstractTransformer {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(CalendarDatesTransformer.class);
 
     @Override
     public List<Statement> _Transform(File data, Charset encoding, String _feedbaseuri) {

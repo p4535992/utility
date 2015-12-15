@@ -75,7 +75,7 @@ public class DefaultHttpRequestRetryHandler implements HttpRequestRetryHandler {
             return false;
         }
         Boolean b = (Boolean)context.getAttribute("http.request_sent");//ExecutionContext.HTTP_REQ_SENT
-        boolean sent = (b != null && b.booleanValue());
+        boolean sent = (b != null && b);
         if (!sent || this.requestSentRetryEnabled) {
             // Retry if the request has not been sent fully or
             // if it's OK to retry methods that have been sent
