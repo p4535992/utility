@@ -2,8 +2,6 @@ package com.github.p4535992.util.reflection;
 
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.log.SystemLog;
-
 
 import java.io.File;
 import java.io.IOException;

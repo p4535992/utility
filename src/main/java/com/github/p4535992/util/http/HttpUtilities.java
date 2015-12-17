@@ -30,13 +30,19 @@ import java.util.regex.Pattern;
 
 /**
  * Created by 4535992 on 08/12/2015.
+ * @author 4535992.
+ * @version 2015-12-17.
  */
 @SuppressWarnings("unused")
 public class HttpUtilities {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(HttpUtilities.class);
-
+    
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+    
     public enum HTTP_METHOD {
         GET, POST, PUT, DELETE, HEAD
     }
@@ -45,7 +51,7 @@ public class HttpUtilities {
         Accept,
     }
 
-    private static Pattern IP_PATTERN = Patterns.IP_ADDRESS;
+    private static final Pattern IP_PATTERN = Patterns.IP_ADDRESS;
 
     private static String boundary;
     private static HttpURLConnection httpConn;
@@ -115,7 +121,7 @@ public class HttpUtilities {
         return invokeHTTPRequest(httpPost, contentType, acceptContentType);
     }
 
-    private static String invokeHTTPRequest(HttpPost httpPost, String contentType,
+    public static String invokeHTTPRequest(HttpPost httpPost, String contentType,
                                             String acceptContentType) throws IOException {
         HttpClient httpClient = createHTTPClient();
 
@@ -550,7 +556,8 @@ public class HttpUtilities {
                     u.getPort(), u.getPath(), u.getQuery(), u.getRef());
 
             return p.toString();
-        } catch (Exception e) {
+        } catch (MalformedURLException | URISyntaxException | NullPointerException e) {
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
     }
@@ -818,15 +825,16 @@ public class HttpUtilities {
         // body
         if (body != null) {
             httpConn.setDoOutput(true);
-            OutputStream os = httpConn.getOutputStream();
-            os.write(body.getBytes());
-            os.flush();
-            os.close();
+            try (OutputStream os = httpConn.getOutputStream()) {
+                os.write(body.getBytes());
+                os.flush();
+            }
         }
         // response
-        InputStream is = httpConn.getInputStream();
-        String response = streamToString(is);
-        is.close();
+        String response;
+        try (InputStream is = httpConn.getInputStream()) {
+            response = streamToString(is);
+        }
         // handle redirects
         if (httpConn.getResponseCode() == 301) {
             String location = httpConn.getHeaderField("Location");
@@ -849,7 +857,6 @@ public class HttpUtilities {
         }
         return out.toString();
     }
-
 
     public static void waiter() throws InterruptedException{
         Random generator = new Random();
@@ -919,16 +926,19 @@ public class HttpUtilities {
      * Makes an HTTP request using GET method to the specified URL.
      * @param requestURL the URL of the remote server.
      * @return An HttpURLConnection object.
-     * @throws IOException thrown if any I/O error occurred.
      */
-    public static HttpURLConnection sendGetRequest(String requestURL)
-            throws IOException {
-        URL url = new URL(requestURL);
-        httpConn = (HttpURLConnection) url.openConnection();
-        httpConn.setUseCaches(false);
-        httpConn.setDoInput(true); // true if we want to read server's response
-        httpConn.setDoOutput(false); // false indicates this is a GET request
-        return httpConn;
+    public static HttpURLConnection executeHTTPGetRequestWithReturn(String requestURL){
+        try {
+            URL url = new URL(requestURL);
+            httpConn = (HttpURLConnection) url.openConnection();
+            httpConn.setUseCaches(false);
+            httpConn.setDoInput(true); // true if we want to read server's response
+            httpConn.setDoOutput(false); // false indicates this is a GET request
+            return httpConn;
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return null;
+        }
     }
 
     /**
@@ -936,69 +946,80 @@ public class HttpUtilities {
      * @param requestURL the URL of the remote server.
      * @param params A map containing POST data in form of key-value pairs.
      * @return An HttpURLConnection object.
-     * @throws IOException thrown if any I/O error occurred.
      */
-    public static HttpURLConnection sendPostRequest(
-            String requestURL,Map<String, String> params) throws IOException {
-        URL url = new URL(requestURL);
-        httpConn = (HttpURLConnection) url.openConnection();
-        httpConn.setUseCaches(false);
-        httpConn.setDoInput(true); // true indicates the server returns response
-        StringBuilder requestParams = new StringBuilder();
-        if (params != null && params.size() > 0) {
-            httpConn.setDoOutput(true); // true indicates POST request
-            // creates the params string, encode them using URLEncoder
-            for (String key : params.keySet()) {
-                String value = params.get(key);
-                requestParams.append(URLEncoder.encode(key, "UTF-8"));
-                requestParams.append("=").append(URLEncoder.encode(value, "UTF-8"));
-                requestParams.append("&");
+    public static HttpURLConnection executeHTTPPostRequestWithReturn(
+            String requestURL,Map<String, String> params){
+        try {
+            URL url = new URL(requestURL);
+            httpConn = (HttpURLConnection) url.openConnection();
+            httpConn.setUseCaches(false);
+            httpConn.setDoInput(true); // true indicates the server returns response
+            StringBuilder requestParams = new StringBuilder();
+            if (params != null && params.size() > 0) {
+                httpConn.setDoOutput(true); // true indicates POST request
+                // creates the params string, encode them using URLEncoder
+                for (String key : params.keySet()) {
+                    String value = params.get(key);
+                    requestParams.append(URLEncoder.encode(key, "UTF-8"));
+                    requestParams.append("=").append(URLEncoder.encode(value, "UTF-8"));
+                    requestParams.append("&");
+                }
+                // sends POST data
+                OutputStreamWriter writer = new OutputStreamWriter(httpConn.getOutputStream());
+                writer.write(requestParams.toString());
+                writer.flush();
             }
-            // sends POST data
-            OutputStreamWriter writer = new OutputStreamWriter(httpConn.getOutputStream());
-            writer.write(requestParams.toString());
-            writer.flush();
+            return httpConn;
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        return httpConn;
     }
 
     /**
      * Returns only one line from the server's response.
-     * This method should be used if the server returns only a single line of String.
+     * This method should be used if the server returns only a single line of St
+     * @param inputStream the InputStream response to Read.
      * @return a String of the server's response.
-     * @throws IOException  thrown if any I/O error occurred.
      */
-    public static String readSingleLineRespone(InputStream inputStream) throws IOException {
-        if (httpConn != null) inputStream = httpConn.getInputStream();
-
-        if(inputStream == null) throw new IOException("Connection is not established.");
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        String response = reader.readLine();
-        reader.close();
-        return response;
+    public static String readSingleLineRespone(InputStream inputStream) {
+        try {
+            if (httpConn != null) inputStream = httpConn.getInputStream();
+            if(inputStream == null) throw new IOException("Connection is not established.");
+            String response;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                response = reader.readLine();
+            }
+            return response;
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return null;
+        }
     }
 
     /**
      * Returns an array of lines from the server's response. This method should
      * be used if the server returns multiple lines of String.
-     *
+     * @param inputStream the InputStream response to Read.
      * @return an array of Strings of the server's response.
-     * @throws IOException
-     *             thrown if any I/O error occurred.
      */
-    public static String[] readMultipleLinesRespone(InputStream inputStream) throws IOException {
-        if (httpConn != null)inputStream = httpConn.getInputStream();
-        if(inputStream==null) throw new IOException("Connection is not established.");
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        List<String> response = new ArrayList<>();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            response.add(line);
+    public static String[] readMultipleLinesRespone(InputStream inputStream){
+        try {
+            if (httpConn != null)inputStream = httpConn.getInputStream();
+            if(inputStream==null) throw new IOException("Connection is not established.");
+            List<String> response;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                response = new ArrayList<>();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.add(line);
+                }
+            }
+            return response.toArray(new String[response.size()]);
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        reader.close();
-        return response.toArray(new String[response.size()]);
     }
 
     /**
@@ -1012,104 +1033,139 @@ public class HttpUtilities {
      * This constructor initializes a new HTTP POST request with content type
      * is set to multipart/form-data.
      * @param requestURL url for the request.
-     * @throws IOException thrown if any I/O error occurred.
+     * @return the OutputStream of the Response to the Request.
      */
-    public static OutputStream MultipartUtility(String requestURL,File output)
-            throws IOException {
-        // creates a unique boundary based on time stamp
-        boundary = "===" + System.currentTimeMillis() + "===";
-        URL url = new URL(requestURL);
-        httpConn = (HttpURLConnection) url.openConnection();
-        httpConn.setUseCaches(false);
-        httpConn.setDoOutput(true);	// indicates POST method
-        httpConn.setDoInput(true);
-        httpConn.setRequestProperty("Content-Type","multipart/form-data; boundary=" + boundary);
-        httpConn.setRequestProperty("User-Agent", "CodeJava Agent");
-        httpConn.setRequestProperty("Test", "Bonjour");
-        return httpConn.getOutputStream();
-        //return new PrintWriter(new OutputStreamWriter(outputStream, charset),true);
+    public static OutputStream MultipartUtility(String requestURL){
+        try {
+            // creates a unique boundary based on time stamp
+            boundary = "===" + System.currentTimeMillis() + "===";
+            URL url = new URL(requestURL);
+            httpConn = (HttpURLConnection) url.openConnection();
+            httpConn.setUseCaches(false);
+            httpConn.setDoOutput(true);	// indicates POST method
+            httpConn.setDoInput(true);
+            httpConn.setRequestProperty("Content-Type","multipart/form-data; boundary=" + boundary);
+            httpConn.setRequestProperty("User-Agent", "CodeJava Agent");
+            httpConn.setRequestProperty("Test", "Bonjour");
+            return httpConn.getOutputStream();
+            //return new PrintWriter(new OutputStreamWriter(outputStream, charset),true);
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return null;
+        }
     }
 
     /**
      * Adds a form field to the request.
      * @param name field name.
      * @param value field value.
+     * @param charset the Charset of the Writer.
+     * @param writer the Writer to use for append the form.
+     * @return if true all the operation are done.
      */
-    public static void addFormField(String name, String value,String charset, Writer writer) throws IOException {
-        writer.append("--").append(boundary).append(LINE_FEED);
-        writer.append("Content-Disposition: form-data; name=\"").append(name).append("\"").append(LINE_FEED);
-        writer.append("Content-Type: text/plain; charset=").append(charset).append(LINE_FEED);
-        writer.append(LINE_FEED);
-        writer.append(value).append(LINE_FEED);
-        writer.flush();
+    public static boolean addFormField(String name, String value,String charset, Writer writer){
+        try {
+            writer.append("--").append(boundary).append(LINE_FEED);
+            writer.append("Content-Disposition: form-data; name=\"").append(name).append("\"").append(LINE_FEED);
+            writer.append("Content-Type: text/plain; charset=").append(charset).append(LINE_FEED);
+            writer.append(LINE_FEED);
+            writer.append(value).append(LINE_FEED);
+            writer.flush();
+            return true;
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return false;
+        }
     }
 
     /**
      * Adds a upload file section to the request.
      * @param fieldName name attribute in input type="file" name="..." /.
      * @param uploadFile a File to be uploaded.
-     * @throws IOException thrown if any I/O error occurred..
+     * @param outputStream the OutputStream to write to the File.
+     * @param writer the Writer to use for append the form.
+     * @return if true all the operation are done.
      */
-    public static void addFilePart(String fieldName, File uploadFile,OutputStream outputStream,Writer writer)
-            throws IOException {
-        String fileName = uploadFile.getName();
-        writer.append("--").append(boundary).append(LINE_FEED);
-        writer.append("Content-Disposition: form-data; name=\"").append(fieldName)
-                .append("\"; filename=\"").append(fileName).append("\"").append(LINE_FEED);
-        writer.append("Content-Type: ").append(URLConnection.guessContentTypeFromName(fileName)).append(LINE_FEED);
-        writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
-        writer.append(LINE_FEED);
-        writer.flush();
-
-        FileInputStream inputStream = new FileInputStream(uploadFile);
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
+    public static boolean addFilePart(
+            String fieldName, File uploadFile,
+            OutputStream outputStream,Writer writer) {
+        try {
+            String fileName = uploadFile.getName();
+            writer.append("--").append(boundary).append(LINE_FEED);
+            writer.append("Content-Disposition: form-data; name=\"").append(fieldName)
+                    .append("\"; filename=\"").append(fileName).append("\"").append(LINE_FEED);
+            writer.append("Content-Type: ").append(URLConnection.guessContentTypeFromName(fileName)).append(LINE_FEED);
+            writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
+            writer.append(LINE_FEED);
+            writer.flush();
+            
+            try (FileInputStream inputStream = new FileInputStream(uploadFile)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                outputStream.flush();
+            }
+            
+            writer.append(LINE_FEED);
+            writer.flush();
+            return true;
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         }
-        outputStream.flush();
-        inputStream.close();
-
-        writer.append(LINE_FEED);
-        writer.flush();
     }
 
     /**
      * Adds a header field to the request.
      * @param name - name of the header field.
      * @param value - value of the header field.
+     * @param writer the Writer to use for append the form.
+     * @return if true all the operation are done. 
      */
-    public static void addHeaderField(String name, String value,Writer writer) throws IOException {
-        writer.append(name).append(": ").append(value).append(LINE_FEED);
-        writer.flush();
+    public static boolean addHeaderField(String name, String value,Writer writer){
+        try {
+            writer.append(name).append(": ").append(value).append(LINE_FEED);
+            writer.flush();
+            return true;
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return false;
+        }
     }
 
     /**
      * Completes the request and receives response from the server.
+     * @param writer the Writer to for populate the List of String.
      * @return a list of Strings as response in case the server returned
      * status OK, otherwise an exception is thrown.
-     * @throws IOException thrown if any I/O error occurred.
      */
-    public static List<String> finish(Writer writer) throws IOException {
-        List<String> response = new ArrayList<>();
-        writer.append(LINE_FEED).flush();
-        writer.append("--").append(boundary).append("--").append(LINE_FEED);
-        writer.close();
-        // checks server's status code first
-        int status = httpConn.getResponseCode();
-        if (status == HttpURLConnection.HTTP_OK) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpConn.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.add(line);
+    public static List<String> finish(Writer writer) {
+        try {
+            List<String> response = new ArrayList<>();
+            writer.append(LINE_FEED).flush();
+            writer.append("--").append(boundary).append("--").append(LINE_FEED);
+            writer.close();
+            // checks server's status code first
+            int status = httpConn.getResponseCode();
+            if (status == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        httpConn.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.add(line);
+                    }
+                }
+                httpConn.disconnect();
+            } else {
+                throw new IOException("Server returned non-OK status: " + status);
             }
-            reader.close();
-            httpConn.disconnect();
-        } else {
-            throw new IOException("Server returned non-OK status: " + status);
+            return response;
+        }catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        return response;
     }
 
     private static int tentativi = 0;

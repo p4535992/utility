@@ -1,6 +1,5 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
 import com.github.p4535992.util.repositoryRDF.sesame.Sesame28Kit;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
@@ -22,6 +21,13 @@ import java.net.URISyntaxException;
  */
 @SuppressWarnings("unused")
 public class JenaAndSesame {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(JenaAndSesame.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
     private static JenaAndSesame instance = null;
     protected JenaAndSesame(){}
@@ -431,13 +437,12 @@ public class JenaAndSesame {
                         ResourceFactory.createProperty(stmt.getPredicate().getNamespace(), stmt.getPredicate().getLocalName()),
                         rdfNode);
                 jenaModel.add(ss);
-
             }
-        }catch(java.lang.NullPointerException ne){
-            SystemLog.exception("JenaAndSesame::convertOpenRDFModelToJenaModel",ne,JenaAndSesame.class);
+            return jenaModel;
+        }catch(java.lang.NullPointerException e){
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        return jenaModel;
-        //return asJenaModel(theModel);
     }
 
     /**
@@ -513,8 +518,7 @@ public class JenaAndSesame {
         if ( value instanceof org.openrdf.model.URI )return asNode((org.openrdf.model.URI)value) ;
         if ( value instanceof org.openrdf.model.BNode )return asNode((org.openrdf.model.BNode) value) ;
         else {
-            SystemLog.exception("JenaAndSesame$asNode. Not a concrete value",
-                    new IllegalArgumentException("JenaAndSesame$asNode. Not a concrete value"), JenaAndSesame.class);
+            logger.error(gm() + "Not a concrete value:"+value.stringValue());
             return null;
         }
     }
@@ -622,7 +626,7 @@ public class JenaAndSesame {
         if ( node.isBlank() )return asBNode(factory, node) ;
         else if (node.matches(Node.ANY) || node.isVariable()) return null;
         else {
-            SystemLog.exception("JenaAndSesame$asValue", new IllegalArgumentException("JenaAndSesame$asValue: Not a concrete node"), JenaAndSesame.class);
+            logger.error(gm() + "Not a concrete value:"+node.toString());
             return null;
         }
     }

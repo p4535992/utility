@@ -1,6 +1,5 @@
 package com.github.p4535992.util.xml;
 
-import com.github.p4535992.util.log.SystemLog;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -27,7 +26,13 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public class XMLKitJDOM {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKitJDOM.class);
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(XMLKitJDOM.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
     private static org.w3c.dom.Document w3cdoc;
     private static org.jdom2.Document jdom2doc;
@@ -47,8 +52,9 @@ public class XMLKitJDOM {
      * @param tagName name of the tag.
      * @param nameAttribute name of the attribute.
      * @param newValueAttribute name of the value.
+     * @return if true all the operation are done. 
      */
-    public static void updateValueOfAttributeSAX(String xmlPath,String tagName,String nameAttribute,String newValueAttribute){
+    public static boolean updateValueOfAttributeSAX(String xmlPath,String tagName,String nameAttribute,String newValueAttribute){
         try {
             org.jdom2.input.SAXBuilder builderSAX = new org.jdom2.input.SAXBuilder();
             File xmlFile = new File(xmlPath);
@@ -62,8 +68,10 @@ public class XMLKitJDOM {
             // display nice nice
             xmlOutput.setFormat(org.jdom2.output.Format.getPrettyFormat());
             xmlOutput.output(doc, new FileWriter(xmlFile.getAbsolutePath()));
-        } catch (org.jdom2.JDOMException|IOException ex) {
-            SystemLog.exception(ex);
+            return true;
+        } catch (org.jdom2.JDOMException|IOException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         }
     }//updateValueOfattributeSAX
 
@@ -78,10 +86,11 @@ public class XMLKitJDOM {
             org.jdom2.output.DOMOutputter output = new org.jdom2.output.DOMOutputter();
             // here we have a DOM-document:
             w3cdoc = output.output(jdomdoc);
+            return  w3cdoc;
         }catch(org.jdom2.JDOMException e){
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        return  w3cdoc;
     }
 
     /**
@@ -99,7 +108,7 @@ public class XMLKitJDOM {
     }
 
 
-    public static void initAndWriteFromElemenrt(Element element,String xmlNameFile){
+    public static boolean initAndWriteFromElemenrt(Element element,String xmlNameFile){
         if(!xmlNameFile.toLowerCase().endsWith(".xml")){
             xmlNameFile = xmlNameFile + ".xml";
         }
@@ -110,8 +119,10 @@ public class XMLKitJDOM {
             root.addContent(element);
             XMLOutputter out = new XMLOutputter();
             out.output(root, System.out);
+            return true;
         } catch (JDOMException|IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
+            return false;
         }
     }
 
@@ -130,7 +141,7 @@ public class XMLKitJDOM {
             out.output(jdom2doc, System.out);
             return true;
         } catch (JDOMException|IOException e) {
-            SystemLog.error(e.getMessage());
+            logger.error(gm() + e.getMessage(),e);
             return false;
         }
     }
@@ -149,7 +160,7 @@ public class XMLKitJDOM {
             out.output(jdom2doc, System.out);
             return true;
         } catch (IOException e) {
-            SystemLog.error(e.getMessage());
+            logger.error(gm() + e.getMessage(),e);
             return false;
         }
     }
@@ -219,10 +230,12 @@ public class XMLKitJDOM {
                 }
                 listOfListsOfElement.add(listOfElement);
             }
+            return listOfListsOfElement;
         } catch (JDOMException|IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        return listOfListsOfElement;
+
     }
 
 

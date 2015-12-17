@@ -4,7 +4,6 @@ import com.github.p4535992.util.database.jooq.SQLJooqKit2;
 import com.github.p4535992.util.database.sql.performance.ConnectionWrapper;
 import com.github.p4535992.util.database.sql.performance.JDBCLogger;
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtilities;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.opencsv.CSVReader;
@@ -36,9 +35,27 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 public class SQLHelper {
 
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(SQLHelper.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+
     private static Connection conn;
     private static Statement stmt;
     private static String query;
+
+    protected SQLHelper() {}
+
+    private static SQLHelper instance = null;
+
+    public static SQLHelper getInstance(){
+        if(instance == null) {
+            instance = new SQLHelper();
+        }
+        return instance;
+    }
 
     public static Connection getCurrentConnection() {
         return conn;
@@ -58,7 +75,7 @@ public class SQLHelper {
             try {
                 result.put((Integer)field.get(null), field.getName());
             } catch (IllegalAccessException e) {
-                SystemLog.warning(e.getMessage(), e, SQLHelper.class);
+                logger.warn(gm() + e.getMessage(), e);
             }
         }
         return result;
@@ -80,7 +97,7 @@ public class SQLHelper {
                 Integer value = (Integer) field.get(null);
                 map.put(value, name);
             } catch (IllegalAccessException e) {
-                SystemLog.exception(e);
+                logger.warn(gm() + e.getMessage(),e);
             }
         }
         return map;
@@ -238,7 +255,7 @@ public class SQLHelper {
         if(dialectDb.toLowerCase().contains("postgres93"))return "postgres93";
         if(dialectDb.toLowerCase().contains("postgres94"))return "postgres94";
         if(dialectDb.toLowerCase().contains("sqlite"))return "sqlite";
-        SystemLog.warning("There is not database type for the specific database dialect used.");
+        logger.warn(gm() + "There is not database type for the specific database dialect used.");
         return "?";
     }
 
@@ -303,7 +320,7 @@ public class SQLHelper {
         }
         if(!StringUtilities.isNullOrEmpty(port) || !StringUtilities.isNumeric(port)) port = "";
         if(StringUtilities.isNullOrEmpty(dialectDB)){
-            SystemLog.warning("No connection database type detected fro this type.");
+            logger.warn(gm() + "No connection database type detected fro this type.");
             return null;
         }else dialectDB = convertDialectDatabaseToTypeNameId(dialectDB);
         switch (dialectDB) {
@@ -318,7 +335,7 @@ public class SQLHelper {
             case "postgres93": return null;
             case "postgres94": return null;
             case "sqlite": return null;
-            default: {SystemLog.warning("No connection database type detected fro this type."); return null;}
+            default: {logger.warn(gm() + "No connection database type detected fro this type."); return null;}
         }
     }
 
@@ -342,9 +359,9 @@ public class SQLHelper {
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
             conn = DriverManager.getConnection(url, username, password);
         }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            SystemLog.error("The Class.forName is not present on the classpath of the project", e, SQLHelper.class);
+            logger.error(gm() + "The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
         } catch (SQLException e) {
-        SystemLog.error("The URL is not correct", e, SQLHelper.class);
+            logger.error(gm() +"The URL is not correct:" + e.getMessage(), e);
         }
         return conn;
     }
@@ -376,13 +393,12 @@ public class SQLHelper {
                 //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(url, username, password);
             } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
-                SystemLog.error("You forgot to turn on your MySQL Server!!!");
-                SystemLog.abort(0);
+                logger.error(gm() +"You forgot to turn on your MySQL Server:" + e.getMessage(), e);
             } catch (SQLException e) {
-                SystemLog.error("The URL is not correct", e, SQLHelper.class);
+                logger.error(gm() +"The URL is not correct:" + e.getMessage(), e);
             }
-        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e1) {
-            SystemLog.error("The Class.forName is not present on the classpath of the project", e1, SQLHelper.class);
+        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            logger.error(gm() +"The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
         }
         return conn;
     }
@@ -445,13 +461,12 @@ public class SQLHelper {
                 //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(fullUrl);
             } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
-                SystemLog.error("You forgot to turn on your MySQL Server!!!");
-                SystemLog.abort(0);
+                logger.error(gm() +"You forgot to turn on your MySQL Server:" + e.getMessage(), e);
             } catch (SQLException e) {
-                SystemLog.error("The URL is not correct", e, SQLHelper.class);
+                logger.error(gm() +"The URL is not correct" + e.getMessage(), e);
             }
-        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e1) {
-            SystemLog.error("The Class.forName is not present on the classpath of the project", e1, SQLHelper.class);
+        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            logger.error(gm() +"The Class.forName is not present on the classpath of the project" + e.getMessage(), e);
         }
         return conn;
     }
@@ -476,9 +491,9 @@ public class SQLHelper {
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
             conn = DriverManager.getConnection(url, username, password);
         }catch (ClassNotFoundException e) {
-            SystemLog.error("The Class.forName is not present on the classpath of the project", e, SQLHelper.class);
+            logger.error(gm() +"The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
         } catch (SQLException e) {
-            SystemLog.error("The URL is not correct", e, SQLHelper.class);
+            logger.error(gm() +"The URL is not correct:" + e.getMessage(), e);
         }
         return conn;
     }
@@ -511,9 +526,9 @@ public class SQLHelper {
             url += "/~/" + database;
             conn = DriverManager.getConnection(url, username, password);
         }catch (ClassNotFoundException e) {
-            SystemLog.error("The Class.forName is not present on the classpath of the project", e, SQLHelper.class);
+            logger.error("The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
         } catch (SQLException e) {
-            SystemLog.error("The URL is not correct", e, SQLHelper.class);
+            logger.error("The URL is not correct:" + e.getMessage(), e);
         }
         return conn;
     }
@@ -527,7 +542,7 @@ public class SQLHelper {
      * @param table the String name of the Table.
      * @param columnNamePattern the String Pattern name of the columnss to get.
      * @return the Map of all columns.
-     * @throws SQLException throw if any erro with the SQL is occurred.
+     * @throws SQLException throw if any error with the SQL is occurred.
      */
     public static Map<String,Integer> getColumns(
             String host,String database,String table,String columnNamePattern) throws SQLException{
@@ -538,8 +553,7 @@ public class SQLHelper {
             conn = chooseAndGetConnection(null,host,null,database,null,null);
             if(conn!=null)metaData = conn.getMetaData();
             else{
-                SystemLog.warning("Can't get the connection for the database",
-                        new Throwable("Can't get the connection for the database"),SQLHelper.class);
+                logger.warn("Can't get the connection for the database");
                 return map;
             }
         }
@@ -613,7 +627,7 @@ public class SQLHelper {
         Class.forName(classDriverName); //load driver//"com.sql.jdbc.Driver"
         String url = (dialectDB  + host + ":" + port + "/" + database); //"jdbc:sql://localhost:3306/jdbctest"
         conn = DriverManager.getConnection(url, user, pass);
-        SystemLog.message("SQLHelper::SetNewConnection -> Set a new Connection.", SQLHelper.class);
+        logger.info("Set a new Connection.");
         return conn;
     }
 
@@ -627,9 +641,9 @@ public class SQLHelper {
 
     /**
      * Method to execute a query SQL.
-     * @param sql the Stirng query SQL.
-     * @return the ResukltSet of the Query SQL.
-     * @throws SQLException thorw if any error is occurred during the execution of the query SQL.
+     * @param sql the String query SQL.
+     * @return the ResultSet of the Query SQL.
+     * @throws SQLException throw if any error is occurred during the execution of the query SQL.
      */
     public static ResultSet executeSQL(String sql) throws SQLException {
         stmt = conn.createStatement();
@@ -639,10 +653,10 @@ public class SQLHelper {
 
     /**
      * Method to execute a query SQL.
-     * @param sql the Stirng query SQL.
+     * @param sql the String query SQL.
      * @param conn the Connection to the Database where execute the query.
-     * @return the ResukltSet of the Query SQL.
-     * @throws SQLException thorw if any error is occurred during the execution of the query SQL.
+     * @return the ResultSet of the Query SQL.
+     * @throws SQLException throw if any error is occurred during the execution of the query SQL.
      */
     public static ResultSet executeSQL(String sql,Connection conn) throws SQLException  {
         // create the java statement
@@ -655,30 +669,33 @@ public class SQLHelper {
     /**
      * Method to print hte result of a query.
      * @param sql the String SQL.
+     * @return if true all the operation are done.
      */
-    public static void checkData(String sql){
+    public static boolean checkData(String sql){
         ResultSet rs ;
         try {
             rs = stmt.executeQuery(sql);
 
             java.sql.ResultSetMetaData metadata = rs.getMetaData();
             for (int i = 0; i < metadata.getColumnCount(); i++) {
-                SystemLog.messageInline("\t" + metadata.getColumnLabel(i + 1));
+                logger.info("\t" + metadata.getColumnLabel(i + 1));
             }
-            SystemLog.messageInline("\n----------------------------------");
+            logger.info("\n----------------------------------");
             while (rs.next()) {
                 for (int i = 0; i < metadata.getColumnCount(); i++) {
                     Object value = rs.getObject(i + 1);
                     if (value == null) {
-                        SystemLog.messageInline("\t       ");
+                        logger.info("\t       ");
                     } else {
-                        SystemLog.messageInline("\t" + value.toString().trim());
+                        logger.info("\t" + value.toString().trim());
                     }
                 }
-                SystemLog.message("");
+                logger.info("");
             }
+            return true;
         } catch (SQLException e) {
-            SystemLog.exception("SQLHelper::checkData",e,SQLHelper.class);
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         }
     }
 
@@ -693,21 +710,21 @@ public class SQLHelper {
             m = conn.getMetaData();
             return m.getDatabaseProductName();
         } catch (SQLException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
     }
 
     /**
      * Method to get a content of a table.
-     * @param tablename the String name of the table.
+     * @param tableName the String name of the table.
      * @param connection the Connection to the Database.
      * @return the Vector String Arrays of the content.
      * @throws SQLException throw if the name if the table not exists on the Database.
      */
-    public static Vector<String[]> getContentOfATable(String tablename, Connection connection)
+    public static Vector<String[]> getContentOfATable(String tableName, Connection connection)
             throws SQLException {
-        String sqlQuery = "SELECT * FROM " + tablename;
+        String sqlQuery = "SELECT * FROM " + tableName;
         Statement statement = connection.createStatement(  );
         ResultSet resultSet = statement.executeQuery(sqlQuery);
         int numColumns = resultSet.getMetaData(  ).getColumnCount(  );
@@ -728,15 +745,16 @@ public class SQLHelper {
      * @param sql the String SQL Query.
      * @return the Long value of the time for execute the query.
      */
-    public static Long getExcecutionTime(String sql){
-        long startTime = 0,endTime = 0;
+    public static Long getExecutionTime(String sql){
+        long startTime,endTime;
         try {
             stmt = conn.createStatement();
             startTime = System.currentTimeMillis();
             ResultSet rs = stmt.executeQuery(sql);
             endTime   = System.currentTimeMillis();
         }catch (SQLException e) {
-            SystemLog.exception(e,SQLHelper.class);
+            logger.error(gm() + e.getMessage(), e);
+            return 0L;
         }
         return endTime - startTime;
     }
@@ -747,8 +765,8 @@ public class SQLHelper {
      * @param conn the Connection to the Database where execute the query.
      * @return the Long value of the time for execute the query.
      */
-    public static Long getExcecutionTime(String sql,Connection conn){
-        long startTime = 0,endTime = 0;
+    public static Long getExecutionTime(String sql,Connection conn){
+        long startTime,endTime;
         //Connection dbConnection = getConnectionFromDriver(  );
         ConnectionWrapper dbConnection = new ConnectionWrapper(conn);
         try {
@@ -757,7 +775,8 @@ public class SQLHelper {
             ResultSet rs = statement.executeQuery(sql);
             endTime   = System.currentTimeMillis();
         }catch (SQLException e) {
-            SystemLog.exception(e,SQLHelper.class);
+            logger.error(gm() + e.getMessage(),e);
+            return 0L;
         }
         Long calculate = endTime - startTime;
         Long calculate2 = JDBCLogger.getTime();
@@ -772,10 +791,15 @@ public class SQLHelper {
      * @param separator the Cgaracter of the separator field on the CSV file.
      * @param nameTable the String name of the table.
      * @param connection the Connection to the Database where execute the query.
+     * @return if true all the operation are done. 
      */
-    public static void importCsvInsertInto(File fileCSV, boolean firstLine,Character separator,
+    public static boolean importCsvInsertInto(File fileCSV, boolean firstLine,Character separator,
                                        String nameTable,Connection connection) {
         String[] columns = FileUtilities.CSVGetHeaders(fileCSV, firstLine);
+        if(columns == null){
+            logger.error(gm() + "Can't load the CSV because we need a first line of headers instead the columns is NULL");
+            return false;
+        }
         SQLJooqKit2.setConnection(connection);
         try {
             CSVReader reader = new CSVReader(new FileReader(fileCSV), separator);
@@ -795,9 +819,11 @@ public class SQLHelper {
                     SQLHelper.executeSQL(insertQuery,connection);
                 }
             }
-            //System.out.println("Data Successfully Uploaded");
+            logger.info("Data CSV File Successfully Uploaded");
+            return true;
         } catch (SQLException |IOException e) {
-            SystemLog.exception(e,SQLHelper.class);
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         } 
     }
 
@@ -807,19 +833,24 @@ public class SQLHelper {
      * @return the String name of the host.
      */
     public static String getHostFromUrl(String url) {
-        String regexForHostAndPort = "[.\\w]+:\\d+";
-        Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
-        Matcher matcher = hostAndPortPattern.matcher(url);
-        matcher.find();
-        int start = matcher.start();
-        int end = matcher.end();
-        if(start >= 0 && end >= 0) {
-            String hostAndPort = url.substring(start, end);
-            String [] array = hostAndPort.split(":");
-            if(array.length >= 2)
-                return array[0];
+        try {
+            String regexForHostAndPort = "[.\\w]+:\\d+";
+            Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
+            Matcher matcher = hostAndPortPattern.matcher(url);
+            matcher.find();
+            int start = matcher.start();
+            int end = matcher.end();
+            if (start >= 0 && end >= 0) {
+                String hostAndPort = url.substring(start, end);
+                String[] array = hostAndPort.split(":");
+                if (array.length >= 2)
+                    return array[0];
+            }
+            throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
+        }catch(IllegalArgumentException e){
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
     }
 
     /**
@@ -828,19 +859,24 @@ public class SQLHelper {
      * @return the String name of the host.
      */
     public static Integer getPortFromUrl(String url) {
-        String regexForHostAndPort = "[.\\w]+:\\d+";
-        Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
-        Matcher matcher = hostAndPortPattern.matcher(url);
-        matcher.find();
-        int start = matcher.start();
-        int end = matcher.end();
-        if(start >= 0 && end >= 0) {
-            String hostAndPort = url.substring(start, end);
-            String [] array = hostAndPort.split(":");
-            if(array.length >= 2)
-                return Integer.parseInt(array[1]);
+        try {
+            String regexForHostAndPort = "[.\\w]+:\\d+";
+            Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
+            Matcher matcher = hostAndPortPattern.matcher(url);
+            matcher.find();
+            int start = matcher.start();
+            int end = matcher.end();
+            if (start >= 0 && end >= 0) {
+                String hostAndPort = url.substring(start, end);
+                String[] array = hostAndPort.split(":");
+                if (array.length >= 2)
+                    return Integer.parseInt(array[1]);
+            }
+            throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
+        }catch(IllegalArgumentException e){
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
     }
 
     /**
@@ -849,13 +885,18 @@ public class SQLHelper {
      * @return the String name of the host.
      */
     public static String getUsernameFromUrl(String url){
-        Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(user|username)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pat.matcher(url  + " ");
-        if(matcher.find())  {
-            String[] find = (matcher.group(0)).split("=");
-            return find[1].substring(0,find[1].length()-1);
+        try {
+            Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(user|username)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pat.matcher(url + " ");
+            if (matcher.find()) {
+                String[] find = (matcher.group(0)).split("=");
+                return find[1].substring(0, find[1].length() - 1);
+            }
+            throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
+        }catch(IllegalArgumentException e){
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
     }
 
     /**
@@ -864,20 +905,17 @@ public class SQLHelper {
      * @return the String name of the host.
      */
     public static String getPasswordFromUrl(String url){
-        Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(pass|password)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pat.matcher(url + " ");
-        if(matcher.find())  {
-            String[] find = (matcher.group(0)).split("=");
-            return find[1].substring(0,find[1].length()-1);
+        try {
+            Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(pass|password)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
+            Matcher matcher = pat.matcher(url + " ");
+            if (matcher.find()) {
+                String[] find = (matcher.group(0)).split("=");
+                return find[1].substring(0, find[1].length() - 1);
+            }
+            throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
+        }catch(IllegalArgumentException e){
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
     }
-
-
-
-
-
-
-
-
 }

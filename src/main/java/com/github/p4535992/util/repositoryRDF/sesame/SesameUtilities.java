@@ -4,16 +4,14 @@ package com.github.p4535992.util.repositoryRDF.sesame;
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.string.StringUtilities;
-
 import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
 import org.openrdf.http.client.SesameClientImpl;
 import org.openrdf.model.*;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Model;
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
-import org.openrdf.model.impl.*;
+import org.openrdf.model.impl.LinkedHashModel;
+import org.openrdf.model.impl.TreeModel;
+import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.*;
 import org.openrdf.repository.*;
@@ -27,7 +25,6 @@ import org.openrdf.repository.manager.RepositoryProvider;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.repository.util.RDFInserter;
 import org.openrdf.rio.*;
-import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.helpers.BasicParserSettings;
 import org.openrdf.sail.NotifyingSail;
 import org.openrdf.sail.Sail;
@@ -47,17 +44,18 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+
 /**
  * Class of utility for Sesame Server and Owlim Server
  * @author 4535992.
- * @version 2015-11-10.
+ * @version 2015-12-17.
  * Work with Sesame openrdf version 2.8.0
  */
 @SuppressWarnings("unused")
-public class Sesame28Kit {
-    
-    private static final org.slf4j.Logger logger = 
-            org.slf4j.LoggerFactory.getLogger(Sesame28Kit.class);
+public class SesameUtilities {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(SesameUtilities.class);
 
     private static String gm() {
         return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
@@ -65,13 +63,13 @@ public class Sesame28Kit {
 
     private static String nameClass;
 
-    protected Sesame28Kit() {}
+    protected SesameUtilities() {}
 
-    private static Sesame28Kit instance = null;
+    private static SesameUtilities instance = null;
 
-    public static Sesame28Kit getInstance(){
+    public static SesameUtilities getInstance(){
         if(instance == null) {
-            instance = new Sesame28Kit();
+            instance = new SesameUtilities();
             //nameClass = instance.getClass().getSimpleName()+"::";
             //help with very large repository....
             System.setProperty("entityExpansionLimit", "1000000");
@@ -122,7 +120,7 @@ public class Sesame28Kit {
 
     private void setRepositoryConnection() throws RepositoryException {
         if(mRepository!=null){
-            Sesame28Kit.mRepositoryConnection = mRepository.getConnection();
+            SesameUtilities.mRepositoryConnection = mRepository.getConnection();
             logger.info("The RepositoryConnection:"+mRepositoryConnection.toString()+" is setted!");
         }else{
             logger.warn(gm()+"Attention, you try to set a RepositoryConnection on a inexistent Repository!");
@@ -216,7 +214,7 @@ public class Sesame28Kit {
      * @param repositoryLocation the Repository Location.
      */
     public void setRepositoryLocation(String repositoryLocation) {
-        Sesame28Kit.mRepositoryLocation = repositoryLocation;
+        SesameUtilities.mRepositoryLocation = repositoryLocation;
     }
 
     /**
@@ -232,7 +230,7 @@ public class Sesame28Kit {
      * @param repositoryName the repository Name.
      */
     public void setRepositoryName(String repositoryName) {
-        Sesame28Kit.mRepositoryName = repositoryName;
+        SesameUtilities.mRepositoryName = repositoryName;
     }
 
     /**
@@ -248,7 +246,7 @@ public class Sesame28Kit {
      * @param repositoryProvider the Repository Provider.
      */
     public void setRepositoryProvider(RepositoryProvider repositoryProvider) {
-        Sesame28Kit.mRepositoryProvider = repositoryProvider;
+        SesameUtilities.mRepositoryProvider = repositoryProvider;
     }
 
     /**
@@ -260,7 +258,7 @@ public class Sesame28Kit {
     }
 
      /**
-     * Method to set RepositoryConnectionWrapper.  
+     * Method to set RepositoryConnectionWrapper.
      * @param repositoryConnectionWrapper the Repository Connection Wrapper.
      */
     public void setRepositoryConnectionWrapper(RepositoryConnectionWrapper repositoryConnectionWrapper) {
@@ -369,7 +367,7 @@ public class Sesame28Kit {
      */
     public RepositoryConnectionWrapper setRepositoryConnectionWrappper(
             Repository mRepository,RepositoryConnection mRepositoryConnection) {
-        Sesame28Kit.mRepositoryConnectionWrapper = 
+        SesameUtilities.mRepositoryConnectionWrapper =
                 new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
         return mRepositoryConnectionWrapper;
     }
@@ -379,7 +377,7 @@ public class Sesame28Kit {
     //------------------------------------------
 
     /**
-     * Method to get the String of the url where are located the  repositories 
+     * Method to get the String of the url where are located the  repositories
      * @return the String url.
      */
     public String getURL_REPOSITORIES() {return URL_REPOSITORIES;}
@@ -391,7 +389,7 @@ public class Sesame28Kit {
     public String getURL_SESAME() {return URL_SESAME;}
 
      /**
-     * Method to get the String of the url where are located the specific repository. 
+     * Method to get the String of the url where are located the specific repository.
      * @return the String url.
      */
     public String getURL_REPOSITORY_ID() {return URL_REPOSITORY_ID;}
@@ -644,7 +642,7 @@ public class Sesame28Kit {
     public Long numberOfImplicitStatements(RepositoryConnection repConn) {
         try {
             // Retrieve all inferred statements
-            RepositoryResult<Statement> statements = 
+            RepositoryResult<Statement> statements =
                     repConn.getStatements(null, null, null, true,
                         new URIImpl("http://www.ontotext.com/implicit"));
             long implicitStatements = 0;
@@ -1710,20 +1708,20 @@ public class Sesame28Kit {
     /**
      * Field a list of RDF file formats used in loadFile().
      */
-    private static final org.openrdf.rio.RDFFormat allFormats[] =
-            new org.openrdf.rio.RDFFormat[] {
-                    org.openrdf.rio.RDFFormat.NTRIPLES, org.openrdf.rio.RDFFormat.N3,
-                    org.openrdf.rio.RDFFormat.RDFXML, org.openrdf.rio.RDFFormat.TURTLE,
-                    org.openrdf.rio.RDFFormat.TRIG, org.openrdf.rio.RDFFormat.TRIX,
-                    org.openrdf.rio.RDFFormat.NQUADS, org.openrdf.rio.RDFFormat.JSONLD ,
-                    org.openrdf.rio.RDFFormat.RDFA,org.openrdf.rio.RDFFormat.RDFJSON};
+    private static final RDFFormat allFormats[] =
+            new RDFFormat[] {
+                    RDFFormat.NTRIPLES, RDFFormat.N3,
+                    RDFFormat.RDFXML, RDFFormat.TURTLE,
+                    RDFFormat.TRIG, RDFFormat.TRIX,
+                    RDFFormat.NQUADS, RDFFormat.JSONLD ,
+                    RDFFormat.RDFA, RDFFormat.RDFJSON};
 
     /**
      * Method to convert a string to a or.openrdf.rio.RDFFormat.
      * @param strFormat string of format.
      * @return correspondent RDFORMAT.
      */
-    private static org.openrdf.rio.RDFFormat stringToRDFFormat(String strFormat) {
+    private static RDFFormat stringToRDFFormat(String strFormat) {
         if(strFormat.equalsIgnoreCase("NT")||strFormat.equalsIgnoreCase("N3")
                 ||strFormat.equalsIgnoreCase("NTRIPLES")||strFormat.equalsIgnoreCase("N-TRIPLES")){
             strFormat = "N-Triples";
@@ -1731,7 +1729,7 @@ public class Sesame28Kit {
         if(strFormat.equalsIgnoreCase("TTL")||strFormat.equalsIgnoreCase("TURTLE")){
             strFormat = "TURTLE";
         }
-        for (org.openrdf.rio.RDFFormat format : allFormats) {
+        for (RDFFormat format : allFormats) {
             if (format.getName().equalsIgnoreCase(strFormat))
                 return format;
         }
@@ -1961,7 +1959,7 @@ public class Sesame28Kit {
             return null;
         }
     }
-    
+
     public static List<Statement> convertRepositoryResultToListStatements(
             RepositoryResult<Statement> iter){
         List<Statement> collection = new ArrayList<>();
@@ -3087,21 +3085,21 @@ public class Sesame28Kit {
      */
     public List<com.hp.hpl.jena.graph.Triple> findJenaTripleFromSesameRepository(
             com.hp.hpl.jena.graph.Triple triple,
-            org.openrdf.model.Resource contexts) {
+            Resource contexts) {
 
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
         com.hp.hpl.jena.graph.Node s = triple.getMatchSubject() ;
         com.hp.hpl.jena.graph.Node p = triple.getMatchPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getMatchObject() ;
-        org.openrdf.model.Resource subj =
+        Resource subj =
                 ( s==null ? null : com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asResource(valueFactory, s) ) ;
-        org.openrdf.model.URI pred   =
+        URI pred   =
                 ( p==null ? null : com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asURI(valueFactory, p) ) ;
-        org.openrdf.model.Value obj  =
+        Value obj  =
                 ( o==null ? null : com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asValue(valueFactory, o) ) ;
         List<com.hp.hpl.jena.graph.Triple> list = new ArrayList<>();
         try {
-            org.openrdf.repository.RepositoryResult<org.openrdf.model.Statement> iter1 =
+            RepositoryResult<Statement> iter1 =
                     mRepositoryConnection.getStatements(subj, pred, obj, true, contexts) ;
             com.hp.hpl.jena.util.iterator.ExtendedIterator<com.hp.hpl.jena.graph.Triple> ext =
                     new com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator(iter1);
@@ -3111,7 +3109,7 @@ public class Sesame28Kit {
                 i++;
             }
             return list;
-        } catch (org.openrdf.repository.RepositoryException ex) {
+        } catch (RepositoryException ex) {
             logger.error(gm() + "Can't execute the research on the repository:"+ ex.getMessage(),ex);
             return null;
         }
@@ -3528,8 +3526,8 @@ public class Sesame28Kit {
                 }
             }
         };
-        try{run(queryRunner, "<QUERY>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
-        try{run(closeRunner, "<CLOSER>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
+        try{run(queryRunner, "<QUERY>");}catch(NullPointerException ne){/*do nothing*/}
+        try{run(closeRunner, "<CLOSER>");}catch(NullPointerException ne){/*do nothing*/}
         long start = System.currentTimeMillis();
         while (!stop.get()) {
             sleep(100);
@@ -3618,8 +3616,8 @@ public class Sesame28Kit {
             }
         };
 
-        try{run(queryRunner, "<QUERY>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
-        try{run(closeRunner, "<CLOSER>");}catch(java.lang.NullPointerException ne){/*do nothing*/}
+        try{run(queryRunner, "<QUERY>");}catch(NullPointerException ne){/*do nothing*/}
+        try{run(closeRunner, "<CLOSER>");}catch(NullPointerException ne){/*do nothing*/}
 
         long start = System.currentTimeMillis();
         while (!stop.get()) {

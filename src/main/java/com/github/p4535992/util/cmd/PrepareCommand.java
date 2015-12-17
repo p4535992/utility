@@ -1,5 +1,5 @@
 package com.github.p4535992.util.cmd;
-import com.github.p4535992.util.log.SystemLog;
+
 import com.github.p4535992.util.string.StringUtilities;
 import org.apache.commons.exec.*;
 
@@ -13,6 +13,13 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public class PrepareCommand {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(PrepareCommand.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
     
     public PrepareCommand(){}
     
@@ -42,11 +49,11 @@ public class PrepareCommand {
                 while ( (line = br.readLine()) != null) {
                     buffer.append(line);//.append("\n");
                     if(!line.isEmpty()){
-                        SystemLog.message("CMD:" + line);}
+                        logger.info("CMD:" + line);}
                 }
                 message = buffer.toString();
-            } catch (IOException ioe) {
-                SystemLog.exception(ioe);
+            } catch (IOException e) {
+                logger.error(gm() + e.getMessage(),e);
             }
         }
     }
@@ -85,13 +92,14 @@ public class PrepareCommand {
             error.join(3000);
             output.join(3000);
             exitVal = proc.waitFor();
-            SystemLog.message("Output: " + output.message);
-            SystemLog.warning("Error: " + error.message);
+            logger.info("Output: " + output.message);
+            logger.warn("Error: " + error.message);
             
             //file.delete();
             //file.deleteOnExit();
         }catch(Exception e){
-             SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
+            return -1;
         }finally{
             file.delete();
         }
@@ -101,7 +109,7 @@ public class PrepareCommand {
     private int RunCommandsWithCommonsExec(String workingDirectory,String mainClass,Map<String,String> params) throws IOException{
         long startTime = System.currentTimeMillis();
         long printJobTimeout = 1000;
-        int exitValue = 0;
+        int exitValue ; // = 0;
         // build up the command line to using a 'java.io.File'
         //CommandLine commandLine = new CommandLine("cd "+System.getProperty("user.dir")+"/Web-Karma-master v2.031/karma-offline");
         //commandLine.setSubstitutionMap(map);
@@ -129,10 +137,11 @@ public class PrepareCommand {
         executor.setStreamHandler(streamHandler);
         try {
             exitValue = executor.execute(commandLine);
-        } catch (ExecuteException ex) {
-            SystemLog.exception(ex);
+        } catch (ExecuteException e) {
+            logger.error(gm() + e.getMessage(),e);
+            return -1;
         }
-        SystemLog.message(outputStream.toString());
+        logger.info(outputStream.toString());
         return exitValue;
     }
 

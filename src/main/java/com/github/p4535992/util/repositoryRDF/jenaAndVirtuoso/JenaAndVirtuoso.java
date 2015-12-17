@@ -1,5 +1,5 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndVirtuoso;
-import com.github.p4535992.util.log.SystemLog;
+
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.*;
@@ -10,7 +10,6 @@ import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.util.NodeUtils;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.vocabulary.RDFS;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +23,13 @@ import java.util.List;
  */
 @SuppressWarnings("unused")
 public class JenaAndVirtuoso {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(JenaAndVirtuoso.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
     private static final String DEFAULT_URL_VIRTUOSO = "jdbc:virtuoso://localhost:1111/charset=UTF-8";
     private static final String DEFAUL_USERNAME= "dba";
@@ -45,27 +51,46 @@ public class JenaAndVirtuoso {
 
     /**
      * Method to connect to a virtuoso repository like a Jena Model.
+     * @return if true all the operation are done. 
      */
-    public void connectToVirtuoso(){
-        virtGraph = new virtuoso.jena.driver.VirtGraph (DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
-        virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
-        virtDataset = new virtuoso.jena.driver.VirtDataset(DEFAULT_URL_VIRTUOSO,DEFAUL_USERNAME,DEFAUL_PASSWORD);
-        SystemLog.message("Connection to the Virtuoso Repository Success!");
+    public boolean connectToVirtuoso(){
+        try {
+            virtGraph = new virtuoso.jena.driver.VirtGraph(DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
+            virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
+            virtDataset = new virtuoso.jena.driver.VirtDataset(DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
+            logger.info("Connection to the Virtuoso Repository Success!");
+            return true;
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
+        }
     }
 
-    public void connectToVirtuoso(String serverVirtuoso,String username,String password,String baseModel){
-        virtGraph = new virtuoso.jena.driver.VirtGraph(serverVirtuoso,username,password);
-        virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
-        virtDataset = new virtuoso.jena.driver.VirtDataset(serverVirtuoso,username,password);
-        //OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, baseModel);
-        SystemLog.message("Connection to the Virtuoso Repository Success!");
+    public boolean connectToVirtuoso(String serverVirtuoso,String username,String password,String baseModel){
+        try {
+            virtGraph = new virtuoso.jena.driver.VirtGraph(serverVirtuoso, username, password);
+            virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
+            virtDataset = new virtuoso.jena.driver.VirtDataset(serverVirtuoso, username, password);
+            //OntModel ontModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, baseModel);
+            logger.info("Connection to the Virtuoso Repository Success!");
+            return true;
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
+        }
     }
 
-    public void connectToVirtuoso(String serverVirtuoso,javax.sql.DataSource dataSource){
-        virtGraph = new virtuoso.jena.driver.VirtGraph(serverVirtuoso,dataSource);
-        virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
-        virtDataset = new virtuoso.jena.driver.VirtDataset(serverVirtuoso,dataSource);
-        SystemLog.message("Connection to the Virtuoso Repository Success!");
+    public boolean connectToVirtuoso(String serverVirtuoso,javax.sql.DataSource dataSource){
+        try {
+            virtGraph = new virtuoso.jena.driver.VirtGraph(serverVirtuoso, dataSource);
+            virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
+            virtDataset = new virtuoso.jena.driver.VirtDataset(serverVirtuoso, dataSource);
+            logger.info("Connection to the Virtuoso Repository Success!");
+            return true;
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
+        }
     }
 
     /**
@@ -129,21 +154,6 @@ public class JenaAndVirtuoso {
     public static void removeAllVirtuoso(String ruleSetName, String uriGraphRuleSet){
         virtModel.removeAll();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Method to execute a SPARQL query on the virtuoso graph VirtGraph.

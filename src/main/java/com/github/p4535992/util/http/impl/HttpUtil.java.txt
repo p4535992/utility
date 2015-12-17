@@ -6,7 +6,6 @@ import java.nio.charset.Charset;
 
 import java.util.*;
 
-import com.github.p4535992.util.log.SystemLog;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -14,6 +13,13 @@ import org.jsoup.nodes.Document;
 
 @SuppressWarnings("unused")
 public class HttpUtil {
+
+	private static final org.slf4j.Logger logger =
+			org.slf4j.LoggerFactory.getLogger(HttpUtil.class);
+
+	private static String gm() {
+		return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+	}
 
 	private static String boundary;
 	private static final String LINE_FEED = "\r\n";
@@ -572,7 +578,7 @@ public class HttpUtil {
 			try {
 				String html = HttpUtil.get(url);
 				doc = Jsoup.parse(html);
-				SystemLog.message("HTTP HAS SUCCEDED!");
+				logger.info(gm() + "HTTP HAS SUCCEDED!");
 				tentativi = 0;
 				return doc != null;
 			} catch (Exception en) {

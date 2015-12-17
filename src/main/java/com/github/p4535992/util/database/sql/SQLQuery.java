@@ -2,7 +2,7 @@ package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.log.SystemLog;
+
 
 import java.io.File;
 import java.util.Arrays;
@@ -15,6 +15,13 @@ import java.util.Objects;
  */
 @SuppressWarnings("unused")
 public class SQLQuery {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(SQLQuery.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
     /**
      * CREATE TABLE  nameTableCopied LIKE  nameTableToCopy;
@@ -342,8 +349,8 @@ public class SQLQuery {
             }
             bQuery.append(");");
         }catch (NullPointerException e){
-            SystemLog.warning("Attention: you probably have forgotten  to put some column for the SQL query");
-            SystemLog.exception(e);
+            logger.error(gm() +"Attention: you probably have forgotten  to put some column for the SQL query");
+            logger.error(gm() + e.getMessage(),e);
         }
         return bQuery.toString();
     }
@@ -392,8 +399,8 @@ public class SQLQuery {
             }
             bQuery.append(");");
         }catch (NullPointerException e){
-            SystemLog.warning("Attention: you probably have forgotten to put some column for the SQL query");
-            SystemLog.exception(e);
+            logger.error(gm() + "Attention: you probably have forgotten to put some column for the SQL query");
+            logger.error(gm() + e.getMessage(),e);
         }
         return bQuery.toString();
     }
@@ -526,11 +533,11 @@ public class SQLQuery {
                     .append(fieldSeparator).append("'").append(" LINES TERMINATED BY '")
                     .append(linesSeparator).append(" ( ")
                     .append(CollectionUtilities.toString(columns)).append(") ");
-            SystemLog.query(loadQuery.toString());
+            logger.info(gm() + loadQuery.toString());
             //SQLHelper.executeSQL(loadQuery,connection);
         }
         catch (Exception e){
-            SystemLog.exception(e, SQLQuery.class);
+            logger.error(gm() + e.getMessage(),e);
         }
         return loadQuery.toString();
     }

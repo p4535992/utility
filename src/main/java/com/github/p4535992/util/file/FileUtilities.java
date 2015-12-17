@@ -1,6 +1,5 @@
 package com.github.p4535992.util.file;
 
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtilities;
 
 import java.io.*;
@@ -28,11 +27,26 @@ import static java.util.Arrays.*;
  */
 @SuppressWarnings("unused")
 public class FileUtilities {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(FileUtilities.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+
+
     private static String fullPath;
     private static char pathSeparator = File.separatorChar;
     //private static char extensionSeparator = '.';
     //private static String extensionSeparatorS = ".";
     public final static String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();
+
+    /**
+     * Check the file separator to see if we're on a Windows platform.
+     * @return  boolean True if the platform is Windows, false otherwise.
+     */
+    private static boolean platformIsWindows() {return File.separatorChar == '\\';}
 
 
     protected FileUtilities() {}
@@ -224,9 +238,12 @@ public class FileUtilities {
     public static File createFile(File file) {
         try {
             if(file.createNewFile())return file;
-            else  return null;
+            else{
+                logger.warn(gm() + "Can't create the file" + file.getName());
+                return null;
+            }
         } catch (IOException e) {
-            SystemLog.exception(e, FileUtilities.class);
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
     }
@@ -235,42 +252,60 @@ public class FileUtilities {
      * Method to copy the content from a file to another in char format.
      * @param fullPathInput string path to the file you want to read the copy.
      * @param fullPathOutput string path to the file you want write the copy.
-     * @throws IOException throw if any error is occurrred.
+     * @return if true all the operation are done.
      */
-    public static void copy(String fullPathInput, String fullPathOutput) throws IOException {
-       copy(new File(fullPathInput), new File(fullPathOutput));
+    public static boolean copy(String fullPathInput, String fullPathOutput){
+       return copy(new File(fullPathInput), new File(fullPathOutput));
     }
 
     /**
      * Method to copy a file.
      * @param destination the String destination for the copy of the file.
      * @param source the String source of the File to copy.
-     * @throws IOException throw if any error is occurrred.
+     * @return if true all the operation are done.
      */
-    public static void copy(File destination, File source) throws IOException {
+    public static boolean copy(File destination, File source){
         if (!destination.exists()) createFile(destination);
         try (OutputStream out = new FileOutputStream(destination);
              InputStream in = new FileInputStream(source)) {
-           copy(in,out,StandardCharsets.UTF_8);
+                copy(in, out, StandardCharsets.UTF_8);
+                logger.info("Done copying contents of " + source.getName() + " to " + destination.getName());
+                return true;
+        }catch(IOException e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         }
-        SystemLog.message("Done copying contents of " + source.getName() + " to " + destination.getName());
+
     }
 
-    public static int copy(InputStream input,OutputStream output, Charset encoding){
+    /**
+     * Method to copy a file.
+     * @param input the InpuStream to copy.
+     * @param output the OutputStream where put the copy.
+     * @param encoding the Charset encoding of the Stream.
+     * @return if true all the operation are done.
+     */
+    public static boolean copy(InputStream input,OutputStream output, Charset encoding){
         InputStreamReader in = new InputStreamReader(input, encoding);
         OutputStreamWriter out = new OutputStreamWriter(output,encoding);
         long count = copyLarge(in,out);
-        if (count > Integer.MAX_VALUE) {
-            return -1;
+        if (count == -1 || count > Integer.MAX_VALUE) {
+            return false; // -1
         }
-        return (int) count;
+        return true; // count
     }
 
-    public static long copyLarge(Reader input, Writer output){
+    /**
+     * Method to copy a file.
+     * @param input the Reader input.
+     * @param output the Writer Output
+     * @return the count of the characters in the Stream.
+     */
+    private static long copyLarge(Reader input, Writer output){
         //copyLarge(input, output, new char[DEFAULT_BUFFER_SIZE])
         char[] buffer = new char[1024 * 4];
         long count = 0;
-        int n = 0;
+        int n ; // n = 0;
         try {
             while (-1 != (n = input.read(buffer))) {
                 output.write(buffer, 0, n);
@@ -278,8 +313,8 @@ public class FileUtilities {
             }
             return count;
         }catch(IOException e){
-            SystemLog.exception(e);
-            return 0;
+            logger.error(gm() + e.getMessage(), e);
+            return -1;
         }
     }
 
@@ -309,7 +344,7 @@ public class FileUtilities {
      * @return the list of absolute file names
      * @since 1.0
      */
-    public static ArrayList getFileList(File file, Pattern[] included, Pattern[] excluded){
+    public static ArrayList<String> getFileList(File file, Pattern[] included, Pattern[] excluded){
         return getFileList(file, included, excluded, true);
     }
 
@@ -323,14 +358,14 @@ public class FileUtilities {
                 for (String aList : list) {
                     list_entry = aList;
                     File next_file = new File(file.getAbsolutePath() + File.separator + list_entry);
-                    ArrayList dir = getFileList(next_file, included, excluded, false);
-                    Iterator dir_it = dir.iterator();
+                    ArrayList<String> dir = getFileList(next_file, included, excluded, false);
+                    Iterator<String> dir_it = dir.iterator();
                     String file_name;
                     while (dir_it.hasNext()) {
-                        file_name = (String) dir_it.next();
+                        file_name = dir_it.next();
                         if (root) {
                             // if the file is not accepted, don't process it further
-                            if (!StringUtilities.isFindWithRegex(file_name, included, excluded)) {
+                            if (!StringUtilities.isMatch(file_name, included, excluded)) {
                                 continue;
                             }
                         } else {
@@ -352,7 +387,7 @@ public class FileUtilities {
         }else if (file.isFile()){
             String  file_name = file.getName();
             if (root){
-                if (StringUtilities.isFindWithRegex(file_name, included, excluded)){
+                if (StringUtilities.isMatch(file_name, included, excluded)){
                     filelist.add(file_name);
                 }
             }else filelist.add(file_name);
@@ -360,7 +395,7 @@ public class FileUtilities {
         return filelist;
     }
     /**
-     * Method to read all file ina direcotry/folder.
+     * Method to read all file ina directory/folder.
      * @param directory file of the directory/folder.
      * @return list of files in the directory.
      */
@@ -369,12 +404,11 @@ public class FileUtilities {
     }
 
     /**
-     * Method to read all file ina direcotry/folder.
-     * @param fullPathDir string path to the loaction of the directory/folder.
+     * Method to read all file ina directory/folder.
+     * @param fullPathDir string path to the location of the directory/folder.
      * @return list of files in the directory.
      */
     public static List<File> readDirectory(String fullPathDir) {
-        File file;
         String[] paths;
         List<File> files = new ArrayList<>();
         try {
@@ -383,7 +417,7 @@ public class FileUtilities {
                 files.add(new File(fullPathDir+File.separator+path));
             }
         } catch (Exception e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
         }
         return files;
     }
@@ -391,21 +425,24 @@ public class FileUtilities {
     /**
      * Removes all files from a given folder.
      * @param path string of the path to the file
+     * @return if true all the operation are done.
      */
-    public static void removeDirectory(String path)
-    {
+    public static boolean removeDirectory(String path) {
         File filePath = new File(path);
         if (filePath.exists()) {
             for (String fileInDirectory : filePath.list()) {
                 File tmpFile = new File(path + "/" + fileInDirectory);
                 if(!tmpFile.delete()){
-                    SystemLog.warning("Can't delete the file:"+tmpFile.getAbsolutePath());
+                    logger.warn("Can't delete the file:" + tmpFile.getAbsolutePath());
+                    return false;
                 }
             }
             if(!filePath.delete()){
-                SystemLog.warning("Can't delete the file:"+filePath.getAbsolutePath());
+                logger.warn("Can't delete the file:" + filePath.getAbsolutePath());
+                return false;
             }
         }
+        return true;
     }
 
     /**
@@ -516,8 +553,8 @@ public class FileUtilities {
     public static File toFile(String referenceResourcePath,Class<?> thisClass){
         try {
             return new File(thisClass.getClassLoader().getResource(referenceResourcePath).getFile());
-        }catch(NullPointerException ne){
-            SystemLog.exception(ne);
+        }catch(NullPointerException e){
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
@@ -534,13 +571,13 @@ public class FileUtilities {
      * @return path to the in uri formato with prefix file:///
      */
     public static String toStringUriWithPrefix(String filePath){
-        StringBuilder mapfilename = new StringBuilder( filePath ) ;
-        for ( int i = 0 ; i < mapfilename.length() ; i++ ) {
-            if ( mapfilename.charAt(i) == '\\' )
-                mapfilename.setCharAt(i, '/') ;
+        StringBuilder mapFileName = new StringBuilder( filePath ) ;
+        for ( int i = 0 ; i < mapFileName.length() ; i++ ) {
+            if ( mapFileName.charAt(i) == '\\' )
+                mapFileName.setCharAt(i, '/') ;
         }
-        if (filePath.charAt(0) == '/') return "file://"+mapfilename.toString() ;
-        else  return "file:///"+mapfilename.toString() ;
+        if (filePath.charAt(0) == '/') return "file://"+mapFileName.toString() ;
+        else  return "file:///"+mapFileName.toString() ;
     }
 
     /**
@@ -559,6 +596,7 @@ public class FileUtilities {
             //dir = convertFileToUri2(dir)+"/";
             //dir = helper.substring(0, helper.length() - currentDirFile.getCanonicalPath().length());
         } catch (Exception e) {
+            logger.error(gm() + e.getMessage(), e);
             dir = null;
         }
         return dir;
@@ -572,8 +610,10 @@ public class FileUtilities {
     public static String getDirectoryName(File file){
         if(file.exists()) {
             return file.getParent();
+        }else {
+            logger.warn(gm() + "The file " + file.getAbsolutePath() + " not exists.");
+            return null;
         }
-        return null;
     }
 
     /**
@@ -584,8 +624,10 @@ public class FileUtilities {
     public static File getDirectoryFile(File file){
         if(file.exists()) {
             return file.getParentFile();
+        }else {
+            logger.warn(gm() + "The file " + file.getAbsolutePath() + " not exists.");
+            return null;
         }
-        return null;
     }
 
     public static File getDirectoryFile(String fullPathFile) {
@@ -595,8 +637,10 @@ public class FileUtilities {
     public static String getDirectoryFullPath(File file){
         if(file.exists()) {
             return file.getAbsoluteFile().getParentFile().getAbsolutePath();
+        }else {
+            logger.warn(gm() + "The file " + file.getAbsolutePath() + " not exists.");
+            return null;
         }
-        return null;
     }
 
     public static String getDirectoryFullPath(String fullPathFile){
@@ -608,14 +652,9 @@ public class FileUtilities {
      * @return the letter of the disk.
      */
     public static String getCurrentDisk() {
-        String dir="";
-        try {
-            dir = getUserDir();
-            String[] split = dir.split(":");
-            dir = split[0];
-        } catch (Exception e) {
-            SystemLog.exception(e);
-        }
+        String dir = getUserDir();
+        String[] split = dir.split(":");
+        dir = split[0];
         return dir + ":".toLowerCase();
     }
 
@@ -642,9 +681,9 @@ public class FileUtilities {
             }
             return file;
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
+            return null;
         }
-        return null;
     }
 
 
@@ -663,7 +702,7 @@ public class FileUtilities {
             }
             return is;
         } catch (IOException e) {
-            SystemLog.warning("The file:" + pathToFile + " not exists!!!");
+            logger.error(gm() + "The file:" + pathToFile + " not exists:" +e.getMessage(), e);
             return null;
         }
         //Alternative
@@ -682,7 +721,7 @@ public class FileUtilities {
         try {
             return new FileInputStream(file);
         }catch(FileNotFoundException e){
-            SystemLog.warning("The file:" + file.getAbsolutePath() + " not exists!!!");
+            logger.error(gm() + "The file:" + file.getAbsolutePath() + " not exists:" + e.getMessage(), e);
             return null;
         }
     }
@@ -699,11 +738,12 @@ public class FileUtilities {
             byte[] bytes = new byte[1024];
             while ((read = inStream.read(bytes)) != -1) { outputStream.write(bytes, 0, read);}
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
+            return null;
         }
         if(new File(filePathOutput).exists()) return new File(filePathOutput);
         else{
-            SystemLog.warning("The file:"+ new File(filePathOutput).getAbsolutePath() +" not exists!!!");
+            logger.warn(gm() + "The file:" + new File(filePathOutput).getAbsolutePath() + " not exists.");
             return null;
         }
     }
@@ -725,11 +765,12 @@ public class FileUtilities {
                     result.append(line).append("\n");
                 }
             } catch (IOException e) {
-                SystemLog.exception(e);
+                logger.error(gm() + e.getMessage(), e);
+                return null;
             }
             return result.toString();
-        }catch(NullPointerException ne){
-            SystemLog.exception(ne);
+        }catch(NullPointerException e){
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
@@ -748,8 +789,8 @@ public class FileUtilities {
         }catch(NullPointerException e) {
             try {
                 return clazz.getClassLoader().getResourceAsStream(name);
-            }catch(NullPointerException ne){
-                SystemLog.exception(ne);
+            }catch(NullPointerException ex){
+                logger.error(gm() + ex.getMessage(), ex);
                 return null;
             }
         }
@@ -785,7 +826,7 @@ public class FileUtilities {
         try {
             return  new GZIPInputStream(new FileInputStream(file));
         } catch (IOException e) {
-            SystemLog.exception(e,FileUtilities.class);
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
@@ -809,7 +850,7 @@ public class FileUtilities {
         if(file.exists()) {
             return !file.isFile() && file.isDirectory();
         }else{
-            SystemLog.warning("The file:"+file.getAbsolutePath()+" not exists!");
+            logger.warn(gm() + "The file:" + file.getAbsolutePath() + " not exists!");
             return false;
         }
     }
@@ -830,9 +871,8 @@ public class FileUtilities {
             }
             byte[] hashedBytes = digest.digest();
             return StringUtilities.toHexString(hashedBytes);
-        } catch (NoSuchAlgorithmException | IOException ex) {
-            SystemLog.error("Could not generate hash from file");
-            SystemLog.exception(ex);
+        } catch (NoSuchAlgorithmException | IOException e) {
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
@@ -890,13 +930,14 @@ public class FileUtilities {
      * @return the Writer Object.
      */
     public static Writer toWriter(File file){
-        Writer writer = null;
+        Writer writer;
         try {
             writer = new FileWriter(file);
+            return writer;
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
+            return null;
         }
-        return writer;
     }
 
     /**
@@ -905,13 +946,14 @@ public class FileUtilities {
      * @return the Writer Object.
      */
     public static Reader toReader(File file){
-        Reader reader = null;
+        Reader reader;
         try {
             reader = new FileReader(file);
+            return reader;
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
+            return null;
         }
-        return reader;
     }
 
     /**
@@ -920,17 +962,17 @@ public class FileUtilities {
      * @param findFile  the String name of file to search.
      * @param basePath the String base of the path to the File.
      * @return the String path to the file.
-     * @throws java.io.FileNotFoundException throw if any error is occurrred.
      */
-    public static String locateFile (String findFile,String basePath) throws FileNotFoundException {
+    public static String locateFile (String findFile,String basePath) {
         URL url;
         String fullPathName;
         StringBuffer decodedPathName;
         int pos, len, start;
-        if (findFile == null)throw new FileNotFoundException("locateFile: null file name");
-        if (findFile.startsWith(basePath)) return findFile.substring(basePath.length());
-        if ((fullPathName = locateByProperty(findFile)) != null)return fullPathName;
-        if ((url = locateByResource(findFile)) != null) {
+        try {
+            if (findFile == null) throw new FileNotFoundException("locateFile: null file name");
+            if (findFile.startsWith(basePath)) return findFile.substring(basePath.length());
+            if ((fullPathName = locateByProperty(findFile)) != null) return fullPathName;
+            if ((url = locateByResource(findFile)) != null) {
           /*
            * The URL that we receive from getResource /might/ have ' '
            * (space) characters converted to "%20" strings.  However,
@@ -938,23 +980,27 @@ public class FileUtilities {
            * kept intact), so we'll just convert all "%20" strings to
            * ' ' characters and hope for the best.
            */
-            fullPathName = url.getFile();
-            //pos = 0;
-            len = fullPathName.length();
-            start = 0;
-            decodedPathName = new StringBuffer();
+                fullPathName = url.getFile();
+                //pos = 0;
+                len = fullPathName.length();
+                start = 0;
+                decodedPathName = new StringBuffer();
 
-            while ((pos = fullPathName.indexOf("%20", start)) != -1) { //pct = %20
-                decodedPathName.append(fullPathName.substring(start, pos));
-                decodedPathName.append(' ');
-                start = pos + 3; //pct.length = 3
+                while ((pos = fullPathName.indexOf("%20", start)) != -1) { //pct = %20
+                    decodedPathName.append(fullPathName.substring(start, pos));
+                    decodedPathName.append(' ');
+                    start = pos + 3; //pct.length = 3
+                }
+                if (start < len) decodedPathName.append(fullPathName.substring(start, len));
+                fullPathName = decodedPathName.toString();
+                if (platformIsWindows()) fullPathName = fullPathName.substring(1, fullPathName.length());
+                return fullPathName;
             }
-            if (start < len)decodedPathName.append(fullPathName.substring(start, len));
-            fullPathName=decodedPathName.toString();
-            if (platformIsWindows())fullPathName = fullPathName.substring(1, fullPathName.length());
-            return fullPathName;
+            throw new FileNotFoundException("locateFile: file not found: " + findFile);
+        }catch(FileNotFoundException e){
+            logger.error(gm() + e.getMessage(), e);
+            return null;
         }
-        throw new FileNotFoundException("locateFile: file not found: " + findFile);
     }
 
     /**
@@ -963,27 +1009,31 @@ public class FileUtilities {
      * @param findFile  the String name of file to search.
      * @param basePath the string prefix of the findFile e.g. "abs://"
      * @return the String path to the file.
-     * @throws java.io.FileNotFoundException throw if any error is occurrred.
      */
-    public static URL locateURL (String findFile,String basePath) throws FileNotFoundException {
+    public static URL locateURL (String findFile,String basePath)  {
         URL url;
         String fullPathName;
-        if (findFile == null) throw new FileNotFoundException("locateURL: null file name");
         try {
-            if (findFile.startsWith(basePath)) {
-                return (new URL("file:/" + findFile.substring(basePath.length())));
+            if (findFile == null) throw new FileNotFoundException("locateURL: null file name");
+            try {
+                if (findFile.startsWith(basePath)) {
+                    return (new URL("file:/" + findFile.substring(basePath.length())));
+                }
+                if ((fullPathName = locateByProperty(findFile)) != null) {
+                    if (platformIsWindows()) url = new URL("file:/" + fullPathName);
+                    else url = new URL("file:" + fullPathName);
+                    return url;
+                }
+            } catch (MalformedURLException e) {
+                logger.error(gm() + "locateURL: URL creation problem:" + e.getMessage(), e);
+                throw new FileNotFoundException("locateURL: URL creation problem");
             }
-            if ((fullPathName = locateByProperty(findFile)) != null) {
-                if(platformIsWindows())url = new URL("file:/" + fullPathName);
-                else url = new URL("file:" + fullPathName);
-                return url;
-            }
-        }catch (MalformedURLException e) {
-            System.err.println("locateURL: URL creation problem");
-            throw new FileNotFoundException("locateURL: URL creation problem");
+            if ((url = locateByResource(findFile)) != null) return url;
+            throw new FileNotFoundException("locateURL: file not found: " + findFile);
+        }catch(FileNotFoundException e){
+            logger.error(gm() + e.getMessage(), e);
+            return null;
         }
-        if ((url = locateByResource(findFile)) != null)return url;
-        throw new FileNotFoundException("locateURL: file not found: " + findFile);
     }
 
     /**
@@ -996,17 +1046,19 @@ public class FileUtilities {
         String fullPathName = null;
         String dir;
         File f = null;
-        if (findFile == null) return null;
-
+        if (findFile == null) {
+            logger.error(gm() + "The findFile parameter can't be NULL.");
+            return null;
+        }
         try {
-            // System.err.println("Searching in user.dir for: " + findFile);
+            logger.warn(gm() + "Searching in 'user.dir' for: " + findFile);
             dir = System.getProperty("user.dir");
             if (dir != null) {
                 fullPathName = dir + File.separatorChar + findFile;
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()) {
-                // System.err.println("Found in user.dir");
+                logger.warn(gm() + "Found in 'user.dir':" + fullPathName);
                 return fullPathName;
             }
             dir = System.getProperty("user.home");
@@ -1015,7 +1067,7 @@ public class FileUtilities {
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()) {
-                // System.err.println("Found in user.home");
+                logger.warn(gm() + "Found in 'user.home':"+fullPathName);
                 return fullPathName;
             }
             dir = System.getProperty("java.home");
@@ -1024,14 +1076,14 @@ public class FileUtilities {
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()){
-                // System.err.println("Found in java.home");
+                logger.warn(gm() + "Found in 'java.home':"+fullPathName);
                 return fullPathName;
             }
-        }
-        catch (Exception e) {
+        }catch (Exception e) {
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
-        return null;
+        return fullPathName;
     }
 
     /**
@@ -1044,15 +1096,9 @@ public class FileUtilities {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         URL url = loader.getResource(findFile);
         if (url == null)  url = FileUtilities.class.getResource("/" + findFile);
-        // System.err.println("Search succeeded via getResource()");
+        logger.warn(gm() + "Search succeeded via getResource()");
         return url;
     }
-
-    /**
-     * Check the file separator to see if we're on a Windows platform.
-     * @return  boolean True if the platform is Windows, false otherwise.
-     */
-    private static boolean platformIsWindows() {return File.separatorChar == '\\';}
 
     /**
      * Method to get the String array of the columns of a CSV File.
@@ -1061,7 +1107,7 @@ public class FileUtilities {
      * @return a String Array of the columns.
      */
     public static String[] CSVGetHeaders(File fileCSV,boolean hasFirstLine){
-        String[] columns = new String[0];
+        String[] columns;
         try{
             com.opencsv.CSVReader reader = new com.opencsv.CSVReader(new FileReader(fileCSV));
             columns = reader.readNext(); // assuming first read
@@ -1073,10 +1119,11 @@ public class FileUtilities {
                     columns[i] = "Column#"+i;
                 }
             }
+            return columns;
         }catch(IOException e){
-            SystemLog.exception("Can't find the CSV File", e, FileUtilities.class);
+            logger.error(gm() + "Can't find the CSV File:"+ e.getMessage(), e);
+            return null;
         }
-        return columns;
     }
 
     /**
@@ -1084,10 +1131,9 @@ public class FileUtilities {
      * @param CSV the File comma separated.
      * @param header if true jump the first line of the content.
      * @return the List of Array of the content of the File comma separated.
-     * @throws IOException throw if the file not exists.
      */
     public static List<String[]> CSVGetContent(File CSV,boolean header){
-        List<String[]> content = new ArrayList<>();
+        List<String[]> content;
         try {
             com.opencsv.CSVReader reader1 = new com.opencsv.CSVReader(new FileReader(CSV));
             content = reader1.readAll();
@@ -1099,10 +1145,11 @@ public class FileUtilities {
                 }
             }*/
             if (header) content.remove(0);
+            return content;
         }catch(IOException e){
-            SystemLog.exception("Can't find the CSV File", e, FileUtilities.class);
+            logger.error(gm() + "Can't find the CSV File:"+ e.getMessage(), e);
+            return null;
         }
-        return content;
     }
 
 
@@ -1110,14 +1157,18 @@ public class FileUtilities {
      * Method to convert a MultipartFile to a File
      * @param multiPartFile the MultiPartFile of Spring to convert.
      * @return the File.
-     * @throws IOException throw if the Multipart File not exists.
      */
-    public File toFile(org.springframework.web.multipart.MultipartFile multiPartFile) throws IOException {
+    public File toFile(org.springframework.web.multipart.MultipartFile multiPartFile) {
         File convFile = new File(multiPartFile.getOriginalFilename());
         /*convFile.createNewFile();
         FileOutputStream fos = new FileOutputStream(convFile); fos.write(multiPartFile.getBytes());fos.close();*/
-        multiPartFile.transferTo(convFile);
-        return convFile;
+        try {
+            multiPartFile.transferTo(convFile);
+            return convFile;
+        } catch (IOException e) {
+            logger.error(gm() + e.getMessage(), e);
+            return null;
+        }
     }
 
     /**
@@ -1361,7 +1412,7 @@ public class FileUtilities {
             try {
                 return Files.readAllLines(path, encodingInput);
             } catch (IOException e1) {
-                SystemLog.exception(e1,FileUtilities.class);
+                logger.error(gm() + e.getMessage(), e);
                 return null;
             }
         }
@@ -1373,15 +1424,18 @@ public class FileUtilities {
      * @param content a List of String to write on the File.
      * @param fileOutput the File where to write.
      * @param encodingOutput the Charset Encoding if null is UTF8.
+     * @return if true all the operation are done.
      */
-    public static void writeSmallFile(Collection<String> content, File fileOutput,Charset encodingOutput) {
+    public static Boolean writeSmallFile(Collection<String> content, File fileOutput,Charset encodingOutput) {
         if(!fileOutput.exists()) createFile(fileOutput);
         if(encodingOutput==null) encodingOutput = StandardCharsets.UTF_8;
         Path path = Paths.get(fileOutput.getAbsolutePath());
         try {
             Files.write(path, content, encodingOutput);
+            return true;
         } catch (IOException e) {
-            SystemLog.exception(e,FileUtilities.class);
+            logger.error(gm() + e.getMessage(), e);
+            return false;
         }
     }
 
@@ -1391,23 +1445,27 @@ public class FileUtilities {
      * It is equivalent to: native2ascii -encoding utf-8.
      * @param UTF8 encoding of input.
      * @return ASCII encoding of output.
-     * @throws IOException  file not found.
      */
-    public static List<String> toAscii(File UTF8) throws IOException{
-        List<String> list = new ArrayList<>();
-        if (UTF8==null) {
-            System.out.println("Usage: java UTF8ToAscii <filename>");
+    public static List<String> toAscii(File UTF8){
+        try {
+            List<String> list = new ArrayList<>();
+            if (UTF8 == null) {
+                logger.info("=== Usage: java UTF8ToAscii <filename> ===");
+                return null;
+            }
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(UTF8), "UTF-8"))) {
+                String line = r.readLine();
+                while (line != null) {
+                    logger.info(unicodeEscape(line));
+                    line = r.readLine();
+                    list.add(line);
+                }
+            }
+            return list;
+        }catch(IOException e){
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
-        try (BufferedReader r = new BufferedReader( new InputStreamReader(new FileInputStream(UTF8),"UTF-8" ))) {
-            String line = r.readLine();
-            while (line != null) {
-                System.out.println(unicodeEscape(line));
-                line = r.readLine();
-                list.add(line);
-            }
-        }
-        return list;
     }
 
     private static final char[] hexChar = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
@@ -1439,23 +1497,27 @@ public class FileUtilities {
      * This utility is equivalent to: native2ascii -reverse -encoding utf-8.
      * @param ASCII file of input in ASCII encoding.
      * @return UTF8 file of input in UTF8 encoding.
-     * @throws IOException file not found.
      */
-    public static List<String> toUTF8(File ASCII) throws IOException {
-        List<String> list = new ArrayList<>();
-        if (ASCII == null) {
-            System.out.println("Usage: java UnicodeEscape2UTF8 <filename>");
+    public static List<String> toUTF8(File ASCII){
+        try {
+            List<String> list = new ArrayList<>();
+            if (ASCII == null) {
+                logger.info(" === Usage: java UnicodeEscape2UTF8 <filename> ===");
+                return null;
+            }
+            try (BufferedReader r = new BufferedReader(new FileReader(ASCII))) {
+                String line = r.readLine();
+                while (line != null) {
+                    line = convertUnicodeEscape(line);
+                    byte[] bytes = line.getBytes("UTF-8");
+                    list.add(StringUtilities.toString(bytes));
+                }
+            }
+            return list;
+        }catch(IOException e){
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
-        try (BufferedReader r = new BufferedReader(new FileReader(ASCII))) {
-            String line = r.readLine();
-            while (line != null) {
-                line = convertUnicodeEscape(line);
-                byte[] bytes = line.getBytes("UTF-8");
-                list.add(StringUtilities.toString(bytes));
-            }
-        }
-        return list;
     }
 
     enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
@@ -1520,9 +1582,8 @@ public class FileUtilities {
      * Method to rewrite a file in the UTF-8 encoding
      * @param fileASCII file of input in ASCII encoding
      * @return the File converted to UTF8 encoding.
-     * @throws IOException file not found
      */
-    public static File writeToUTF8(File fileASCII) throws IOException{
+    public static File writeToUTF8(File fileASCII){
         List<String> list = toUTF8(fileASCII);
         File fileUTF8 = new File(fileASCII.getAbsolutePath());
         //fileASCII = new File(filePathASCII);
@@ -1535,9 +1596,8 @@ public class FileUtilities {
      * Method to rewrite a file in the ASCII encoding
      * @param fileUTF8 file of input in UTF8 encoding
      * @return the File converted with ASCII.
-     * @throws IOException file not found
      */
-    public static File writeToASCII(File fileUTF8) throws IOException{
+    public static File writeToASCII(File fileUTF8){
         List<String> list = toAscii(fileUTF8);
         File fileAscii = new File(fileUTF8.getAbsolutePath());
         write(list, fileAscii, null, StringUtilities.US_ASCII);
@@ -1591,7 +1651,7 @@ public class FileUtilities {
         }
         if(encodingOutput == null) encodingOutput = StandardCharsets.UTF_8;
         if(encodingOutput.name().toUpperCase().startsWith("UTF")) replace = true;
-        SystemLog.message("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
+        logger.info("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
         Path path = Paths.get(fileOutput.getAbsolutePath());
         try (BufferedWriter writer = Files.newBufferedWriter(path, encodingOutput)){
             for(String line : collectionContent){
@@ -1615,7 +1675,7 @@ public class FileUtilities {
             }
             return true;
         }catch(java.lang.NullPointerException|IOException e){
-            SystemLog.warning(e.getMessage(), FileUtilities.class);
+            logger.error(gm() + e.getMessage(), e);
             return false;
         }
     }
@@ -1625,7 +1685,7 @@ public class FileUtilities {
         if(encodingOutput == null) encodingOutput = StandardCharsets.UTF_8;
         if(encodingInput == null) encodingInput = StringUtilities.toCharset(System.getProperty("file.encoding"));
         if(encodingOutput.name().toUpperCase().startsWith("UTF")) replace = true;
-        SystemLog.message("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
+        logger.info("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
         try {
             boolean firstLine = true;
             FileInputStream fis = new FileInputStream(fileInput);
@@ -1656,7 +1716,7 @@ public class FileUtilities {
             }
             return true;
         }catch (Exception e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
             return false;
         }
     }
@@ -1688,7 +1748,8 @@ public class FileUtilities {
             params.parseNameValuePairs(lines, separator, true);
             //map = params.getParameters();
         }catch(IOException e){
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
         return params;
     }
@@ -1724,7 +1785,7 @@ public class FileUtilities {
             }
             return collection;
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
@@ -1738,10 +1799,10 @@ public class FileUtilities {
     public static String toString(File file, String encoding){
         StringWriter sw = new StringWriter();
         long count = 0;
-        int n = 0;
+        int n ; // n = 0;
         try {
             FileInputStream fis = new FileInputStream(file);
-            SystemLog.message("Reading file: " + file + " using encoding: " + encoding);
+            logger.info("Reading file: " + file + " using encoding: " + encoding);
             //org.apache.commons.io.IOUtils.copy(fis, sw, encoding);
             InputStreamReader in = new InputStreamReader(fis, StringUtilities.toCharset(encoding));
             char[] buffer = new char[1024 * 4];
@@ -1750,7 +1811,7 @@ public class FileUtilities {
                 count += n;
             }
         }catch(IOException e){
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
         if (count > Integer.MAX_VALUE) return null;
@@ -1761,9 +1822,8 @@ public class FileUtilities {
      * Method to read the Binary Content of a File.
      * @param fileInput the File to read.
      * @return the arrays of Bytes of the content of the File.
-     * @throws IOException throw if the File not exists.
      */
-    public static byte[] readBinaryFileContent(File fileInput) throws IOException {
+    public static byte[] readBinaryFileContent(File fileInput) {
         ByteArrayOutputStream bs;
         try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(fileInput))) {
             bs = new ByteArrayOutputStream();
@@ -1772,8 +1832,12 @@ public class FileUtilities {
                 int bytesRead;
                 while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
             }
+            return bs.toByteArray();
+        }catch(IOException e){
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        return bs.toByteArray();
+
         /*//OLD METHOD
         InputStream IPut = new FileInputStream(fileInput);
         Vector<byte[]> BytArrsV = new Vector<>();
@@ -1809,9 +1873,9 @@ public class FileUtilities {
      * Convenience method for writing bytes to an OutputStream.
      * @param fileOutput File to write.
      * @param bbuf The contents to write to the OutputStream, OPut.
-     * @throws IOException Probably an IO Exception if any.
+     * @return if true all the operation are done.
      */
-    public static void writeBinaryFileContent(File fileOutput, byte[] bbuf) throws IOException {
+    public static boolean writeBinaryFileContent(File fileOutput, byte[] bbuf)  {
         /* try{OPut.write(bbuf, 0, bbuf.length);OPut.flush();
         }catch(Exception ex){SystemLog.exception(ex,StringUtilities.class);}
         finally{ OPut.close();}
@@ -1822,7 +1886,12 @@ public class FileUtilities {
                 int bytesRead;
                 while ((bytesRead = in.read(ioBuf)) != -1) out.write(ioBuf, 0, bytesRead);
             }
+            return true;
         }//try
+        catch(IOException e){
+            logger.error(gm() + e.getMessage(), e);
+            return false;
+        }
     }
 
     /**
@@ -1830,23 +1899,20 @@ public class FileUtilities {
      * Important note: This method hasn't been tested yet, and was originally written a long, long time ago.
      * @param fileToUpdate the File to update.
      * @param textToAppend the String text to append.
-     * @throws IOException throw if any error is occurred.
      */
-    public static void appendToFile(File fileToUpdate, String textToAppend) throws IOException {
+    public static void appendToFile(File fileToUpdate, String textToAppend)  {
         BufferedWriter bw = null;
         try {
             bw = new BufferedWriter(new FileWriter(fileToUpdate, true));
             bw.write(textToAppend);
             bw.flush();
-        } catch (IOException ioe) {
-            throw ioe;
+        } catch (IOException e) {
+            logger.error(gm() + e.getMessage(),e);
         } finally { // always close the file
             if (bw != null)
                 try {
                     bw.close();
-                } catch (IOException ioe2) {
-                    // ignore it
-                }
+                } catch (IOException ignored) {}
         }
 
     }

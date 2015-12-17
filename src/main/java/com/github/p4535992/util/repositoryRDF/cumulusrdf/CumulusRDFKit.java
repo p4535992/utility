@@ -1,5 +1,4 @@
 package com.github.p4535992.util.repositoryRDF.cumulusrdf;
-import com.github.p4535992.util.log.SystemLog;
 import edu.kit.aifb.cumulus.store.CumulusStoreException;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -23,11 +22,14 @@ import java.util.Iterator;
 @SuppressWarnings("unused")
 public class CumulusRDFKit{
 
-    public static org.apache.log4j.Logger logger;
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(CumulusRDFKit.class);
 
-    protected CumulusRDFKit() {
-        logger = org.apache.log4j.Logger.getLogger(this.getClass().getName());
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
     }
+
+    protected CumulusRDFKit() {}
 
     private static CumulusRDFKit instance = null;
 
@@ -56,7 +58,7 @@ public class CumulusRDFKit{
         try {
             sail.initialize();
         } catch (SailException e) {
-            SystemLog.exception(e,CumulusRDFKit.class);
+           logger.error(gm() + e.getMessage(),e);
         }
         return  new SailRepository(sail);
     }

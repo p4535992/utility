@@ -2,7 +2,6 @@ package com.github.p4535992.util.database.sql;
 
 
 import com.github.p4535992.util.collection.CollectionUtilities;
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionUtilities;
 
 import javax.persistence.Column;
@@ -20,6 +19,14 @@ import java.util.*;
  */
 @SuppressWarnings("unused")
 public class SQLSupport<T>{
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(SQLSupport.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+
     private Class<? extends T> cl;
 
     //CONSTRUCTOR
@@ -182,9 +189,9 @@ public class SQLSupport<T>{
                 }//if list.size() > 0
             }//for each ssc
         support = new SQLSupport(columns,values,types);
-        }catch(IllegalAccessException|NoSuchMethodException|
+        }catch(IllegalAccessException|
                 InvocationTargetException|NoSuchFieldException e){
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
         }
         return support;
     }
@@ -233,17 +240,11 @@ public class SQLSupport<T>{
         return  columns;
     }
 
-    public static <T> T invokeSetterSupport(T iClass, String column, Object value) throws NoSuchFieldException {
-        try {
-            Method method = ReflectionUtilities.findSetter(iClass, column, value);
-            Object[] values = new Object[]{value};
-            iClass = ReflectionUtilities.invokeSetter(iClass, method, values);
-            return iClass;
-        } catch (IllegalAccessException|
-                InvocationTargetException|NoSuchMethodException e) {
-            SystemLog.exception(e);
-        }
-        return null;
+    public static <T> T invokeSetterSupport(T iClass, String column, Object value) {
+        Method method = ReflectionUtilities.findSetter(iClass, column, value);
+        Object[] values = new Object[]{value};
+        iClass = ReflectionUtilities.invokeSetter(iClass, method, values);
+        return iClass;
     }
 
     /*public static Map<org.jooq.Field,org.jooq.Field> convertSQLSupportToMapJOOQField(

@@ -1,0 +1,174 @@
+ Custom SLF4J Logger Adapter
+
+According to SLF4J official site - The Simple Logging Facade for Java (SLF4J) serves as a simple facade or
+abstraction for various logging frameworks (e.g. java.util.logging, logback, log4j) allowing the end user to
+plug in the desired logging framework at deployment time.
+
+ Logging is done using slf4j-api.jar which is mandatory at compile time. However, any runtime binding could be used.
+ SLF4J is out there for quite a long time and quite popular among Java programmers. The reason for this post is that
+ I lately encountered a situation where I was in a situation that one of my Java console application was turned into
+ Java swing application. There was a text area where I wanted to redirect all log messages that was emitted by SLF4J
+ into this log text area. Note that in my application slf4j-log4j binding was used. This post Gin-Lung Cheng guided
+ me to think a way out. But to me it was missing a concrete example which took a little longer for me to sort it out.
+ In order to help you to save some time here it is discussed how to have your own slf4j runtime.
+
+Writing slf4j custom implementation is quite straight forward as mentioned in the link that I mentioned above.
+
+    Create an implementation of org.slf4j.Logger interface. But this may not be trivial and could be a bit frustrating
+    where you will be required to implement a lots of methods. Instead, a marker less adapter could be inherited:
+    org.slf4j.helpers.MarkerIgnoringBase
+    Create a factory for the new logger using this interface: org.slf4j.ILoggerFactory
+    Create your own binder class, so SLF4J knows which factory to use to get loggers: org.slf4j.spi.LoggerFactoryBinder
+
+You may wonder how slf4j runtime going to recognize your custom logger. SLF4J put it quite simple, these logger
+implementation should be in org.slf4j.impl package.
+
+Now lets sub-class org.slf4j.helpers.MarkerIgnoringBase  and override ONLY void write(StringBuilder buf, Throwable t)
+method where you can direct your log messages as you wish. Note that you can see the code of slf4j-simple and fill
+your custom logger accordingly.
+package org.slf4j.impl;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MarkerIgnoringBase;
+import org.slf4j.helpers.MessageFormatter;
+import org.slf4j.spi.LocationAwareLogger;
+
+public class FrameLogger extends MarkerIgnoringBase {
+
+    // code fill in from slf4j-simple as required to format your log messages as required.
+
+    void write(StringBuilder buf, Throwable t) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+
+        // Print some output: goes to your special stream
+        //
+        PrintStream TARGET_STREAM = ps;
+        TARGET_STREAM.println(buf.toString());
+        if (t != null) {
+            t.printStackTrace(TARGET_STREAM);
+        }
+        TARGET_STREAM.flush();
+        try {
+            String str = baos.toString("utf-8");
+
+
+            // below is your custom place where you want to direct your log message to.
+            // In my case, messages were appended to a text area
+            //
+            MainFrame.log( str );
+
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+}
+
+At this stage your slf4j logger is ready which need to register with slf4j logger factory in order to retrieve by Java classes.
+
+package org.slf4j.impl;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import org.slf4j.ILoggerFactory;
+import org.slf4j.Logger;
+
+
+public class FrameLoggerFactory implements ILoggerFactory {
+
+    ConcurrentMap loggerMap;
+
+    public FrameLoggerFactory() {
+        loggerMap = new ConcurrentHashMap();
+    }
+
+    /**
+     * Return an appropriate {@link SimpleLogger} instance by name.
+     */
+    public Logger getLogger(String name) {
+        Logger frameLogger = loggerMap.get(name);
+        if (frameLogger != null) {
+            return frameLogger;
+        } else {
+            Logger newInstance = new FrameLogger(name);
+            Logger oldInstance = loggerMap.putIfAbsent(name, newInstance);
+            return oldInstance == null ? newInstance : oldInstance;
+        }
+    }
+
+    void reset() {
+        loggerMap.clear();
+    }
+}
+
+Finally, this logger factory need to be registered with slf4j framework. This could be done by implementing
+org.slf4j.spi.LoggerFactoryBinder interface.
+
+package org.slf4j.impl;
+
+import org.slf4j.ILoggerFactory;
+import org.slf4j.spi.LoggerFactoryBinder;
+
+
+public class StaticLoggerBinder implements LoggerFactoryBinder {
+
+    /**
+     * The unique instance of this class.
+     *
+     */
+    private static final StaticLoggerBinder SINGLETON = new StaticLoggerBinder();
+
+    /**
+     * Return the singleton of this class.
+     *
+     * @return the StaticLoggerBinder singleton
+     */
+    public static final StaticLoggerBinder getSingleton() {
+        return SINGLETON;
+    }
+
+    /**
+     * Declare the version of the SLF4J API this implementation is compiled
+     * against. The value of this field is usually modified with each release.
+     */
+    // to avoid constant folding by the compiler, this field must *not* be final
+    public static String REQUESTED_API_VERSION = "1.6.6"; // !final
+
+    private static final String loggerFactoryClassStr = FrameLoggerFactory.class.getName();
+
+    /**
+     * The ILoggerFactory instance returned by the {@link #getLoggerFactory}
+     * method should always be the same object
+     */
+    private final ILoggerFactory loggerFactory;
+
+    private StaticLoggerBinder() {
+        loggerFactory = new FrameLoggerFactory();
+    }
+
+    public ILoggerFactory getLoggerFactory() {
+        return loggerFactory;
+    }
+
+    public String getLoggerFactoryClassStr() {
+        return loggerFactoryClassStr;
+    }
+}
+
+Now your custom slf4j runtime is ready. You can simple keep this org.slf4j.impl package inside your project,
+or you can simply create a jar out of this and add to your project as dependency. As mentioned before, you should
+include slf4j-api.jar in your project as dependency.
+
+If all things go well, you can see your log messages are going to the swing text area. If you require to direct
+log stream into any other destination (say, file or database), simple put that logic in void write(StringBuilder buf,
+Throwable t) method in step 1. Also, you can place a configuration file of your own style or just follow styles of
+popular log4j configuration file format to configure your custom loggers destination accordingly.

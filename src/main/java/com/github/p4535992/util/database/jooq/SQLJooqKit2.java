@@ -2,7 +2,6 @@ package com.github.p4535992.util.database.jooq;
 
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.database.sql.SQLHelper;
-import com.github.p4535992.util.log.SystemLog;
 
 import com.github.p4535992.util.string.StringUtilities;
 import org.jooq.*;
@@ -23,6 +22,13 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public class SQLJooqKit2 {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(SQLJooqKit2.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
     private static DSLContext dslContext;
     private static SQLJooqKit2 instance = null;
@@ -115,10 +121,13 @@ public class SQLJooqKit2 {
                 m = conn.getMetaData();
                 return convertDialectDBToSQLDialectJOOQ(m.getDatabaseProductName());
             } catch (SQLException e) {
-                SystemLog.exception(e);
+                logger.error(gm() + e.getMessage(),e);
                 return null;
             }
-        }else return null;
+        }else{
+            logger.error(gm() + "No SQL Connection open, the Connection is NULL");
+            return null;
+        }
     }
 
     /**
@@ -606,10 +615,12 @@ public class SQLJooqKit2 {
      */
     public static DSLContext createDSLContext(){
         if(connection==null){
-            SystemLog.warning("No Connection is initialized for this operation");
+            logger.error("No Connection is initialized for this operation, the Connection is NULL");
+            return null;
         }
         if(sqlDialect==null){
-            SystemLog.warning("No SQLDialect is initialized for this operation");
+            logger.error("No SQLDialect is initialized for this operation, the SQLDialect is NULL");
+            return null;
         }
         setConnection(connection, sqlDialect);
         return dslContext;

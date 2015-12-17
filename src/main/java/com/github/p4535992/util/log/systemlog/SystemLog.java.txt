@@ -1,4 +1,4 @@
-package com.github.p4535992.util.log;
+package com.github.p4535992.util.log.systemlog;
 
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.string.StringUtilities;
@@ -30,9 +30,9 @@ public class SystemLog extends OutputStream{
     /** {@code org.slf4j.Logger} */
     private static final org.slf4j.Logger SLF4JLogger =
             org.slf4j.LoggerFactory.getLogger(SystemLog.class);
-    private static final org.apache.log4j.Logger LOG4JLogger = 
+    private static final org.apache.log4j.Logger LOG4JLogger =
             org.apache.log4j.Logger.getLogger(SystemLog.class);
-    private static final java.util.logging.Logger UTILLogger = 
+    private static final java.util.logging.Logger UTILLogger =
             java.util.logging.Logger.getLogger(SystemLog.class.getName());
 
     protected static org.slf4j.Logger slf4j;
@@ -177,7 +177,7 @@ public class SystemLog extends OutputStream{
     }
 
     public SystemLog(OutputStream... outputStreams) {
-       this.outputStreams= outputStreams;
+        this.outputStreams= outputStreams;
     }
 
     @Override
@@ -264,7 +264,7 @@ public class SystemLog extends OutputStream{
      * @param logEntry message to write as a log entry
      */
     protected static void write(String logEntry) {
-       try{
+        try{
             if(isInline){
                 if (isERROR) System.err.print(logEntry);
                 else System.out.print(logEntry);
@@ -272,9 +272,9 @@ public class SystemLog extends OutputStream{
                 if (isERROR) System.err.println(logEntry);
                 else System.out.println(logEntry);
             }
-       }finally{
+        }finally{
             isERROR=false;
-       }
+        }
     }
 
     //-----------------------------------------------------------------------------------------------------------------

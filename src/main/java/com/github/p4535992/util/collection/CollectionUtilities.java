@@ -1,6 +1,5 @@
 package com.github.p4535992.util.collection;
 
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.reflection.ReflectionUtilities;
 import com.github.p4535992.util.string.StringUtilities;
 import java.lang.reflect.Array;
@@ -15,8 +14,13 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class CollectionUtilities {
 
-    
-    
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(CollectionUtilities.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+
     /**
      * Method to check if a Class is a Collection or not.
      * @param c the Class to inspect.
@@ -135,7 +139,7 @@ public class CollectionUtilities {
             }
             else return new ArrayList<>();
         }else{
-            SystemLog.error("The object:"+collection+ " is not a Collection");
+            logger.error("The object:"+collection+ " is not a Collection");
             return new ArrayList<>();
         }
     }
@@ -153,7 +157,7 @@ public class CollectionUtilities {
             if(collection instanceof List) return new HashSet<>((List<T>)collection);
             else return new HashSet<>();
         }else{
-            SystemLog.error("The object:"+collection+ " is not a Collection");
+            logger.error("The object:"+collection+ " is not a Collection");
             return new HashSet<>();
         }
     }
@@ -175,7 +179,7 @@ public class CollectionUtilities {
                 public T nextElement() {return null;}
             };
         }else{
-            SystemLog.error("The object:"+collection+ " is not a Collection");
+            logger.error("The object:"+collection+ " is not a Collection");
             return new Enumeration<T>() {
                 @Override
                 public boolean hasMoreElements() {return false;}
@@ -211,7 +215,7 @@ public class CollectionUtilities {
                 };
             }
         }else{
-            SystemLog.error("The object:"+collection+ " is not a Collection");
+            logger.error("The object:"+collection+ " is not a Collection");
             return new Iterable<T>() {
                 @Override
                 public Iterator<T> iterator() {return null;}
@@ -241,7 +245,7 @@ public class CollectionUtilities {
                 };
             }
         }else{
-            SystemLog.error("The object:"+collection+ " is not a Collection");
+            logger.error("The object:"+collection+ " is not a Collection");
             return new Iterator<T>() {
                 @Override
                 public boolean hasNext() { return false;}
@@ -352,7 +356,7 @@ public class CollectionUtilities {
                 array[j] = value[i];
             }
         }else{
-            SystemLog.warning("WARNING: Check your array size");
+            logger.warn("WARNING: Check your array size");
         }
         return array;
     }
@@ -451,7 +455,7 @@ public class CollectionUtilities {
                 array[j] = value[i];
             }
         }else{
-            SystemLog.error("WARNING: Check your array size");
+            logger.error("WARNING: Check your array size");
         }
         return array;
     }
@@ -947,9 +951,9 @@ public class CollectionUtilities {
     }
 
     public <K,V> V getElementAt(LinkedHashMap<K,V> map, int index) {
-        for (Map.Entry entry : map.entrySet()) {
+        for (Map.Entry<K,V> entry : map.entrySet()) {
             if (index-- == 0) {
-                return (V) entry.getValue();
+                return entry.getValue();
             }
         }
         return null;

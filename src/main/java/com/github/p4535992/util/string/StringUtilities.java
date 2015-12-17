@@ -952,6 +952,7 @@ public class StringUtilities {
      * @param <T> generic type.
      * @return object serializable.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T toObject(T object,String nameTempSer){
         try{
             try (FileInputStream fileIn = new FileInputStream("/tmp/"+nameTempSer+".ser");
@@ -973,6 +974,7 @@ public class StringUtilities {
      * @param <T> generic variable.
      * @return object casted to soefic vairable.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T toInstanceOfObject(Object objectToCast,Class<T> clazz) {
         try {
             if (clazz.isInstance(objectToCast)) {
@@ -1014,6 +1016,7 @@ public class StringUtilities {
      * @param <T> generic type.
      * @return object T.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T toPojo(String xmlStringData, Class<T> clazz){
         try {
             JAXBContext context = JAXBContext.newInstance(clazz);
@@ -1323,7 +1326,7 @@ public class StringUtilities {
      * Character objects and the values String objects.
      * @return The encoded String object.
      */
-    private static String encode(String source, HashMap encodingTable) {
+    private static String encode(String source, HashMap<Character,String> encodingTable) {
         if (null == source) return null;
         if (null == encodingTable)return source;
 

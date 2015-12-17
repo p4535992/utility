@@ -1,6 +1,0 @@
-2015-12-09_18:01:22.012 [main] DEBUG u.o.l.s.c.SysOutOverSLF4JInitialiser - Your logging framework class ch.qos.logback.classic.Logger should not need access to the standard println methods on the console, so you should not need to register a logging system package.
-2015-12-09_18:01:22.031 [main] INFO  u.o.l.s.context.SysOutOverSLF4J - Replaced standard System.out and System.err PrintStreams with SLF4JPrintStreams
-2015-12-09_18:01:22.034 [main] INFO  u.o.l.s.context.SysOutOverSLF4J - Redirected System.out and System.err to SLF4J for this context
-2015-12-09_18:01:54.991 [main] DEBUG u.o.l.s.c.SysOutOverSLF4JInitialiser - Your logging framework class ch.qos.logback.classic.Logger should not need access to the standard println methods on the console, so you should not need to register a logging system package.
-2015-12-09_18:01:55.019 [main] INFO  u.o.l.s.context.SysOutOverSLF4J - Replaced standard System.out and System.err PrintStreams with SLF4JPrintStreams
-2015-12-09_18:01:55.035 [main] INFO  u.o.l.s.context.SysOutOverSLF4J - Redirected System.out and System.err to SLF4J for this context

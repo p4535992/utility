@@ -46,6 +46,10 @@ public class HTTPUtil {
 	private static final org.apache.log4j.Logger logger =
 			org.apache.log4j.Logger.getLogger(HTTPUtil.class);
 
+	private static String gm() {
+		return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+	}
+
 	public enum HTTP_METHOD {
 		GET, POST, PUT, DELETE, HEAD
 	}

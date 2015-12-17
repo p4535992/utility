@@ -1,7 +1,6 @@
 package com.github.p4535992.util.bean;
 
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.log.SystemLog;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -21,6 +20,13 @@ import org.apache.commons.collections.CollectionUtils;
  */
 @SuppressWarnings("unused")
 public class BeansKit implements  org.springframework.context.ResourceLoaderAware{
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger( BeansKit.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
     private ResourceLoader resourceLoader;
 
@@ -65,7 +71,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
                         abstractContext = new ClassPathXmlApplicationContext(path);
                         context = abstractContext;
                     } catch (Exception e4) {
-                        SystemLog.exception(e4);
+                        logger.error(gm() + e4.getMessage(),e4);
                     }
                 }
             }
@@ -96,7 +102,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
                     abstractContext = new ClassPathXmlApplicationContext(paths);
                     context = abstractContext;
                 } catch (Exception e4) {
-                    SystemLog.exception(e4);
+                    logger.error(gm() + e4.getMessage(), e4);
                 }
 
             }
@@ -112,20 +118,21 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
     public static File getResourceAsFile(String name,Class<?> thisClass) {
         try {
             return new File(thisClass.getClassLoader().getResource(name).getFile());
-        }catch(java.lang.NullPointerException ne){
-            SystemLog.exception(ne,BeansKit.class);
+        }catch(java.lang.NullPointerException e){
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
 
     public static String getResourceAsString(String fileName,Class<?> thisClass) {
-        String result = "";
+        String result;
         try {
             result = org.apache.commons.io.IOUtils.toString(thisClass.getClassLoader().getResourceAsStream(fileName));
+            return result;
         } catch (IOException e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
+            return null;
         }
-        return result;
     }
 
     public static File getResourceSpringAsFile(String fileName) {
@@ -133,7 +140,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
             final org.springframework.core.io.Resource yourfile = new org.springframework.core.io.ClassPathResource(fileName);
             return yourfile.getFile();
         }catch(IOException e){
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
@@ -166,7 +173,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
             br.close();
             return stringBuilder.toString();
         } catch (Exception e) {
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(), e);
             return null;
         }
     }
@@ -190,7 +197,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
             }
             return stringBuilder.toString();
         }catch (IOException e){
-            SystemLog.exception(e);
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
     }
@@ -232,7 +239,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
     
     //-----------------------------------------------------------------------------------------
     
-    public static Collection collect(Collection collection, String propertyName) {
+    public static Collection<?> collect(Collection<?> collection, String propertyName) {
         return CollectionUtils.collect(collection, new BeanToPropertyValueTransformer(propertyName));
     }
 

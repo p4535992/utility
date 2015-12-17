@@ -1,4 +1,4 @@
-package com.github.p4535992.util.log;
+package com.github.p4535992.util.log.systemlog;
 
 import java.io.*;
 import java.util.*;
@@ -176,7 +176,7 @@ public class PrintLog extends PrintStream {
      * "c:\\data\\system.out.txt". Keep in mind though, that you should make
      * sure to flush System.out and close the file before the JVM shuts down,
      * to be sure that all data written to System.out is actually flushed to the file.
-     * @throws java.io.FileNotFoundException throw if the file of the log append text not exists.
+     * @throws FileNotFoundException throw if the file of the log append text not exists.
      */
     public static void start() throws FileNotFoundException {
         start(new File(""));
@@ -191,23 +191,23 @@ public class PrintLog extends PrintStream {
         // Save current settings for later restoring.
         oldStdout = System.out;
         oldStderr = System.err;
-        SystemLog multiOut;
-        SystemLog multiErr;
+        com.github.p4535992.util.log.systemlog.SystemLog multiOut;
+        com.github.p4535992.util.log.systemlog.SystemLog multiErr;
 
-        if(SystemLog.isLog4j) {
+        if(com.github.p4535992.util.log.systemlog.SystemLog.isLog4j) {
             System.setOut(createLoggingProxyOut(System.out));
             System.setErr(createLoggingProxyErr(System.err));
         }else {
             if (file.getPath().isEmpty()) {
-                multiOut = new SystemLog(System.out);
-                multiErr = new SystemLog(System.err);
+                multiOut = new com.github.p4535992.util.log.systemlog.SystemLog(System.out);
+                multiErr = new com.github.p4535992.util.log.systemlog.SystemLog(System.err);
             } else {
                 logFile = file;
                 logStreamFile = new PrintStream(
                         new BufferedOutputStream(
                                 new FileOutputStream(file)));
-                multiOut = new SystemLog(System.out, logStreamFile);
-                multiErr = new SystemLog(System.err, logStreamFile);
+                multiOut = new com.github.p4535992.util.log.systemlog.SystemLog(System.out, logStreamFile);
+                multiErr = new com.github.p4535992.util.log.systemlog.SystemLog(System.err, logStreamFile);
             }
             PrintLog stdout = new PrintLog(multiOut);
             PrintLog stderr = new PrintLog(multiErr);

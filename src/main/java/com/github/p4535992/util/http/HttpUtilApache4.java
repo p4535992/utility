@@ -1,8 +1,6 @@
 package com.github.p4535992.util.http;
 
 import com.github.p4535992.util.http.helper.DefaultHttpRequestRetryHandler;
-import com.github.p4535992.util.http.impl.HttpUtil;
-import com.github.p4535992.util.log.SystemLog;
 import com.github.p4535992.util.string.StringUtilities;
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
@@ -35,6 +33,13 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 public class HttpUtilApache4 {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(HttpUtilApache4.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
     public enum HTTP_METHOD { GET, POST, PUT, DELETE, HEAD }
 
@@ -244,7 +249,7 @@ public class HttpUtilApache4 {
             if (entity != null) {
                 try (InputStream instream = entity.getContent()) {
                     // do something useful
-                    content = HttpUtil.streamToString(instream);
+                    content = HttpUtilities.streamToString(instream);
                 }
             }
         } finally {
@@ -291,7 +296,7 @@ public class HttpUtilApache4 {
             }
             content = buf.toString();
         } catch (Exception e) {
-            SystemLog.exception(e);
+           logger.error(gm()+e.getMessage(),e);
         }
         return content;
     }

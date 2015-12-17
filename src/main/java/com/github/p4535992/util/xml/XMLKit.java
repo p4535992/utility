@@ -4,7 +4,6 @@ import org.xml.sax.InputSource;
 import org.w3c.dom.*;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
-import com.sun.xml.internal.ws.protocol.xml.XMLMessageException;
 import java.io.*;
 import java.util.*;
 
@@ -21,7 +20,8 @@ import javax.xml.xpath.XPathFactory;
 /**
  * Little Utility for Create,Read,Delete  adn Update XML File without Third Library JAVA
  * Created by 4535992 on 28/03/2015.
- * I dont' own all the code in thus class i put the reference where i find some useful method.
+ * I dont' own all the code i put some of the reference to the page
+ * where i find some useful method.
  * href: http://www.java2s.com/Code/Java/XML/CopyanXMLdocument.htm
  * href: http://www.java2s.com/Code/Java/XML/W3CDOMutilitymethods.htm
  * href: http://www.java2s.com/Code/Java/XML/Getthecontentofthegivenelement.htm
@@ -31,7 +31,13 @@ import javax.xml.xpath.XPathFactory;
 @SuppressWarnings("unused")
 public class XMLKit {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(XMLKit.class);
+    private static final org.slf4j.Logger logger = 
+            org.slf4j.LoggerFactory.getLogger(XMLKit.class);
+    
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+    
     private static javax.xml.parsers.DocumentBuilderFactory docFactory;
     private static javax.xml.parsers.DocumentBuilder docBuilder;
     private static org.w3c.dom.Document doc;
@@ -217,7 +223,7 @@ public class XMLKit {
 
 
     public static DocumentBuilder getBuilder() throws ParserConfigurationException {
-        DocumentBuilder builder = (DocumentBuilder) builders.poll();
+        DocumentBuilder builder = builders.poll();
         if (builder == null) {
             if (docFactory == null) {
                 docFactory = DocumentBuilderFactory.newInstance();
@@ -243,13 +249,11 @@ public class XMLKit {
      * @param tagName string rootTag.
      * @param nameAttribute string name of attribute.
      * @param newValueAttribute string new value attribute.
-     * @throws TransformerException error.
-     * @throws IOException error.
-     * @throws SAXException error.
+     * @return if true all the operation are done. 
      */
-    public static void updateValueOfAttribute(
-            String tagName,String nameAttribute,String newValueAttribute)
-            throws TransformerException, IOException, SAXException {
+    public static boolean updateValueOfAttribute(
+            String tagName,String nameAttribute,String newValueAttribute) {
+        try{
             //doc =  loadDocumentFromFile(xmlFile);
             Element el = selectFirstElementByAttribute(tagName, nameAttribute);
             //get map containing the attributes of this node
@@ -265,7 +269,12 @@ public class XMLKit {
                     break;
                 }
             }
+            return true;
             //saveToXml(doc, xmlFile.getAbsolutePath());
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
+        }
     }
 
     /**
@@ -275,27 +284,30 @@ public class XMLKit {
      * @param tagName string rootTag.
      * @param nameAttribute string name of attribute.
      * @param newValueAttribute string new value attribute.
-     * @throws TransformerException error.
-     * @throws IOException error.
-     * @throws SAXException error.
+     * @return if true all the operation are done.
      */
-    public static void updateValueOfAttribute(
-            File xmlFile,String tagName,String nameAttribute,String newValueAttribute)
-            throws TransformerException, IOException, SAXException {
-        doc =  loadDocumentFromFile(xmlFile);
-        Element el = selectFirstElementByAttribute(tagName, nameAttribute);
-        NamedNodeMap attributes = el.getAttributes();
-        int numAttrs = attributes.getLength();
-        for(int i =0; i < numAttrs; i++){
-            Attr attr = (Attr) attributes.item(i);
-            if(Objects.equals(attr.getNodeName(), nameAttribute)){
-                attr.setValue(newValueAttribute);
-                logger.info("Update the value of the attribute:"
-                        +attr.getName()+ "="+newValueAttribute);
-                break;
+    public static boolean updateValueOfAttribute(
+            File xmlFile,String tagName,String nameAttribute,String newValueAttribute){
+        try{
+            doc =  loadDocumentFromFile(xmlFile);
+            Element el = selectFirstElementByAttribute(tagName, nameAttribute);
+            NamedNodeMap attributes = el.getAttributes();
+            int numAttrs = attributes.getLength();
+            for(int i =0; i < numAttrs; i++){
+                Attr attr = (Attr) attributes.item(i);
+                if(Objects.equals(attr.getNodeName(), nameAttribute)){
+                    attr.setValue(newValueAttribute);
+                    logger.info("Update the value of the attribute:"
+                            +attr.getName()+ "="+newValueAttribute);
+                    break;
+                }
             }
+            writeDocumentToXmlFile(doc, xmlFile.getAbsolutePath());
+            return true;
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         }
-        writeDocumentToXmlFile(doc, xmlFile.getAbsolutePath());
     }
 
 
@@ -319,25 +331,38 @@ public class XMLKit {
     }
     */
     
-    public static void updateValueOfInnerText(Element element,String tagName,String newContent){
-        Element root = doc.getDocumentElement();
-        NodeList rootlist = root.getChildNodes();
-        for(int i=0; i<rootlist.getLength(); i++) {
-            Element theTagFirstLevel = (Element)rootlist.item(i);
-            if(theTagFirstLevel.getTagName().equalsIgnoreCase(tagName)) {
-                NodeList personlist = theTagFirstLevel.getChildNodes();
-                Element name = (Element) personlist.item(0);
-                NodeList namelist = name.getChildNodes();
-                Text nametext = (Text) namelist.item(0);
-                String oldname = nametext.getData();
-                if (!oldname.equals(newContent)) {
-                    nametext.setData(newContent);
-                    logger.info("Update the content of the tag:"
-                            +tagName+ "="+newContent);
+    /**
+     * Method to update the value of element by the tag name.
+     * @param element  the Element XML to update.
+     * @param tagName the TagName where update the value.
+     * @param newContent the String of the new value fot the tagname.
+     * @return if true all the operation are done.
+     */
+    public static boolean updateValueOfInnerText(Element element,String tagName,String newContent){
+        try{
+            Element root = doc.getDocumentElement();
+            NodeList rootlist = root.getChildNodes();
+            for(int i=0; i<rootlist.getLength(); i++) {
+                Element theTagFirstLevel = (Element)rootlist.item(i);
+                if(theTagFirstLevel.getTagName().equalsIgnoreCase(tagName)) {
+                    NodeList personlist = theTagFirstLevel.getChildNodes();
+                    Element name = (Element) personlist.item(0);
+                    NodeList namelist = name.getChildNodes();
+                    Text nametext = (Text) namelist.item(0);
+                    String oldname = nametext.getData();
+                    if (!oldname.equals(newContent)) {
+                        nametext.setData(newContent);
+                        logger.info("Update the content of the tag:"
+                                +tagName+ "="+newContent);
+                    }
+                    break;
                 }
-                break;
-            }
 
+            }
+            return true;
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         }
     }
 
@@ -357,10 +382,17 @@ public class XMLKit {
      * @param element the element where add the new attribute.
      * @param newAttribute the nea attribute toadd.
      * @param valueAttribute the value of the new attribute.
+     * @return if true all the operation are done.
      */
-    public static void addAttribute(Element element,String newAttribute,String valueAttribute){
-        Element person = (Element)element.getFirstChild();
-        person.setAttribute(newAttribute,valueAttribute);
+    public static boolean addAttribute(Element element,String newAttribute,String valueAttribute){
+        try{
+            Element person = (Element)element.getFirstChild();
+            person.setAttribute(newAttribute,valueAttribute);
+            return true;
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
+        }
     }
 
     /**
@@ -851,13 +883,13 @@ public class XMLKit {
     public static void checkPrefix(String qname){
         try{
             if(qname == null) {
-                throw new XMLMessageException("Unexpected null QName");
+                throw new IllegalArgumentException("Unexpected null QName");
             }
             if(qname.indexOf(":") <= 0) {
-                throw new XMLMessageException("Missing prefix: " + qname);
+                throw new IllegalArgumentException("Missing prefix: " + qname);
             }
-        }catch(XMLMessageException xme){
-            logger.error(xme.getMessage(),xme);
+        }catch(IllegalArgumentException e){
+            logger.error(gm() + e.getMessage(),e);
         }
     }
 
@@ -948,6 +980,7 @@ public class XMLKit {
      * @param xmlFile the string of the file xml.
      * @return the Map of all namespace on the XML File.
      */
+    @SuppressWarnings("unchecked")
     public static Map<String,String> getNamespaces(String xmlFile) {
         Map<String,String> namespaces = new HashMap<>();
         // Construct a SAX Parser using JAXP
@@ -964,7 +997,7 @@ public class XMLKit {
             parser.parse(xmlFile, handler);
         } catch(ParserConfigurationException | SAXException | IOException e) {
             // Maybe FileNotFound, maybe something else, anyway, life goeson...
-            logger.error("Maybe FileNotFound",e);
+            logger.error(gm() + "Maybe FileNotFound:"+e.getMessage(),e);
             return null;
         }
         // Add any newly discovered prefixes to the namespace bindings
@@ -1027,12 +1060,19 @@ public class XMLKit {
      * Copy child node references from source to target.
      * @param source Source Node.
      * @param target Target Node.
+     * @return if true all the operation are done.
      */
-    public static void copyChildNodes(Node source, Node target) {
-        List<Node> nodeList = copyNodeList(source.getChildNodes());
-        int childCount = nodeList.size();
-        for (Object aNodeList : nodeList) {
-            target.appendChild((Node) aNodeList);
+    public static boolean copyChildNodes(Node source, Node target) {
+        try{
+            List<Node> nodeList = copyNodeList(source.getChildNodes());
+            //int childCount = nodeList.size();
+            for (Object aNodeList : nodeList) {
+                target.appendChild((Node) aNodeList);
+            }
+            return true;
+        }catch(Exception e){
+            logger.error(gm() + e.getMessage(),e);
+            return false;
         }
     }
 
@@ -1040,13 +1080,17 @@ public class XMLKit {
      * Replace one node with another node.
      * @param newNode New node - added in same location as oldNode.
      * @param oldNode Old node - removed.
+     * @return if true all the operation are done.
      */
-    public static void replaceNode(Node newNode, Node oldNode) {
+    public static boolean replaceNode(Node newNode, Node oldNode) {
         Node parentNode = oldNode.getParentNode();
         if(parentNode == null) {
-            System.out.println("Cannot replace node [" + oldNode + "] with [" + newNode + "]. [" + oldNode + "] has no parent.");
+            logger.warn("Cannot replace node [" + oldNode + "] with [" + newNode + "]. "
+                    + "[" + oldNode + "] has no parent.");
+            return false;
         } else {
             parentNode.replaceChild(newNode, oldNode);
+            return true;
         }
     }
 
@@ -1055,9 +1099,10 @@ public class XMLKit {
      * Clones the NodeList elements.
      * @param newNodes New nodes - added in same location as oldNode.
      * @param oldNode Old node - removed.
+     * @return if true all the operation are done. 
      */
-    public static void replaceNode(NodeList newNodes, Node oldNode) {
-        replaceNode(newNodes, oldNode, true);
+    public static boolean replaceNode(NodeList newNodes, Node oldNode) {
+        return replaceNode(newNodes, oldNode, true);
     }
 
     /**
@@ -1065,12 +1110,14 @@ public class XMLKit {
      * @param newNodes New nodes - added in same location as oldNode.
      * @param oldNode Old node - removed.
      * @param clone Clone Nodelist Nodes.
+     * @return if true all the operation are done.
      */
-    public static void replaceNode(NodeList newNodes, Node oldNode, boolean clone) {
+    public static boolean replaceNode(NodeList newNodes, Node oldNode, boolean clone) {
         Node parentNode = oldNode.getParentNode();
         if(parentNode == null) {
-            System.out.println("Cannot replace [" + oldNode + "] with a NodeList. [" + oldNode + "] has no parent.");
-            return;
+            logger.warn("Cannot replace [" + oldNode + "] with a NodeList. "
+                    + "[" + oldNode + "] has no parent.");
+            return false;
         }
         int nodeCount = newNodes.getLength();
         List<Node> nodeList = copyNodeList(newNodes);
@@ -1078,16 +1125,20 @@ public class XMLKit {
             if(!(parentNode instanceof Document)) {
                 parentNode.removeChild(oldNode);
             }
-            return;
         }
         if(parentNode instanceof Document) {
             List<Element> elements = getElements(newNodes, "*", null);
             if(!elements.isEmpty()) {
-                System.out.println("Request to replace the Document root node with a 1+ in length NodeList.  Replacing root node with the first element node from the NodeList.");
+                logger.warn("Request to replace the Document root node with a 1+ "
+                        + "in length NodeList.  Replacing root node with the first element"
+                        + " node from the NodeList.");
                 parentNode.removeChild(oldNode);
                 parentNode.appendChild(elements.get(0));
+                return true;
             } else {
-                System.out.println("Cannot replace document root element with a NodeList that doesn't contain an element node.");
+                logger.warn("Cannot replace document root element with a NodeList "
+                        + "that doesn't contain an element node.");
+                return false;
             }
         } else {
             for(int i = 0; i < nodeCount; i++) {
@@ -1097,8 +1148,9 @@ public class XMLKit {
                     parentNode.insertBefore(nodeList.get(i), oldNode);
                 }
             }
-            parentNode.removeChild(oldNode);
+            parentNode.removeChild(oldNode);         
         }
+        return true;
     }
 
     /**
@@ -1106,20 +1158,24 @@ public class XMLKit {
      * @param newNode Node to be inserted.
      * @param refNode Reference node before which the supplied nodes should
      * be inserted.
+     * @return if true all the operation are done. 
      */
-    public static void insertBefore(Node newNode, Node refNode) {
+    public static boolean insertBefore(Node newNode, Node refNode) {
         Node parentNode = refNode.getParentNode();
         if(parentNode == null) {
-            System.out.println("Cannot insert [" + newNode + "] before [" + refNode + "]. [" + refNode + "] has no parent.");
-            return;
+            logger.warn("Cannot insert [" + newNode + "] before [" + refNode + "]. "
+                    + "[" + refNode + "] has no parent.");
+            return false;
         }
         if(parentNode instanceof Document && newNode.getNodeType() == Node.ELEMENT_NODE) {
-            System.out.println("Request to insert an element before the Document root node.  This is not allowed.  Replacing the Document root with the new Node.");
+            logger.warn("Request to insert an element before the Document root node. "
+                    + "This is not allowed.  Replacing the Document root with the new Node.");
             parentNode.removeChild(refNode);
             parentNode.appendChild(newNode);
         } else {
             parentNode.insertBefore(newNode, refNode);
         }
+        return true;
     }
 
     /**
@@ -1127,31 +1183,36 @@ public class XMLKit {
      * @param newNodes Nodes to be inserted.
      * @param refNode Reference node before which the supplied nodes should
      * be inserted.
+     * @return if true all the operation are done. 
      */
-    public static void insertBefore(NodeList newNodes, Node refNode) {
+    public static boolean insertBefore(NodeList newNodes, Node refNode) {
         Node parentNode = refNode.getParentNode();
         if(parentNode == null) {
-            System.out.println("Cannot insert a NodeList before [" + refNode + "]. [" + refNode + "] has no parent.");
-            return;
+            logger.warn("Cannot insert a NodeList before [" + refNode + "]. "
+                    + "[" + refNode + "] has no parent.");
+            return false;
         }
         int nodeCount = newNodes.getLength();
         List<Node> nodeList = copyNodeList(newNodes);
         if(nodeCount == 0) {
-            return;
+            return false;
         }
         if(parentNode instanceof Document) {
             List<Element> elements = getElements(newNodes, "*", null);
             if(!elements.isEmpty()) {
-                System.out.println("Request to insert a NodeList before the Document root node.  Will replace the root element with the 1st element node from the NodeList.");
+               logger.warn("Request to insert a NodeList before the Document root node.  "
+                       + "Will replace the root element with the 1st element node from the NodeList.");
                 parentNode.removeChild(refNode);
                 parentNode.appendChild(elements.get(0));
             } else {
-                System.out.println("Cannot insert beforen the document root element from a NodeList that doesn't contain an element node.");
+                logger.warn("Cannot insert before the document root element from "
+                        + "a NodeList that doesn't contain an element node.");
+                return false;
             }
             for(int i = 0; i < nodeCount; i++) {
                 Node node = nodeList.get(i);
                 if(node.getNodeType() != Node.ELEMENT_NODE) {
-                    System.out.println("****" + node);
+                    logger.info("****" + node);
                     parentNode.insertBefore(node, refNode);
                 }
             }
@@ -1160,6 +1221,7 @@ public class XMLKit {
                 parentNode.insertBefore(nodeList.get(i), refNode);
             }
         }
+        return true;
     }
 
     /**
@@ -1199,18 +1261,22 @@ public class XMLKit {
      * &lt;/ul&gt;
      * @param element Element to be removed.
      * @param keepChildren Keep child content.
+     * @return if true all the operation are done. 
      */
-    public static void removeElement(Element element, boolean keepChildren) {
+    public static boolean removeElement(Element element, boolean keepChildren) {
         Node parent = element.getParentNode();
         if(parent == null) {
-            System.out.println("Cannot remove element [" + element + "]. [" + element + "] has no parent.");
-            return;
+            logger.warn("Cannot remove element [" + element + "]. "
+                    + "[" + element + "] has no parent.");
+            return false;
         }
         NodeList children = element.getChildNodes();
         if (parent instanceof Document) {
             List<Element> childElements = null;
             if(!keepChildren) {
-                System.out.println("Cannot remove document root element [" + getName(element) + "] without keeping child content.");
+                logger.warn("Cannot remove document root element "
+                        + "[" + getName(element) + "] without keeping child content.");
+                return false;
             } else {
                 if(children != null && children.getLength() > 0) {
                     childElements = getElements(element, "*", null);
@@ -1219,27 +1285,34 @@ public class XMLKit {
                     parent.removeChild(element);
                     parent.appendChild(childElements.get(0));
                 } else {
-                    System.out.println("Cannot remove empty document root element [" + getName(element) + "].");
+                    logger.warn("Cannot remove empty document root element "
+                            + "[" + getName(element) + "].");
+                    return false;
                 }
             }
         } else {
             if(keepChildren && children != null) {
-                insertBefore(children, element);
+                if(!insertBefore(children, element)){
+                    return false;
+                }
             }
             parent.removeChild(element);
         }
+        return true;
     }
 
     /**
      * Remove all child nodes from the supplied node.
      * @param node to be "cleared".
+     * @return if true all the operation are done.  
      */
-    public static void removeChildren(Node node) {
+    public static boolean removeChildren(Node node) {
         NodeList children = node.getChildNodes();
         int nodeCount = children.getLength();
         for(int i = 0; i < nodeCount; i++) {
             node.removeChild(children.item(0));
         }
+        return true;
     }
 
     /**
@@ -1501,7 +1574,8 @@ public class XMLKit {
     public static int countNodesBefore(Node node) {
         Node parent = node.getParentNode();
         if(parent == null) {
-            System.out.println("Cannot count nodes before [" + node + "]. [" + node + "] has no parent.");
+            logger.info("Cannot count nodes before [" + node + "]. "
+                    + "[" + node + "] has no parent.");
             return 0;
         }
         NodeList siblings = parent.getChildNodes();
@@ -1530,16 +1604,19 @@ public class XMLKit {
     public static int countNodesBetween(Node node1, Node node2) {
         Node parent1 = node1.getParentNode();
         if(parent1 == null) {
-            System.out.println("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. [" + node1 + "] has no parent.");
+            logger.info("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. "
+                    + "[" + node1 + "] has no parent.");
             return 0;
         }
         Node parent2 = node2.getParentNode();
         if(parent2 == null) {
-            System.out.println("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. [" + node2 + "] has no parent.");
+            logger.info("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. "
+                    + "[" + node2 + "] has no parent.");
             return 0;
         }
         if(parent1 != parent2) {
-            System.out.println("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. These nodes do not share the same sparent.");
+            logger.info("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. "
+                    + "These nodes do not share the same sparent.");
             return 0;
         }
         int countBeforeNode1 = countNodesBefore(node1);
@@ -1559,7 +1636,7 @@ public class XMLKit {
     public static int countElementsBefore(Node node, String tagName) {
         Node parent = node.getParentNode();
         if(parent == null) {
-            System.out.println("Cannot count nodes before [" + node + "]. [" + node + "] has no parent.");
+            logger.info("Cannot count nodes before [" + node + "]. [" + node + "] has no parent.");
             return 0;
         }
         NodeList siblings = parent.getChildNodes();
@@ -1586,7 +1663,8 @@ public class XMLKit {
     public static String getTextBefore(Node node) {
         Node parent = node.getParentNode();
         if(parent == null) {
-            System.out.println("Cannot get text before node [" + node + "]. [" + node + "] has no parent.");
+            logger.info("Cannot get text before node [" + node + "]. "
+                    + "[" + node + "] has no parent.");
             return "";
         }
         NodeList siblings = parent.getChildNodes();
@@ -1614,16 +1692,19 @@ public class XMLKit {
     public static String getTextBetween(Node node1, Node node2) {
         Node parent1 = node1.getParentNode();
         if(parent1 == null) {
-            System.out.println("Cannot get text between nodes [" + node1 + "] and [" + node2 + "]. [" + node1 + "] has no parent.");
+            logger.info("Cannot get text between nodes [" + node1 + "] and [" + node2 + "]. "
+                    + "[" + node1 + "] has no parent.");
             return "";
         }
         Node parent2 = node2.getParentNode();
         if(parent2 == null) {
-            System.out.println("Cannot get text between nodes [" + node1 + "] and [" + node2 + "]. [" + node2 + "] has no parent.");
+            logger.info("Cannot get text between nodes [" + node1 + "] and [" + node2 + "]. "
+                    + "[" + node2 + "] has no parent.");
             return "";
         }
         if(parent1 != parent2) {
-            System.out.println("Cannot get text between nodes [" + node1 + "] and [" + node2 + "]. These nodes do not share the same sparent.");
+            logger.info("Cannot get text between nodes [" + node1 + "] and [" + node2 + "]. "
+                    + "These nodes do not share the same sparent.");
             return "";
         }
         NodeList siblings = parent1.getChildNodes();
@@ -1667,7 +1748,10 @@ public class XMLKit {
                 xpath.append("/{CDATA}[").append(cdataNum).append(1).append("]");
                 break;
             default:
-                throw new UnsupportedOperationException("XPath generation for supplied DOM Node type not supported.  Only supports element, comment and cdata section DOM nodes.");
+                throw 
+                new UnsupportedOperationException(
+                        "XPath generation for supplied DOM Node type not supported."
+                                + "  Only supports element, comment and cdata section DOM nodes.");
         }
         while(parent != null && parent.getNodeType() == Node.ELEMENT_NODE) {
             xpath.insert(0, getXPathToken((Element)parent));
@@ -1712,11 +1796,17 @@ public class XMLKit {
      * Add literal text to the supplied element.
      * @param element Target DOM Element.
      * @param literalText Literal text to be added.
+     * @return if true all the operation are done. 
      */
-    public static void addLiteral(Element element, String literalText) {
-        Document document = element.getOwnerDocument();
-        Text literal = document.createTextNode(literalText);
-        element.appendChild(literal);
+    public static boolean addLiteral(Element element, String literalText) {
+        try{
+            Document document = element.getOwnerDocument();
+            Text literal = document.createTextNode(literalText);
+            element.appendChild(literal);
+            return true;
+        }catch(Exception e){
+            return false;
+        }
     }
 
     /**
@@ -1825,8 +1915,8 @@ public class XMLKit {
    * Gets the child of the specified element having the specified unique
    * name.  If there are more than one children elements with the same name
    * and exception is thrown.
-   * @param element    The parent element
-   * @param tagName    The name of the desired child
+   * @param element    The parent element.
+   * @param tagName    The name of the desired child.
    * @return           The named child.
    */
   public static Element getUniqueChild(Element element, String tagName){
@@ -1835,16 +1925,16 @@ public class XMLKit {
         if (goodChildren != null && goodChildren.hasNext()) {
            Element child = goodChildren.next();
            if (goodChildren.hasNext()) {
-              throw new XMLMessageException
+              throw new IllegalArgumentException
                  ("expected only one " + tagName + " tag");
            }
            return child;
         } else {
-           throw new XMLMessageException
+           throw new IllegalArgumentException
               ("expected one " + tagName + " tag");
         }
-    }catch(XMLMessageException xe){
-        logger.error("Child was not found or was not unique",xe);
+    }catch(IllegalArgumentException e){
+        logger.error(gm() + "Child was not found or was not unique:"+e.getMessage(),e);
         return null;
     }
   

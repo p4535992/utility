@@ -158,7 +158,7 @@ public class RepositoryRDFUtilities {
         s.removeJenaTripleFromSesameRepository(triple, s.createResource(context));
     }
 
-    public Set<String> getSesameRepositories(){
+    public List<String> getSesameRepositories(){
         return s.getRepositories();
     }
 

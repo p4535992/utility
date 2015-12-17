@@ -1,8 +1,5 @@
 package com.github.p4535992.util.exception;
 
-import com.github.p4535992.util.log.SystemLog;
-import org.slf4j.Logger;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -18,6 +15,8 @@ import java.util.List;
  */
 @SuppressWarnings("unused")
 public class ExceptionKit extends  RuntimeException{
+
+
 
     private static final long serialVersionUID = 3L;
     public ExceptionKit() {}
@@ -178,7 +177,7 @@ public class ExceptionKit extends  RuntimeException{
      * {@code false} if it needs to be wrapped
      */
     public static boolean declaresException(Method method, Class<?> exceptionType) {
-        if(method==null) SystemLog.error("Method must not be null");
+        if(method==null) return false;
         Class<?>[] declaredExceptions = method.getExceptionTypes();
         for (Class<?> declaredException : declaredExceptions) {
             if (declaredException.isAssignableFrom(exceptionType)) {
