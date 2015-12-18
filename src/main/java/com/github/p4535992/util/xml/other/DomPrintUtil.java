@@ -1,4 +1,4 @@
-package com.github.p4535992.util.xml;
+package com.github.p4535992.util.xml.other;
 /*******************************************************************************
  * Copyright (c) 2008 IBM Corporation and Others
  * All rights reserved. This program and the accompanying materials

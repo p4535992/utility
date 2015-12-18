@@ -26,19 +26,19 @@ import static org.apache.jena.riot.web.HttpOp.execHttpPostForm;
  * href: https://searchcode.com/codesearch/view/27861362/
  */
 @SuppressWarnings("unused")
-public class Fuseki23Kit {
+public class FusekiUtilities {
 
     public static org.apache.log4j.Logger logger;
 
-    protected Fuseki23Kit() {
+    protected FusekiUtilities() {
         logger = org.apache.log4j.Logger.getLogger(this.getClass().getName());
     }
 
-    private static Fuseki23Kit instance = null;
+    private static FusekiUtilities instance = null;
 
-    public static Fuseki23Kit getInstance(){
+    public static FusekiUtilities getInstance(){
         if(instance == null) {
-            instance = new Fuseki23Kit();
+            instance = new FusekiUtilities();
         }
         return instance;
     }

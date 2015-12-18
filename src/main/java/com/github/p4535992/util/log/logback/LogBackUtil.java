@@ -130,8 +130,6 @@ public class LogBackUtil {
         //return (Logger) LoggerFactory.getLogger(nameLogger);
     }
 
-
-
    /* private static Logger createLoggerFor(String nameLogger, String file) {
         Logger myLogger = createLogger(nameLogger);
         PatternLayoutEncoder ple = createPatternLayoutEncoder();
@@ -200,10 +198,16 @@ public class LogBackUtil {
         return myLogger;
     }
 
-
     protected static void start(){
+        logger.warn("You not specified the path for the logback.xml "
+                + "configuration file by default you use a logback.xml "
+                + "file on the root path of the \"resources\" folder");
+        start("logback.xml");
+    }
+
+    protected static void start(String pathToLogBackXML){
         try {
-            String pathToLogBackXML = "C:\\Users\\tenti\\Desktop\\EAT\\utility\\src\\main\\resources\\logback.xml";
+            //String pathToLogBackXML = "C:\\Users\\tenti\\Desktop\\EAT\\utility\\src\\main\\resources\\logback.xml";
 
             //Redirect all System.out and System.err to SLF4J.
             SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
@@ -239,7 +243,12 @@ public class LogBackUtil {
             /*Logger LOG = (Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
             LOG.setLevel(Level.WARN);*/
             try {
-                configurator.doConfigure(ClassLoader.getSystemClassLoader().getResource("logback.xml").getFile());
+                if(pathToLogBackXML.contains("resources")) {
+                    configurator.doConfigure(ClassLoader.getSystemClassLoader().getResource("logback.xml").getFile());
+                }else{
+                    configurator.doConfigure(pathToLogBackXML);
+                }
+
             } catch (JoranException je) {
                 StatusPrinter.print(loggerContext);
             } catch(NullPointerException ne){

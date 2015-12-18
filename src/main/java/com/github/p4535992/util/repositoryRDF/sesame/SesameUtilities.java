@@ -3,6 +3,7 @@ package com.github.p4535992.util.repositoryRDF.sesame;
 
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaSesameUtilities;
 import com.github.p4535992.util.string.StringUtilities;
 import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
@@ -3040,9 +3041,9 @@ public class SesameUtilities {
         com.hp.hpl.jena.graph.Node p = triple.getPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getObject() ;
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
-        Resource subj = com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asResource(valueFactory, s) ;
-        URI pred = com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asURI(valueFactory, p) ;
-        Value obj = com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asValue(valueFactory, o) ;
+        Resource subj = JenaSesameUtilities.asResource(valueFactory, s) ;
+        URI pred = JenaSesameUtilities.asURI(valueFactory, p) ;
+        Value obj = JenaSesameUtilities.asValue(valueFactory, o) ;
         try {
             Statement stmt = valueFactory.createStatement(subj, pred, obj) ;
             mRepositoryConnection.remove(stmt, contexts) ;
@@ -3064,9 +3065,9 @@ public class SesameUtilities {
         com.hp.hpl.jena.graph.Node p = triple.getPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getObject() ;
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
-        Resource subj  = com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asResource(valueFactory, s) ;
-        URI pred       = com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asURI(valueFactory, p) ;
-        Value obj      = com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asValue(valueFactory, o) ;
+        Resource subj  = JenaSesameUtilities.asResource(valueFactory, s) ;
+        URI pred       = JenaSesameUtilities.asURI(valueFactory, p) ;
+        Value obj      = JenaSesameUtilities.asValue(valueFactory, o) ;
         try {
             Statement stmt = valueFactory.createStatement(subj, pred, obj) ;
             mRepositoryConnection.add(stmt, contexts) ;
@@ -3092,11 +3093,11 @@ public class SesameUtilities {
         com.hp.hpl.jena.graph.Node p = triple.getMatchPredicate() ;
         com.hp.hpl.jena.graph.Node o = triple.getMatchObject() ;
         Resource subj =
-                ( s==null ? null : com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asResource(valueFactory, s) ) ;
+                ( s==null ? null : JenaSesameUtilities.asResource(valueFactory, s) ) ;
         URI pred   =
-                ( p==null ? null : com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asURI(valueFactory, p) ) ;
+                ( p==null ? null : JenaSesameUtilities.asURI(valueFactory, p) ) ;
         Value obj  =
-                ( o==null ? null : com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame.asValue(valueFactory, o) ) ;
+                ( o==null ? null : JenaSesameUtilities.asValue(valueFactory, o) ) ;
         List<com.hp.hpl.jena.graph.Triple> list = new ArrayList<>();
         try {
             RepositoryResult<Statement> iter1 =

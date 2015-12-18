@@ -7,11 +7,12 @@
 Class utility for the third library:
 - Many Useful Class for Play with the JDK version 7
 - JDOM
-- JDOM2
+- JDOM2 
 - Hibernate 4 (in progress)
-- Jena 2
+- Jena 2 
 - Sesame OpenRDF
-- VirtJena (Sesame Adapter for Virtuoso server)
+- VirtJena (Sesame Adapter for Virtuoso ) 
+- Cumulus RDF (Sesame Adapter for Cassandra)
 - JSoup
 - JOOQ 3
 - HTTP Apache

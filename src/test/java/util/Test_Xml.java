@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import javax.xml.transform.TransformerException;
 import org.xml.sax.SAXException;
-import com.github.p4535992.util.xml.XMLKit;
+import com.github.p4535992.util.xml.XMLUtilities;
 
 /**
  *
@@ -29,7 +29,7 @@ public class Test_Xml {
           File file = new File(path);
           // <property name="connection.driver_class">com.sql.jdbc.Driver</property>
           //XMLUtil2.updateInnerTextOfSpecificElement(path, "property", "name", "connection.driver_class", "XXXX");
-          XMLKit.updateValueOfAttribute(file, "mapping", "resource", "YYY");
+          XMLUtilities.updateValueOfAttribute(file, "mapping", "resource", "YYY");
     }//main
     
 }

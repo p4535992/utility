@@ -3,7 +3,6 @@ package com.github.p4535992.util.repositoryRDF.jena;
 
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.xml.XMLUtilities;
-
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Graph;
@@ -20,9 +19,14 @@ import com.hp.hpl.jena.reasoner.Reasoner;
 import com.hp.hpl.jena.reasoner.ReasonerRegistry;
 import com.hp.hpl.jena.sparql.core.DatasetGraph;
 import com.hp.hpl.jena.sparql.resultset.RDFOutput;
-import com.hp.hpl.jena.sparql.util.*;
+import com.hp.hpl.jena.sparql.util.NodeUtils;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RSS;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 
 import java.io.*;
 import java.net.URI;
@@ -34,12 +38,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
-
 /**
  * Class utility for Jena
  * Created by 4535992 in 2015-04-28.
@@ -47,23 +45,23 @@ import org.apache.jena.riot.RDFFormat;
  * @version 2015-12-07.
  */
 @SuppressWarnings("unused")
-public class Jena2Kit {
+public class JenaUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(Jena2Kit.class);
+            org.slf4j.LoggerFactory.getLogger(JenaUtilities.class);
 
     private static String gm() {
         return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
     }
 
     //CONSTRUCTOR
-    protected Jena2Kit() {}
+    protected JenaUtilities() {}
 
-    private static Jena2Kit instance = null;
+    private static JenaUtilities instance = null;
 
-    public static Jena2Kit getInstance(){
+    public static JenaUtilities getInstance(){
         if(instance == null) {
-            instance = new Jena2Kit();
+            instance = new JenaUtilities();
         }
         return instance;
     }
@@ -379,7 +377,7 @@ public class Jena2Kit {
         logger.info(gm() +"Exec query CONSTRUCT SPARQL :" + sparql);
         return  resultModel;
     }
-    
+
     /**
      * Method for execute a DESCRIIBE SPARQL on a Jena Model.
      * @param sparql sparql query.
@@ -438,10 +436,10 @@ public class Jena2Kit {
         //}
         return result;
     }
-    
+
     /**
      * Metodo per il caricamento di un file di triple in un'oggetto model di JENA.
-     * @param filename name of the file of input. 
+     * @param filename name of the file of input.
      * @param filepath path to the file of input wihtout the name.
      * @param inputFormat format of the file in input.
      * @return the jena model of the file.
@@ -462,18 +460,18 @@ public class Jena2Kit {
 
         logger.info("Try to read file of triples from the path:" + fileInput.getAbsolutePath() + "...");
         try {
-            com.hp.hpl.jena.util.FileManager.get().addLocatorClassLoader(Jena2Kit.class.getClassLoader());
+            com.hp.hpl.jena.util.FileManager.get().addLocatorClassLoader(JenaUtilities.class.getClassLoader());
             m = com.hp.hpl.jena.util.FileManager.get().loadModel(fileInput.toURI().toString(),null,INFORMAT);
         }catch(Exception e){
             try {
                 m.read(in, null, INFORMAT);
             } catch (Exception e1) {
                 try {
-                    org.apache.jena.riot.RDFDataMgr.read(m, in, INLANGFORMAT);
+                    RDFDataMgr.read(m, in, INLANGFORMAT);
                 } catch (Exception e2) {
                     try {
                         //If you are just opening the stream from a file (or URL) then Apache Jena
-                        org.apache.jena.riot.RDFDataMgr.read(m,fileInput.toURI().toString());
+                        RDFDataMgr.read(m,fileInput.toURI().toString());
                     } catch (Exception e3) {
                         logger.error(gm() + "Failed read the file of triples from the path:" +
                                 fileInput.getAbsolutePath() + ":" + e.getMessage(), e);
@@ -502,14 +500,14 @@ public class Jena2Kit {
      * return all the language Lang supported from jena.
      * exception : "AWT-EventQueue-0" java.lang.NoSuchFieldError: RDFTHRIFT  or CSV.
      */
- 	private static final org.apache.jena.riot.Lang allFormatsOfRiotLang[] = new org.apache.jena.riot.Lang[] { 
-            org.apache.jena.riot.Lang.NTRIPLES, org.apache.jena.riot.Lang.N3,org.apache.jena.riot.Lang.RDFXML,
-            org.apache.jena.riot.Lang.TURTLE, org.apache.jena.riot.Lang.TRIG, org.apache.jena.riot.Lang.TTL,
-            org.apache.jena.riot.Lang.NQUADS ,
-            org.apache.jena.riot.Lang.NQ,
+ 	private static final Lang allFormatsOfRiotLang[] = new Lang[] {
+            Lang.NTRIPLES, Lang.N3, Lang.RDFXML,
+            Lang.TURTLE, Lang.TRIG, Lang.TTL,
+            Lang.NQUADS ,
+            Lang.NQ,
  		    //org.apache.jena.riot.Lang.JSONLD,
-            org.apache.jena.riot.Lang.NT,org.apache.jena.riot.Lang.RDFJSON,
- 		    org.apache.jena.riot.Lang.RDFNULL
+            Lang.NT, Lang.RDFJSON,
+ 		    Lang.RDFNULL
             //org.apache.jena.riot.Lang.CSV,
             //org.apache.jena.riot.Lang.RDFTHRIFT
         };
@@ -519,7 +517,7 @@ public class Jena2Kit {
      * if you are not using the last version of jena you can found in build:
      * "AWT-EventQueue-0" java.lang.NoSuchFieldError: JSONLD_FLAT
      */
- 	private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] { 	
+ 	private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] {
         RDFFormat.TURTLE, RDFFormat.TTL,
         //RDFFormat.JSONLD_FLAT,
         //RDFFormat.JSONLD_PRETTY,
@@ -650,7 +648,7 @@ public class Jena2Kit {
      * @param strFormat string name of a RDFFormat.
      * @return lang the language Lang for the same name.
      */
- 	public static org.apache.jena.riot.Lang createToRiotLang(String strFormat) {
+ 	public static Lang createToRiotLang(String strFormat) {
             if(strFormat.toUpperCase().contains("NT") ||
                     strFormat.toUpperCase().contains("NTRIPLES")|| strFormat.toUpperCase().contains("N3")){
                  strFormat="N-Triples";
@@ -708,7 +706,7 @@ public class Jena2Kit {
                 } else if (outputFormat.toLowerCase().contains("bio")) {
                     ResultSetFormatter.outputAsBIO(fos, results);
                 }else if(outputFormat.toLowerCase().contains("rdf")){
-                    com.hp.hpl.jena.query.ResultSetFormatter.outputAsRDF(fos, "RDF/XML", results);
+                    ResultSetFormatter.outputAsRDF(fos, "RDF/XML", results);
                 }
                 logger.info("... the file of triple to:" + fullPathOutputFile + " is been wrote!");
             } else if (outputFormat.toLowerCase().contains("ttl")) {
@@ -812,7 +810,7 @@ public class Jena2Kit {
                             new SelectorImpl( subject, p,(RDFNode) null));
             while (iter.hasNext() && !foundLocal) {
                 Statement stmt = iter.next();
-                com.hp.hpl.jena.rdf.model.Property sp = stmt.getPredicate();
+                Property sp = stmt.getPredicate();
 
                 if (uri.equals(sp.getNameSpace())
                         && ("".equals(property)
@@ -950,9 +948,9 @@ public class Jena2Kit {
             logger.warn(gm() + "Exception while try to delete a literal:"+e.getMessage(),e);
         }
     }
-    
+
     /**
-     * Method to query/read for a literal on a Jena Model. 
+     * Method to query/read for a literal on a Jena Model.
      * @param model jena model.
      * @param subject subject of the statement.
      * @param property property of the statement.
@@ -963,7 +961,7 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to query/read for a literal on a Jena Model. 
+     * Method to query/read for a literal on a Jena Model.
      * @param model jena model.
      * @param subject subject of the statement.
      * @param property property of the statement.
@@ -1159,14 +1157,14 @@ public class Jena2Kit {
             //subject = model.createResource("");
             //...Delete all the statements with predicate p for this resource from its associated model.
             subject.removeAll(property);
-            subject.addProperty(property, (RDFNode) value);         
+            subject.addProperty(property, (RDFNode) value);
             return model;
         } catch (Exception e) {
             logger.error(gm()+ e.getMessage(),e);
             return null;
         }
     }
-    
+
     /**
      * Method for delete statement with specific proprety and literal on a Jena model.
      * @param model jena model.
@@ -1357,9 +1355,9 @@ public class Jena2Kit {
     }
 
     /**
-     * Method to replace a resource on a model jena. 
+     * Method to replace a resource on a model jena.
      * @param oldResource resource to replace.
-     * @param newResource the new resource.  
+     * @param newResource the new resource.
      * @return if true all the operation are done.
      */
     public static boolean updateResource(Resource oldResource,Resource newResource) {
@@ -1388,7 +1386,7 @@ public class Jena2Kit {
         } catch (Exception e) {
             logger.error(gm() + e.getMessage(),e);
             return false;
-        }      
+        }
     }
 
     /**
@@ -2088,14 +2086,14 @@ public class Jena2Kit {
      * @return Jena Model.
      */
     public static Model createModel(){
-       return ModelFactory.createDefaultModel();      
+       return ModelFactory.createDefaultModel();
     }
 
     /**
      * Method utility: create new default Jena Graph.
      * @return Jena Graph.
      */
-    public static com.hp.hpl.jena.graph.Graph createGraph(){
+    public static Graph createGraph(){
         return  com.hp.hpl.jena.sparql.graph.GraphFactory.createDefaultGraph();
     }
 
@@ -2183,7 +2181,7 @@ public class Jena2Kit {
      * @param model the jena Model
      * @return the Jena Graph.
      */
-    public com.hp.hpl.jena.graph.Graph convertModelToGraph(Model model){
+    public Graph convertModelToGraph(Model model){
         return model.getGraph();
     }
 
@@ -2192,7 +2190,7 @@ public class Jena2Kit {
      * @param graph the Jena Graph.
      * @return the Jena Model.
      */
-    public static Model convertGraphToModel(com.hp.hpl.jena.graph.Graph graph){
+    public static Model convertGraphToModel(Graph graph){
         return ModelFactory.createModelForGraph(graph);
     }
 
@@ -2209,9 +2207,9 @@ public class Jena2Kit {
      * @param object the Jena Graph Node Object of the triple.
      * @return the Jena Graph Triple Object setted with the content of the jena Graph Nodes.
      */
-    public com.hp.hpl.jena.graph.Triple convertGraphNodesToGraphTriple(
-            com.hp.hpl.jena.graph.Node subject,com.hp.hpl.jena.graph.Node predicate,com.hp.hpl.jena.graph.Node object){
-        return new com.hp.hpl.jena.graph.Triple(subject,predicate,object);
+    public Triple convertGraphNodesToGraphTriple(
+            Node subject,Node predicate,Node object){
+        return new Triple(subject,predicate,object);
     }
 
     /**
@@ -2230,7 +2228,7 @@ public class Jena2Kit {
      * @param graph the jena Graph Object.
      */
     @SuppressWarnings("deprecation")
-    public void addListOfTriplesToJenaGraph(List<com.hp.hpl.jena.graph.Triple> triples,com.hp.hpl.jena.graph.Graph graph){
+    public void addListOfTriplesToJenaGraph(List<Triple> triples,Graph graph){
         graph.getBulkUpdateHandler().add(triples);
        /* for(Triple triple: triples){
             graph.add(triple);

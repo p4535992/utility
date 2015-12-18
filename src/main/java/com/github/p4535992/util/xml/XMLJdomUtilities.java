@@ -25,10 +25,10 @@ import java.util.Map;
  * @version 2015-06-29
  */
 @SuppressWarnings("unused")
-public class XMLKitJDOM {
+public class XMLJdomUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(XMLKitJDOM.class);
+            org.slf4j.LoggerFactory.getLogger(XMLJdomUtilities.class);
 
     private static String gm() {
         return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
@@ -37,11 +37,11 @@ public class XMLKitJDOM {
     private static org.w3c.dom.Document w3cdoc;
     private static org.jdom2.Document jdom2doc;
 
-    private static XMLKitJDOM instance = null;
-    protected XMLKitJDOM(){ }
-    public static XMLKitJDOM getInstance(){
+    private static XMLJdomUtilities instance = null;
+    protected XMLJdomUtilities(){ }
+    public static XMLJdomUtilities getInstance(){
         if(instance == null) {
-            instance = new XMLKitJDOM();
+            instance = new XMLJdomUtilities();
         }
         return instance;
     }

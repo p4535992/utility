@@ -22,10 +22,10 @@ import java.util.List;
  * @version 2015-09-30.
  */
 @SuppressWarnings("unused")
-public class JenaAndVirtuoso {
+public class JenaVirtuosoUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(JenaAndVirtuoso.class);
+            org.slf4j.LoggerFactory.getLogger(JenaVirtuosoUtilities.class);
 
     private static String gm() {
         return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
@@ -40,11 +40,11 @@ public class JenaAndVirtuoso {
     public static virtuoso.jena.driver.VirtDataset virtDataset;
     public static virtuoso.jena.driver.VirtModel virtModel;
 
-    private static JenaAndVirtuoso instance = null;
-    public JenaAndVirtuoso(){}
-    public static JenaAndVirtuoso getInstance(){
+    private static JenaVirtuosoUtilities instance = null;
+    public JenaVirtuosoUtilities(){}
+    public static JenaVirtuosoUtilities getInstance(){
         if(instance == null) {
-            instance = new JenaAndVirtuoso();
+            instance = new JenaVirtuosoUtilities();
         }
         return instance;
     }

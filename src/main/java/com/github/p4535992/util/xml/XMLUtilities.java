@@ -1,5 +1,6 @@
 package com.github.p4535992.util.xml;
 
+import com.github.p4535992.util.xml.impl.PrefixGrabber;
 import org.xml.sax.InputSource;
 import org.w3c.dom.*;
 import org.xml.sax.EntityResolver;
@@ -29,10 +30,10 @@ import javax.xml.xpath.XPathFactory;
  * @version 2015-06-29.
  */
 @SuppressWarnings("unused")
-public class XMLKit {
+public class XMLUtilities {
 
     private static final org.slf4j.Logger logger = 
-            org.slf4j.LoggerFactory.getLogger(XMLKit.class);
+            org.slf4j.LoggerFactory.getLogger(XMLUtilities.class);
     
     private static String gm() {
         return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
@@ -47,17 +48,17 @@ public class XMLKit {
     //public static Map<String,String> namespaces = new Hashtable<>();
 
 
-    private static XMLKit instance = null;
-    protected XMLKit(){ }
-    public static XMLKit getInstance(){
+    private static XMLUtilities instance = null;
+    protected XMLUtilities(){ }
+    public static XMLUtilities getInstance(){
         if(instance == null) {
-            instance = new XMLKit();
+            instance = new XMLUtilities();
         }
         return instance;
     }
 
-    public static XMLKit getNewInstance(){
-        instance = new XMLKit();
+    public static XMLUtilities getNewInstance(){
+        instance = new XMLUtilities();
         return instance;
     }
 

@@ -1,6 +1,8 @@
 package com.github.p4535992.util.repositoryRDF.sparql;
 
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,23 +14,109 @@ import org.slf4j.LoggerFactory;
  * @version 2015-07-07.
  */
 @SuppressWarnings("unused")
-public class SparqlKit {
+public class SparqlUtilities {
     
     private static final org.slf4j.Logger logger =  
-            LoggerFactory.getLogger(SparqlKit.class);
-    
-    private static SparqlKit instance = null;
-    protected SparqlKit(){}
-    public static SparqlKit getInstance(){
+            LoggerFactory.getLogger(SparqlUtilities.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+
+
+    private static SparqlUtilities instance = null;
+    protected SparqlUtilities(){}
+    public static SparqlUtilities getInstance(){
         if(instance == null) {
-            instance = new SparqlKit();
+            instance = new SparqlUtilities();
         }
         return instance;
     }
 
-    public static final String SPARQL_TYPE = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
-    public static final String a = "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>";
+    public enum SPARQL_PREFIX{
+        SPARQL_TYPE(0),a(1),bbcpont(2),dbpedia(3),dbpont(4),dbpprop(5),dbtune(6),dc(7),dct(8),
+        dcterm(9), factbook(10), fb(11),ff(12), foaf(13), geo(14), geonames(15), geoont(16) , geopos(17),
+        gis(18), gr(19), km4c(20), km4cr(21),lingvoj(22), musicont(23),nytimes(24),oasis(25),om(26),
+        onto(27),opencyc(28),opencycen(29), org(30), ot(31),otn(32), owl(33),pext(34),
+        pkm(35), psys(36),ptop(37),rdf(38),rdfs(39),schema(40),skos(41),swvocab(42),
+        time(43),ub(44),umbel(45),umbelac(46),umbelen(47),umbelsc(48),vann(49),wordnet(50),wordnet16(51),
+        wordnsc(52),xsd(53),yago(54),wgs84(55);
 
+        private final Integer value;
+        SPARQL_PREFIX(Integer value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            String uri ="";
+            switch (this) {
+                case SPARQL_TYPE:
+                case a:
+                    uri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"; break;
+                case bbcpont: uri = "http://purl.org/ontology/po/"; break;
+                case dbpedia: uri = "http://dbpedia.org/resource/"; break;
+                case dbpont: uri = "http://dbpedia.org/ontology/"; break;
+                case dbpprop: uri = "http://dbpedia.org/property/"; break;
+                case dbtune: uri = "http://dbtune.org/bbc/peel/work/"; break;
+                case dc: uri = "http://purl.org/dc/elements/1.1/"; break;
+                case dct: uri = "http://purl.org/dc/terms/#"; break;
+                case dcterm: uri = "http://purl.org/dc/terms/"; break;
+                case factbook: uri = "http://www.daml.org/2001/12/factbook/factbook-ont#"; break;
+                case fb: uri  = "http://rdf.freebase.com/ns/"; break;
+                case ff: uri = "http://factforge.net/"; break;
+                case foaf: uri = "http://xmlns.com/foaf/0.1/"; break;
+                case geo:
+                case geopos:
+                case wgs84:
+                    uri = "http://www.w3.org/2003/01/geo/wgs84_pos#"; break;
+                case geonames: uri = "http://sws.geonames.org/"; break;
+                case geoont: uri = "http://www.geonames.org/ontology#"; break;
+                case gis: uri  = "http://www.opengis.net/ont/geosparql#"; break;
+                case gr: uri  = "http://purl.org/goodrelations/v1#"; break;
+                case km4c: uri = "http://www.disit.org/km4city/schema#"; break;
+                case km4cr: uri = "http://www.disit.org/km4city/resource#"; break;
+                case lingvoj: uri = "http://www.lingvoj.org/ontology#"; break;
+                case musicont: uri = "http://purl.org/ontology/mo/"; break;
+                case nytimes: uri = "http://data.nytimes.com/"; break;
+                case oasis: uri = "http://psi.oasis-open.org/iso/639/#"; break;
+                case om: uri  = "http://www.ontotext.com/owlim/"; break;
+                case onto: uri = "http://www.ontotext.com/"; break;
+                case opencyc: uri = "http://sw.opencyc.org/concept/"; break;
+                case opencycen: uri = "http://sw.opencyc.org/2008/06/10/concept/en/"; break;
+                case org: uri  = "http://www.w3.org/ns/org#"; break;
+                case ot: uri = "http://www.ontotext.com/"; break;
+                case otn: uri = "http://www.pms.ifi.uni-muenchen.de/OTN#"; break;
+                case owl: uri = "http://www.w3.org/2002/07/owl#"; break;
+                case pext: uri = "http://proton.semanticweb.org/protonext#"; break;
+                case pkm: uri = "http://proton.semanticweb.org/protonkm#"; break;
+                case psys: uri = "http://proton.semanticweb.org/protonsys#"; break;
+                case ptop: uri = "http://proton.semanticweb.org/protontop#"; break;
+                case rdf: uri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"; break;
+                case rdfs: uri = "http://www.w3.org/2000/01/rdf-schema#"; break;
+                case schema: uri = "http://schema.org/"; break;
+                case skos: uri ="http://www.w3.org/2004/02/skos/core#"; break;
+                case swvocab: uri = "http://www.w3.org/2003/06/sw-vocab-status/ns#"; break;
+                case time: uri = "http://www.w3.org/2006/time#"; break;
+                case ub: uri = "http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#"; break;
+                case umbel: uri = "http://umbel.org/umbel#"; break;
+                case umbelac: uri = "http://umbel.org/umbel/ac/"; break;
+                case umbelen: uri = "http://umbel.org/umbel/ne/wikipedia/"; break;
+                case umbelsc: uri = "http://umbel.org/umbel/sc/"; break;
+                case vann: uri = "http://purl.org/vocab/vann/#"; break;
+                case wordnet: uri = "http://www.w3.org/2006/03/wn/wn20/instances/"; break;
+                case wordnet16: uri = "http://xmlns.com/wordnet/1.6/"; break;
+                case wordnsc: uri = "http://www.w3.org/2006/03/wn/wn20/schema/"; break;
+                case xsd: uri = "http://www.w3.org/2001/XMLSchema#"; break;
+                case yago: uri = "http://mpii.de/yago/resource/"; break;
+
+            }
+            return uri;
+        }
+    }
+
+    /*public static final String SPARQL_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+    public static final String a = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
     public static final String bbcpont = "http://purl.org/ontology/po/";
     public static final String dbpedia = "http://dbpedia.org/resource/";
     public static final String dbpont = "http://dbpedia.org/ontology/";
@@ -81,7 +169,7 @@ public class SparqlKit {
     public static final String wordnet16 = "http://xmlns.com/wordnet/1.6/";
     public static final String wordnsc = "http://www.w3.org/2006/03/wn/wn20/schema/";
     public static final String xsd = "http://www.w3.org/2001/XMLSchema#";
-    public static final String yago = "http://mpii.de/yago/resource/";
+    public static final String yago = "http://mpii.de/yago/resource/";*/
 
     private static final Map<String,String> namespacePrefixes = new HashMap<>();
 
@@ -143,7 +231,21 @@ public class SparqlKit {
         namespacePrefixes.put("wordn-sc","http://www.w3.org/2006/03/wn/wn20/schema/");
         namespacePrefixes.put("xsd","http://www.w3.org/2001/XMLSchema#");
         namespacePrefixes.put("yago","http://mpii.de/yago/resource/");
+        namespacePrefixes.put("wgs84","http://www.w3.org/2003/01/geo/wgs84_pos#");
+
         return namespacePrefixes;
+    }
+
+    private static String getDomainName(String url) {
+        try {
+            URI uri = new URI(url);
+            String domain = uri.getHost();
+            return domain.startsWith("www.") ? domain.substring(4) : domain;
+        }catch(URISyntaxException e){
+            logger.warn(gm() + e.getMessage(),e);
+            url = url.replace("http://","");
+            return url;
+        }
     }
 
     /**
@@ -154,10 +256,10 @@ public class SparqlKit {
        return preparePrefix("");
     }
 
-    public static String preparePrefix(String specialCharacter){
+    public static String preparePrefix(Character characterPrefix){
         StringBuilder sb = new StringBuilder();
         for(Map.Entry<String,String> entry : getDefaultNamespacePrefixes().entrySet()){
-            sb.append(specialCharacter).append("prefix ")
+            sb.append(characterPrefix).append("prefix ")
                     .append(entry.getKey()).append(": <").append(entry.getValue()).append("> .\n");
         }
         return sb.toString();
@@ -176,13 +278,15 @@ public class SparqlKit {
         return sb.toString();
     }
 
-    public static String preparePrefixLabel(String domainUri){
+    public static String preparePrefix(String domainUri){
         for(Map.Entry<String,String> entry : getDefaultNamespacePrefixes().entrySet()){
              if(entry.getValue().contains(domainUri)){
                  return entry.getKey() +":";
              }
         }
-        return "";
+        logger.warn(gm() + "No prefix found on the map for the domain uri you have specified we create a automatic" +
+                "by getting the first two caracther after the protocoll on the uri.");
+        return getDomainName(domainUri).substring(0,2);
     }
 
     /**

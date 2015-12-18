@@ -1,4 +1,4 @@
-package com.github.p4535992.util.xml;
+package com.github.p4535992.util.xml.impl;
 
 import java.util.HashMap;
 import org.xml.sax.SAXException;
@@ -14,7 +14,7 @@ import java.util.jar.Attributes;
   * @version $Revision: 1.1 $
   */
 @SuppressWarnings("unused")
-class PrefixGrabber extends DefaultHandler {
+public class PrefixGrabber extends DefaultHandler {
     private final HashMap<String,String> nsHash = new HashMap<>();
     private boolean root = true;
 

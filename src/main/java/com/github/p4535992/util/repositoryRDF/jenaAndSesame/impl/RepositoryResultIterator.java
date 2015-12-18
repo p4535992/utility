@@ -1,6 +1,6 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl;
 
-import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaAndSesame;
+import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaSesameUtilities;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.shared.JenaException;
 import com.hp.hpl.jena.util.iterator.NiceIterator;
@@ -37,7 +37,7 @@ public class RepositoryResultIterator extends NiceIterator<Triple>
     @Override
     public Triple next()
     {
-        try { org.openrdf.model.Statement stmt = iter.next(); return JenaAndSesame.statementToTriple(stmt) ; }
+        try { org.openrdf.model.Statement stmt = iter.next(); return JenaSesameUtilities.statementToTriple(stmt) ; }
         catch (org.openrdf.repository.RepositoryException ex) { throw new JenaException(ex) ; }
     }
 

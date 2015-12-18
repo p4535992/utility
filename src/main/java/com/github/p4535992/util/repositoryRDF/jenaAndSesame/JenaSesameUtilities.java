@@ -20,21 +20,21 @@ import java.net.URISyntaxException;
  * @version 2015-07-02.
  */
 @SuppressWarnings("unused")
-public class JenaAndSesame {
+public class JenaSesameUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(JenaAndSesame.class);
+            org.slf4j.LoggerFactory.getLogger(JenaSesameUtilities.class);
 
     private static String gm() {
         return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
     }
 
-    private static JenaAndSesame instance = null;
-    protected JenaAndSesame(){}
+    private static JenaSesameUtilities instance = null;
+    protected JenaSesameUtilities(){}
 
-    public static JenaAndSesame getInstance(){
+    public static JenaSesameUtilities getInstance(){
         if(instance == null) {
-            instance = new JenaAndSesame();
+            instance = new JenaSesameUtilities();
         }
         return instance;
     }
