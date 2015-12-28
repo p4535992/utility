@@ -115,7 +115,6 @@ public class DomPrintUtil {
 
     /**
      * Returns XML text converted from the target DOM
-     *
      * @return String format XML converted from the target DOM
      */
     public String toXMLString() {

@@ -14,6 +14,8 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.StatusPrinter;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.string.StringUtilities;
+import com.github.p4535992.util.xml.XMLUtilities;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
 
@@ -36,82 +38,163 @@ public class LogBackUtil {
     protected static String logTimestampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
     protected static File logfile;
 
-    protected static boolean isERROR,isPRINT,isInline, isLogOff = false;
-    protected static boolean isLogUtil ,isLog4j ,isSlf4j =false;
-    protected static boolean logging = false;
 
     protected static LoggerContext loggerContext;
 
+    protected static LOGPATTERN logpattern = LOGPATTERN.PATTERN_CLASSIC;
+    protected static LOGPATTERN logpatternConsole ;
+    protected static LOGPATTERN logpatternFile;
+    protected static LOGPATTERN logpatternFileError;
 
+
+    public enum LOGPATTERN {
+        PATTERN_CLASSIC("%d{yyyy-MM-dd_HH:mm:ss.SSS} [%thread] %-5level %logger{52} - %msg%n"),
+        PATTERN_CLASSIC_NOTIME("[%thread] %-5level %logger{52} - %msg%n"),
+        PATTERN_COLORED1("%d{yyyy-MM-dd_HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{52}) - %msg%n"),
+        PATTERN_COLORED1_NOTIME("[%thread] %highlight(%-5level) %cyan(%logger{52}) - %msg%n"),
+        PATTERN_COLORED2_NOTIME("[%thread] %highlightex(%-5level) %logger{15} - %highlightex(%msg) %n"),
+        PATTERN_COLORED1_METHOD_NOTIME("[%thread] %highlight(%-5level) %cyan(%logger{52}.%M) - %msg%n"),
+        PATTERN_METHOD("%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n"),
+        PATTERN_METHOD_LINE("%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36}.%M - %msg%n"),
+        PATTERN_METHOD_LINE_NOTIME("[%thread] %-5level %logger{36}.%M - %msg%n");
+
+        private final String value;
+
+        LOGPATTERN(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return new String(value.getBytes(), StringUtilities.DEFAULT_ENCODING);
+        }
+
+        @Override
+        public String toString() {
+            return getValue();
+        }
+    }
+
+    public static void setCustomPattern(LOGPATTERN logpattern){
+        LogBackUtil.logpattern = logpattern;
+    }
 
     private static LogBackUtil instance = null;
 
     public static LogBackUtil init(){
+        return LogBackUtil.initBase(null,null,null,null);
+    }
+
+    public static LogBackUtil init(LOGPATTERN logpattern) {
+        return LogBackUtil.initBase(null,null,null,logpattern);
+    }
+
+    public static LogBackUtil init(String pathFileOutputLog) {
+        return LogBackUtil.initBase(pathFileOutputLog,null,null,null);
+    }
+
+    public static LogBackUtil init(File fileOutputLog) {
+        return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null,null,null);
+    }
+
+    public static LogBackUtil init(File fileOutputLog,File xmlConfigLogBack){
+        return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null, xmlConfigLogBack,null);
+    }
+
+    public static LogBackUtil init(File fileOutputLog,File xmlConfigLogBack,LOGPATTERN logpattern){
+        return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null, xmlConfigLogBack,logpattern);
+    }
+
+    public static LogBackUtil init(File fileOutputLog,LOGPATTERN logpattern){
+        return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null, null,logpattern);
+    }
+
+    public static LogBackUtil init(String pathFileOutputLog,LOGPATTERN logpattern){
+        return LogBackUtil.initBase(pathFileOutputLog,null, null,logpattern);
+    }
+
+    public static LogBackUtil init(String pathFileOutputLog,String xmlConfigLogBack,LOGPATTERN logpattern){
+        return LogBackUtil.initBase(pathFileOutputLog,null, new File(xmlConfigLogBack),logpattern);
+    }
+
+    public static LogBackUtil init(String pathFileOutputLog, String suffixPathFileOutputLog,
+                                   File xmlConfigLogBack){
+        return LogBackUtil.initBase(pathFileOutputLog,suffixPathFileOutputLog, xmlConfigLogBack,null);
+    }
+
+    public static LogBackUtil init(String pathFileOutputLog, String suffixPathFileOutputLog,
+                                       File xmlConfigLogBack,LOGPATTERN logpattern){
+        return LogBackUtil.initBase(pathFileOutputLog,suffixPathFileOutputLog, xmlConfigLogBack,null);
+    }
+
+
+    public static LogBackUtil console(){
         if(instance == null) {
             instance = new LogBackUtil();
-            prepareLogFile(null, null, null);
-            start();
         }
+        String basePath = "utility\\src\\main\\java\\com\\github\\" +
+                "p4535992\\util\\log\\logback\\resources\\logback_base_console.xml";
+        start(basePath,true);
         return instance;
     }
 
-    public static LogBackUtil init(File file){
+
+    private static LogBackUtil initBase(String pathFileOutputLog, String suffixPathFileOutputLog,
+                                   File xmlConfigLogBack,LOGPATTERN logpattern){
         if(instance == null){
             instance = new LogBackUtil();
-            prepareLogFile(
-                    FileUtilities.getFilenameWithoutExt(file),
-                    FileUtilities.getExtension(file),
-                    FileUtilities.getPath(file));
-            start();
-        }
-        return instance;
-    }
-
-    public static LogBackUtil init(String LOGNAME, String SUFFIX){
-        if(instance == null){
-            instance = new LogBackUtil();
-            prepareLogFile(LOGNAME, SUFFIX, null);
-            start();
-        }
-        return instance;
-    }
-
-    public static LogBackUtil init(String LOGNAME){
-        if(instance == null){
-            instance = new LogBackUtil();
-            prepareLogFile(LOGNAME, ".txt", null);
-            start();
-        }
-        return instance;
-    }
-
-    private static void prepareLogFile(String LOGNAME, String SUFFIX,String PATHFILE){
-        //Set default value
-        logTimestampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        logging = true;
-
-        if (LOGNAME != null) {
-            if (StringUtilities.isNullOrEmpty(SUFFIX)) SUFFIX = "log";
-            if (PATHFILE == null) {
-                isPRINT = true;
-                logfile =
-                        new File(System.getProperty("user.dir") + File.separator
-                                + LOGNAME + "_" + logTimestampFile + "." + SUFFIX);
-                //logfile.createNewFile();
-            } else {
-                isPRINT = true;
-                logfile = new File(
-                        PATHFILE + File.separator + LOGNAME + "_" + logTimestampFile + "." + SUFFIX);
-                //logfile.createNewFile();
-            }
-        } else {
-            if (isPRINT) {
-                if (logfile == null || !logfile.exists()) {
-                    logfile = new File(System.getProperty("user.dir") + File.separator
-                            + "createdAutomaticLog" + "_" + logTimestampFile + ".log");
-                    //logfile.createNewFile();
+            prepareLogFile(pathFileOutputLog, suffixPathFileOutputLog);
+            if(xmlConfigLogBack == null){
+                StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+                Class<?> myCLass;
+                try {
+                    myCLass = Class.forName(stackTraceElements[3].getClassName());
+                } catch (ClassNotFoundException e) {
+                    System.err.println("Can't load the java Class invoke the LogbackUtil, " +
+                            "we used a not customize configuration");
+                    myCLass = LogBackUtil.class;
+                }
+                System.err.println("You have not specified the path for the logback.xml "
+                        + "configuration file by default we use a logback.xml "
+                        + "file on the root path of the \"resources\" folder");
+                ClassLoader classLoader = myCLass.getClassLoader();
+                try {
+                    xmlConfigLogBack = new File(classLoader.getResource("logback.xml").getFile());
+                }catch(Exception e){
+                    System.err.println("Sorry the XML configuration file you try to load from the resource " +
+                            "folder not exists, by default we use a logback.xml "
+                            + "file on the root path of the \"resources\" folder");
+                    classLoader = LogBackUtil.class.getClassLoader();
+                    xmlConfigLogBack = new File(classLoader.getResource("logback.xml").getFile());
                 }
             }
+            start(xmlConfigLogBack,logpattern);
+        }
+        return instance;
+    }
+
+
+    //METHOD
+
+    private static void prepareLogFile(String LOGNAME, String SUFFIX){
+        String logTimestampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        if (StringUtilities.isNullOrEmpty(LOGNAME)) LOGNAME = "createdAutomaticLog";
+        if(!(LOGNAME.contains("/")||LOGNAME.contains("\\"))) {
+            LOGNAME = StringUtilities.PROJECT_DIR + File.separator + LOGNAME;
+        }
+        if (StringUtilities.isNullOrEmpty(SUFFIX)) SUFFIX = "log";
+        logfile = new File(LOGNAME + "_" + logTimestampFile + "." + SUFFIX);
+    }
+
+    private static void prepareLogFile(File LOGNAME){
+        String logTimestampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        if(LOGNAME == null){
+            String file = StringUtilities.PROJECT_DIR + File.separator + "createdAutomaticLog";
+            logfile = new File(file + "_" + logTimestampFile + ".log");
+        }else {
+            String SUFFIX = FileUtilities.getExtension(LOGNAME);
+            //Set default value
+            if (StringUtilities.isNullOrEmpty(SUFFIX)) SUFFIX = "log";
+            logfile = new File(LOGNAME + "_" + logTimestampFile + "." + SUFFIX);
         }
     }
 
@@ -198,14 +281,16 @@ public class LogBackUtil {
         return myLogger;
     }
 
-    protected static void start(){
-        logger.warn("You not specified the path for the logback.xml "
-                + "configuration file by default you use a logback.xml "
-                + "file on the root path of the \"resources\" folder");
-        start("logback.xml");
+    protected static void start(File pathToLogBackXML,LOGPATTERN pattern){
+        if(pattern != null)LogBackUtil.logpattern = pattern;
+        start(pathToLogBackXML.getAbsolutePath());
     }
 
     protected static void start(String pathToLogBackXML){
+        start(pathToLogBackXML,false);
+    }
+
+    protected static void start(String pathToLogBackXML,boolean justConsole){
         try {
             //String pathToLogBackXML = "C:\\Users\\tenti\\Desktop\\EAT\\utility\\src\\main\\resources\\logback.xml";
 
@@ -224,88 +309,62 @@ public class LogBackUtil {
             // assume SLF4J is bound to logback in the current environment
             loggerContext = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
             // print logback's internal status
-            StatusPrinter.print(loggerContext);
+            //StatusPrinter.print(loggerContext);
 
             JoranConfigurator configurator = new JoranConfigurator();
             configurator.setContext(loggerContext);
             // Call context.reset() to clear any previous configuration, e.g. default
             // configuration. For multi-step configuration, omit calling context.reset().
             loggerContext.reset();
-            // inject the name of the current application as "application-name"
-            // property of the LoggerContext
-            loggerContext.putProperty("DEV_HOME",System.getProperty("user.dir"));
-            //context.putProperty("application-name", "NAME_OF_CURRENT_APPLICATION");
-            loggerContext.putProperty("logFileName22", logfile.getName());
+            if(!justConsole) {
+                // inject the name of the current application as "application-name"
+                // property of the LoggerContext
+                loggerContext.putProperty("DEV_HOME", System.getProperty("user.dir"));
+                //context.putProperty("application-name", "NAME_OF_CURRENT_APPLICATION");
+                loggerContext.putProperty("logFileName",
+                        logfile.getName());
+                loggerContext.putProperty("logPatternConsole",
+                        logpatternConsole == null ? logpattern.getValue() : logpatternConsole.getValue());
+                loggerContext.putProperty("logPatternFile",
+                        logpatternFile == null ? logpattern.getValue() : logpatternFile.getValue());
+                loggerContext.putProperty("logPatternFileError",
+                        logpatternFileError == null ? logpattern.getValue() : logpatternFileError.getValue());
+                /*Logger rootLogger = loggerContext.getLogger("com.github.p4535992.util");
+                rootLogger.setLevel(Level.INFO);*/
 
-            /*Logger rootLogger = loggerContext.getLogger("com.github.p4535992.util");
-            rootLogger.setLevel(Level.INFO);*/
-
-            /*Logger LOG = (Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-            LOG.setLevel(Level.WARN);*/
+                /*Logger LOG = (Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+                LOG.setLevel(Level.WARN);*/
+            }else{
+                // go to the console logback.xml
+            }
             try {
                 if(pathToLogBackXML.contains("resources")) {
-                    configurator.doConfigure(ClassLoader.getSystemClassLoader().getResource("logback.xml").getFile());
+                    configurator.doConfigure(ClassLoader.getSystemClassLoader().getResource(pathToLogBackXML).getFile());
                 }else{
-                    configurator.doConfigure(pathToLogBackXML);
+                    try {
+                        configurator.doConfigure(pathToLogBackXML);
+                    }catch(Exception e){
+                        System.err.println(e.getMessage());
+                    }
                 }
 
             } catch (JoranException je) {
                 StatusPrinter.print(loggerContext);
             } catch(NullPointerException ne){
-                logger.error("Wrong name resources for the LogBack config file.",ne);
+                //The context XML File is not on the Resource Folder
+                try {
+                    pathToLogBackXML = new File(FileUtilities.getDirectoryUser()+pathToLogBackXML).getAbsolutePath();
+                    configurator.doConfigure(pathToLogBackXML);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
             }
                // configurator.doConfigure(pathToLogBackXML);
             //optional
             //StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
             //StatusPrinter.print(loggerContext);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-   /* public static void start(String filePath) {
-        init();
-        stop();
-        fileAppender.setFile(filePath);
-        fileAppender.start();
-    }
-
-    public static void stop() {
-        if (fileAppender.isStarted()) {
-            fileAppender.stop();
-        }
-    }*/
-
-    //---------------------------------------------------------------------------------------------------------
-
-    protected static String prepareLogEntry(String logEntry, Class<?> clazz){
-        try {
-            if (logEntry != null) {
-                StringBuilder sb = new StringBuilder();
-                if(!isLogOff) {
-                    if(!(isLog4j || isSlf4j || isLogUtil)) {
-                        if (logTimestamp != null)
-                            sb.append(logTimestamp.format(new Date()));
-                        else {
-                            DateFormat df = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-                            sb.append(df.format(logTimestamp));
-                        }
-                       /* if (isDEBUG) {
-                            sb.append(MyLevel.DEBUG);
-                        }
-                        sb.append(myLevel.toString());*/
-                        //Add to the class.....
-                        if(clazz!=null)sb.append(clazz.getName()).append("::");
-                    }
-                }
-                logEntry = StringUtilities.toStringInline(logEntry);//beautify String
-                sb.append(logEntry);
-                return sb.toString();
-            }else{
-                return "[NULL]["+logTimestamp+"]";
-            }
-        }catch(Exception e){
-            return "[SOME ERROR WITH THE CREATION OF THE LOG][" + logTimestamp + "]";
+        } catch (Exception e) {
+           e.printStackTrace();
         }
     }
 
@@ -318,6 +377,29 @@ public class LogBackUtil {
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         logger.error(sw.toString());
+    }
+
+    public static void setLogpatternConsole(LOGPATTERN logpatternConsole) {
+        LogBackUtil.logpatternConsole = logpatternConsole;
+    }
+
+    public static void setLogpatternFile(LOGPATTERN logpatternFile) {
+        LogBackUtil.logpatternFile = logpatternFile;
+    }
+
+    public static void setLogpatternFileError(LOGPATTERN logpatternFileError) {
+        LogBackUtil.logpatternFileError = logpatternFileError;
+    }
+
+
+    public static File getMySQLScript(){
+        String basePath = "utility\\src\\main\\java\\com\\github\\p4535992" +
+                "\\util\\log\\logback\\script\\mysql.sql";
+        return new File(FileUtilities.getDirectoryUser()+basePath);
+    }
+
+    public static File getMySQLScript(String pathResourceFileName,Class<?> thisClass,File outputFile){
+        return FileUtilities.getFromResourceAsFile(pathResourceFileName,thisClass,outputFile);
     }
 
 

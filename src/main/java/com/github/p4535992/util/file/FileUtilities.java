@@ -1,17 +1,15 @@
 package com.github.p4535992.util.file;
 
+import com.github.p4535992.util.file.resources.ClassLoaderUtil;
 import com.github.p4535992.util.string.StringUtilities;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -30,17 +28,13 @@ public class FileUtilities {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(FileUtilities.class);
-
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
-
+    
     private static String fullPath;
-    private static char pathSeparator = File.separatorChar;
+    public static char pathSeparator = File.separatorChar;
+    public static final String pathSeparatorReference = "/";
     //private static char extensionSeparator = '.';
     //private static String extensionSeparatorS = ".";
-    public final static String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();
+    //public final static String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();
 
     /**
      * Check the file separator to see if we're on a Windows platform.
@@ -103,6 +97,11 @@ public class FileUtilities {
     public static String getExtension(String fullPath) {
         if(!fullPath.contains(".")) fullPath = fullPath +". ";
         return fullPath.substring(fullPath.lastIndexOf('.') + 1);
+
+       /* int i = path.toString().lastIndexOf(".");
+        if (i >= 0) {
+            return path.toString().substring(i + 1);
+        } */
 
        /* String fileName = getFilename(fullpath);
         if (null == fileName)	throw new IllegalArgumentException("fileName can't be null.");
@@ -239,11 +238,11 @@ public class FileUtilities {
         try {
             if(file.createNewFile())return file;
             else{
-                logger.warn(gm() + "Can't create the file" + file.getName());
+                logger.warn( "Can't create the file" + file.getName());
                 return null;
             }
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error( e.getMessage(),e);
             return null;
         }
     }
@@ -272,9 +271,22 @@ public class FileUtilities {
                 logger.info("Done copying contents of " + source.getName() + " to " + destination.getName());
                 return true;
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error( e.getMessage(),e);
             return false;
         }
+    }
+
+    public static boolean copyFile(Path src, Path dest) {
+        dest = Files.isDirectory(src) ? dest.resolve(src) : dest;
+        EnumSet<FileVisitOption> opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
+        TreeCopier tc = new TreeCopier(src, dest, false, false);
+        try {
+            Files.walkFileTree(src, opts, Integer.MAX_VALUE, tc);
+            return true;
+        } catch (IOException e) {
+            logger.error("Copying file/folder: "+src+" to "+dest+"", e);
+        }
+        return false;
 
     }
 
@@ -289,10 +301,7 @@ public class FileUtilities {
         InputStreamReader in = new InputStreamReader(input, encoding);
         OutputStreamWriter out = new OutputStreamWriter(output,encoding);
         long count = copyLarge(in,out);
-        if (count == -1 || count > Integer.MAX_VALUE) {
-            return false; // -1
-        }
-        return true; // count
+        return !(count == -1 || count > Integer.MAX_VALUE);
     }
 
     /**
@@ -313,7 +322,7 @@ public class FileUtilities {
             }
             return count;
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return -1;
         }
     }
@@ -344,11 +353,11 @@ public class FileUtilities {
      * @return the list of absolute file names
      * @since 1.0
      */
-    public static ArrayList<String> getFileList(File file, Pattern[] included, Pattern[] excluded){
+    public static List<String> getFileList(File file, Pattern[] included, Pattern[] excluded){
         return getFileList(file, included, excluded, true);
     }
 
-    private static ArrayList<String> getFileList(File file, Pattern[] included, Pattern[] excluded, boolean root){
+    private static List<String> getFileList(File file, Pattern[] included, Pattern[] excluded, boolean root){
         if (null == file)return new ArrayList<>();
         ArrayList<String> filelist = new ArrayList<>();
         if (file.isDirectory()){
@@ -358,7 +367,7 @@ public class FileUtilities {
                 for (String aList : list) {
                     list_entry = aList;
                     File next_file = new File(file.getAbsolutePath() + File.separator + list_entry);
-                    ArrayList<String> dir = getFileList(next_file, included, excluded, false);
+                    List<String> dir = getFileList(next_file, included, excluded, false);
                     Iterator<String> dir_it = dir.iterator();
                     String file_name;
                     while (dir_it.hasNext()) {
@@ -394,13 +403,23 @@ public class FileUtilities {
         }
         return filelist;
     }
+
     /**
      * Method to read all file ina directory/folder.
      * @param directory file of the directory/folder.
      * @return list of files in the directory.
      */
-    public static List<File> readDirectory(File directory) {
-        return readDirectory(directory.getAbsolutePath());
+    public static List<File> getFilesFromDirectory(File directory) {
+        return getFilesFromDirectory(directory.getAbsolutePath());
+    }
+
+    /**
+     * Method to read all file ina directory/folder.
+     * @param directory file of the directory/folder.
+     * @return list of files in the directory.
+     */
+    public static List<File> getFilesFromDirectory(Path directory) {
+        return getFilesFromDirectory(directory.toFile().getAbsolutePath());
     }
 
     /**
@@ -408,7 +427,7 @@ public class FileUtilities {
      * @param fullPathDir string path to the location of the directory/folder.
      * @return list of files in the directory.
      */
-    public static List<File> readDirectory(String fullPathDir) {
+    public static List<File> getFilesFromDirectory(String fullPathDir) {
         String[] paths;
         List<File> files = new ArrayList<>();
         try {
@@ -417,19 +436,153 @@ public class FileUtilities {
                 files.add(new File(fullPathDir+File.separator+path));
             }
         } catch (Exception e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
         }
         return files;
     }
 
+    public static List<Path> getPathsFromDirectory(Path directory) {
+        List<Path> paths = new ArrayList<>();
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(directory.toUri()))) {
+            for (Path path : directoryStream) {
+                paths.add(path);
+            }
+        } catch (IOException e) {
+            logger.error("Listing files in directory: {}", directory, e);
+        }
+        return paths;
+    }
+
+    public static List<Path> getPathsFromDirectory(String directory) {
+        return getPathsFromDirectory(Paths.get(directory));
+    }
+
+    public static List<Path> getPathsFromDirectory(File directory) {
+        return getPathsFromDirectory(directory.toPath());
+    }
+
+    public static List<Path> getPathsDirectoriesFromDirectory(Path dir) throws IOException {
+        return getPathsFromDirectory(dir,null,null);
+    }
+
+    public static List<Path> getPathsFromDirectory(Path dir,DirectoryStream.Filter<? super Path> filter) throws IOException {
+        return getPathsFromDirectory(dir,filter,null);
+    }
+
+    public static List<Path> getPathsFromDirectory(Path dir, String glob) throws IOException {
+        //e.g. glob "*.{txt,doc,pdf,ppt}"
+       return getPathsFromDirectory(dir,null,glob);
+    }
+
+    private static List<Path> getPathsFromDirectory(Path directory,DirectoryStream.Filter<? super Path> filter,String glob){
+        List<Path> paths = new ArrayList<>();
+        DirectoryStream<Path> directoryStream  ;
+        try{
+            if(filter!= null) directoryStream  = Files.newDirectoryStream(directory, filter);
+            else if(glob != null) directoryStream  = Files.newDirectoryStream(directory, glob);
+            else directoryStream  = Files.newDirectoryStream(directory);
+            for (Path path : directoryStream) {
+                paths.add(path);
+            }
+            directoryStream.close();
+        } catch (IOException e) {
+            logger.error("Listing files in directory: {}", directory, e);
+        }
+        return paths;
+    }
+
+    public static File getFromResourceAsFile(String fileNameResource,Class<?> thisClass,File outputFile) {
+        StringBuilder result = new StringBuilder("");
+        //Get file from resources folder
+        ClassLoader classLoader = thisClass.getClassLoader();
+        File file = new File(classLoader.getResource(fileNameResource).getFile());
+        try (Scanner scanner = new Scanner(file)) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                result.append(line).append("\n");
+            }
+            //scanner.close();
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+        }
+        return toFile(result.toString(),outputFile);
+    }
+
+    public static File getFromResourceAsFileWithCommons(String fileNameResource,Class<?> thisClass,File outputFile) {
+        ClassLoader classLoader = thisClass.getClassLoader();
+        String result = "";
+        try {
+            result = org.apache.commons.io.IOUtils.toString(classLoader.getResourceAsStream(fileNameResource));
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+        }
+        return toFile(result,outputFile);
+    }
+
+    public static Iterator<URL> getFromResources(String resourceName, Class<?> callingClass, boolean aggregate)
+            throws IOException {
+        return ClassLoaderUtil.getResources(resourceName,callingClass,aggregate);
+    }
+
+    public static URL getFromResourceAsURL(String resourceName, Class<?> callingClass) {
+       return ClassLoaderUtil.getResourceAsURL(resourceName,callingClass);
+    }
+
+    public static InputStream getFromResourceAsStream(String resourceName, Class<?> callingClass) {
+        return ClassLoaderUtil.getResourceAsStream(resourceName, callingClass);
+    }
+
+    public static Class<?> getFromResourceAsClass(String className, Class<?> callingClass) throws ClassNotFoundException {
+        return ClassLoaderUtil.loadClass(className,callingClass);
+    }
+
+    public static String[] getFromResourceAsListing(String path,Class<?> callingClass) throws URISyntaxException, IOException {
+        return ClassLoaderUtil.getResourceListing(callingClass,path);
+    }
+
+    public InputStream getFromResourceAsStream(String name) {
+       return ClassLoaderUtil.getResourceAsStream(name);
+    }
+
     /**
      * Removes all files from a given folder.
-     * @param path string of the path to the file
+     * href: http://www.adam-bien.com/roller/abien/entry/java_7_deleting_recursively_a.
+     * @param filePathToTheFile string of the path to the file
      * @return if true all the operation are done.
      */
-    public static boolean removeDirectory(String path) {
-        File filePath = new File(path);
-        if (filePath.exists()) {
+    public static boolean deleteDirectory(String filePathToTheFile){
+        File filePath = new File(filePathToTheFile);
+        if(filePath.exists()){
+            if(filePath.isDirectory()) {
+                Path path = filePath.toPath();
+                try {
+                    Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                            Files.delete(dir);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                }catch(IOException e){
+                    logger.error(e.getMessage(), e);
+                    return false;
+                }
+                return true;
+            }else{
+                logger.warn("The file to the path:"+filePathToTheFile+ "is not a directory");
+                return false;
+            }
+        }else{
+            logger.warn("Not exists the file to the path:"+filePathToTheFile);
+            return false;
+        }
+        /*if (filePath.exists()) {
             for (String fileInDirectory : filePath.list()) {
                 File tmpFile = new File(path + "/" + fileInDirectory);
                 if(!tmpFile.delete()){
@@ -442,7 +595,7 @@ public class FileUtilities {
                 return false;
             }
         }
-        return true;
+        return true;*/
     }
 
     /**
@@ -554,7 +707,7 @@ public class FileUtilities {
         try {
             return new File(thisClass.getClassLoader().getResource(referenceResourcePath).getFile());
         }catch(NullPointerException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -585,18 +738,24 @@ public class FileUtilities {
      * equivalent to : dir = System.getProperty("user.dir");
      * @return string of the path to the user directory of the project
      */
-    public static String getUserDir() {
+    public static String getDirectoryUser() {
         String dir;
         try {
             //1 Method
             //File currentDirFile = new File("");
             //dir = currentDirFile.getAbsolutePath();
             //2 Method
-            dir = System.getProperty("user.dir")+File.separator;
+            //dir = System.getProperty("user.dir")+File.separator;
+            //3 Method
             //dir = convertFileToUri2(dir)+"/";
             //dir = helper.substring(0, helper.length() - currentDirFile.getCanonicalPath().length());
+            //4 Method
+            dir = new File(".").getCanonicalPath()+File.separator;
+            //5 Method
+            //Path currentRelativePath = Paths.get("");
+            //dir = currentRelativePath.toAbsolutePath().toString()+File.separator;
         } catch (Exception e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             dir = null;
         }
         return dir;
@@ -611,7 +770,7 @@ public class FileUtilities {
         if(file.exists()) {
             return file.getParent();
         }else {
-            logger.warn(gm() + "The file " + file.getAbsolutePath() + " not exists.");
+            logger.warn( "The file " + file.getAbsolutePath() + " not exists.");
             return null;
         }
     }
@@ -625,7 +784,7 @@ public class FileUtilities {
         if(file.exists()) {
             return file.getParentFile();
         }else {
-            logger.warn(gm() + "The file " + file.getAbsolutePath() + " not exists.");
+            logger.warn( "The file " + file.getAbsolutePath() + " not exists.");
             return null;
         }
     }
@@ -638,7 +797,7 @@ public class FileUtilities {
         if(file.exists()) {
             return file.getAbsoluteFile().getParentFile().getAbsolutePath();
         }else {
-            logger.warn(gm() + "The file " + file.getAbsolutePath() + " not exists.");
+            logger.warn( "The file " + file.getAbsolutePath() + " not exists.");
             return null;
         }
     }
@@ -652,7 +811,7 @@ public class FileUtilities {
      * @return the letter of the disk.
      */
     public static String getCurrentDisk() {
-        String dir = getUserDir();
+        String dir = getDirectoryUser();
         String[] split = dir.split(":");
         dir = split[0];
         return dir + ":".toLowerCase();
@@ -664,24 +823,25 @@ public class FileUtilities {
      * @param fullPath the String output path for the temporary File.
      * @return the temporary File.
      */
-    public static File toTempFile(String content,String fullPath){
+    public static File createTempFile(String content,String fullPath){
         try {
-            File file = File.createTempFile(
+            //create a temp file
+            File temp = File.createTempFile(
                     getFilename(fullPath),
                     getExtension(fullPath),
                     getDirectoryFile(fullPath)
             );
             // Delete temp file when program exits.
-            file.deleteOnExit();
+            temp.deleteOnExit();
             try ( //Writer writer = new FileWriter(file);
                   //PrintWriter out = new PrintWriter(writer);
                   //out.println(content);
-                  BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
-                bw.write(content);
+                  BufferedWriter bw = new BufferedWriter(new FileWriter(temp))) {
+                  bw.write(content);
             }
-            return file;
+            return temp;
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -698,11 +858,11 @@ public class FileUtilities {
         try (InputStream is = FileUtilities.class.getResourceAsStream(pathToFile)) {
             int Byte; // Byte because byte is keyword!
             while ((Byte = is.read()) != -1 ) {
-                System.out.print((char) Byte);
+                logger.info(String.valueOf((char) Byte));
             }
             return is;
         } catch (IOException e) {
-            logger.error(gm() + "The file:" + pathToFile + " not exists:" +e.getMessage(), e);
+            logger.error( "The file:" + pathToFile + " not exists:" +e.getMessage(), e);
             return null;
         }
         //Alternative
@@ -721,14 +881,14 @@ public class FileUtilities {
         try {
             return new FileInputStream(file);
         }catch(FileNotFoundException e){
-            logger.error(gm() + "The file:" + file.getAbsolutePath() + " not exists:" + e.getMessage(), e);
+            logger.error( "The file:" + file.getAbsolutePath() + " not exists:" + e.getMessage(), e);
             return null;
         }
     }
 
     /**
      * Method to convert a Stream to a File.
-     * @param inStream the Inputstream to decode.
+     * @param inStream the InputStream to decode.
      * @param filePathOutput the String path the the new location of the file.
      * @return the File Object.
      */
@@ -738,18 +898,18 @@ public class FileUtilities {
             byte[] bytes = new byte[1024];
             while ((read = inStream.read(bytes)) != -1) { outputStream.write(bytes, 0, read);}
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
         if(new File(filePathOutput).exists()) return new File(filePathOutput);
         else{
-            logger.warn(gm() + "The file:" + new File(filePathOutput).getAbsolutePath() + " not exists.");
+            logger.warn( "The file:" + new File(filePathOutput).getAbsolutePath() + " not exists.");
             return null;
         }
     }
 
     /**
-     * Method to covnert a resource file to a Stream.
+     * Method to convert a resource file to a Stream.
      * @param fileName String name of the Resource File to read(reference path).
      * @param clazz the Class who call this method.
      * @return the Stream of the File..
@@ -765,12 +925,12 @@ public class FileUtilities {
                     result.append(line).append("\n");
                 }
             } catch (IOException e) {
-                logger.error(gm() + e.getMessage(), e);
+                logger.error(e.getMessage(), e);
                 return null;
             }
             return result.toString();
         }catch(NullPointerException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -790,7 +950,7 @@ public class FileUtilities {
             try {
                 return clazz.getClassLoader().getResourceAsStream(name);
             }catch(NullPointerException ex){
-                logger.error(gm() + ex.getMessage(), ex);
+                logger.error( ex.getMessage(), ex);
                 return null;
             }
         }
@@ -826,7 +986,7 @@ public class FileUtilities {
         try {
             return  new GZIPInputStream(new FileInputStream(file));
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
     }
@@ -850,7 +1010,7 @@ public class FileUtilities {
         if(file.exists()) {
             return !file.isFile() && file.isDirectory();
         }else{
-            logger.warn(gm() + "The file:" + file.getAbsolutePath() + " not exists!");
+            logger.warn( "The file:" + file.getAbsolutePath() + " not exists!");
             return false;
         }
     }
@@ -872,7 +1032,7 @@ public class FileUtilities {
             byte[] hashedBytes = digest.digest();
             return StringUtilities.toHexString(hashedBytes);
         } catch (NoSuchAlgorithmException | IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
     }
@@ -935,7 +1095,7 @@ public class FileUtilities {
             writer = new FileWriter(file);
             return writer;
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
     }
@@ -951,7 +1111,7 @@ public class FileUtilities {
             reader = new FileReader(file);
             return reader;
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
     }
@@ -998,7 +1158,7 @@ public class FileUtilities {
             }
             throw new FileNotFoundException("locateFile: file not found: " + findFile);
         }catch(FileNotFoundException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
     }
@@ -1025,13 +1185,13 @@ public class FileUtilities {
                     return url;
                 }
             } catch (MalformedURLException e) {
-                logger.error(gm() + "locateURL: URL creation problem:" + e.getMessage(), e);
+                logger.error( "locateURL: URL creation problem:" + e.getMessage(), e);
                 throw new FileNotFoundException("locateURL: URL creation problem");
             }
             if ((url = locateByResource(findFile)) != null) return url;
             throw new FileNotFoundException("locateURL: file not found: " + findFile);
         }catch(FileNotFoundException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
     }
@@ -1047,18 +1207,18 @@ public class FileUtilities {
         String dir;
         File f = null;
         if (findFile == null) {
-            logger.error(gm() + "The findFile parameter can't be NULL.");
+            logger.error( "The findFile parameter can't be NULL.");
             return null;
         }
         try {
-            logger.warn(gm() + "Searching in 'user.dir' for: " + findFile);
+            logger.warn( "Searching in 'user.dir' for: " + findFile);
             dir = System.getProperty("user.dir");
             if (dir != null) {
                 fullPathName = dir + File.separatorChar + findFile;
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()) {
-                logger.warn(gm() + "Found in 'user.dir':" + fullPathName);
+                logger.warn( "Found in 'user.dir':" + fullPathName);
                 return fullPathName;
             }
             dir = System.getProperty("user.home");
@@ -1067,7 +1227,7 @@ public class FileUtilities {
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()) {
-                logger.warn(gm() + "Found in 'user.home':"+fullPathName);
+                logger.warn( "Found in 'user.home':"+fullPathName);
                 return fullPathName;
             }
             dir = System.getProperty("java.home");
@@ -1076,11 +1236,11 @@ public class FileUtilities {
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()){
-                logger.warn(gm() + "Found in 'java.home':"+fullPathName);
+                logger.warn( "Found in 'java.home':"+fullPathName);
                 return fullPathName;
             }
         }catch (Exception e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
         return fullPathName;
@@ -1096,7 +1256,7 @@ public class FileUtilities {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         URL url = loader.getResource(findFile);
         if (url == null)  url = FileUtilities.class.getResource("/" + findFile);
-        logger.warn(gm() + "Search succeeded via getResource()");
+        logger.warn( "Search succeeded via getResource()");
         return url;
     }
 
@@ -1107,7 +1267,7 @@ public class FileUtilities {
      * @return a String Array of the columns.
      */
     public static String[] CSVGetHeaders(File fileCSV,boolean hasFirstLine){
-        String[] columns;
+        String[] columns = new String[0];
         try{
             com.opencsv.CSVReader reader = new com.opencsv.CSVReader(new FileReader(fileCSV));
             columns = reader.readNext(); // assuming first read
@@ -1119,12 +1279,12 @@ public class FileUtilities {
                     columns[i] = "Column#"+i;
                 }
             }
-            return columns;
         }catch(IOException e){
-            logger.error(gm() + "Can't find the CSV File:"+ e.getMessage(), e);
-            return null;
+            logger.error("Can't find the CSV File",e);
         }
+        return columns;
     }
+
 
     /**
      * Method to get the content of a comma separated file (.csv,.input,.txt)
@@ -1147,18 +1307,17 @@ public class FileUtilities {
             if (header) content.remove(0);
             return content;
         }catch(IOException e){
-            logger.error(gm() + "Can't find the CSV File:"+ e.getMessage(), e);
+            logger.error( "Can't find the CSV File:"+ e.getMessage(), e);
             return null;
         }
     }
-
 
     /**
      * Method to convert a MultipartFile to a File
      * @param multiPartFile the MultiPartFile of Spring to convert.
      * @return the File.
      */
-    public File toFile(org.springframework.web.multipart.MultipartFile multiPartFile) {
+    public static File toFile(org.springframework.web.multipart.MultipartFile multiPartFile) {
         File convFile = new File(multiPartFile.getOriginalFilename());
         /*convFile.createNewFile();
         FileOutputStream fos = new FileOutputStream(convFile); fos.write(multiPartFile.getBytes());fos.close();*/
@@ -1166,9 +1325,46 @@ public class FileUtilities {
             multiPartFile.transferTo(convFile);
             return convFile;
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
+    }
+
+    /**
+     * Method to convert e array of Bytes to a path Object.
+     * @param bytes the array of bytes.
+     * @param pathToTheFile the String path to the path object for the File.
+     * @return the Path object populate with the Array of Bytes.
+     */
+    public static Path toPath(byte[] bytes,String pathToTheFile){
+            Path path = Paths.get(pathToTheFile);
+            return toPath(bytes,path);
+    }
+
+    /**
+     * Method to convert e array of Bytes to a path Object.
+     * @param bytes the array of bytes.
+     * @param pathToTheFile the String path to the path object for the File.
+     * @return the path object populate with the Array of Bytes.
+     */
+    public static Path toPath(byte[] bytes,Path pathToTheFile){
+        try {
+            Files.write(pathToTheFile, bytes);
+            return pathToTheFile;
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    /**
+     * Method to convert e array of Bytes to a path Object.
+     * @param bytes the array of bytes.
+     * @param pathToTheFile the String path to the path object for the File.
+     * @return the File object populate with the Array of Bytes.
+     */
+    public static File toFile(byte[] bytes,String pathToTheFile){
+        return toPath(bytes,pathToTheFile).toFile();
     }
 
     /**
@@ -1289,6 +1485,99 @@ public class FileUtilities {
         private Handler handler;
     } //end of class FileWalker
 
+
+    /**
+     * A {@code FileVisitor} that copies a file-tree ("cp -r")
+     */
+   static public class TreeCopier implements FileVisitor<Path> {
+        private final Path source;
+        private final Path target;
+        private final boolean prompt;
+        private final boolean preserve;
+
+        TreeCopier(Path source, Path target, boolean prompt, boolean preserve) {
+            this.source = source;
+            this.target = target;
+            this.prompt = prompt;
+            this.preserve = preserve;
+        }
+
+        /**
+         * Copy source file to target location. If {@code prompt} is true then
+         * prompt user to overwrite target if it exists. The {@code preserve}
+         * parameter determines if file attributes should be copied/preserved.
+         */
+        private static void copyFile(Path source, Path target, boolean prompt, boolean preserve) {
+            CopyOption[] options = (preserve) ? new CopyOption[] {
+                    StandardCopyOption.COPY_ATTRIBUTES,
+                    StandardCopyOption.REPLACE_EXISTING } : new CopyOption[] { StandardCopyOption.REPLACE_EXISTING };
+            try {
+                Files.createDirectories(target.getParent());
+            } catch (IOException e) {
+                logger.error("Unable to create: "+target.getParent()+"", e);
+            }
+            try {
+                Files.copy(source, target, options);
+            } catch (IOException e) {
+                logger.error("Unable to copy: "+source+"", e);
+            }
+
+        }
+
+        @Override
+        public FileVisitResult preVisitDirectory(Path dir,
+                                                 BasicFileAttributes attrs) {
+            // before visiting entries in a directory we copy the directory
+            // (okay if directory already exists).
+            CopyOption[] options = (preserve) ? new CopyOption[] { StandardCopyOption.COPY_ATTRIBUTES }
+                    : new CopyOption[0];
+
+            Path newdir = target.resolve(source.relativize(dir));
+            try {
+                if (Files.notExists(target.getParent())) {
+                    Files.createDirectories(target.getParent());
+                }
+                Files.copy(dir, newdir, options);
+            } catch (FileAlreadyExistsException x) {
+                // ignore
+            } catch (IOException e) {
+                logger.error("Unable to create: "+newdir+"", e);
+                return FileVisitResult.SKIP_SUBTREE;
+            }
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            copyFile(file, target.resolve(source.relativize(file)), prompt,preserve);
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+            // fix up modification time of directory when done
+            if (exc == null && preserve) {
+                Path newdir = target.resolve(source.relativize(dir));
+                try {
+                    FileTime time = Files.getLastModifiedTime(dir);
+                    Files.setLastModifiedTime(newdir, time);
+                } catch (IOException e) {
+                    logger.error("Unable to copy all attributes to: "+newdir+"", e);
+                }
+            }
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFileFailed(Path file, IOException e) {
+            if (e instanceof FileSystemLoopException) {
+                logger.error("cycle detected: " + file);
+            } else {
+                logger.error("Unable to copy: "+file+"", e);
+            }
+            return FileVisitResult.CONTINUE;
+        }
+    }
 
     /////////////////////////////////////////
     //OTHER METHODS WITH COMMONS UTIL APACHE COMMONS
@@ -1412,7 +1701,7 @@ public class FileUtilities {
             try {
                 return Files.readAllLines(path, encodingInput);
             } catch (IOException e1) {
-                logger.error(gm() + e.getMessage(), e);
+                logger.error( e.getMessage(), e);
                 return null;
             }
         }
@@ -1434,7 +1723,7 @@ public class FileUtilities {
             Files.write(path, content, encodingOutput);
             return true;
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return false;
         }
     }
@@ -1456,24 +1745,24 @@ public class FileUtilities {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(UTF8), "UTF-8"))) {
                 String line = r.readLine();
                 while (line != null) {
-                    logger.info(unicodeEscape(line));
+                    logger.info(StringUtilities.unicodeEscape(line));
                     line = r.readLine();
                     list.add(line);
                 }
             }
             return list;
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error( e.getMessage(),e);
             return null;
         }
     }
 
-    private static final char[] hexChar = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-    /**
+   /* private static final char[] hexChar = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+    *//**
      * Method for convert a string UTF-8 to HEX
      * @param text string of text you want to convert to HEX
      * @return the text in HEX encoding
-     */
+     *//*
     private static String unicodeEscape(String text) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < text.length(); i++) {
@@ -1489,7 +1778,7 @@ public class FileUtilities {
             }
         }
         return sb.toString();
-    }
+    }*/
 
     /**
      * Reads file with unicode escaped characters and write them out to
@@ -1508,26 +1797,26 @@ public class FileUtilities {
             try (BufferedReader r = new BufferedReader(new FileReader(ASCII))) {
                 String line = r.readLine();
                 while (line != null) {
-                    line = convertUnicodeEscape(line);
+                    line = StringUtilities.convertUnicodeEscapeToASCII(line);
                     byte[] bytes = line.getBytes("UTF-8");
                     list.add(StringUtilities.toString(bytes));
                 }
             }
             return list;
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error( e.getMessage(),e);
             return null;
         }
     }
 
-    enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
+   /* enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}*/
 
     /**
      *  convert unicode escapes back to char
      * @param s string to convert unicode escape.
      * @return string converted.
      */
-    private static String convertUnicodeEscape(String s) {
+    /*private static String convertUnicodeEscape(String s) {
         char[] out = new char[s.length()];
         ParseState state = ParseState.NORMAL;
         int j = 0, k = 0, unicode = 0;
@@ -1576,7 +1865,7 @@ public class FileUtilities {
             out[j++] = c;
         }
         return new String(out, 0, j);
-    }
+    }*/
 
     /**
      * Method to rewrite a file in the UTF-8 encoding
@@ -1588,7 +1877,7 @@ public class FileUtilities {
         File fileUTF8 = new File(fileASCII.getAbsolutePath());
         //fileASCII = new File(filePathASCII);
         write(list,fileUTF8,StringUtilities.US_ASCII,StringUtilities.UTF_8);
-        fileASCII.delete();
+        boolean delete = fileASCII.delete();
         return fileUTF8;
     }
 
@@ -1608,7 +1897,7 @@ public class FileUtilities {
     public static File writeToANSI(File fileUTF8) {
         File fileANSI = new File(fileUTF8.getAbsolutePath());
         write(fileUTF8, fileANSI, StringUtilities.UTF_8, StringUtilities.CP1252);
-        fileUTF8.delete();
+        boolean delete = fileUTF8.delete();
         return fileANSI;
     }
 
@@ -1675,54 +1964,17 @@ public class FileUtilities {
             }
             return true;
         }catch(java.lang.NullPointerException|IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return false;
         }
     }
 
     public static boolean write(File fileInput,File fileOutput,Charset encodingInput,Charset encodingOutput){
-        boolean replace = false;
-        if(encodingOutput == null) encodingOutput = StandardCharsets.UTF_8;
-        if(encodingInput == null) encodingInput = StringUtilities.toCharset(System.getProperty("file.encoding"));
-        if(encodingOutput.name().toUpperCase().startsWith("UTF")) replace = true;
-        logger.info("Try to writing to file named " + fileOutput.getAbsolutePath() + " with Encoding: " + encodingOutput.name());
-        try {
-            boolean firstLine = true;
-            FileInputStream fis = new FileInputStream(fileInput);
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(fis,encodingInput))) {
-                FileOutputStream fos = new FileOutputStream(fileOutput);
-                try (Writer writer = new BufferedWriter(new OutputStreamWriter(fos, encodingOutput))) {
-                    for (String line; (line = r.readLine()) != null;) {
-                        if (firstLine) {
-                            if (line.startsWith("\uFEFF")) {
-                                line = line.substring(1);
-                            }
-                            firstLine = false;
-                        }
-                        if(replace){
-                            for (Map.Entry<String, String> entry : unicodeCodePoint.entrySet()) {
-                                try{
-                                    String s = entry.getKey().replace("U+","\\u");
-                                    if(line.contains(s))line = line.replace(s,entry.getValue());
-                                }catch(java.lang.NullPointerException ne){
-                                    break;
-                                }
-                            } //foreach entry
-                        }
-                        writer.write(line + System.getProperty("line.separator"));
-                        writer.flush();
-                    }
-                }
-            }
-            return true;
-        }catch (Exception e) {
-            logger.error(gm() + e.getMessage(),e);
-            return false;
-        }
+        return write(read(fileInput,encodingInput),fileOutput,encodingInput,encodingOutput);
     }
 
     /**
-     * Method to read the cotnetn of a file line by line.
+     * Method to read the content of a file line by line.
      * @param fileInput the file to read.
      * @param separator the Char separator.
      * @return the String content Mapped of the file.
@@ -1748,7 +2000,7 @@ public class FileUtilities {
             params.parseNameValuePairs(lines, separator, true);
             //map = params.getParameters();
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error( e.getMessage(),e);
             return null;
         }
         return params;
@@ -1785,19 +2037,26 @@ public class FileUtilities {
             }
             return collection;
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
     }
 
     /**
      * Method to get the String content of the File.
+     * href: http://www.adam-bien.com/roller/abien/entry/java_8_reading_a_file
+     * href: http://stackoverflow.com/questions/16919501/create-a-path-from-string-in-java7
      * @param file the File to copy.
-     * @param encoding the encoding of the File you desire.
+     * @param encoding the Charset of the File you desire.
      * @return the String of the content of the File.
      */
-    public static String toString(File file, String encoding){
-        StringWriter sw = new StringWriter();
+    public static String toString(File file, Charset encoding){
+        return toString(file.toPath(),encoding);
+    }
+
+    public static String toString(Path path, Charset encoding){
+        //OLD METHOD java 1.6
+        /*StringWriter sw = new StringWriter();
         long count = 0;
         int n ; // n = 0;
         try {
@@ -1811,20 +2070,71 @@ public class FileUtilities {
                 count += n;
             }
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return null;
         }
         if (count > Integer.MAX_VALUE) return null;
-        return sw.toString();
+        return sw.toString();*/
+
+        //NEW METHOD MORE PERFORMANCE java 1.7,1.8
+        //Method 1 - This way i will be able to use Lambda expressions and streams easily also.
+       /* try (BufferedReader reader =
+                     Files.newBufferedReader(Paths.get(file.toURI()),StringUtilities.UTF_8)) {
+            return StringUtilities.toString(reader);
+        }catch(IOException e){
+            logger.error( e.getMessage(), e);
+            return null;
+        }*/
+        //Method 2
+        try{
+            return new String(Files.readAllBytes(path),encoding);
+        }catch(IOException e){
+            logger.error( e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Method to get the String content of the Stream of a File.
+     * href: http://www.java2s.com/Tutorials/Java/java.nio.file/Files/Java_Files_copy_InputStream_in_Path_target_CopyOption_options_.htm.
+     * @param stream the Stream of the File to convert to a String object.
+     * @param encoding the Charset of the encoding of the String.
+     * @return the String content o f the InputStream.
+     */
+    public static String toString(InputStream stream,Charset encoding){
+        Path copy_to = Paths.get(new File(".").toURI());
+        try {
+            Files.copy(stream,copy_to, StandardCopyOption.REPLACE_EXISTING);
+            return toString(copy_to,encoding);
+        }catch(IOException e){
+            logger.error( e.getMessage(),e);
+            return null;
+        }
+    }
+
+    public static byte[] toBytes(Path pathInput) {
+        try {
+            return Files.readAllBytes(pathInput);
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    public static byte[] toBytes(String filePathInput) {
+        return toBytes(Paths.get(filePathInput));
     }
 
     /**
      * Method to read the Binary Content of a File.
+     * OLD_NAME: readBinaryFileContent.
      * @param fileInput the File to read.
      * @return the arrays of Bytes of the content of the File.
      */
-    public static byte[] readBinaryFileContent(File fileInput) {
-        ByteArrayOutputStream bs;
+    public static byte[] toBytes(File fileInput) {
+        return toBytes(fileInput.toPath());
+        //OLD_METHOD
+        /*ByteArrayOutputStream bs;
         try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(fileInput))) {
             bs = new ByteArrayOutputStream();
             try (BufferedOutputStream out = new BufferedOutputStream(bs)) {
@@ -1834,48 +2144,19 @@ public class FileUtilities {
             }
             return bs.toByteArray();
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
-        }
-
-        /*//OLD METHOD
-        InputStream IPut = new FileInputStream(fileInput);
-        Vector<byte[]> BytArrsV = new Vector<>();
-        int size=0;
-        byte[] FinalVal = new byte[0];
-        int read=0;
-        try{
-            int i=0;
-            byte[] bbuf = new byte[1024];
-            while ((read  = IPut.read(bbuf, 0, bbuf.length)) > -1){
-                byte[] bbuf2 = new byte[read];
-                for (i=0; i < bbuf2.length; i++){
-                    bbuf2[i] = bbuf[i];
-                }
-                BytArrsV.addElement(bbuf2);
-                size += read;
-            }
-            FinalVal = new byte[size];
-            int j = 0;
-            for (i = 0; i < BytArrsV.size(); i++){
-                byte[] byarr = BytArrsV.elementAt(i);
-                for (int k = 0; k < byarr.length; k++){
-                    FinalVal[j++] = byarr[k];
-                }
-            }
-        }catch(Exception ex){throw ex;
-        }finally{IPut.close();}
-        return FinalVal;
-        */
+        }*/
     }
     
     /**
      * Convenience method for writing bytes to an OutputStream.
+     * OLD_NAME: writeBinaryFileContent.
      * @param fileOutput File to write.
      * @param bbuf The contents to write to the OutputStream, OPut.
      * @return if true all the operation are done.
      */
-    public static boolean writeBinaryFileContent(File fileOutput, byte[] bbuf)  {
+    public static boolean write(File fileOutput, byte[] bbuf)  {
         /* try{OPut.write(bbuf, 0, bbuf.length);OPut.flush();
         }catch(Exception ex){SystemLog.exception(ex,StringUtilities.class);}
         finally{ OPut.close();}
@@ -1889,7 +2170,7 @@ public class FileUtilities {
             return true;
         }//try
         catch(IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error( e.getMessage(), e);
             return false;
         }
     }
@@ -1907,7 +2188,7 @@ public class FileUtilities {
             bw.write(textToAppend);
             bw.flush();
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error( e.getMessage(),e);
         } finally { // always close the file
             if (bw != null)
                 try {
@@ -1916,7 +2197,30 @@ public class FileUtilities {
         }
 
     }
-    
- 
+
+    public static boolean isValidFile(String file) {
+        try {
+            File f = new File(file);
+            if(f.isFile() && !f.isDirectory())return true;
+            f = new File(getDirectoryUser()+file);
+            if(f.isFile() && !f.isDirectory())return true;
+
+            f = new File(getDirectoryUser()+file);
+            if(f.isFile() && !f.isDirectory())return true;
+            else{
+                if(f.isDirectory())logger.warn("The path:"+file+" is a directory");
+                return false;
+            }
+        }
+        catch (Exception e) {
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }
+
+
+
+
+
 
 }

@@ -199,7 +199,7 @@ public class JSoupKit {
         private static List<List<List<String>>> subExtractor6(org.jsoup.select.Elements TableColl, boolean HTML)
         {
             List<List<List<String>>> ResultCollection = new ArrayList<>();
-            //Nuova tabella
+            //New Table
             for(org.jsoup.nodes.Element TableElem : TableColl)
             {
                 switch (TableElem.tagName().toUpperCase())
@@ -341,8 +341,10 @@ public class JSoupKit {
         /// <returns></returns>
         private static List<String> Extractor6(org.jsoup.nodes.Element node, boolean HTML, List<String> Cols)
         {
-            String[] goodTag = new String[] { "A", "IMG", "P", "SPAN", "CAPTION", "DIV", "DD", "DT", "DL", "LI", "DIV", "BR", "STRONG","B"};//...possible new entry -> STRONG,#TEXT
-            String[] goodAttr = new String[] { "SRC", "HREF", "ID", "NAME", "VALUE", "TITLE", "ALT","ONCLICK" }; //... aggiungere via via gli attributi che si reputano interessanti
+            String[] goodTag = new String[] { "A", "IMG", "P", "SPAN", "CAPTION", "DIV", "DD",
+                    "DT", "DL", "LI", "DIV", "BR", "STRONG","B"};//...possible new entry -> STRONG,#TEXT
+            String[] goodAttr = new String[] { "SRC", "HREF", "ID", "NAME", "VALUE", "TITLE",
+                    "ALT","ONCLICK" }; //..add more attributes , by use case
             String Testo;                      
             org.jsoup.nodes.Element child;
             if (node.children().size() == 1 && !Arrays.asList(goodTag).contains(node.children().first().tagName().toUpperCase())) //Se è una tag in cui non si deve estarre informazioni a questo giro
@@ -384,7 +386,9 @@ public class JSoupKit {
                     if (check && clean(Testo)==null) Cols.add((Testo == null) ? "" : Testo); //Testo = "";
                     else if (Testo != null)  Cols.add(Testo); 
                 }
-                else if ("IMG".contains(child.tagName().toUpperCase()))//.Equals("IMG")...Se il filtro degli attrbituti è true ma sappiamo che vi è un qualcosa di utile l'unico caso trovato sono le immagini
+                //.Equals("IMG")...Se il filtro degli attributi è true ma sappiamo
+                // che vi è un qualcosa di utile l'unico caso trovato sono le immagini
+                else if ("IMG".contains(child.tagName().toUpperCase()))
                 {
                     Testo = "";
                     Cols.add(Testo); 
@@ -501,8 +505,8 @@ public class JSoupKit {
                             .post();
                     htmlContent = doc.outerHtml();
                 } catch (IOException e1) {
-                    logger.error("JSOUP can't convert the url to a string maybe the " +
-                            "web page not exists anymore or can't be reach", e1);
+                    logger.error("JSOUP can't convert the url:"+url+" to a string maybe the " +
+                            "web page not exists anymore or can't be reach");
                     return null;
                 }
             }

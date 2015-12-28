@@ -4,6 +4,7 @@ package com.github.p4535992.util.repositoryRDF.sesame;
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaSesameUtilities;
+import com.github.p4535992.util.repositoryRDF.sparql.SparqlUtilities;
 import com.github.p4535992.util.string.StringUtilities;
 import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
@@ -57,11 +58,7 @@ public class SesameUtilities {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(SesameUtilities.class);
-
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
+    
     private static String nameClass;
 
     protected SesameUtilities() {}
@@ -121,20 +118,23 @@ public class SesameUtilities {
 
     private void setRepositoryConnection() throws RepositoryException {
         if(mRepository!=null){
-            SesameUtilities.mRepositoryConnection = mRepository.getConnection();
+            isRepositoryInitialized();
+            mRepositoryConnection = mRepository.getConnection();
             logger.info("The RepositoryConnection:"+mRepositoryConnection.toString()+" is setted!");
         }else{
-            logger.warn(gm()+"Attention, you try to set a RepositoryConnection on a inexistent Repository!");
+            logger.warn("Attention, you try to set a RepositoryConnection on a inexistent Repository!");
         }
     }
 
     public void setRepository(RepositoryManager manager,String repositoryId) throws RepositoryException, RepositoryConfigException {
         if( mRepositoryManager==null && manager!=null)  mRepositoryManager = manager;
         if (mRepositoryManager != null) {
+            isRepositoryManagerInitialized(); //set repository manager
             mRepository = mRepositoryManager.getRepository(repositoryId);
-            logger.info("The Repository:"+mRepository.toString()+" is setted!");
+            isRepositoryInitialized();
+            logger.info("The Repository:"+mRepository.getDataDir()+File.separator+repositoryId+" is setted!");
         }else{
-            logger.warn(gm()+"Attention, you try to set a Repository on a inexistent RepositoryManager!");
+            logger.warn("Attention, you try to set a Repository on a inexistent RepositoryManager!");
         }
     }
 
@@ -154,7 +154,10 @@ public class SesameUtilities {
      * Method to set RepositoryManager.
      * @param repositoryManager the Repository manager.
      */
-    public void setRepositoryManager(RepositoryManager repositoryManager) {mRepositoryManager = repositoryManager;}
+    public void setRepositoryManager(RepositoryManager repositoryManager) {
+        mRepositoryManager = repositoryManager;
+        isRepositoryManagerInitialized();
+    }
 
     /**
      * Method to get RemoteRepositoryManager.
@@ -286,7 +289,7 @@ public class SesameUtilities {
             mRepositoryConnectionWrapper.setDelegate(repository.getConnection());
             return mRepositoryConnectionWrapper;
         } catch (RepositoryException e) {
-            logger.error(gm()+"Can't create the RepositoryConnectionWrapper Sesame, " +
+            logger.error("Can't create the RepositoryConnectionWrapper Sesame, " +
                     "maybe you not have set a repository!",e);
             return null;
         }
@@ -336,7 +339,7 @@ public class SesameUtilities {
             mRepositoryManager.initialize();
             return mRemoteRepositoryManager;
         } catch (RepositoryException e) {
-            logger.error(gm()+"Can't create the RepositoryManager Sesame, " +
+            logger.error("Can't create the RepositoryManager Sesame, " +
                     "maybe you not have set a correct path to the folder!",e);
             return null;
         }
@@ -354,7 +357,7 @@ public class SesameUtilities {
             mRemoteRepositoryManager.initialize();
             return mRemoteRepositoryManager;
         } catch (RepositoryException e) {
-            logger.error(gm()+"Can't create the RepositoryManager Sesame, " +
+            logger.error("Can't create the RepositoryManager Sesame, " +
                     "maybe you not have set a correct the URL address to the Sesame Server!",e);
             return null;
         }
@@ -366,10 +369,21 @@ public class SesameUtilities {
      * @param mRepositoryConnection the RepositoryConnection OpenRDF to Wrapper.
      * @return the RepositoryConnectionWrapper.
      */
-    public RepositoryConnectionWrapper setRepositoryConnectionWrappper(
+    public RepositoryConnectionWrapper setRepositoryConnectionWrapper(
             Repository mRepository,RepositoryConnection mRepositoryConnection) {
-        SesameUtilities.mRepositoryConnectionWrapper =
+        mRepositoryConnectionWrapper =
                 new RepositoryConnectionWrapper(mRepository,mRepositoryConnection);
+        return mRepositoryConnectionWrapper;
+    }
+
+    public RepositoryConnectionWrapper setRepositoryConnectionWrapper(Repository mRepository) {
+        try {
+            mRepositoryConnectionWrapper =
+                    new RepositoryConnectionWrapper(mRepository,mRepository.getConnection());
+        } catch (RepositoryException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
         return mRepositoryConnectionWrapper;
     }
 
@@ -413,6 +427,24 @@ public class SesameUtilities {
         this.URL_REPOSITORY_ID = "http://"+server+":"+port+"/openrdf-sesame/repositories/"+ ID_REPOSITORY;
     }
 
+    public void setPrefixes(Map<String,String> mapPrefixes,RepositoryConnection repositoryConnection){
+        try {
+            for(Map.Entry<String,String> entry : mapPrefixes.entrySet()){
+                repositoryConnection.setNamespace(entry.getKey(),entry.getValue());
+            }
+        } catch (RepositoryException e) {
+            logger.error(e.getMessage(),e);
+        }
+    }
+
+    public void setPrefixes(Map<String,String> mapPrefixes){
+        setPrefixes(mapPrefixes,mRepositoryConnection);
+    }
+
+    public void setPrefixes(){
+        setPrefixes(SparqlUtilities.getDefaultNamespacePrefixes(),mRepositoryConnection);
+    }
+
     /**
      * Method for Close the currently opened repository. This works for managed and unmanaged repositories.
      */
@@ -430,7 +462,7 @@ public class SesameUtilities {
                 // mRepository.shutDown();
                 // SystemLog.message("Repository shut down");
             } catch (RepositoryException e) {
-                logger.error(gm()+"Could not close Repository",e);
+                logger.error("Could not close Repository",e);
             }
             mRepositoryConnection = null;
             mRepository = null;
@@ -448,7 +480,7 @@ public class SesameUtilities {
      */
     public Repository connectToLocalWithConfigFile(String repositoryId,String username,String password){
         if (repositoryId == null) {
-            logger.warn(gm()+"No repository ID specified. When using the '" + URL_REPOSITORY_ID
+            logger.warn("No repository ID specified. When using the '" + URL_REPOSITORY_ID
                     + "' parameter to specify a Sesame server, you must also use the 'null' " +
                     "parameter to specify a repository on that server.");
             System.exit(-5);
@@ -463,7 +495,7 @@ public class SesameUtilities {
             mRepositoryManager = mRemoteRepositoryManager;
             mRepositoryManager.initialize();
         } catch (RepositoryException e) {
-            logger.error(gm()+"Unable to establish a connection with the Sesame server '"
+            logger.error("Unable to establish a connection with the Sesame server '"
                     + URL_REPOSITORY_ID + "': "
                     + e.getMessage(),e);
             System.exit(-5);
@@ -481,14 +513,14 @@ public class SesameUtilities {
                 } else {
                     message += "identifies an existing repository on the Sesame server located at " + URL_REPOSITORY_ID;
                 }
-                logger.warn(gm()+message);
+                logger.warn(message);
                 System.exit(-6);
             }
             // Open a connection to this repository
             mRepositoryConnection = mRepository.getConnection();
             //repositoryConnection.setAutoCommit(false);//deprecated
         } catch (OpenRDFException e) {
-            logger.error(gm()+"Unable to establish a connection to the repository '" + repositoryId + "': "
+            logger.error("Unable to establish a connection to the repository '" + repositoryId + "': "
                     + e.getMessage(),e);
             System.exit(-7);
         }
@@ -534,7 +566,7 @@ public class SesameUtilities {
             parser.parse(reader, defaultNamespace);
             return model;
         }catch(RDFParseException|RDFHandlerException|IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -545,7 +577,7 @@ public class SesameUtilities {
      */
     public void importIntoRepositoryDirectoryChunked(String preloadFolder){
         if(!new File(preloadFolder).exists()) {
-            logger.warn(gm()+"The '" + preloadFolder + "' not exists, can't make the import to the sesame repository!");
+            logger.warn("The '" + preloadFolder + "' not exists, can't make the import to the sesame repository!");
         }else {
             logger.info("===== Load Files (from the '" + preloadFolder + "' parameter) ==========");
             logger.info("Start the import of the Data on the repository...");
@@ -571,7 +603,7 @@ public class SesameUtilities {
             try {
                 walker.walk(new File(preloadFolder));
             } catch (Exception e) {
-                logger.error(gm() + "Can't go to the other file the method FileWalker has failed!", e);
+                logger.error("Can't go to the other file the method FileWalker has failed!", e);
                 return;
             }
             logger.info("...end the import of the Data on the repository...");
@@ -625,7 +657,7 @@ public class SesameUtilities {
             statements.close();
             return explicitStatements;
         }catch(RepositoryException e){
-            logger.error(gm()+e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -655,7 +687,7 @@ public class SesameUtilities {
             statements.close();
             return implicitStatements;
         } catch (RepositoryException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -680,7 +712,7 @@ public class SesameUtilities {
             iter.close();
             return namespacePrefixes;
         }catch(RepositoryException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -703,7 +735,7 @@ public class SesameUtilities {
     private void evaluateQueries(File queryFile){
         logger.info("===== Query Evaluation ======================");
         if (queryFile == null) {
-            logger.warn(gm() + "No query file given in parameter 'null'.");
+            logger.warn("No query file given in parameter 'null'.");
             return;
         }
         //long startQueries = System.currentTimeMillis();
@@ -746,7 +778,7 @@ public class SesameUtilities {
             logger.info("Query Sesame is a tuple query!");
             return mRepositoryConnection.prepareTupleQuery(language, query);
         } catch (RepositoryException | MalformedQueryException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         try {
             tempLocalConnection.prepareBooleanQuery(language, query);
@@ -755,7 +787,7 @@ public class SesameUtilities {
             logger.info("Query Sesame is a boolean query!");
             return mRepositoryConnection.prepareBooleanQuery(language, query);
         } catch (RepositoryException | MalformedQueryException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
 
         try {
@@ -765,7 +797,7 @@ public class SesameUtilities {
             logger.info("Query Sesame is a graph query!");
             return mRepositoryConnection.prepareGraphQuery(language, query);
         } catch (RepositoryException | MalformedQueryException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         return null;
     }
@@ -787,8 +819,9 @@ public class SesameUtilities {
                         tempLocalConnection.prepareUpdate(language, query);
                         logger.info("Query SPARQL is a update query");
                         return mRepositoryConnection.prepareUpdate(language, query);
-                    } catch (RepositoryException | MalformedQueryException ignored) {
-                        logger.warn(gm() + ignored.getMessage(),ignored);
+                    } catch (Exception ignored) {
+                        //TODO manage the parse exception of sesame
+                        logger.warn("Make sure the server sesame is up:"+ignored.getMessage().replace("\n"," "));
                     }
                 }
                 for (QueryLanguage language : queryLanguages) {
@@ -797,20 +830,20 @@ public class SesameUtilities {
                         if (result != null) return result;
                     } catch (Exception ignored) {
                         //continue;
-                        logger.warn(gm() + ignored.getMessage(),ignored);
+                        logger.warn(ignored.getMessage(),ignored);
                     }
                 }
-                logger.error(gm() + "Can't prepare this query SPARQL/SERQL in any language");
+                logger.error("Can't prepare this query SPARQL/SERQL in any language");
                 return null;
             } catch (Exception e) {
-                logger.error(gm()+e.getMessage(),e);
+                logger.error(e.getMessage(),e);
             } finally {
                 tempLocalConnection.close();
                 tempLocalRepository.shutDown();
             }
             return null;
         }catch(RepositoryException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -835,7 +868,7 @@ public class SesameUtilities {
             if (lang.getName().equalsIgnoreCase(strLang))
                 return lang;
         }
-        logger.warn(gm() + "The Query Language '" + strLang + "' is not recognised");
+        logger.warn("The Query Language '" + strLang + "' is not recognised");
         throw new IllegalArgumentException("The Query Language '" + strLang + "' is not recognised");
     }
 
@@ -855,7 +888,7 @@ public class SesameUtilities {
         try {
             Operation preparedOperation = prepareOperation(query);
             if (preparedOperation == null) {
-                logger.warn(gm()+"Unable to parse query: " + query);
+                logger.warn("Unable to parse query: " + query);
                 return;
             }
             //If the Query is a Update..........
@@ -916,7 +949,7 @@ public class SesameUtilities {
                             try {
                                 logger.info(beautifyRDFValue(aTuple.getValue()) + "\t");
                             } catch (Exception e) {
-                                logger.error(gm()+e.getMessage(),e);
+                                logger.error(e.getMessage(),e);
                             }
                         }
                     }
@@ -928,9 +961,9 @@ public class SesameUtilities {
                 //SystemLog.message(rows + " result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
             }
         } catch (UpdateExecutionException|QueryEvaluationException e) {
-           logger.error(gm() + "An error occurred during query execution", e);
+           logger.error("An error occurred during query execution", e);
         } catch (RepositoryException e){
-            logger.error(gm() + "An error occurred during the writing of the result of SPARQL query", e);
+            logger.error("An error occurred during the writing of the result of SPARQL query", e);
         }
     }
 
@@ -982,7 +1015,7 @@ public class SesameUtilities {
                 if (retrieved)logger.warn("Statement was not deleted properly in last step.");
             }
         }catch(RepositoryException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -1025,7 +1058,7 @@ public class SesameUtilities {
                             mRepositoryConnection.exportStatements(null, null, null, true, rdfWriter);
                         }
                     } catch (RepositoryException|RDFHandlerException e) {
-                        logger.error(gm() + e.getMessage(), e);
+                        logger.error(e.getMessage(), e);
                         return null;
                     } finally {
                         writer.close();
@@ -1035,7 +1068,7 @@ public class SesameUtilities {
             }//end if
             else throw new IOException("The File where export the result not exists, create it!");
         }catch(UnsupportedRDFormatException|IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             logger.warn("Attention the export File of the Sesame repository return a null File Object");
         }
         return null;
@@ -1108,7 +1141,7 @@ public class SesameUtilities {
             }
             return result;
         } catch (Exception e) {
-            logger.error(gm()+e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -1173,7 +1206,7 @@ public class SesameUtilities {
             }
             writer.endRDF();
         } catch (RDFHandlerException|FileNotFoundException e) {
-            logger.error(gm()+e.getMessage(),e);
+            logger.error(e.getMessage(),e);
         }
     }
 
@@ -1193,21 +1226,21 @@ public class SesameUtilities {
                     tempConnection.prepareTupleQuery(language, query);
                     return mRepositoryConnection.prepareTupleQuery(language, query);
                 } catch (MalformedQueryException|RepositoryException e) {
-                    logger.error(gm() + e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
 
                 try {
                     tempConnection.prepareBooleanQuery(language, query);
                     return mRepositoryConnection.prepareBooleanQuery(language, query);
                 } catch (MalformedQueryException|RepositoryException e) {
-                    logger.error(gm() + e.getMessage(),e);
+                    logger.error(e.getMessage(),e);
                 }
 
                 try {
                     tempConnection.prepareGraphQuery(language, query);
                     return mRepositoryConnection.prepareGraphQuery(language, query);
                 } catch (MalformedQueryException|RepositoryException e) {
-                    logger.error(gm() + e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }
                 return null;
             } finally {
@@ -1215,7 +1248,7 @@ public class SesameUtilities {
                 tempRepository.shutDown();
             }
         }catch (RepositoryException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         return null;
     }
@@ -1258,7 +1291,7 @@ public class SesameUtilities {
             if (result != null)
                 return result;
         }
-        logger.error(gm()+"Can't prepare this query in any language");
+        logger.error("Can't prepare this query in any language");
         return null;
     }
 
@@ -1337,7 +1370,7 @@ public class SesameUtilities {
                 //Accessing a server-side repository
                 mRepository= new HTTPRepository(directoryOrServer, idRepository);
             } else{
-                logger.warn(gm()+"Attention type a correct String typeRepository:" + Arrays.toString(types));
+                logger.warn("Attention type a correct String typeRepository:" + Arrays.toString(types));
             }
             // wrap it into a Sesame SailRepository
             if(mRepository != null && !mRepository.isInitialized()){
@@ -1345,7 +1378,7 @@ public class SesameUtilities {
                     mRepository.initialize();
                     return mRepository;
                 } catch (RepositoryException e) {
-                    logger.error(gm()+e.getMessage(),e);
+                    logger.error(e.getMessage(),e);
                     // Something went wrong during the transaction, so we roll it back
                     mRepository.getConnection().rollback();
                 }finally{
@@ -1355,7 +1388,7 @@ public class SesameUtilities {
             }
             return mRepository;
         }catch(RepositoryException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -1416,7 +1449,7 @@ public class SesameUtilities {
                 result.close();
             }
         } catch (OpenRDFException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         return list;
     }
@@ -1446,7 +1479,7 @@ public class SesameUtilities {
                 result.close();
             }
         } catch (OpenRDFException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         return list;
     }
@@ -1469,7 +1502,7 @@ public class SesameUtilities {
                 result.close();
             }
         } catch (OpenRDFException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         return resultModel;
     }
@@ -1501,7 +1534,7 @@ public class SesameUtilities {
             repositoryConnection.prepareGraphQuery(lang, queryString).evaluate(writer);
             logger.info("... the file " + nameFileOut + " is been written!!!");
         } catch (FileNotFoundException|RepositoryException|MalformedQueryException|RDFHandlerException|QueryEvaluationException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -1643,7 +1676,7 @@ public class SesameUtilities {
             repositoryConnection.prepareTupleQuery(lang, queryString).evaluate(trh);
             logger.info("...the result of the tuple query is been written " + filePath);
         } catch (OpenRDFException|FileNotFoundException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -1684,7 +1717,7 @@ public class SesameUtilities {
             // ...and start the conversion!
             rdfParser.parse(in, documentUrl.toString());
         } catch (IOException|RDFParseException|RDFHandlerException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -1734,7 +1767,7 @@ public class SesameUtilities {
             if (format.getName().equalsIgnoreCase(strFormat))
                 return format;
         }
-        logger.error(gm() + "The RDF format '" + strFormat + "' is not recognised");
+        logger.error("The RDF format '" + strFormat + "' is not recognised");
         throw new IllegalArgumentException("The RDF format '" + strFormat + "' is not recognised");
     }
 
@@ -1753,7 +1786,7 @@ public class SesameUtilities {
             //RDFFormat format = RDFFormat.forFileName(file.getName());
             RDFFormat format = convertFileNameToRDFFormat(file.getName());
             if (format == null) {
-                logger.warn(gm() + "Unknown RDF format for file: " + file);
+                logger.warn("Unknown RDF format for file: " + file);
                 return 0;
             }
 
@@ -1812,14 +1845,14 @@ public class SesameUtilities {
             } catch (RepositoryException|RDFParseException|RDFHandlerException e) {
                 mRepositoryConnection.rollback();
                 System.out.println();
-                logger.warn(gm() + "Failed to load '" + file.getName() + "' (" + format.getName() + ")." + e);
+                logger.warn("Failed to load '" + file.getName() + "' (" + format.getName() + ")." + e);
                 return 0;
             } finally {
                 if (reader != null)reader.close();
                 mRepositoryConnection.close();
             }
         }catch(RepositoryException|IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         return 0;
     }
@@ -1853,7 +1886,7 @@ public class SesameUtilities {
             repositoryManager.shutDown();
             return true;
         }catch(RepositoryException|RepositoryConfigException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return false;
         }
     }
@@ -1956,7 +1989,7 @@ public class SesameUtilities {
             }
             return about;
         } catch (RepositoryException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -2025,7 +2058,7 @@ public class SesameUtilities {
      * @return repository manager.
      */
     public RepositoryManager connectToLocation(String urlOrDirectory) {
-        logger.info("Calling " + gm() + " with String: " + urlOrDirectory);
+        logger.info("Calling with String: " + urlOrDirectory);
         if(StringUtilities.isURL(urlOrDirectory)) {
             connectToRemoteLocation(urlOrDirectory);
             return mRepositoryManager;
@@ -2033,7 +2066,7 @@ public class SesameUtilities {
             connectToLocalLocation(urlOrDirectory);
             return mRepositoryManager;
         } else{
-            logger.warn(gm() + "Not exists the url or the File with path:" + urlOrDirectory);
+            logger.warn("Not exists the url or the File with path:" + urlOrDirectory);
             return null;
         }
     }
@@ -2046,7 +2079,7 @@ public class SesameUtilities {
      * @return repository manager.
      */
     public RepositoryManager connectToLocation(URL urlOrDirectory) {
-        logger.info("Calling "+gm()+" with URL: " + urlOrDirectory);
+        //logger.info("Calling with URL: " + urlOrDirectory);
         try {
             if (StringUtilities.isURL(urlOrDirectory.toString())) {
                 connectToRemoteLocation(urlOrDirectory.toString());
@@ -2055,11 +2088,11 @@ public class SesameUtilities {
                 connectToLocalLocation(urlOrDirectory);
                 return mRepositoryManager;
             } else {
-                logger.warn(gm() + "Not exists the url or the File with path:" + urlOrDirectory);
+                logger.warn("Not exists the url or the File with path:" + urlOrDirectory);
                 return null;
             }
         }catch(URISyntaxException|MalformedURLException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -2072,12 +2105,12 @@ public class SesameUtilities {
      * @return repository manager.
      */
     public RepositoryManager connectToLocation(File urlOrDirectory) {
-        logger.info("Calling SesameManager.connectToLocation with URL: " + urlOrDirectory);
+        //logger.info("Calling SesameManager.connectToLocation with URL: " + urlOrDirectory);
         if(urlOrDirectory.exists()){
             connectToLocalLocation(urlOrDirectory);
             return mRepositoryManager;
         } else{
-            logger.warn(gm()+"Not exists the url or the File with path:"+urlOrDirectory);
+            logger.warn("Not exists the url or the File with path:"+urlOrDirectory);
             return null;
         }
     }
@@ -2104,7 +2137,7 @@ public class SesameUtilities {
                 }
             }
         } catch(MalformedURLException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
         logger.info("Success to connect to the Sesame Repository to the url location:"+url);
         setRepositoryManager(mRemoteRepositoryManager, url);
@@ -2130,7 +2163,7 @@ public class SesameUtilities {
         try {
             return connectToLocalLocation(FileUtilities.toURL(directory));
         } catch (MalformedURLException e) {
-            logger.error(gm() +"The URL directory not exists or is wrong:" + directory.getAbsolutePath(), e);
+            logger.error("The URL directory not exists or is wrong:" + directory.getAbsolutePath(), e);
             return null;
         }
     }
@@ -2142,23 +2175,26 @@ public class SesameUtilities {
      */
     private RepositoryManager connectToLocalLocation(URL directory) {
         isManagedRepository = true;
-        logger.info("Called connectToLocalLocation to " + directory);
+        logger.info("Called the RepositoryManager to " + directory);
         File dir;
         try {
             dir = new File(directory.toURI());
         } catch (URISyntaxException e) {
-            logger.error(gm() +"Specified URL is invalid: "+directory, e);
+            logger.error("Specified URL is invalid: "+directory, e);
             return null;
         }
         if (!dir.exists()) {
-            logger.error(gm() +"Specified path does not exist: " +dir.getAbsolutePath());
+            logger.error("Specified path does not exist: " +dir.getAbsolutePath());
             return null;
         }
         if (!dir.isDirectory()) {
-            logger.error(gm() +"Specified path is not a directory: " + dir.getAbsolutePath());
+            logger.error("Specified path is not a directory: " + dir.getAbsolutePath());
             return null;
         }
-        setRepositoryManager(new LocalRepositoryManager(dir), dir.toString());
+        if(!dir.getAbsolutePath().endsWith(File.separator)){
+            dir = new File(dir.getAbsolutePath()+File.separator);
+        }
+        setRepositoryManager(new LocalRepositoryManager(dir));
         logger.info("Success to connect to the Sesame Repository to the url location:"+directory);
         return mRepositoryManager;
     }
@@ -2181,7 +2217,7 @@ public class SesameUtilities {
             setRepositoryConnection();
             return mRepository;
         } catch (RepositoryException e) {
-            logger.error(gm()+e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -2207,13 +2243,13 @@ public class SesameUtilities {
     public Repository connectToHTTPRepository(String urlAddressRepositoryId){
         try {
             mRepository = new HTTPRepository(urlAddressRepositoryId);
-            mRepository.initialize();
+            //mRepository.initialize(); //include in the setReposiotryConnection method.
             setRepositoryConnection();
             logger.info("Connected to the repository at the url:" + urlAddressRepositoryId);
             return mRepository;
         } catch (RepositoryException e) {
             logger.warn("Can't connected to the repository at the url:" + urlAddressRepositoryId);
-            logger.error(gm()+e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -2249,7 +2285,7 @@ public class SesameUtilities {
             return mRepository;
         } catch (RepositoryException e) {
             logger.warn("Can't connected to the repository at the directory:" + directory.getAbsolutePath());
-            logger.error(gm()+e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -2299,7 +2335,7 @@ public class SesameUtilities {
             return mRepository;
         } catch (RepositoryException e) {
             logger.warn("Can't connected to the repository at the directory:" + repositoryID.getAbsolutePath());
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
 
@@ -2323,15 +2359,15 @@ public class SesameUtilities {
 
 
     private void setRepositoryManager(RepositoryManager manager, String location) {
-        logger.info("setRepositoryManager called");
         try {
             disconnect();
             manager.initialize();
             mRepositoryManager = manager;
             mRepositoryLocation = location;
-            setRepository(mRepositoryManager,location);
+            isRepositoryManagerInitialized(); //set repository manager
+            setRepository(mRepositoryManager,location); //set repository with the repository manager
         } catch (RepositoryException|RepositoryConfigException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
         }
     }
 
@@ -2344,16 +2380,16 @@ public class SesameUtilities {
      * @return repository connection.
      */
     public RepositoryConnection openRepository(String repositoryID) {
-        logger.info("Called "+gm()+" with ID " + repositoryID);
+        logger.info("Called "+" with ID " + repositoryID);
         if(mRepositoryManager != null) {
             try {
                 mRepository = mRepositoryManager.getRepository(repositoryID);
             } catch (RepositoryException|RepositoryConfigException e) {
-                logger.error(gm() + "Could not get repository " + repositoryID + "because " + e.getMessage(), e);
+                logger.error("Could not get repository " + repositoryID + "because " + e.getMessage(), e);
                 return null;
             }
             if(mRepository == null) {
-                logger.error(gm()+"Getting repository failed - no repository of this repositoryID found: "+ repositoryID);
+                logger.error("Getting repository failed - no repository of this repositoryID found: "+ repositoryID);
                 return null;
             }
             try {
@@ -2361,11 +2397,11 @@ public class SesameUtilities {
                 logger.info("repository connection set");
                 return mRepositoryConnection;
             } catch (Exception e) {
-                logger.error(gm() + "Could not get connection " + repositoryID + "because " + e.getMessage(), e);
+                logger.error("Could not get connection " + repositoryID + "because " + e.getMessage(), e);
                 return null;
             }
         } else {
-            logger.error(gm() +  "Not connected to a repository location for openRepository " + repositoryID);
+            logger.error( "Not connected to a repository location for openRepository " + repositoryID);
             return null;
         }
     }
@@ -2379,7 +2415,7 @@ public class SesameUtilities {
      */
     public boolean createRepository(String config) {
         if(mRepositoryManager == null) {
-            logger.error(gm()+"No connect the ReposiotryManager is NULL");
+            logger.error("No connect the ReposiotryManager is NULL");
             return false;
         }
         Repository systemRepo = mRepositoryManager.getSystemRepository();
@@ -2402,7 +2438,7 @@ public class SesameUtilities {
                 repConfig.parse(model, repositoryNode);
                 repConfig.validate();
                 if (RepositoryConfigUtil.hasRepositoryConfig(systemRepo, repConfig.getID())) {
-                    logger.error(gm() + "Repository already exists with ID " + repConfig.getID());
+                    logger.error("Repository already exists with ID " + repConfig.getID());
                     return false;
                 } else {
                     RepositoryConfigUtil.updateRepositoryConfigs(systemRepo, repConfig);
@@ -2413,7 +2449,7 @@ public class SesameUtilities {
                     try {
                         mRepository.initialize();
                     } catch (IllegalStateException e) {
-                        logger.error(gm() + "Got an IllegalStateException, ignored: "+e.getMessage(),e);
+                        logger.error("Got an IllegalStateException, ignored: "+e.getMessage(),e);
                         // we get this if the SAIL has already been initialized, just
                         // ignore and be happy that we can be sure that indeed it has
                         return false;
@@ -2422,11 +2458,11 @@ public class SesameUtilities {
                     return true;
                 }
             } catch (RepositoryException|RepositoryConfigException e) {
-                logger.error(gm() + "Error creating repository: " + e.getMessage(), e);
+                logger.error("Error creating repository: " + e.getMessage(), e);
                 return false;
             }
         } catch (IOException|RDFParseException e) {
-            logger.error(gm() +"Error parsing the config string: "+ e.getMessage(), e);
+            logger.error("Error parsing the config string: "+ e.getMessage(), e);
             return false;
         }
     }
@@ -2453,14 +2489,14 @@ public class SesameUtilities {
                 repConfig = new RepositoryConfig();
                 repConfig.parse(model, repositoryNode);
             } catch (RepositoryConfigException e) {
-                logger.error(gm() + "Could not create repository from RDF graph:" + e.getMessage(), e);
+                logger.error("Could not create repository from RDF graph:" + e.getMessage(), e);
                 return null;
             }
 
             try {
                 repConfig.validate();
             } catch (RepositoryConfigException e) {
-                logger.error(gm() +"Could not validate repository: " + e.getMessage(), e);
+                logger.error("Could not validate repository: " + e.getMessage(), e);
                 return null;
             }
             RepositoryImplConfig rpc = repConfig.getRepositoryImplConfig();
@@ -2470,7 +2506,7 @@ public class SesameUtilities {
                 try {
                     repo.initialize();
                 } catch (RepositoryException e) {
-                    logger.error(gm() +"Could not initialize repository: " + e.getMessage(),e);
+                    logger.error("Could not initialize repository: " + e.getMessage(),e);
                     return null;
                 }
                 try {
@@ -2479,19 +2515,19 @@ public class SesameUtilities {
                     logger.info("Repo is writable " + repo.isWritable());
                     return repo;
                 } catch (RepositoryException e) {
-                    logger.error(gm() +"Could not get connection for unmanaged repository: " + e.getMessage(),e);
+                    logger.error("Could not get connection for unmanaged repository: " + e.getMessage(),e);
                     return null;
                 }
             }
             else{
-                logger.warn(gm() + " the repository is NULL");
+                logger.warn(" the repository is NULL");
                 return null;
             }
         }catch(RDFParseException e){
-            logger.error(gm() +"Could not get subject of config RDF: " + e.getMessage(), e);
+            logger.error("Could not get subject of config RDF: " + e.getMessage(), e);
             return null;
         }catch(IOException e){
-            logger.error(gm() +"Not found the directory file: " + e.getMessage(), e);
+            logger.error("Not found the directory file: " + e.getMessage(), e);
             return null;
         }
     }
@@ -2520,7 +2556,7 @@ public class SesameUtilities {
             try {
                 myRepository.initialize();
             } catch (RepositoryException e) {
-                logger.error(gm() +"Error initializing memory store: " + e.getMessage(),e);
+                logger.error("Error initializing memory store: " + e.getMessage(),e);
                 return null;
             }
             Model model = Rio.parse(new StringReader(filePathConfig), RepositoryConfigSchema.NAMESPACE, RDFFormat.TURTLE);
@@ -2530,7 +2566,7 @@ public class SesameUtilities {
             repConfig.validate();
             return repConfig;
         } catch (RepositoryConfigException|IOException|RDFParseException e) {
-            logger.error(gm() +"Error parsing the config string " + e.getMessage(),e);
+            logger.error("Error parsing the config string " + e.getMessage(),e);
             return null;
         }
     }
@@ -2543,28 +2579,28 @@ public class SesameUtilities {
     public Repository createRepositoryStack(RepositoryImplConfig config) {
         RepositoryFactory factory = RepositoryRegistry.getInstance().get(config.getType());
         if (factory == null) {
-            logger.error(gm() +"Unsupported repository type: " + config.getType());
+            logger.error("Unsupported repository type: " + config.getType());
             return null;
         }
         Repository repository;
         try {
             repository = factory.getRepository(config);
         } catch (RepositoryConfigException e) {
-            logger.error(gm() + "Could not get repository from factory: " + e.getMessage(),e);
+            logger.error("Could not get repository from factory: " + e.getMessage(),e);
             return null;
         }
         if (config instanceof DelegatingRepositoryImplConfig) {
             RepositoryImplConfig delegateConfig = ((DelegatingRepositoryImplConfig)config).getDelegate();
             Repository delegate = createRepositoryStack(delegateConfig);
             if(repository ==null){
-                logger.error(gm() + "The dDelegate Repository or the Repository is NULL");
+                logger.error("The dDelegate Repository or the Repository is NULL");
                 return null;
             }
             if(delegate!=null) {
                 try {
                     ((DelegatingRepository) repository).setDelegate(delegate);
                 } catch (ClassCastException e) {
-                    logger.error(gm() +
+                    logger.error(
                             "Delegate specified for repository that is not a DelegatingRepository: "
                                     + delegate.getClass());
                 }
@@ -2623,10 +2659,10 @@ public class SesameUtilities {
             try {
                 boolean done = mRepositoryManager.removeRepository(name);
             } catch (RepositoryException|RepositoryConfigException e) {
-                logger.error(gm() + "Could not delete repository " + name + ": " + e.getMessage(), e);
+                logger.error("Could not delete repository " + name + ": " + e.getMessage(), e);
             }
         } else {
-           logger.error(gm() + " Can't delete the Repository the RepositoryManager is NULL");
+           logger.error(" Can't delete the Repository the RepositoryManager is NULL");
         }
     }
 
@@ -2637,7 +2673,7 @@ public class SesameUtilities {
         try {
             mRepositoryConnection.clear();
         } catch (RepositoryException e) {
-            logger.error(gm() + "Could not clear repository: " + e.getMessage(), e);
+            logger.error("Could not clear repository: " + e.getMessage(), e);
         }
     }
 
@@ -2703,7 +2739,7 @@ public class SesameUtilities {
         try {
             if (!mRepository.isInitialized()) mRepository.initialize();
             if(fileOrDirectory.isDirectory()){
-                List<File> files = FileUtilities.readDirectory(fileOrDirectory);
+                List<File> files = FileUtilities.getFilesFromDirectory(fileOrDirectory);
                 for (File file: files)  {
                     if (!mRepository.isInitialized()) mRepository.initialize();
                     try {
@@ -2733,7 +2769,7 @@ public class SesameUtilities {
                 return true;
             }
         } catch (RepositoryException|IOException|RDFParseException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -2757,7 +2793,7 @@ public class SesameUtilities {
                     RDFFormat sesameFormat;
                     try {
                         if (inputFormat == null) {
-                            logger.warn("Could not import - format not supported: " + inputFormat + " use the RDF/XML");
+                            logger.warn("Could not import - format not supported: 'NULL', use the RDF/XML");
                             sesameFormat = RDFFormat.RDFXML;
                         } else {
                             sesameFormat = stringToRDFFormat(inputFormat);
@@ -2787,26 +2823,12 @@ public class SesameUtilities {
                     if(StringUtilities.isNullOrEmpty(baseURI) || StringUtilities.isNullOrEmpty(inputFormat)){
                         File fileOrDirectory = (File) objectToImport;
                         if(fileOrDirectory.isDirectory()){
-                            List<File> files = FileUtilities.readDirectory(fileOrDirectory);
+                            List<File> files = FileUtilities.getFilesFromDirectory(fileOrDirectory);
                             for (File file: files)  {
-                                try {
-                                    mRepositoryConnection.begin();
-                                    mRepositoryConnection.add(file, "file://" + file.getAbsolutePath(),
-                                            convertFileNameToRDFFormat(file));
-                                    mRepositoryConnection.commit();
-                                } finally {
-                                    mRepositoryConnection.close();
-                                }
+                                addFileDataToRepositoryConnection(file);
                             }
                         }else{
-                            try {
-                                mRepositoryConnection.begin();
-                                mRepositoryConnection.add(fileOrDirectory, "file://" + fileOrDirectory.getAbsolutePath(),
-                                        convertFileNameToRDFFormat(fileOrDirectory));
-                                mRepositoryConnection.commit();
-                            } finally {
-                                mRepositoryConnection.close();
-                            }
+                            addFileDataToRepositoryConnection(fileOrDirectory);
                         }
                     }else {
                         if (contexts != null && contexts.length > 0)
@@ -2824,19 +2846,30 @@ public class SesameUtilities {
                 mRepositoryConnection.commit();
                 logger.info("...end the import of the Data on the repository");
             } catch(RepositoryException|IOException|RDFParseException e) {
-                logger.error(gm() + "Could not import: " + e.getMessage(), e);
+                logger.error("Could not import: " + e.getMessage(), e);
                 return false;
             }finally {
                 try {
                     mRepositoryConnection.close();
                 } catch (RepositoryException e) {
-                    logger.warn(gm() + "Cannot close the connection: " + e.getMessage(), e);
+                    logger.warn("Cannot close the connection: " + e.getMessage(), e);
                 }
             }
             return true;
         } else {
-            logger.error(gm() + "Cannot import, no connection open!");
+            logger.error("Cannot import, no connection open!");
             return false;
+        }
+    }
+
+    private void addFileDataToRepositoryConnection(File file) throws RepositoryException, RDFParseException, IOException {
+        try {
+            mRepositoryConnection.begin();
+            mRepositoryConnection.add(file, "file://" + file.getAbsolutePath(),
+                    convertFileNameToRDFFormat(file));
+            mRepositoryConnection.commit();
+        } finally {
+            mRepositoryConnection.close();
         }
     }
 
@@ -2866,11 +2899,11 @@ public class SesameUtilities {
                 logger.info("Execute Ask Query: " + query);
                 return result;
             } catch (RepositoryException | MalformedQueryException | QueryEvaluationException e) {
-                logger.error(gm()+"Could not prepare BooleanQuery:"+ e.getMessage(),e);
+                logger.error("Could not prepare BooleanQuery:"+ e.getMessage(),e);
                 return null;
             }
         } else {
-            logger.error(gm()+"Could not create an ask query, no connection, the RepositoryConnection is NULL");
+            logger.error("Could not create an ask query, no connection, the RepositoryConnection is NULL");
             return null;
         }
     }
@@ -2890,11 +2923,11 @@ public class SesameUtilities {
                 logger.info("Execute Update Query: " + query);
                 return true;
             } catch (RepositoryException | MalformedQueryException | UpdateExecutionException e) {
-                logger.error(gm() + "Could not prepare an Update operation:"+ e.getMessage(),e);
+                logger.error("Could not prepare an Update operation:"+ e.getMessage(),e);
                 return false;
             }
         } else {
-            logger.error(gm() + "Cannot create an update operation, no connection, the RepositoryConnection is NULL");
+            logger.error("Cannot create an update operation, no connection, the RepositoryConnection is NULL");
             return false;
         }
     }
@@ -2905,13 +2938,13 @@ public class SesameUtilities {
      */
     public List<String> getRepositories() {
         if(mRepositoryManager == null) {
-            logger.warn(gm() + "You must set the Repository Manager for avoid the empty list,the Repository Manager is NULL");
+            logger.warn("You must set the Repository Manager for avoid the empty list,the Repository Manager is NULL");
             return null;
         }
         try {
             return new ArrayList<>(mRepositoryManager.getRepositoryIDs());
         } catch (RepositoryException e) {
-            logger.error(gm() + "Could not get repository IDs:" + e.getMessage(),e);
+            logger.error("Could not get repository IDs:" + e.getMessage(),e);
             return null;
         }
     }
@@ -2935,7 +2968,7 @@ public class SesameUtilities {
             return true;
             //System.out.println("============================================================");
         }catch(QueryEvaluationException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -2973,8 +3006,68 @@ public class SesameUtilities {
      * @return if true the repository is initialized.
      */
     public Boolean isRepositoryInitialized(){
-        return mRepository.isInitialized();
+        return isAnyRepositoryInitialized(mRepository);
     }
+
+    public Boolean isRepositoryInitialized(Repository repository){
+        return isAnyRepositoryInitialized(repository);
+    }
+
+    public Boolean isRepositoryManagerInitialized(){
+        return isRepositoryManagerInitialized(mRepositoryManager);
+    }
+
+    public Boolean isRepositoryManagerInitialized(RepositoryManager repositoryManager){
+        return isAnyRepositoryInitialized(repositoryManager);
+    }
+
+    public Boolean isRemoteRepositoryManagerInitialized(){
+        return isRemoteRepositoryManagerInitialized(mRemoteRepositoryManager);
+    }
+
+    public Boolean isRemoteRepositoryManagerInitialized(RemoteRepositoryManager remoteRepositoryManager){
+        return isAnyRepositoryInitialized(remoteRepositoryManager);
+    }
+
+
+    private Boolean isAnyRepositoryInitialized(Object repoObject){
+        try{
+            if(repoObject instanceof Repository){
+                if(!(((Repository) repoObject).isInitialized())){
+                    logger.warn("The Repository is not Initialized , try to automatically initialized.");
+                    mRepository.initialize();
+                    return true;
+                }
+            }else if(repoObject instanceof RemoteRepositoryManager) {
+                if (!(((RemoteRepositoryManager) repoObject).isInitialized())) {
+                    logger.warn("The RemoteRepositoryManager is not Initialized , try to automatically initialized.");
+                    mRemoteRepositoryManager.initialize();
+                    for(Repository repo: mRemoteRepositoryManager.getAllRepositories()){
+                        isAnyRepositoryInitialized(repo);
+                    }
+                    return true;
+                }
+            }else if(repoObject instanceof RepositoryManager) {
+                if (!(((RepositoryManager) repoObject).isInitialized())) {
+                    logger.warn("The RepositoryManager is not Initialized , try to automatically initialized.");
+                    mRepositoryManager.initialize();
+                    for(Repository repo: mRepositoryManager.getAllRepositories()){
+                        isAnyRepositoryInitialized(repo);
+                    }
+                    return true;
+                }
+            }else{
+                return false;
+            }
+        }catch(RepositoryException|RepositoryConfigException e){
+            logger.error("Can't initialized the "+repoObject.getClass().getName()+":" + e.getMessage(), e);
+            return false;
+        }
+        return false;
+    }
+
+
+
 
     /**
      * Method to check if a repository is connected.
@@ -2984,7 +3077,7 @@ public class SesameUtilities {
         try {
             return mRepositoryConnection.isOpen();
         }catch(RepositoryException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return  false;
         }
     }
@@ -2997,7 +3090,7 @@ public class SesameUtilities {
         try {
             return mRepositoryConnection.isActive();
         }catch(RepositoryException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return  false;
         }
     }
@@ -3010,7 +3103,7 @@ public class SesameUtilities {
         try {
             return mRepositoryConnection.isEmpty();
         }catch(RepositoryException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return  false;
         }
     }
@@ -3049,7 +3142,7 @@ public class SesameUtilities {
             mRepositoryConnection.remove(stmt, contexts) ;
             return true;
         } catch (RepositoryException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -3073,7 +3166,7 @@ public class SesameUtilities {
             mRepositoryConnection.add(stmt, contexts) ;
             return true;
         } catch (RepositoryException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -3111,7 +3204,7 @@ public class SesameUtilities {
             }
             return list;
         } catch (RepositoryException ex) {
-            logger.error(gm() + "Can't execute the research on the repository:"+ ex.getMessage(),ex);
+            logger.error("Can't execute the research on the repository:"+ ex.getMessage(),ex);
             return null;
         }
     }
@@ -3136,7 +3229,7 @@ public class SesameUtilities {
             mRepositoryConnectionWrapper.close();
             return true;
         } catch (RepositoryException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -3172,14 +3265,7 @@ public class SesameUtilities {
              sailStack = new ForwardChainingRDFSInferencer((NotifyingSail) sailStack);
              sailStack = new DirectTypeHierarchyInferencer((NotifyingSail) sailStack);
          }
-         try {
-             mRepository = new SailRepository(sailStack);
-             mRepository.initialize();
-             return  mRepository;
-         } catch (Exception e) {
-             logger.error(gm() + e.getMessage(),new RuntimeException(e));
-             return null;
-         }
+         return connectToXXXRepository(sailStack);
      }
 
 
@@ -3194,12 +3280,16 @@ public class SesameUtilities {
             sailStack = new ForwardChainingRDFSInferencer((NotifyingSail) sailStack);
             sailStack = new DirectTypeHierarchyInferencer((NotifyingSail) sailStack);
         }
+        return connectToXXXRepository(sailStack);
+    }
+
+    private Repository connectToXXXRepository(Sail sailStack){
         try {
             mRepository = new SailRepository(sailStack);
             mRepository.initialize();
             return  mRepository;
         } catch (Exception e) {
-            logger.error(gm() + e.getMessage(),new RuntimeException(e));
+            logger.error(e.getMessage(),new RuntimeException(e));
             return null;
         }
     }
@@ -3243,7 +3333,7 @@ public class SesameUtilities {
             setRepositoryConnection();
             return mRepository;
         }catch (RepositoryException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -3268,12 +3358,12 @@ public class SesameUtilities {
             mRepositoryConnection.commit();
             result = true;
         } catch (IOException|RDFParseException|RepositoryException e) {
-            logger.error(gm()+ e.getMessage(),e);
+            logger.error( e.getMessage(),e);
         }finally {
             try {
                 mRepositoryConnection.close();
             } catch (RepositoryException e) {
-                logger.error(gm() + "Cannot close the connection:" + e.getMessage(),e);
+                logger.error("Cannot close the connection:" + e.getMessage(),e);
                 result = false;
             }
         }
@@ -3332,7 +3422,7 @@ public class SesameUtilities {
             }
             return model;
         } catch (RepositoryException e) {
-            logger.error(gm()+ "The connection to the Repository:"+repository+" is not possible:" +e.getMessage(),e);
+            logger.error( "The connection to the Repository:"+repository+" is not possible:" +e.getMessage(),e);
             return  null;
         }
     }
@@ -3344,8 +3434,8 @@ public class SesameUtilities {
      */
     private Long getExecutionQueryTime2(GraphQuery graphQuery) {
         Long calculate = calculateExecutionTime(graphQuery);
-        if(calculate == null) logger.warn(gm()+"Query Graph result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'");
-        else logger.warn(gm()+"Query Graph result(s) in " + calculate + "ms.");
+        if(calculate == null) logger.warn("Query Graph result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'");
+        else logger.warn("Query Graph result(s) in " + calculate + "ms.");
         return calculate;
 
     }
@@ -3357,8 +3447,8 @@ public class SesameUtilities {
      */
     private Long getExecutionQueryTime2(TupleQuery tupleQuery){
         Long calculate = calculateExecutionTime(tupleQuery);
-        if(calculate == null) logger.warn(gm()+"Query Tuple result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'");
-        else logger.warn(gm()+"Query Tuple result(s) in " + calculate + "ms.");
+        if(calculate == null) logger.warn("Query Tuple result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME'");
+        else logger.warn("Query Tuple result(s) in " + calculate + "ms.");
         return calculate;
     }
 
@@ -3372,10 +3462,10 @@ public class SesameUtilities {
             long queryBegin = System.nanoTime();
             boolean gs = booleanQuery.evaluate();
             long queryEnd = System.nanoTime();
-            logger.warn(gm()+"Query Boolean result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+            logger.warn("Query Boolean result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
             return (queryEnd - queryBegin) / 1000000;
         } catch (QueryEvaluationException e) {
-            logger.error(gm()+"Query Boolean result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME':"+e.getMessage(),e);
+            logger.error("Query Boolean result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME':"+e.getMessage(),e);
             return null;
         }
     }
@@ -3390,10 +3480,10 @@ public class SesameUtilities {
             long queryBegin = System.nanoTime();
             updateQuery.execute();
             long queryEnd = System.nanoTime();
-            logger.warn(gm() + "Query Update result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
+            logger.warn("Query Update result(s) in " + (queryEnd - queryBegin) / 1000000 + "ms.");
             return (queryEnd - queryBegin) / 1000000;
         } catch (UpdateExecutionException e) {
-            logger.error(gm()+"Query Update result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME':"+e.getMessage(),e);
+            logger.error("Query Update result(s) in 'ERROR CAN'T CALCULATE THE EXECUTION TIME':"+e.getMessage(),e);
             return null;
         }
     }
@@ -3424,7 +3514,7 @@ public class SesameUtilities {
     private Long getExecutionQueryTime2(Operation preparedOperation){
         long timeConnection = 150; //all the connection to a repository in a tomcat server are around the 250ms.
         if (preparedOperation == null) {
-            logger.warn(gm() + "Unable to parse SPARQL query the preparedOperation is NULL");
+            logger.warn("Unable to parse SPARQL query the preparedOperation is NULL");
             return null;
         }
         //If the Query is a Update..........
@@ -3463,7 +3553,7 @@ public class SesameUtilities {
     private Long calculateExecutionTime(final TupleQuery query){
         long QUERY_TIME = 500; //time reference for sesame...
         if (query == null) {
-            logger.warn(gm() + "Unable to calculate the execution time, the TupleQuery is NULL");
+            logger.warn("Unable to calculate the execution time, the TupleQuery is NULL");
             return null;
         }
         final TupleQueryResult[] result = new TupleQueryResult[1];
@@ -3486,10 +3576,10 @@ public class SesameUtilities {
                     try {
                         result[0].close();
                     }catch (QueryEvaluationException e) {
-                        logger.error(gm() + e.getMessage(),e);
+                        logger.error(e.getMessage(),e);
                     }
                 }catch (QueryEvaluationException e) {
-                    logger.error(gm() + e.getMessage(), e);
+                    logger.error(e.getMessage(), e);
                 }finally {stop.set(true);}
             }
         };
@@ -3518,9 +3608,8 @@ public class SesameUtilities {
                         times[1] = System.currentTimeMillis();
                         //SystemLog.sparql("<<<<<<<<< query closed", Sesame28Kit.class);
                         stop.set(true);
-                    }
-                    catch (QueryEvaluationException e) {
-                        logger.error(gm() + e.getMessage(),e);
+                    } catch (QueryEvaluationException ignored) {
+                        logger.error(ignored.getMessage());
                     }
                 }else {
                     stop.set(true);
@@ -3555,7 +3644,6 @@ public class SesameUtilities {
         final GraphQueryResult[] result = new GraphQueryResult[1];
         final AtomicBoolean stop = new AtomicBoolean(false);
         final long[] times = new long[] { -1, -1 };
-
         Runnable queryRunner = new Runnable() {
             @Override
             public void run() {
@@ -3573,16 +3661,15 @@ public class SesameUtilities {
                     try {
                         result[0].close();
                     }catch (QueryEvaluationException e) {
-                        logger.error(gm() + e.getMessage(),e);
+                        logger.error(e.getMessage(),e);
                     }
                 }catch (QueryEvaluationException e) {
-                    logger.error(gm() + e.getMessage(),e);
+                    logger.error(e.getMessage(),e);
                 }finally {
                     stop.set(true);
                 }
             }
         };
-
         Runnable closeRunner = new Runnable() {
             @Override
             public void run() {
@@ -3609,7 +3696,7 @@ public class SesameUtilities {
                         //SystemLog.sparql("<<<<<<<<< query closed",Sesame28Kit.class);
                         stop.set(true);
                     }catch (QueryEvaluationException e) {
-                        logger.error(gm() + e.getMessage(),e);
+                        logger.error(e.getMessage(),e);
                     }
                 }else {
                     stop.set(true);

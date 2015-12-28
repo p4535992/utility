@@ -3,7 +3,7 @@ package util;
 import org.openrdf.query.*;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
-import com.github.p4535992.util.repositoryRDF.sesame.Sesame28Kit;
+import com.github.p4535992.util.repositoryRDF.sesame.SesameUtilities;
 import org.openrdf.repository.base.RepositoryConnectionWrapper;
 
 import java.io.UnsupportedEncodingException;
@@ -18,7 +18,7 @@ public class Test_Sesame {
             + "       ?p ?o . } LIMIT 600000 OFFSET 0 ";
 
     public static void main(String args[]) throws RepositoryException, MalformedQueryException, QueryEvaluationException, UnsupportedEncodingException {
-        Sesame28Kit sesame = Sesame28Kit.getInstance();
+        SesameUtilities sesame = SesameUtilities.getInstance();
         /*sesame.setParameterLocalRepository(
                 "owlim",
                 "C:\\Users\\tenti\\AppData\\Roaming\\Aduna\\OpenRDF Sesame\\repositories",

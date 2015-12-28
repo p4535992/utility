@@ -1,6 +1,6 @@
 package util;
 
-import com.github.p4535992.util.repositoryRDF.sesame.Sesame28Kit;
+import com.github.p4535992.util.repositoryRDF.sesame.SesameUtilities;
 
 public class Test_GraphDB6 {
 
@@ -58,7 +58,7 @@ public class Test_GraphDB6 {
 				+ "WHERE {?service a <http://www.disit.org/km4city/schema#Service>;"
 				+ "       ?p ?o . } LIMIT 600000 OFFSET 0 ";
 
-		Sesame28Kit s = null;
+		SesameUtilities s = null;
 		try {
 			// The ontologies and datasets specified in the 'import' parameter
 			// of the Sesame configuration file are loaded during

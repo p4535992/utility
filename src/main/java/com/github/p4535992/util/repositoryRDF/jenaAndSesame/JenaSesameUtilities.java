@@ -1,7 +1,7 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 
 import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
-import com.github.p4535992.util.repositoryRDF.sesame.Sesame28Kit;
+import com.github.p4535992.util.repositoryRDF.sesame.SesameUtilities;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.*;
 import com.hp.hpl.jena.rdf.model.*;
@@ -416,21 +416,27 @@ public class JenaSesameUtilities {
         Model jenaModel = ModelFactory.createDefaultModel();
         try {
             for (org.openrdf.model.Statement stmt : theModel) {
+                org.openrdf.model.Value value = stmt.getObject();
                 Node node = NodeUtils.asNode(stmt.getObject().stringValue());
                 RDFNode rdfNode;
                 if (node.isURI()) {
                     try {
                         rdfNode = ResourceFactory.createTypedLiteral(new URI(stmt.getObject().stringValue()));
                     } catch (URISyntaxException e) {
-                        if (node.isLiteral())
+                       /* if (node.isLiteral())
                             rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
                         else if (node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
-                        else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                        else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());*/
+                        rdfNode = asRDfNode(value);
                     }
-                } else if (node.isLiteral())
+                }
+               /* else if (node.isLiteral())
                     rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
                 else if (node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject());
-                else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());
+                else rdfNode = ResourceFactory.createTypedLiteral(stmt.getObject().stringValue());*/
+                else{
+                    rdfNode = asRDfNode(value);
+                }
                 //RDFNode rdfNode = jenaModel.asRDFNode(node);
                 Statement ss = ResourceFactory.createStatement(
                         ResourceFactory.createResource(stmt.getSubject().toString()),
@@ -443,6 +449,15 @@ public class JenaSesameUtilities {
             logger.error(gm() + e.getMessage(),e);
             return null;
         }
+    }
+
+    private RDFNode asRDfNode(org.openrdf.model.Value objectValue){
+        Node node = NodeUtils.asNode(objectValue.stringValue());
+        RDFNode rdfNode;
+        if(node.isLiteral())rdfNode = ResourceFactory.createTypedLiteral(objectValue.stringValue());
+        else if (node.isBlank()) rdfNode = ResourceFactory.createTypedLiteral(objectValue);
+        else rdfNode = ResourceFactory.createTypedLiteral(objectValue.stringValue());
+        return rdfNode;
     }
 
     /**
@@ -745,7 +760,7 @@ public class JenaSesameUtilities {
      */
    public Model convertSesameRepositoryToJenaModel(
             org.openrdf.repository.Repository repository){
-       Sesame28Kit sesame = Sesame28Kit.getInstance();
+       SesameUtilities sesame = SesameUtilities.getInstance();
        return convertOpenRDFModelToJenaModel(sesame.convertRepositoryToModel(repository));
    }
 

@@ -23,10 +23,6 @@ public class SQLSupport<T>{
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(SQLSupport.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     private Class<? extends T> cl;
 
     //CONSTRUCTOR
@@ -61,7 +57,7 @@ public class SQLSupport<T>{
     }
 
     @SuppressWarnings("rawtypes")
-    protected <T> SQLSupport(String[] columns,Object[] values,int[] types){
+    protected <E> SQLSupport(String[] columns,Object[] values,int[] types){
         //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
         this.COLUMNS=columns;
         this.VALUES = values;
@@ -69,7 +65,7 @@ public class SQLSupport<T>{
     }
 
     @SuppressWarnings("rawtypes")
-    protected <T> SQLSupport(T object){
+    protected <E> SQLSupport(E object){
         //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
         this.COLUMNS = null;
         this.VALUES = null;
@@ -153,7 +149,7 @@ public class SQLSupport<T>{
                 if(method!=null){
                     values[i] = ReflectionUtilities.invokeGetter(object, method);
                     Class<?> clazz = fields[i].getType();
-                    types[i] = SQLHelper.convertClass2SQLTypes(clazz);
+                    types[i] = SQLUtilities.convertClass2SQLTypes(clazz);
                     i++;
                 }
             }
@@ -191,7 +187,7 @@ public class SQLSupport<T>{
         support = new SQLSupport(columns,values,types);
         }catch(IllegalAccessException|
                 InvocationTargetException|NoSuchFieldException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
         }
         return support;
     }
@@ -206,7 +202,7 @@ public class SQLSupport<T>{
         Class<?>[] classes =  ReflectionUtilities.getClassesByFieldsByAnnotation(clazz, aClass);
         //GET TYPES SQL
         for(Class<?> cl: classes){
-            types.add(SQLHelper.convertClass2SQLTypes(cl));
+            types.add(SQLUtilities.convertClass2SQLTypes(cl));
         }
         return CollectionUtilities.toArray(types);
     }

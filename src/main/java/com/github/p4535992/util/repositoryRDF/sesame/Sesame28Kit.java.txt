@@ -790,7 +790,7 @@ public class Sesame28Kit {
                         logger.info("Query SPARQL is a update query");
                         return mRepositoryConnection.prepareUpdate(language, query);
                     } catch (RepositoryException | MalformedQueryException ignored) {
-                        logger.warn(gm() + ignored.getMessage(),ignored);
+                        logger.warn("Make sure the server sesame is up:"+ignored.getMessage(),ignored);
                     }
                 }
                 for (QueryLanguage language : queryLanguages) {
@@ -2705,7 +2705,7 @@ public class Sesame28Kit {
         try {
             if (!mRepository.isInitialized()) mRepository.initialize();
             if(fileOrDirectory.isDirectory()){
-                List<File> files = FileUtilities.readDirectory(fileOrDirectory);
+                List<File> files = FileUtilities.getFilesFromDirectory(fileOrDirectory);
                 for (File file: files)  {
                     if (!mRepository.isInitialized()) mRepository.initialize();
                     try {
@@ -2789,7 +2789,7 @@ public class Sesame28Kit {
                     if(StringUtilities.isNullOrEmpty(baseURI) || StringUtilities.isNullOrEmpty(inputFormat)){
                         File fileOrDirectory = (File) objectToImport;
                         if(fileOrDirectory.isDirectory()){
-                            List<File> files = FileUtilities.readDirectory(fileOrDirectory);
+                            List<File> files = FileUtilities.getFilesFromDirectory(fileOrDirectory);
                             for (File file: files)  {
                                 try {
                                     mRepositoryConnection.begin();

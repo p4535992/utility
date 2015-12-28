@@ -61,8 +61,8 @@ public class SimpleParameters {
 
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder();
-        List<String> keys = new ArrayList<String>(mParameters.keySet());
+        StringBuilder result = new StringBuilder("");
+        List<String> keys = new ArrayList<>(mParameters.keySet());
         Collections.sort(keys);
         for (String key : keys) {
             result.append(key).append('=').append(mParameters.get(key))

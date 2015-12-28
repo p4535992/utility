@@ -1,10 +1,9 @@
 package com.github.p4535992.util.gtfs.tordf;
 
-import com.github.p4535992.util.file.ArchiveUtilities;
+import com.github.p4535992.util.file.archive.ArchiveUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.gtfs.tordf.helper.TransformerPicker;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
-import com.github.p4535992.util.gtfs.tordf.transformer.impl.AbstractTransformer;
 import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
 import com.github.p4535992.util.string.StringUtilities;
 import com.hp.hpl.jena.rdf.model.Model;

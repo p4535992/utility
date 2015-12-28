@@ -1,7 +1,7 @@
 package com.github.p4535992.util.database.jooq;
 
-import com.github.p4535992.util.collection.CollectionUtilities;
-import com.github.p4535992.util.database.sql.SQLHelper;
+import com.github.p4535992.util.collection.ArrayUtilities;
+import com.github.p4535992.util.database.sql.SQLUtilities;
 
 import com.github.p4535992.util.string.StringUtilities;
 import org.jooq.*;
@@ -92,7 +92,7 @@ public class SQLJooqKit2 {
      * @return the SQLDialect of JOOQ.
      */
     public static SQLDialect convertStringToSQLDialectJOOQ(String sqlDialect) {
-        sqlDialect = SQLHelper.convertDialectDatabaseToTypeNameId(sqlDialect);
+        sqlDialect = SQLUtilities.convertDialectDatabaseToTypeNameId(sqlDialect);
         switch (sqlDialect.toLowerCase()) {
             case "cubrid":return SQLDialect.CUBRID;
             case "derby": return SQLDialect.DERBY;
@@ -603,8 +603,8 @@ public class SQLJooqKit2 {
     public static DataType createDataType(int sqlTypes){
         return new DefaultDataType(
                 sqlDialect,
-                SQLHelper.convertSQLTypes2JavaClass(sqlTypes),
-                SQLHelper.convertSQLTypes2String(sqlTypes)
+                SQLUtilities.convertSQLTypes2JavaClass(sqlTypes),
+                SQLUtilities.convertSQLTypes2String(sqlTypes)
         );
     }
 
@@ -644,7 +644,7 @@ public class SQLJooqKit2 {
             fields[i] = field;
             fv[i] = createFieldValueCapture(values[i], types[i]);
         }
-        return CollectionUtilities.toMap(fields, fv);
+        return ArrayUtilities.toMap(fields, fv);
     }
 
     /**
@@ -663,7 +663,7 @@ public class SQLJooqKit2 {
             fields[i] = field;
             fv[i] = createFieldValueCapture(values[i]);
         }
-        return CollectionUtilities.toMap(fields, fv);
+        return ArrayUtilities.toMap(fields, fv);
     }
 
     /*
@@ -712,7 +712,7 @@ public class SQLJooqKit2 {
     @SuppressWarnings("unchecked")
     public static List<Condition> convertToListConditionEqualsWithAND(String[] columns,Object[] values) {
         List<Condition> conds = new ArrayList<>();
-        if (columns != null && !CollectionUtilities.isEmpty(columns)) {
+        if (columns != null && !ArrayUtilities.isEmpty(columns)) {
             for (int i = 0; i < columns.length; i++) {
                 if (values[i] == null) {
                     conds.add(createFieldValue(columns[i]).isNull());
@@ -811,7 +811,7 @@ public class SQLJooqKit2 {
      * @param password string password.
      */
     public static void getMySQLConnection(String host,String port,String database,String username,String password){
-        connection = SQLHelper.getMySqlConnection(host, port, database, username, password);
+        connection = SQLUtilities.getMySqlConnection(host, port, database, username, password);
         connProvider= new DefaultConnectionProvider(connection);
         connProvider.acquire();
         sqlDialect = SQLDialect.MYSQL;
@@ -874,4 +874,20 @@ public class SQLJooqKit2 {
 
 
     }
+
+
+    //Method to support the integration with SpringFramework JDBC
+
+    //http://stackoverflow.com/questions/4474365/jooq-and-spring/14243136#14243136
+    /*public static convertSpringDataSourceToJooqFactory(DataSource dataSource){
+        //your actual data source (optional) make access lazy
+        final DataSource lazyDS = new LazyConnectionDataSourceProxy(dataSource);
+        // make spring transactions available in plain jdbc context
+        final DataSource txDS = new TransactionAwareDataSourceProxy(lazyDS);
+        // create jOOQ factory
+        org.jooq.impl.Factory jooq = new org.jooq.impl.Factory(txDS, *//* dialect *//*, *//* settings *//*);
+
+    }*/
+
+
 }

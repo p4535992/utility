@@ -1,6 +1,10 @@
 package com.github.p4535992.util.xml;
 
+import com.github.p4535992.util.string.StringUtilities;
 import com.github.p4535992.util.xml.impl.PrefixGrabber;
+import com.github.p4535992.util.xml.impl.TreeWalkerImpl;
+import org.w3c.dom.html.HTMLTitleElement;
+import org.w3c.dom.traversal.NodeFilter;
 import org.xml.sax.InputSource;
 import org.w3c.dom.*;
 import org.xml.sax.EntityResolver;
@@ -38,7 +42,9 @@ public class XMLUtilities {
     private static String gm() {
         return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
     }
-    
+
+
+    //FIELD
     private static javax.xml.parsers.DocumentBuilderFactory docFactory;
     private static javax.xml.parsers.DocumentBuilder docBuilder;
     private static org.w3c.dom.Document doc;
@@ -72,9 +78,9 @@ public class XMLUtilities {
             //FileInputStream file = new FileInputStream(fileXML); //optional
             doc = initDocumentXML();
             doc = docBuilder.parse(fileXML);
-            logger.info("Documento W3C loaded from file:" + fileXML.getAbsolutePath());
+            logger.info("Document W3C loaded from file:" + fileXML.getAbsolutePath());
          }catch (SAXException|IOException e) {
-            logger.error(e.getMessage(),e);
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
         return doc;
@@ -90,10 +96,10 @@ public class XMLUtilities {
             doc = initDocumentXML();
             //doc = docBuilder.parse(new ByteArrayInputStream(xml.getBytes()));
             doc = docBuilder.parse(new InputSource(new StringReader(xml)));
-            logger.info("Documento W3C loaded from file:" + xml);
+            logger.info("Document W3C loaded from file:" + xml);
             return doc;
         }catch (SAXException|IOException e) {
-            logger.error(e.getMessage(),e);
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
     }
@@ -108,9 +114,9 @@ public class XMLUtilities {
             doc = initDocumentXML();
             doc = docBuilder.parse(new InputSource(in));
             //doc = docBuilder.parse(new InputSource(new StringReader(xml)));
-            logger.info("Documento W3C loaded from stream:" + in);
+            logger.info("Document W3C loaded from stream:" + in);
         }catch (SAXException|IOException e) {
-            logger.error(e.getMessage(),e);
+            logger.error(gm() + e.getMessage(),e);
             return null;
         }
         return doc;
@@ -127,12 +133,12 @@ public class XMLUtilities {
             //FileInputStream file = new FileInputStream(fileXML); //optional
             doc = initDocumentXML();
             doc = docBuilder.parse(fileXML);
-            logger.info("Documento W3C loaded from file:" + fileXML.getAbsolutePath());
+            logger.info("Document W3C loaded from file:" + fileXML.getAbsolutePath());
             return doc.getDocumentElement();
         }catch(SAXException|IOException e){
             if (defElement != null) return getDocumentBuilder().newDocument().createElement(defElement);
             else {
-                logger.warn("Documento W3C loaded from stream:" + fileXML + " is NULL");
+                logger.warn(gm() + "Document W3C loaded from stream:" + fileXML + " is NULL");
                 return null;
             }
         }
@@ -143,12 +149,12 @@ public class XMLUtilities {
             //FileInputStream file = new FileInputStream(fileXML); //optional
             doc = initDocumentXML();
             doc = docBuilder.parse(new InputSource(in));
-            logger.info("Documento W3C loaded from stream:" + in);
+            logger.info("Document W3C loaded from stream:" + in);
             return doc.getDocumentElement();
         }catch(SAXException|IOException e){
             if (defElement != null) return getDocumentBuilder().newDocument().createElement(defElement);
             else {
-                logger.warn("Documento W3C loaded from stream:" + in + " is NULL");
+                logger.warn(gm() +"Document W3C loaded from stream:" + in + " is NULL");
                 return null;
             }
         }
@@ -186,9 +192,10 @@ public class XMLUtilities {
     }
 
 
-    public static Document createDocumentXMLFromString(String rootQName){
+    public static Document toDocument(String rootQName){
         try{
-            doc = getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation().createDocument(null, rootQName, null);
+            doc = getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
+                    .createDocument(null, rootQName, null);
             //doc = docBuilder.newDocument();
         }catch(ParserConfigurationException|DOMException pe){
             logger.error(pe.getMessage(),pe);
@@ -481,7 +488,7 @@ public class XMLUtilities {
         NodeList nList = doc.getElementsByTagName(tagName);
         for (int temp = 0; temp < nList.getLength(); temp++){
             Node nNode = nList.item(temp);
-            System.out.println("\nCurrent Element :" + nNode.getNodeName());
+            logger.info("\nCurrent Element :" + nNode.getNodeName());
             //NodeList nList = doc.getElementsByTagName("staff");
             if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element eElement = (Element) nNode;
@@ -631,6 +638,20 @@ public class XMLUtilities {
     }
 
     /**
+     * Method to Print out the target Document in specified encoding
+     * @param xmlDoc the Document W3C to convert to a File.
+     * @param file the target file
+     * @throws IOException throw if the File Output directory not exists.
+     */
+    public void writeToFile(Document xmlDoc,File file) throws IOException {
+        try (PrintWriter tmpPW = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(file), StringUtilities.UTF_8))) {
+            tmpPW.println(toStringXML(xmlDoc));
+            tmpPW.flush();
+        }
+    }
+
+    /**
      * Method to convert a Node XML to a Element XML.
      * @param node node XML to input.
      * @return elment XML.
@@ -712,8 +733,20 @@ public class XMLUtilities {
      * Method to convert Document to String.
      * @return the string content of the document.
      */
-    public static String convertDocumentToString(){
-        doc = initDocumentXML();
+    public static String toStringXML(){
+        if(doc == null){
+            doc = initDocumentXML();
+        }
+        return toStringXML(doc);
+    }
+
+    /**
+     * Method to convert Document to String.
+     * @param doc the Document W3C to convert to a String.
+     * @return the string content of the document.
+     */
+    public static String toStringXML(Document doc){
+        //doc = initDocumentXML();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         convertElementToStream(doc.getDocumentElement(), baos);
         return new String(baos.toByteArray());
@@ -854,6 +887,11 @@ public class XMLUtilities {
             throw new Exception("Error evaluate xpath",e);
         }
         return serializeNodes(childNodes);
+    }
+
+    public String getXMLString(String targetS) {
+        return targetS.replaceAll("&", "&amp;").replaceAll("<","&lt;")
+                .replaceAll(">", "&gt;");
     }
 
     /**
@@ -1464,6 +1502,18 @@ public class XMLUtilities {
         return attributeValue;
     }
 
+    public String getAttributeValue(Element element, Node attr,NodeFilter attrFilter) {
+        if (attrFilter == null || attrFilter.acceptNode(attr) != -1) {
+            String value = getXMLString(attr.getNodeValue());
+            String quat = "\"";
+            if (value.indexOf("\"") > 0) {
+                quat = "'";
+            }
+            return " " + attr.getNodeName() + "=" + quat + value + quat;
+        }
+        return "";
+    }
+
     /**
      * Method to get the previous sibling in a XML Node.
      * @param node the Node where  execute the research.
@@ -1473,7 +1523,8 @@ public class XMLUtilities {
     public static Node getPreviousSibling(Node node, short nodeType) {
         Node parent = node.getParentNode();
         if(parent == null) {
-            System.out.println("Cannot get node [" + node + "] previous sibling. [" + node + "] has no parent.");
+            logger.warn(gm() + "Cannot get node [" + node + "] previous sibling. " +
+                    "[" + node + "] has no parent.");
             return null;
         }
         NodeList siblings = parent.getChildNodes();
@@ -1512,7 +1563,7 @@ public class XMLUtilities {
     public static int countNodesBefore(Node node, short nodeType) {
         Node parent = node.getParentNode();
         if(parent == null) {
-            System.out.println("Cannot count nodes before [" + node + "]. [" + node + "] has no parent.");
+            logger.warn(gm() +"Cannot count nodes before [" + node + "]. [" + node + "] has no parent.");
             return 0;
         }
         NodeList siblings = parent.getChildNodes();
@@ -1545,16 +1596,19 @@ public class XMLUtilities {
     public static int countNodesBetween(Node node1, Node node2, short nodeType) {
         Node parent1 = node1.getParentNode();
         if(parent1 == null) {
-            System.out.println("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. [" + node1 + "] has no parent.");
+            logger.warn(gm() + "Cannot count nodes between [" + node1 + "] " +
+                    "and [" + node2 + "]. [" + node1 + "] has no parent.");
             return 0;
         }
         Node parent2 = node2.getParentNode();
         if(parent2 == null) {
-            System.out.println("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. [" + node2 + "] has no parent.");
+            logger.warn(gm() + "Cannot count nodes between [" + node1 + "] " +
+                    "and [" + node2 + "]. [" + node2 + "] has no parent.");
             return 0;
         }
         if(parent1 != parent2) {
-            System.out.println("Cannot count nodes between [" + node1 + "] and [" + node2 + "]. These nodes do not share the same sparent.");
+            logger.warn(gm() + "Cannot count nodes between [" + node1 + "] " +
+                    "and [" + node2 + "]. These nodes do not share the same sparent.");
             return 0;
         }
         int countBeforeNode1 = countNodesBefore(node1, nodeType);
@@ -1962,6 +2016,175 @@ public class XMLUtilities {
      }
      return goodChildren.iterator();
   }
+
+    //-------------------------------------------------------------
+
+    private boolean checkNewLine(Node target,boolean indent) {
+        if (indent && target.hasChildNodes()) {
+            short type = target.getFirstChild().getNodeType();
+            return !(type == Node.TEXT_NODE || type == Node.CDATA_SECTION_NODE);
+        }
+        return false;
+    }
+
+
+    /**
+     * Returns XML text converted from the target DOM
+     * @param document the Document W3C to convert tpo String.
+     * @param nodeFilter the NodeFilter for use a filter on the result of the String.
+     * @param entityReferenceExpansion if true abilitate the Entity refrence Expansion.
+     * @return String format XML converted from the target DOM
+     */
+    public String toXMLString(
+            Document document,NodeFilter nodeFilter,boolean entityReferenceExpansion) {
+        String LINE_SEP = System.getProperty("line.separator");
+        String EMPTY_STR = "";
+        String LT = "<";
+        String GT = ">";
+        String AMP = "&";
+        String QUAT = "\"";
+        String SINGLE_QUAT = "'";
+        String ESC_LT = "&lt;";
+        String ESC_GT = "&gt;";
+        String ESC_AMP = "&amp;";
+        int whatToShow = NodeFilter.SHOW_ALL; //show all element
+        //NodeFilter nodeFilter = null;
+        //entityReferenceExpansion = false;
+        boolean indent = true;
+        boolean escapeTagBracket = false;
+
+        StringBuilder tmpSB = new StringBuilder(8192);
+        TreeWalkerImpl treeWalker = new TreeWalkerImpl(document, whatToShow,
+                nodeFilter, entityReferenceExpansion);
+
+        String lt = escapeTagBracket ? ESC_LT : LT;
+        String gt = escapeTagBracket ? ESC_GT : GT;
+        String line_sep = indent ? LINE_SEP : EMPTY_STR;
+
+        Node tmpN = treeWalker.nextNode();
+        boolean prevIsText = false;
+
+        String indentS = EMPTY_STR;
+        while (tmpN != null) {
+            short type = tmpN.getNodeType();
+            switch (type) {
+                case Node.ELEMENT_NODE:
+                    if (prevIsText) {
+                        tmpSB.append(line_sep);
+                    }
+                    tmpSB.append(indentS).append(lt).append(tmpN.getNodeName());
+                    NamedNodeMap attrs = tmpN.getAttributes();
+                    int len = attrs.getLength();
+                    for (int i = 0; i < len; i++) {
+                        Node attr = attrs.item(i);
+                        String value = attr.getNodeValue();
+                        if (null != value) {
+                            tmpSB.append(getAttributeValue((Element) tmpN, attr,nodeFilter));
+                        }
+                    }
+                    if (tmpN instanceof HTMLTitleElement && !tmpN.hasChildNodes()) {
+                        tmpSB.append(gt).append(((HTMLTitleElement) tmpN).getText());
+                        prevIsText = true;
+                    } else if (checkNewLine(tmpN,indent)) {
+                        tmpSB.append(gt).append(line_sep);
+                        prevIsText = false;
+                    } else {
+                        tmpSB.append(gt);
+                        prevIsText = true;
+                    }
+                    break;
+                case Node.TEXT_NODE:
+                    if (!prevIsText) {
+                        tmpSB.append(indentS);
+                    }
+                    tmpSB.append(getXMLString(tmpN.getNodeValue()));
+                    prevIsText = true;
+                    break;
+                case Node.COMMENT_NODE:
+                    String comment;
+                    if (escapeTagBracket) {
+                        comment = getXMLString(tmpN.getNodeValue());
+                    } else {
+                        comment = tmpN.getNodeValue();
+                    }
+                    tmpSB.append(line_sep).append(indentS).append(lt)
+                            .append("!--").append(comment).append("--").append(gt).append(line_sep);
+                    prevIsText = false;
+                    break;
+                case Node.CDATA_SECTION_NODE:
+                    tmpSB.append(line_sep).append(indentS).append(lt).append("!CDATA[")
+                            .append(tmpN.getNodeValue()).append("]]").append(line_sep);
+                    break;
+                case Node.DOCUMENT_TYPE_NODE:
+                    if (tmpN instanceof DocumentType) {
+                        DocumentType docType = (DocumentType) tmpN;
+                        String pubId = docType.getPublicId();
+                        String sysId = docType.getSystemId();
+                        if (null != pubId && pubId.length() > 0) {
+                            if (null != sysId && sysId.length() > 0) {
+                                tmpSB.append(lt).append("!DOCTYPE ").append(docType.getName())
+                                        .append(" PUBLIC \"").append(pubId).append(" \"").append(sysId).append("\">").append(line_sep);
+                            } else {
+                                tmpSB.append(lt).append("!DOCTYPE ").append(docType.getName())
+                                        .append(" PUBLIC \"").append(pubId).append("\">").append(line_sep);
+                            }
+                        } else {
+                            tmpSB.append(lt).append("!DOCTYPE ").append(docType.getName())
+                                    .append(" SYSTEM \"").append(docType.getSystemId()).append("\">").append(line_sep);
+                        }
+                    } else {
+                        logger.warn(gm() + "Document Type node does not implement DocumentType: "+ tmpN);
+                    }
+                    break;
+                default:
+                    logger.warn(gm() + tmpN.getNodeType() + " : " + tmpN.getNodeName());
+            }
+
+            Node next = treeWalker.firstChild();
+            if (null != next) {
+                if (type == Node.ELEMENT_NODE && indent) {
+                    indentS = indentS + " ";
+                }
+                tmpN = next;
+                continue;
+            }
+
+            if (tmpN.getNodeType() == Node.ELEMENT_NODE) {
+                tmpSB.append(lt).append("/").append(tmpN.getNodeName()).append(gt).append(line_sep);
+                prevIsText = false;
+            }
+
+            next = treeWalker.nextSibling();
+            if (null != next) {
+                tmpN = next;
+                continue;
+            }
+
+            tmpN = null;
+            next = treeWalker.parentNode();
+            while (null != next) {
+                if (next.getNodeType() == Node.ELEMENT_NODE) {
+                    if (indent) {
+                        if (indentS.length() > 0) {
+                            indentS = indentS.substring(1);
+                        } else {
+                            logger.error(gm() + "indent: " + next.getNodeName() + " " + next);
+                        }
+                    }
+                    tmpSB.append(line_sep).append(indentS).append(lt).append("/")
+                            .append(next.getNodeName()).append(gt).append(line_sep);
+                    prevIsText = false;
+                }
+                next = treeWalker.nextSibling();
+                if (null != next) {
+                    tmpN = next;
+                    break;
+                }
+                next = treeWalker.parentNode();
+            }
+        }
+        return tmpSB.toString();
+    }
 }
 
     

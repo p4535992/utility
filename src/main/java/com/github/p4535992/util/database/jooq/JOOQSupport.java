@@ -1,12 +1,16 @@
 package com.github.p4535992.util.database.jooq;
 
-import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.collection.ArrayUtilities;
+import com.github.p4535992.util.database.jooq.spring.config.PersistenceContext;
 import com.github.p4535992.util.regex.pattern.Patterns;
 import com.github.p4535992.util.string.StringUtilities;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 
 /**
  * Created by 4535992 on 21/10/2015.
+ * @author 4535992.
+ * @version 2015-12-24.
  */
 public class JOOQSupport {
 
@@ -33,10 +37,10 @@ public class JOOQSupport {
         //values = values.substring(0, values.length() - 1);
         //String[] param = values.split(",");
         //for(String s: param)values = values.replace(s.trim(),"?");
-        String[] array = CollectionUtilities.createArrayWithSingleElement("?", columns.length);
-        String values = CollectionUtilities.toString(array);
+        String[] array = ArrayUtilities.createSingleton("?", columns.length);
+        String values = ArrayUtilities.toString(array);
         //return queryString + " values (" + values +")" + supportQuery;
-        return preQuery + CollectionUtilities.toString(columns)
+        return preQuery + ArrayUtilities.toString(columns)
                 + ") values (" + values +")" + postQuery;
     }
 
@@ -65,4 +69,17 @@ public class JOOQSupport {
         }
         return queryString + " where (" + values +")" + supportQuery;
     }
+
+
+    //TODO: MAKE THE FULL CODE FOR INTEGRATION WITH SPRING
+    @SuppressWarnings("unchecked")
+    public static <T> void startSpring(Class<?> classObject) {
+        try (AnnotationConfigApplicationContext applicationContext = 
+                new AnnotationConfigApplicationContext(PersistenceContext.class)) {
+            T userDetailTest = (T) applicationContext.getBean(classObject);
+            //userDetailTest.start();
+        }
+    }
+
+
 }

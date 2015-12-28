@@ -107,14 +107,12 @@ public class HttpUtilities {
         for (String param:formParameters.keySet()) {
             formParams.add(new BasicNameValuePair(param, formParameters.get(param)));
         }
-
         return executeHTTPPostRequest(serviceURL, contentType, acceptContentType, new UrlEncodedFormEntity(formParams, "UTF-8"));
     }
 
     public static String executeHTTPPostRequest(String serviceURL, String contentType,
                                                 String acceptContentType, String rawPostBodyData)
             throws IOException {
-
         // Prepare the headers
         HttpPost httpPost = new HttpPost(serviceURL);
         httpPost.setEntity(new StringEntity(rawPostBodyData));

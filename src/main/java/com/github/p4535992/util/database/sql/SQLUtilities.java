@@ -1,18 +1,25 @@
 package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.database.jooq.SQLJooqKit2;
+import com.github.p4535992.util.database.sql.datasource.DatabaseContextFactory;
+import com.github.p4535992.util.database.sql.datasource.LocalContext;
+import com.github.p4535992.util.database.sql.datasource.LocalContextFactory;
 import com.github.p4535992.util.database.sql.performance.ConnectionWrapper;
 import com.github.p4535992.util.database.sql.performance.JDBCLogger;
+import com.github.p4535992.util.database.sql.runScript.ScriptRunner;
 import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.log.logback.LogBackUtil;
 import com.github.p4535992.util.string.StringUtilities;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.opencsv.CSVReader;
 
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.naming.spi.NamingManager;
+import javax.sql.DataSource;
+import java.io.*;
 import java.lang.reflect.Field;
+import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -29,30 +36,39 @@ import java.util.regex.Pattern;
  * HSQLDB: jdbc:hsqldb:mem:databasename (in-memory database)
  * Microsoft SQL Server: jdbc:sqlserver://servername;databaseName=databasename
  * (due to the semicolon, the URL must be put in quotes when passed as a command-line argument in Linux/Unix shells)
+ *
+ * href: https://devcenter.heroku.com/articles/database-connection-pooling-with-java
+ *
+ * href: https://www.safaribooksonline.com/library/view/java-enterprise-best/0596003846/ch04.html (very useful)
+ * href: http://penguindreams.org/blog/running-beans-that-use-application-server-datasources-locally/ (very useful)
+ * href: http://www.codeproject.com/Articles/802383/Run-SQL-Script-sql-containing-DDL-DML-SELECT-state
  * @author 4535992
  * @version 2015-11-10.
  */
 @SuppressWarnings("unused")
-public class SQLHelper {
+public class SQLUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(SQLHelper.class);
+            org.slf4j.LoggerFactory.getLogger(SQLUtilities.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
+    private static DataSource dataSource;
     private static Connection conn;
     private static Statement stmt;
     private static String query;
 
-    protected SQLHelper() {}
+    private static final String DEFAULT_DELIMITER = ";";
+    //private static final Pattern NEW_DELIMITER_PATTERN = Pattern.compile("(?:--|\\/\\/|\\#)?!DELIMITER=(.+)");
+    //private static final Pattern COMMENT_PATTERN = Pattern.compile("^(?:--|\\/\\/|\\#).+");
 
-    private static SQLHelper instance = null;
+    public enum DBType {MYSQL,SQL,ORACLE,DB2,H2,HSQLDB,HSQL,MARIADB}
 
-    public static SQLHelper getInstance(){
+    protected SQLUtilities() {}
+
+    private static SQLUtilities instance = null;
+
+    public static SQLUtilities getInstance(){
         if(instance == null) {
-            instance = new SQLHelper();
+            instance = new SQLUtilities();
         }
         return instance;
     }
@@ -62,7 +78,7 @@ public class SQLHelper {
     }
 
     public static void setCurrentConnection(Connection conn) {
-        SQLHelper.conn = conn;
+        SQLUtilities.conn = conn;
     }
 
     /**
@@ -75,7 +91,7 @@ public class SQLHelper {
             try {
                 result.put((Integer)field.get(null), field.getName());
             } catch (IllegalAccessException e) {
-                logger.warn(gm() + e.getMessage(), e);
+                logger.warn(e.getMessage(), e);
             }
         }
         return result;
@@ -97,7 +113,7 @@ public class SQLHelper {
                 Integer value = (Integer) field.get(null);
                 map.put(value, name);
             } catch (IllegalAccessException e) {
-                logger.warn(gm() + e.getMessage(),e);
+                logger.warn(e.getMessage(),e);
             }
         }
         return map;
@@ -255,7 +271,7 @@ public class SQLHelper {
         if(dialectDb.toLowerCase().contains("postgres93"))return "postgres93";
         if(dialectDb.toLowerCase().contains("postgres94"))return "postgres94";
         if(dialectDb.toLowerCase().contains("sqlite"))return "sqlite";
-        logger.warn(gm() + "There is not database type for the specific database dialect used.");
+        logger.warn("There is not database type for the specific database dialect used:"+dialectDb);
         return "?";
     }
 
@@ -320,7 +336,7 @@ public class SQLHelper {
         }
         if(!StringUtilities.isNullOrEmpty(port) || !StringUtilities.isNumeric(port)) port = "";
         if(StringUtilities.isNullOrEmpty(dialectDB)){
-            logger.warn(gm() + "No connection database type detected fro this type.");
+            logger.warn("No connection database type detected fro this type;"+dialectDB);
             return null;
         }else dialectDB = convertDialectDatabaseToTypeNameId(dialectDB);
         switch (dialectDB) {
@@ -335,7 +351,7 @@ public class SQLHelper {
             case "postgres93": return null;
             case "postgres94": return null;
             case "sqlite": return null;
-            default: {logger.warn(gm() + "No connection database type detected fro this type."); return null;}
+            default: {logger.warn("No connection database type detected fro this type:"+dialectDB); return null;}
         }
     }
 
@@ -351,17 +367,21 @@ public class SQLHelper {
     public static Connection getHSQLConnection(String host,String port,String database,String username,String password) {
         // The newInstance() call is a work around for some broken Java implementations
         try {
-            Class.forName("org.hsqldb.jdbcDriver").newInstance();
+            invokeClassDriverForDbType(DBType.HSQL);
             String url = "jdbc:hsqldb:hsql://" + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port; //jdbc:hsqldb:data/database
             }
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
             conn = DriverManager.getConnection(url, username, password);
-        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            logger.error(gm() + "The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
-        } catch (SQLException e) {
-            logger.error(gm() +"The URL is not correct:" + e.getMessage(), e);
+        }catch (InstantiationException e) {
+            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
+        }catch(IllegalAccessException e){
+            logger.error("Access problem while loading!:"+e.getMessage(),e);
+        } catch(ClassNotFoundException e){
+            logger.error("Unable to load driver class!:"+e.getMessage(),e);
+        }catch (SQLException e) {
+            logger.error("The URL is not correct:" + e.getMessage(), e);
         }
         return conn;
     }
@@ -379,11 +399,7 @@ public class SQLHelper {
                     String host,String port,String database,String username,String password) {
         // The newInstance() call is a work around for some broken Java implementations
         try {
-            try {
-                Class.forName("com.mysql.jdbc.Driver").newInstance(); //load driver//"com.sql.jdbc.Driver"
-            } catch (ClassNotFoundException e) {
-                Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-            }
+            invokeClassDriverForDbType(DBType.MYSQL);
             String url = "jdbc:mysql://" + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
@@ -393,12 +409,16 @@ public class SQLHelper {
                 //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(url, username, password);
             } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
-                logger.error(gm() +"You forgot to turn on your MySQL Server:" + e.getMessage(), e);
+                logger.error("You forgot to turn on your MySQL Server:" + e.getMessage(), e);
             } catch (SQLException e) {
-                logger.error(gm() +"The URL is not correct:" + e.getMessage(), e);
+                logger.error("The URL is not correct:" + e.getMessage(), e);
             }
-        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            logger.error(gm() +"The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
+        }catch (InstantiationException e) {
+            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
+        }catch(IllegalAccessException e){
+            logger.error("Access problem while loading!:"+e.getMessage(),e);
+        } catch(ClassNotFoundException e){
+            logger.error("Unable to load driver class!:"+e.getMessage(),e);
         }
         return conn;
     }
@@ -452,21 +472,21 @@ public class SQLHelper {
         else  hostAndDatabase = hostAndDatabase.replace(port, "").replace(":","").replace("/","");
         return getMySqlConnection(hostAndDatabase,port,database,username,password);*/
         try {
-            try {
-                Class.forName("com.mysql.jdbc.Driver").newInstance(); //load driver//"com.sql.jdbc.Driver"
-            } catch (ClassNotFoundException e) {
-                Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-            }
+            invokeClassDriverForDbType(DBType.MYSQL);
             try {
                 //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(fullUrl);
             } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
-                logger.error(gm() +"You forgot to turn on your MySQL Server:" + e.getMessage(), e);
+                logger.error("You forgot to turn on your MySQL Server:" + e.getMessage(), e);
             } catch (SQLException e) {
-                logger.error(gm() +"The URL is not correct" + e.getMessage(), e);
+                logger.error("The URL is not correct" + e.getMessage(), e);
             }
-        }catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            logger.error(gm() +"The Class.forName is not present on the classpath of the project" + e.getMessage(), e);
+        }catch (InstantiationException e) {
+            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
+        }catch(IllegalAccessException e){
+            logger.error("Access problem while loading!:"+e.getMessage(),e);
+        } catch(ClassNotFoundException e){
+            logger.error("Unable to load driver class!:"+e.getMessage(),e);
         }
         return conn;
     }
@@ -482,7 +502,7 @@ public class SQLHelper {
      */
     public static Connection getOracleConnection(String host,String port,String database,String username,String password){
         try {
-            Class.forName("oracle.jdbc.driver.OracleDriver");
+            invokeClassDriverForDbType(DBType.ORACLE);
             //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
             String url = "jdbc:oracle:thin:@" + host;
             if (port != null && StringUtilities.isNumeric(port)) {
@@ -490,10 +510,14 @@ public class SQLHelper {
             }
             url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
             conn = DriverManager.getConnection(url, username, password);
-        }catch (ClassNotFoundException e) {
-            logger.error(gm() +"The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
+       /* }catch (InstantiationException e) {
+            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
+        }catch(IllegalAccessException e){
+            logger.error("Access problem while loading!:"+e.getMessage(),e);*/
+        } catch(ClassNotFoundException|IllegalAccessException|InstantiationException e){
+            logger.error("Unable to load driver class!:"+e.getMessage(),e);
         } catch (SQLException e) {
-            logger.error(gm() +"The URL is not correct:" + e.getMessage(), e);
+            logger.error("The URL is not correct:" + e.getMessage(), e);
         }
         return conn;
     }
@@ -509,10 +533,10 @@ public class SQLHelper {
      * @param password string password.
      * @return the Connection to the H2 database.
      */
-    public static Connection getH2RemoteConnection(String host,String port,String database,String username,String password)
-    {
+    public static Connection getH2RemoteConnection(
+            String host,String port,String database,String username,String password) {
         try {
-            Class.forName("org.h2.Driver"); //Loading driver connection
+            invokeClassDriverForDbType(DBType.H2);
             /*
             jdbc:h2:tcp://<server>[:<port>]/[<path>]<databaseName>
             jdbc:h2:tcp://localhost/~/test
@@ -525,8 +549,8 @@ public class SQLHelper {
             }
             url += "/~/" + database;
             conn = DriverManager.getConnection(url, username, password);
-        }catch (ClassNotFoundException e) {
-            logger.error("The Class.forName is not present on the classpath of the project:" + e.getMessage(), e);
+        }catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
+            logger.error("Unable to load driver class!:" + e.getMessage(), e);
         } catch (SQLException e) {
             logger.error("The URL is not correct:" + e.getMessage(), e);
         }
@@ -569,19 +593,20 @@ public class SQLHelper {
 
     public static Map<String,Integer> getColumns(Connection conn,String tablename) throws SQLException {
         conn.setAutoCommit(false);
-        Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_READ_ONLY);
+        Map<String,Integer> map;
         //stmt.setFetchSize(DATABASE_TABLE_FETCH_SIZE);
-        String query = "Select * FROM " + tablename;
-        ResultSet r = stmt.executeQuery(query);
-        ResultSetMetaData meta = r.getMetaData();
-        // Get the column names
-        Map<String,Integer> map = new HashMap<>();
-        for (int i = 1; i <= meta.getColumnCount(); i++) {
-            map.put(meta.getColumnName(i), meta.getColumnType(i));
+        try (Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_READ_ONLY)) {
+            //stmt.setFetchSize(DATABASE_TABLE_FETCH_SIZE);
+            query = "Select * FROM " + tablename;
+            try (ResultSet r = statement.executeQuery(query)) {
+                ResultSetMetaData meta = r.getMetaData();
+                // Get the column names
+                map = new HashMap<>();
+                for (int i = 1; i <= meta.getColumnCount(); i++) {
+                    map.put(meta.getColumnName(i), meta.getColumnType(i));
+                }
+            }
         }
-        r.close();
-        stmt.close();
         return map;
     }
 
@@ -636,7 +661,7 @@ public class SQLHelper {
      * @param connection  the Connection to set.
      */
     public static void setConnection(Connection connection){
-        SQLHelper.conn = connection;
+        SQLUtilities.conn = connection;
     }
 
     /**
@@ -647,7 +672,7 @@ public class SQLHelper {
      */
     public static ResultSet executeSQL(String sql) throws SQLException {
         stmt = conn.createStatement();
-        return stmt.executeQuery(query);
+        return stmt.executeQuery(sql);
         //stmt.executeUpdate(sql);
     }
 
@@ -659,11 +684,41 @@ public class SQLHelper {
      * @throws SQLException throw if any error is occurred during the execution of the query SQL.
      */
     public static ResultSet executeSQL(String sql,Connection conn) throws SQLException  {
+        if(sql.contains(FileUtilities.pathSeparatorReference)){ //Reference path
+             if(FileUtilities.isValidFile(sql)){
+                 executeSQL(new File(sql),conn);
+             }
+        }
         // create the java statement
         stmt = conn.createStatement();
         // execute the query, and get a java resultset
-        return stmt.executeQuery(query);
+        return stmt.executeQuery(sql);
         //stmt.executeUpdate(sql);
+    }
+
+    /**
+     * Method to execute a query SQL.
+     * @param aSQLScriptFilePath the File script SQL.
+     * @param conn the Connection to the Database where execute the query.
+     * @return the ResultSet of the Query SQL.
+     */
+    public static boolean executeSQL(File aSQLScriptFilePath,Connection conn){
+        try {
+            if(!aSQLScriptFilePath.exists()){
+                throw new IOException("The File "+aSQLScriptFilePath.getAbsolutePath()+" not exists.");
+            }
+            // Give the input file to Reader
+            Reader reader = new BufferedReader(new FileReader(aSQLScriptFilePath));
+            //InputStream stream = new BufferedInputStream(new FileInputStream(aSQLScriptFilePath));
+            // Execute script
+            ScriptRunner scriptRunner = new ScriptRunner(conn, false, true);
+            scriptRunner.runScript(reader);
+            return true;
+        } catch (SQLException|IOException e) {
+            logger.error("Failed to Execute" + aSQLScriptFilePath.getAbsolutePath()
+                    + " The error is " + e.getMessage(),e);
+            return false;
+        }
     }
 
     /**
@@ -694,7 +749,7 @@ public class SQLHelper {
             }
             return true;
         } catch (SQLException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -710,7 +765,7 @@ public class SQLHelper {
             m = conn.getMetaData();
             return m.getDatabaseProductName();
         } catch (SQLException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -722,20 +777,20 @@ public class SQLHelper {
      * @return the Vector String Arrays of the content.
      * @throws SQLException throw if the name if the table not exists on the Database.
      */
-    public static Vector<String[]> getContentOfATable(String tableName, Connection connection)
+    public static List<String[]> getContentOfATable(String tableName, Connection connection)
             throws SQLException {
         String sqlQuery = "SELECT * FROM " + tableName;
         Statement statement = connection.createStatement(  );
         ResultSet resultSet = statement.executeQuery(sqlQuery);
         int numColumns = resultSet.getMetaData(  ).getColumnCount(  );
         String[  ] aRow;
-        Vector<String[]> allRows = new Vector<>();
+        List<String[]> allRows = new ArrayList<>();
         while(resultSet.next(  )) {
             aRow = new String[numColumns];
             for (int i = 0; i < numColumns; i++)
                 //ResultSet access is 1-based, arrays are 0-based
                 aRow[i] = resultSet.getString(i+1);
-            allRows.addElement(aRow);
+            allRows.add(aRow);
         }
         return allRows;
     }
@@ -753,7 +808,7 @@ public class SQLHelper {
             ResultSet rs = stmt.executeQuery(sql);
             endTime   = System.currentTimeMillis();
         }catch (SQLException e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return 0L;
         }
         return endTime - startTime;
@@ -775,7 +830,7 @@ public class SQLHelper {
             ResultSet rs = statement.executeQuery(sql);
             endTime   = System.currentTimeMillis();
         }catch (SQLException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return 0L;
         }
         Long calculate = endTime - startTime;
@@ -797,7 +852,7 @@ public class SQLHelper {
                                        String nameTable,Connection connection) {
         String[] columns = FileUtilities.CSVGetHeaders(fileCSV, firstLine);
         if(columns == null){
-            logger.error(gm() + "Can't load the CSV because we need a first line of headers instead the columns is NULL");
+            logger.error("Can't load the CSV because we need a first line of headers instead the columns is NULL");
             return false;
         }
         SQLJooqKit2.setConnection(connection);
@@ -813,16 +868,16 @@ public class SQLHelper {
                     int[] types = new int[values.length];
                     for(int i = 0; i < rowData.length; i++){
                         values[i] = rowData[i];
-                        types[i] = SQLHelper.convertStringToSQLTypes(values[i]);
+                        types[i] = SQLUtilities.convertStringToSQLTypes(values[i]);
                     }
                     insertQuery = SQLJooqKit2.insert(nameTable, columns,values,types);
-                    SQLHelper.executeSQL(insertQuery,connection);
+                    SQLUtilities.executeSQL(insertQuery,connection);
                 }
             }
             logger.info("Data CSV File Successfully Uploaded");
             return true;
         } catch (SQLException |IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         } 
     }
@@ -834,21 +889,23 @@ public class SQLHelper {
      */
     public static String getHostFromUrl(String url) {
         try {
-            String regexForHostAndPort = "[.\\w]+:\\d+";
+            /*String regexForHostAndPort = "[.\\w]+:\\d+";
             Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
             Matcher matcher = hostAndPortPattern.matcher(url);
-            matcher.find();
-            int start = matcher.start();
-            int end = matcher.end();
-            if (start >= 0 && end >= 0) {
-                String hostAndPort = url.substring(start, end);
-                String[] array = hostAndPort.split(":");
-                if (array.length >= 2)
-                    return array[0];
+            if(matcher.find()) {
+                int start = matcher.start();
+                int end = matcher.end();
+                if (start >= 0 && end >= 0) {
+                    String hostAndPort = url.substring(start, end);
+                    String[] array = hostAndPort.split(":");
+                    if (array.length >= 2)
+                        return array[0];
+                }
             }
-            throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
+            throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");*/
+            return supportGetHostAndPort(url,0);
         }catch(IllegalArgumentException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -860,23 +917,41 @@ public class SQLHelper {
      */
     public static Integer getPortFromUrl(String url) {
         try {
-            String regexForHostAndPort = "[.\\w]+:\\d+";
+            /*String regexForHostAndPort = "[.\\w]+:\\d+";
             Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
             Matcher matcher = hostAndPortPattern.matcher(url);
-            matcher.find();
+            if(matcher.find()) {
+                int start = matcher.start();
+                int end = matcher.end();
+                if (start >= 0 && end >= 0) {
+                    String hostAndPort = url.substring(start, end);
+                    String[] array = hostAndPort.split(":");
+                    if (array.length >= 2)
+                        return Integer.parseInt(array[1]);
+                }
+            }
+            throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");*/
+            return Integer.parseInt(supportGetHostAndPort(url,1));
+        }catch(IllegalArgumentException e){
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    private static String supportGetHostAndPort(String url,int i){
+        String regexForHostAndPort = "[.\\w]+:\\d+";
+        Pattern hostAndPortPattern = Pattern.compile(regexForHostAndPort);
+        Matcher matcher = hostAndPortPattern.matcher(url);
+        if(matcher.find()) {
             int start = matcher.start();
             int end = matcher.end();
             if (start >= 0 && end >= 0) {
                 String hostAndPort = url.substring(start, end);
                 String[] array = hostAndPort.split(":");
-                if (array.length >= 2)
-                    return Integer.parseInt(array[1]);
+                if (array.length >= 2) return array[i];
             }
-            throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
-        }catch(IllegalArgumentException e){
-            logger.error(gm() + e.getMessage(),e);
-            return null;
         }
+        throw new IllegalArgumentException("couldn't find pattern '" + regexForHostAndPort + "' in '" + url + "'");
     }
 
     /**
@@ -886,7 +961,8 @@ public class SQLHelper {
      */
     public static String getUsernameFromUrl(String url){
         try {
-            Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(user|username)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
+            Pattern pat = Pattern.compile(
+                    "(\\&|\\?|\\=|\\/)?(user|username)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
             Matcher matcher = pat.matcher(url + " ");
             if (matcher.find()) {
                 String[] find = (matcher.group(0)).split("=");
@@ -894,7 +970,7 @@ public class SQLHelper {
             }
             throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
         }catch(IllegalArgumentException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -906,7 +982,9 @@ public class SQLHelper {
      */
     public static String getPasswordFromUrl(String url){
         try {
-            Pattern pat = Pattern.compile("(\\&|\\?|\\=|\\/)?(pass|password)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE);
+            Pattern pat = Pattern.compile(
+                    "(\\&|\\?|\\=|\\/)?(pass|password)(\\=)(.*?)(\\&|\\?|\\=|\\/|\\s)+", Pattern.CASE_INSENSITIVE
+            );
             Matcher matcher = pat.matcher(url + " ");
             if (matcher.find()) {
                 String[] find = (matcher.group(0)).split("=");
@@ -914,8 +992,286 @@ public class SQLHelper {
             }
             throw new IllegalArgumentException("couldn't find pattern '" + pat.toString() + "' in '" + url + "'");
         }catch(IllegalArgumentException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
+    }
+
+    /*public enum DATABASE_URL{ HOST,PATH,USERNAME,PASSWORD,DRIVER,PORT}
+
+    public static String getInfoFromUrl(String url,DATABASE_URL database_url){
+        URI dbUri;
+        String urlPart = database_url.name();
+        url = url.split("://")[1];
+        url = "http://"+url;
+        try {
+            dbUri = new URI(System.getenv(url));
+            switch(urlPart){
+                case "HOST": return dbUri.getHost();
+                case "DRIVER":return dbUri.getScheme();
+                case "USERNAME":return dbUri.getUserInfo().split(":")[0];
+                case "PASSWORD": return dbUri.getUserInfo().split(":")[1];
+                case "PATH": return dbUri.getPath();
+                case "PORT": return String.valueOf(dbUri.getPort());
+                default: return "N/A";
+            }
+
+        } catch (URISyntaxException e) {
+            logger.error("Couldn't find pattern '" + urlPart + "' in '" + url + "':"+e.getMessage(),e);
+            return "N/A";
+        }
+    }*/
+
+    public static String getURL(Connection conn){
+        try {
+            return conn.getMetaData().getURL();
+        } catch (SQLException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    public static String getURL(DatabaseMetaData databaseMetadata){
+        try {
+            return databaseMetadata.getURL();
+        } catch (SQLException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    public static void invokeClassDriverForDbType(DBType dbType)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        String name = dbType.name();
+        switch(name){
+            case "MYSQL": {
+                try {
+                    Class.forName("com.mysql.jdbc.Driver").newInstance(); //load driver//"com.sql.jdbc.Driver"
+                    break;
+                } catch (ClassNotFoundException e) {
+                    Class.forName("org.gjt.mm.mysql.Driver").newInstance();
+                    break;
+                }
+            }
+            case "ORACLE":{
+                Class.forName("oracle.jdbc.driver.OracleDriver").newInstance();
+                break;
+            }
+            case "H2":{
+                Class.forName("org.h2.Driver").newInstance(); //Loading driver connection
+                break;
+            }
+            case "HSQL":{
+                Class.forName("org.hsqldb.jdbcDriver").newInstance();
+                break;
+            }
+        }
+    }
+
+    public static void invokeClassDriverForDbType(String driverClassName)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        Class.forName(driverClassName).newInstance(); //load driver//"com.sql.jdbc.Driver"
+    }
+
+    //--------------------------------------------------------------------------------
+
+    /**
+     * https://www.safaribooksonline.com/library/view/java-enterprise-best/0596003846/ch04.html
+     * http://penguindreams.org/blog/running-beans-that-use-application-server-datasources-locally/
+     */
+    /*public void connectToDatabase( ) {
+        try {
+            InitialContext ctx = new InitialContext(parms);
+            ConnectionPoolDataSource poolDataSource =
+                    (ConnectionPoolDataSource) ctx.lookup(cpsource);
+            poolDataSource.setLoginTimeout(30); // seconds
+            PooledConnection poolConnection =
+                    poolDataSource.getPooledConnection();
+            Connection connection = poolConnection.getConnection();
+            DataSource ds = (DataSource)ctx.lookup("dsname");
+            //  Do whatever you would typically do with the connection here.
+        } catch (Exception e) {
+            //  Handle exceptions.
+        } finally {
+            connection.close();
+        }
+    }*/
+
+    /*private static Connection getPooledConnection(String dataSourceName,String url,String driverDbClassName){
+        logger.info("Attempting to connect to " + dataSourceName);
+        logger.info("Initializing the naming context...");
+        try {
+            InitialContext initCtx;
+            try {
+                initCtx = createContext(url, driverDbClassName);
+            }catch(Exception e){
+                try {
+                    invokeClassDriverForDbType(driverDbClassName);
+                    initCtx = createContext(url, driverDbClassName);
+                } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e1) {
+                    logger.error(e1.getMessage(),e);
+                    return conn;
+                }
+            }
+            //String dataSourceName = "HrDS";
+            ConnectionPoolDataSource poolDataSource = (ConnectionPoolDataSource) initCtx.lookup(dataSourceName);
+            PooledConnection pooledConnection = poolDataSource.getPooledConnection();
+            dataSource = (DataSource) initCtx.lookup(dataSourceName);
+            logger.info("Establishing a connection...");
+            logger.info("Connect to " + dataSource.getConnection().getCatalog() + " a success!");
+            conn = pooledConnection.getConnection(); // Obtain connection from pool
+        }catch(NamingException|SQLException e){
+            logger.error(e.getMessage(),e);
+        }
+        return conn;
+    }*/
+
+   /* private static InitialContext createContext(String url,String driverDbClassName) throws NamingException {
+        Properties env = new Properties();
+        //Hashtable<Object,Object> env = new Hashtable<>();
+        //env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.rmi.registry.RegistryContextFactory");
+        //env.put(Context.PROVIDER_URL, "rmi://localhost:1099");
+        //"com.sun.jndi.rmi.registry.RegistryContextFactory" -> "rmi://localhost:1099"
+        //"com.sun.jndi.ldap.LdapCtxFactory" -> "ldap://localhost:389/o=JNDITutorial"
+        //"com.sun.jndi.fscontext.RefFSContextFactory" -> "file:/tmp/marketing"
+
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.fscontext.RefFSContextFactory");
+        env.put(Context.DNS_URL, url);
+        // Use anonymous authentication
+        env.put(Context.SECURITY_AUTHENTICATION, "none");
+        return new InitialContext(env);
+    }*/
+
+   /* private static Connection getPooledLocalConnection(
+            String dataSourceName,String jdbcUrl,String driverDbClassName, String username,String password){
+        try {
+            //Use LocalContext (all context setted outer)
+           *//* LocalContext ctx = LocalContextFactory.createLocalContext("com.mysql.jdbc.Driver");
+            ctx.addDataSource("jdbc/js1","jdbc:mysql://dbserver1/dboneA", "username", "xxxpass");*//*
+            LocalContext ctx = LocalContextFactory.createLocalContext(driverDbClassName);
+            ctx.addDataSource(dataSourceName,jdbcUrl, username, password);
+            callDataSource(dataSourceName);
+        } catch (NamingException e) {
+            logger.error(e.getMessage(),e);
+        }
+        return conn;
+    }*/
+
+    /*private static Connection getPooledLocalConnection(String dataSourceName){
+        try {
+            //Use DatabaseContext (all context setted inner)
+            try {
+                NamingManager.setInitialContextFactoryBuilder(new DatabaseContextFactory());
+            }catch( java.lang.IllegalStateException e){
+                logger.warn("InitialContextFactoryBuilder already set");
+               *//* DatabaseContextFactory factory = new DatabaseContextFactory();
+                Properties env = new Properties();
+                env.put(Context.INITIAL_CONTEXT_FACTORY, driverDbClassName);
+                env.put(Context.PROVIDER_URL, url);
+                factory.createInitialContextFactory(env);*//*
+            }
+            //Start to invoke
+            callDataSource(dataSourceName);
+        } catch (NamingException e) {
+            logger.error(e.getMessage(),e);
+        }
+        return conn;
+    }*/
+
+    private static DataSource getLocalPooledConnection(String dataSourceName) {
+        return getPooledLocalConnectionBase(dataSourceName,null,null,null,null);
+    }
+
+    public static DataSource getLocalPooledConnection(
+            String dataSourceName,String jdbcUrl,String driverDbClassName,
+            String username,String password) {
+        return getPooledLocalConnectionBase(dataSourceName,jdbcUrl,driverDbClassName,username,password);
+    }
+
+    /**
+     * https://www.safaribooksonline.com/library/view/java-enterprise-best/0596003846/ch04.html
+     * http://penguindreams.org/blog/running-beans-that-use-application-server-datasources-locally/
+     * http://www.java2s.com/Code/Java/Database-SQL-JDBC/MiniConnectionPoolManager.htm
+     */
+    private static DataSource getPooledLocalConnectionBase(
+            String dataSourceName,String jdbcUrl,String driverDbClassName,
+            String username,String password) {
+        logger.info("Attempting to connect to the DataSource '" + dataSourceName+"'...");
+        try {
+            logger.info("...initializing the naming context...");
+            if(jdbcUrl == null) {
+                //Use DatabaseContext (all context set inner)
+                try {
+                    NamingManager.setInitialContextFactoryBuilder(new DatabaseContextFactory());
+                }catch(java.lang.IllegalStateException e){
+                    logger.warn("InitialContextFactoryBuilder already set");
+                   /* DatabaseContextFactory factory = new DatabaseContextFactory();
+                    Properties env = new Properties();
+                    env.put(Context.INITIAL_CONTEXT_FACTORY, driverDbClassName);
+                    env.put(Context.PROVIDER_URL, url);
+                    factory.createInitialContextFactory(env);*/
+                    return dataSource;
+                }
+            }else {
+                //Use LocalContext (all context set outer)
+               /* LocalContext ctx = LocalContextFactory.createLocalContext("com.mysql.jdbc.Driver");
+                ctx.addDataSource("jdbc/js1","jdbc:mysql://dbserver1/dboneA", "username", "xxxpass");*/
+                LocalContext ctx = LocalContextFactory.createLocalContext(driverDbClassName);
+                ctx.addDataSource(dataSourceName, jdbcUrl, username, password);
+                //callDataSource(dataSourceName);
+            }
+            logger.info("...establishing a context...");
+        } catch (NamingException e) {
+            logger.error(e.getMessage(),e);
+        }
+
+        try {
+            dataSource = (DataSource) new InitialContext().lookup(dataSourceName);
+            conn = dataSource.getConnection();
+            logger.info("...establishing a connection to the datasource '"+dataSourceName+"', " +
+                    "connect to the database '"+dataSource.getConnection().getCatalog()+"'");
+        }catch (NamingException|SQLException e) {
+            logger.error(e.getMessage(),e);
+        }
+        return dataSource;
+    }
+
+
+
+
+
+
+
+    public static void main(String[] args) throws IOException, SQLException, URISyntaxException {
+        String userDir = new File(".").getCanonicalPath();
+        String userDir2 = StringUtilities.PROJECT_DIR;  String userDir3 = LogBackUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        LogBackUtil.console();
+        //test1 jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true
+        //test2 jdbc:postgresql://host:port/database?user=userName&password=pass
+
+        //WORK
+        //Connection conn = getMySqlConnection("localhost","3306","geodb","siimobility","siimobility");
+        //String url = "jdbc:postgresql://host:port/database?user=userName&password=pass";
+
+
+        //WORK
+      /* DataSource conn2 = getLocalConnection(
+                "ds1","jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true",
+                "com.mysql.jdbc.Driver","siimobility","siimobility");*/
+
+        DataSource conn2 = getLocalPooledConnection(
+                "ds1","jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true",
+                "com.mysql.jdbc.Driver","siimobility","siimobility");
+
+        executeSQL(LogBackUtil.getMySQLScript(),conn);
+        //WORK
+        /*DataSource conn3 = getLocalConnection("ds1");*/
+
+        //NOT WORK
+        /*Connection conn4 = getPooledConnection("ds1",
+                "jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true","com.mysql.jdbc.Driver");*/
+
+        String test = "";
+
     }
 }

@@ -154,7 +154,7 @@ public class Patterns {
     // input.  This is to stop foo.sure from
     // matching as foo.su
 
-    public static final Pattern Protocol_URL = Pattern.compile("((?:(http|https|Http|Https|rtsp|Rtsp):\\/\\/))");
+    public static final Pattern Protocol_URL = Pattern.compile("((?:(http|https|Http|Https|rtsp|Rtsp|ftp):\\/\\/))");
 
     public static final Pattern EMAIL_ADDRESS
         = Pattern.compile(
@@ -439,12 +439,12 @@ public class Patterns {
     private static final String LINE_SEPARATOR_PATTERN = "\r\n|[\n\r\u2028\u2029\u0085]";
     private static final String LINE_PATTERN = ".*("+LINE_SEPARATOR_PATTERN+")|.+$";
 
-    public static Pattern IS_SEPARATOR() {
+    public static Pattern IS_LINE_SEPARATOR() {
         Pattern sp = separatorPattern;
         if (sp == null) separatorPattern = sp = Pattern.compile(LINE_SEPARATOR_PATTERN);
         return sp;
     }
-    public static Pattern  IS_LINE() {
+    public static Pattern  IS_LINE_PATTERN() {
         Pattern lp = linePattern;
         if (lp == null) linePattern = lp = Pattern.compile(LINE_PATTERN);
         return lp;
@@ -463,6 +463,10 @@ public class Patterns {
 
     public static final Pattern  GET_LAST_PART_OF_URI = Pattern.compile("([^/\\#])+(?=/$|$)",Pattern.CASE_INSENSITIVE);
 
+    /**
+     * http://alvinalexander.com/blog/post/java/multiline-regular-expression-in-java-1-4
+     */
+    public static final Pattern IS_STRING_MUTLILINE_1 =  Pattern.compile(".*\\d+\\.\\d+\\.\\d+\\.\\d+.*",Pattern.MULTILINE);
 
     /**
      * Do not create this static utility class.

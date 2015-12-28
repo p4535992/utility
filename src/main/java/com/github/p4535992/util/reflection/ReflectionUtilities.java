@@ -1,6 +1,8 @@
 package com.github.p4535992.util.reflection;
 
+import com.github.p4535992.util.collection.ArrayUtilities;
 import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.collection.ListUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 
 import java.io.File;
@@ -16,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by 4535992 on 26/10/2015.
  * Class for help with the first impact with java reflection library.
  * I don't own any right on the code, but i want to thank all the piece of code i
- * copied and modified fro my purpose  from the internet and help me with this.
+ * copied and modified for my purpose  from the internet and help me with this class.
  * href: http://my.safaribooksonline.com/video/-/9780133038118?cid=2012-3-blog-video-java-socialmedia
  * href: http://www.asgteach.com/blog/?p=559
  * href: http://stackoverflow.com/questions/709961/determining-if-an-object-is-of-primitive-type
@@ -39,6 +41,10 @@ public class ReflectionUtilities {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(ReflectionUtilities.class);
 
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
+
     // ---------------------------------------------------------------------
     // Members
     // ---------------------------------------------------------------------
@@ -46,7 +52,6 @@ public class ReflectionUtilities {
     private static Object  object;
     private static boolean isClass;
     private static Class<?> clazz;
-    private static final Set<Class<?>> WRAPPER_TYPES = getWrapperTypes();
     private static class NULL {}
 
     // ---------------------------------------------------------------------
@@ -78,29 +83,6 @@ public class ReflectionUtilities {
     // ---------------------------------------------------------------------
     // Static API used as entrance points to the fluent API
     // ---------------------------------------------------------------------
-
-    /**
-     * Set a field value.
-     * This is roughly equivalent to {@link Field#set(Object, Object)}. If the
-     * wrapped object is a {@link Class}, then this will set a value to a static
-     * member field. If the wrapped object is any other {@link Object}, then
-     * this will set a value to an instance member field.
-     * @param name the String name of the Field.
-     * @param value the new value for the field of obj.
-     * being modified
-     * @return The same wrapped object, to be used for further reflection.
-     * @throws Exception If any reflection exception occurred.
-     */
-     private ReflectionUtilities set(String name, Object value) throws Exception {
-        try {
-            Field field = toField(name);
-            field.set(object, unWrapper(value));
-            return this;
-        }
-        catch (Exception e) {
-            throw new Exception(e);
-        }
-    }
 
     /**
      * Call a constructor.
@@ -239,7 +221,6 @@ public class ReflectionUtilities {
 
     /**
      * Get a wrapped field.
-     * <p>
      * This is roughly equivalent to {@link Field#get(Object)}. If the wrapped
      * object is a {@link Class}, then this will wrap a static member field. If
      * the wrapped object is any other {@link Object}, then this wrap an
@@ -386,13 +367,41 @@ public class ReflectionUtilities {
         return null;
     }
 
+    private static List<String> primitiveNames;
+    private static List<String> wrapperNames;
+    private static List<Class<?>> primitiveTypes;
+    private static List<Class<?>> wrapperTypes;
+
+    private static void initPrimitives() {
+        if (primitiveNames == null) {
+            primitiveNames = Arrays.asList("boolean", "char", "byte", "short", "int", "long", "float", "double", "void");
+            primitiveTypes = Arrays.asList(boolean.class, char.class, byte.class, short.class, int.class,
+                    long.class, float.class, double.class, void.class);
+        }
+    }
+
+    private static void initWrappers() {
+        if (wrapperNames == null) {
+            wrapperNames = Arrays.asList("Boolean", "Character", "Byte", "Short", "Integer", "Long", "Float", "Double", "Void");
+            wrapperTypes = Arrays.asList(Boolean.class,Character.class,Byte.class,Short.class,Integer.class,
+                    Long.class,Float.class,Double.class,Void.class);
+        }
+    }
+
+
+    private static List<String> getPrimitiveNames() { initPrimitives(); return primitiveNames; }
+    private static List<Class<?>> getPrimitiveTypes() { initPrimitives(); return primitiveTypes; }
+    private static List<String> getWrapperNames() { initWrappers(); return wrapperNames; }
+    private static List<Class<?>> getWrapperTypes() { initWrappers(); return wrapperTypes; }
+
     /**
      * Method to check if a specific class is a Wrapper class.
      * @param aClass class of the object you want to test.
      * @return boolean value if is a primite type or not.
      */
     public static boolean isWrapperType(Class<?> aClass) {
-        return WRAPPER_TYPES.contains(aClass);
+        getWrapperTypes();
+        return wrapperTypes.contains(aClass);
     }
 
     /**
@@ -401,33 +410,7 @@ public class ReflectionUtilities {
      * @return boolean value if is a primite type or not.
      */
     public static boolean isPrimitiveType(Class<?> aClass) {
-        return !WRAPPER_TYPES.contains(aClass);
-    }
-
-    /**
-     * List of all primitve class.
-     * @return all the primitve class on java.
-     */
-    public static Set<Class<?>> getWrapperTypes(){
-        Set<Class<?>> ret = new HashSet<>();
-        ret.add(Boolean.class);
-        ret.add(Character.class);
-        ret.add(Byte.class);
-        ret.add(Short.class);
-        ret.add(Integer.class);
-        ret.add(Long.class);
-        ret.add(Float.class);
-        ret.add(Double.class);
-        ret.add(Void.class);
-        return ret;
-    }
-
-    /**
-     * Unwrap an object
-     */
-    private static Object unWrapper(Object object) {
-        if (object instanceof ReflectionUtilities) return ((ReflectionUtilities) object).get();
-        return object;
+        return primitiveTypes.contains(aClass);
     }
 
     /**
@@ -531,7 +514,7 @@ public class ReflectionUtilities {
                             return null;
                         }
                     }
-                    logger.warn("ReflectionUtilities::as ->",e);
+                    logger.warn(gm() + e.getMessage(),e);
                     throw e;
                 }
             }
@@ -597,7 +580,7 @@ public class ReflectionUtilities {
     private static Class<?> toClass(String name){
         try {return Class.forName(name);
         } catch (NullPointerException|ClassNotFoundException e) {
-            logger.error("ReflectionUtilities::toClass ->" + e);
+            logger.error(gm() + e.getMessage());
             return null;
         }
     }
@@ -672,7 +655,7 @@ public class ReflectionUtilities {
         Method method =null;
         try {
             //If the method you are trying to access takes no parameters, pass null as the parameter type array, like this:
-            if (CollectionUtilities.isEmpty(param)) method = aClass.getMethod(nameOfMethod);//nameOfMethod, null
+            if (ArrayUtilities.isEmpty(param)) method = aClass.getMethod(nameOfMethod);//nameOfMethod, null
             else method = aClass.getMethod(nameOfMethod, param);// String.class
         }catch(NoSuchMethodException e){
             logger.error("ReflectionUtils::getMethodByNameAndParam ->",e);
@@ -772,7 +755,7 @@ public class ReflectionUtilities {
                 types.add(field);
             }
         }
-        return CollectionUtilities.toArray(types);
+        return ListUtilities.toArray(types);
     }
 
     /**
@@ -802,7 +785,9 @@ public class ReflectionUtilities {
      * @param aClass the Class to inspect.
      * @return the String URL of the location of the source of the file.
      */
-    public static String getClassReference(Class<?> aClass){ return aClass.getName();}
+  /*  public static String getClassReference(Class<?> aClass) {
+        return aClass.getName();
+    }*/
 
     //Method for get all the class in a package with library reflections
 //    public Set<Class<? extends Object>> getClassesByPackage(String pathToPackage){
@@ -1018,7 +1003,7 @@ public class ReflectionUtilities {
                 }
             }
         } catch (Exception e) {
-            logger.error("ReflectionUtilities::copyFieldToClass ->",e);
+            logger.error(e.getMessage(),e);
         }
         return targetValue;
     }
@@ -1685,7 +1670,7 @@ public class ReflectionUtilities {
         if (!directory.exists()) {
             return classes;
         }
-        List<File> files = FileUtilities.readDirectory(directory);
+        List<File> files = FileUtilities.getFilesFromDirectory(directory);
         if(files!= null && files.size()>0){
             for (File file : files) {
                 if (file.isDirectory()) {
@@ -1982,33 +1967,38 @@ public class ReflectionUtilities {
     @SuppressWarnings("unchecked")
     public static Collection<Object[]> findInfoAnnotationField(Annotation annotation)
             throws SecurityException, NoSuchFieldException {
-        Collection<Object[]> list = new ArrayList<>();
+        Collection<Object[]> list = new HashSet<>();
         Object[] array = new Object[3];
-        if(annotation!=null) {
-            Object handler = Proxy.getInvocationHandler(annotation);
-            Field f;
-            try {
-                //This is the name of the field.
-                f = handler.getClass().getDeclaredField("memberValues");
-            } catch (NoSuchFieldException | SecurityException e) {
-                throw new IllegalStateException(e);
-            }
-            f.setAccessible(true);
-            Map<String, Object> memberValues;
-            try {
-                memberValues = (Map<String, Object>) f.get(handler);
-            } catch (IllegalArgumentException | IllegalAccessException e) {
-                throw new IllegalStateException(e);
-            }
-            array[0] = annotation.annotationType().getName();//javax.persistence.column
-            for (Map.Entry<String, Object> entry : memberValues.entrySet()) {
-                array[1] = entry.getKey();
-                array[2] = entry.getValue();
-                list.add(array.clone());
-            }
-            return list;
+        if(annotation!=null) return getInfoAnnotation(annotation,list,array);
+        else return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Set<Object[]> getInfoAnnotation(
+            Annotation annotation, Collection<Object[]> list, Object[] array){
+        Object handler = Proxy.getInvocationHandler(annotation);
+        Field f;
+        try {
+            //This is the name of the field.
+            f = handler.getClass().getDeclaredField("memberValues");
+        } catch (NoSuchFieldException | SecurityException e) {
+            throw new IllegalStateException(e);
         }
-        return null;
+        f.setAccessible(true);
+        Map<String, Object> memberValues;
+        try {
+            memberValues = (Map<String, Object>) f.get(handler);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
+        array[0] = annotation.annotationType().getName();//javax.persistence.column
+        for (Map.Entry<String, Object> entry : memberValues.entrySet()) {
+            array[1] = entry.getKey();
+            array[2] = entry.getValue();
+            list.add(array.clone());
+        }
+        return (Set<Object[]>) list;
+
     }
 
     //    public static List<Object[]> getAnnotationField(Class<?> aClass, Annotation annotation,String fieldName )
@@ -2054,31 +2044,9 @@ public class ReflectionUtilities {
         Collection<Object[]> list = new ArrayList<>();
         Object[] array = new Object[3];
         final Annotation annotation = field.getAnnotation(annotationField);
-        if(annotation!=null) {
-            Object handler = Proxy.getInvocationHandler(annotation);
-            Field f;
-            try {
-                //This is the name of the field.
-                f = handler.getClass().getDeclaredField("memberValues");
-            }catch (NoSuchFieldException | SecurityException e) {
-                throw new IllegalStateException(e);
-            }
-            f.setAccessible(true);
-            Map<String, Object> memberValues;
-            try {
-                memberValues = (Map<String, Object>) f.get(handler);
-            } catch (IllegalArgumentException | IllegalAccessException e) {
-                throw new IllegalStateException(e);
-            }
-            array[0] = annotation.annotationType().getName();//javax.persistence.column
-            for (Map.Entry<String, Object> entry : memberValues.entrySet()) {
-                array[1] = entry.getKey();
-                array[2] = entry.getValue();
-                list.add(array.clone());
-            }
-            return list;
-        }
-        return null;
+        if(annotation != null) {
+            return getInfoAnnotation(annotation, list, array);
+        }else return null;
     }
 
     /**
@@ -2190,7 +2158,7 @@ public class ReflectionUtilities {
             //final Annotation annotation = field.getAnnotation(annotationClass);
             //list = getAnnotationField(aClass, annotation, fieldName);
             if(aObj != null && !aObj.isEmpty()) {
-                Object[] bObj = CollectionUtilities.concatenateArrays(fObj, aObj.toArray());
+                Object[] bObj = ArrayUtilities.concatenateArrays(fObj, aObj.toArray());
                 list.add(bObj);
             }
         }
@@ -2356,7 +2324,7 @@ public class ReflectionUtilities {
                 Type[] typeArguments = type.getActualTypeArguments();
                 for(Type typeArgument : typeArguments){
                     Class<?> typeArgClass = (Class<?>) typeArgument;
-                    list.add(new String[]{typeArgClass.getName(),getClassReference(typeArgClass)});
+                    list.add(new String[]{typeArgClass.getName(),typeArgClass.getName()});
                 }
             }
         } catch (NullPointerException|NoSuchMethodException e) {
@@ -2409,7 +2377,7 @@ public class ReflectionUtilities {
             for (Type typeArgument : typeArguments) {
                 Class<?> typeArgClass = (Class<?>) typeArgument;
                 logger.info("typeArgClass = " + typeArgClass);
-                list.add(new String[]{typeArgClass.getName(), getClassReference(typeArgClass)});
+                list.add(new String[]{typeArgClass.getName(), typeArgClass.getName()});
             }
         } catch (NullPointerException e) {
             logger.error("ReflectionUtilities::findInfoTypes ->",e);
@@ -2677,8 +2645,8 @@ public class ReflectionUtilities {
                 MyObject2 = method.invoke(MyObject);
             }*/
                 try {
-                    Class<?> clazz = method.invoke(MyObject).getClass();
-                    MyObject2 = clazz.cast(method.invoke(MyObject));
+                    Class<?> clazz2 = method.invoke(MyObject).getClass();
+                    MyObject2 = clazz2.cast(method.invoke(MyObject));
                 } catch (NullPointerException ne1) {
                     MyObject2 = method.invoke(MyObject);
                 }

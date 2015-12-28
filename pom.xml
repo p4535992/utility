@@ -86,11 +86,6 @@
         <joda-time.version>2.3</joda-time.version>
         <org.jadira.usertype.core.version>3.0.0.CR1</org.jadira.usertype.core.version>
         <!-- JENA and Sesame OpenRDF version used 2.13.0 and 2.10.1 -->
-        <!--<org.apache.jena.jena.version>2.10.1</org.apache.jena.jena.version>-->
-        <!--<org.apache.jena.arq.version>2.13.0</org.apache.jena.arq.version>-->
-        <!--<org.apache.jena.core.version>2.13.0</org.apache.jena.core.version>-->
-        <!--<org.apache.jena.jena-tdb.version>1.1.2</org.apache.jena.jena-tdb.version>-->
-        <!--<org.apache.jena.jena-iri.version>1.1.2</org.apache.jena.jena-iri.version>-->
         <!-- Jena Libraries (Core, ARQ, IRI, and TDB) -->
         <org.apache.jena.apache-jena-libs.version>2.10.1</org.apache.jena.apache-jena-libs.version>
         <!-- Jena Support -->
@@ -103,6 +98,7 @@
         <org.semanticweb.yars.nxparser-api.version>2.2</org.semanticweb.yars.nxparser-api.version>
         <!-- XML -->
         <org.jdom.jdom2.version>2.0.6</org.jdom.jdom2.version>
+        <xml-apis.xml-apis.version>1.4.01</xml-apis.xml-apis.version>
         <!-- HTML -->
         <org.jsoup.jsoup.version>1.8.2</org.jsoup.jsoup.version>
         <!-- JSON -->
@@ -116,25 +112,33 @@
         <!-- SPRING FRAMEWORK -->
         <io.spring.platform-version>1.1.2.RELEASE</io.spring.platform-version>
         <org.springframework.version>4.1.6.RELEASE</org.springframework.version>
-        <commons-fileupload.commons-fileupload.version>1.3.1</commons-fileupload.commons-fileupload.version>
+        <!-- <commons-fileupload.commons-fileupload.version>1.3.1</commons-fileupload.commons-fileupload.version>-->
         <!-- Logging -->
-        <logback.version>1.1.3</logback.version>
         <org.slf4j.version>1.7.12</org.slf4j.version>
-        <commons-logging.version>1.1.1</commons-logging.version>
+        <!-- Logback + log4j + jul -->
         <spring-boot-starter-logging.version>1.3.0.RELEASE</spring-boot-starter-logging.version>
-        <org.apache.logging.log4j.core.version>2.3</org.apache.logging.log4j.core.version>
+        <!-- <org.apache.logging.log4j.core.version>2.3</org.apache.logging.log4j.core.version>-->
+        <org.fusesource.jansi.jansi.version>1.11</org.fusesource.jansi.jansi.version>
         <!-- Apache -->
         <!--<org.apache.httpcomponents.httpclient.version>4.4.1</org.apache.httpcomponents.httpclient.version>-->
         <org.apache.httpcomponents.httpclient.version>4.5.1</org.apache.httpcomponents.httpclient.version>
-        <org.apache.commons.commons-dbcp2.version>2.0</org.apache.commons.commons-dbcp2.version>
+        <!--<org.apache.commons.commons-dbcp2.version>2.0</org.apache.commons.commons-dbcp2.version>
         <org.apache.commons.commons-lang3.version>3.4</org.apache.commons.commons-lang3.version>
-        <org.apache.commons.commons-codec.version>1.10</org.apache.commons.commons-codec.version>
+        <org.apache.commons.commons-codec.version>1.10</org.apache.commons.commons-codec.version>-->
+        <org.apache.tika.version>1.11</org.apache.tika.version>
+
         <!-- javax -->
         <javax.interceptor-api.version>1.2</javax.interceptor-api.version>
+        <!-- Other -->
+        <cglib.cglib.version>3.2.0</cglib.cglib.version>
+        <com.jolbox.bonecp.version>0.8.0.RELEASE</com.jolbox.bonecp.version>
+        <!-- Archive -->
+        <net.sf.sevenzipjbinding.sevenzipjbinding>9.20-2.00beta</net.sf.sevenzipjbinding.sevenzipjbinding>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Framework: core + beans + contentxt + web -->
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
@@ -146,8 +150,13 @@
                         <groupId>org.springframework.security</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
+            <!-- Open RDF: ***** -->
             <dependency>
                 <groupId>org.openrdf.sesame</groupId>
                 <artifactId>sesame-bom</artifactId>
@@ -165,7 +174,7 @@
             <dependency>
                 <groupId>xml-apis</groupId>
                 <artifactId>xml-apis</artifactId>
-                <version>1.4.01</version>
+                <version>${xml-apis.xml-apis.version}</version>
                 <scope>runtime</scope>
             </dependency>
         </dependencies>
@@ -204,6 +213,30 @@
             <version>${org.springframework.version}</version>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- SUPPORT LIBRARY FOR SPRING -->
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib.cglib.version}</version>
+            <optional>true</optional>
+        </dependency>
+
 
         <!-- ============= -->
         <!-- HIBERNATE     -->
@@ -301,6 +334,14 @@
             <version>${org.jooq.jooq.version}</version>
         </dependency>
 
+        <!-- Pooling database -->
+        <dependency>
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp</artifactId>
+            <version>${com.jolbox.bonecp.version}</version>
+            <optional>true</optional>
+        </dependency>
+
 
         <!-- ============= -->
         <!-- JSON PARSER   -->
@@ -334,7 +375,7 @@
         </dependency>
 
         <!-- =============== -->
-        <!-- XML - JDOM2     -->
+        <!-- XML - JDOM2 + XML API    -->
         <!-- =============== -->
         <dependency>
             <groupId>org.jdom</groupId>
@@ -342,6 +383,13 @@
             <version>${org.jdom.jdom2.version}</version>
             <optional>true</optional>
         </dependency>
+        <!-- Support XML function on SpringFramework and Hibernate -->
+      <!--  <dependency>
+            <groupId>xml-apis</groupId>
+            <artifactId>xml-apis</artifactId>
+            <version>${xml-apis.xml-apis.version}</version>
+            <optional>true</optional>
+        </dependency>-->
 
         <!-- =============== -->
         <!-- HTML - JSOUP    -->
@@ -563,6 +611,42 @@
             <artifactId>commons-codec</artifactId>
             <version>${org.apache.commons.commons-codec.version}</version>
         </dependency>-->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>${org.apache.tika.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parsers</artifactId>
+            <version>${org.apache.tika.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <!-- Excel support -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>3.10-FINAL</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.10-FINAL</version>
+        </dependency>
+        <!-- ====================== -->
+        <!-- ARCHIVE                -->
+        <!-- ====================== -->
+        <dependency>
+            <groupId>net.sf.sevenzipjbinding</groupId>
+            <artifactId>sevenzipjbinding</artifactId>
+            <version>${net.sf.sevenzipjbinding.sevenzipjbinding}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.sevenzipjbinding</groupId>
+            <artifactId>sevenzipjbinding-all-platforms</artifactId>
+            <version>${net.sf.sevenzipjbinding.sevenzipjbinding}</version>
+        </dependency>
 
         <!-- ====================== -->
         <!-- MAVEN PLUGIN DEPENDENCY-->
@@ -599,7 +683,8 @@
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
             <artifactId>jansi</artifactId>
-            <version>1.11</version>
+            <version>${org.fusesource.jansi.jansi.version}</version>
+            <optional>true</optional>
         </dependency>
         <!-- The SLF4J - take out because already present in logback classic -->
          <dependency>

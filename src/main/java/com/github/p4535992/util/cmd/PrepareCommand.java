@@ -1,7 +1,6 @@
 package com.github.p4535992.util.cmd;
 
 import com.github.p4535992.util.string.StringUtilities;
-import org.apache.commons.exec.*;
 
 import java.io.*;
 import java.util.Map;
@@ -16,10 +15,6 @@ public class PrepareCommand {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(PrepareCommand.class);
-
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
     
     public PrepareCommand(){}
     
@@ -53,7 +48,7 @@ public class PrepareCommand {
                 }
                 message = buffer.toString();
             } catch (IOException e) {
-                logger.error(gm() + e.getMessage(),e);
+                logger.error(e.getMessage(),e);
             }
         }
     }
@@ -98,7 +93,7 @@ public class PrepareCommand {
             //file.delete();
             //file.deleteOnExit();
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return -1;
         }finally{
             file.delete();
@@ -114,10 +109,10 @@ public class PrepareCommand {
         //CommandLine commandLine = new CommandLine("cd "+System.getProperty("user.dir")+"/Web-Karma-master v2.031/karma-offline");
         //commandLine.setSubstitutionMap(map);
         // insert the executor and consider the exitValue '0' as success
-        Executor executor = new DefaultExecutor();
+        org.apache.commons.exec.Executor executor = new org.apache.commons.exec.DefaultExecutor();
         executor.setWorkingDirectory(new File(workingDirectory));
         //executor.setExitValue(0);
-        CommandLine commandLine = new CommandLine("mvn exec:java");
+        org.apache.commons.exec.CommandLine commandLine = new org.apache.commons.exec.CommandLine("mvn exec:java");
         commandLine.addArgument(" -Dexec.mainClass=\"" + mainClass + "\"");
         StringBuilder builder = new StringBuilder();
         builder.append(" -Dexec.args=\"");
@@ -128,17 +123,17 @@ public class PrepareCommand {
         builder.append("\"");
         commandLine.addArgument(builder.toString());
         // insert a watchdog if requested
-        ExecuteWatchdog watchdog = new ExecuteWatchdog(printJobTimeout);
+        org.apache.commons.exec.ExecuteWatchdog watchdog = new org.apache.commons.exec.ExecuteWatchdog(printJobTimeout);
         executor.setWatchdog(watchdog);
         
         // handle output
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
+        org.apache.commons.exec.PumpStreamHandler streamHandler = new org.apache.commons.exec.PumpStreamHandler(outputStream);
         executor.setStreamHandler(streamHandler);
         try {
             exitValue = executor.execute(commandLine);
-        } catch (ExecuteException e) {
-            logger.error(gm() + e.getMessage(),e);
+        } catch (org.apache.commons.exec.ExecuteException e) {
+            logger.error(e.getMessage(),e);
             return -1;
         }
         logger.info(outputStream.toString());

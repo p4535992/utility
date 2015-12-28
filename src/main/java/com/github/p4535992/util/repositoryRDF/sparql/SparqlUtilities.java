@@ -232,7 +232,6 @@ public class SparqlUtilities {
         namespacePrefixes.put("xsd","http://www.w3.org/2001/XMLSchema#");
         namespacePrefixes.put("yago","http://mpii.de/yago/resource/");
         namespacePrefixes.put("wgs84","http://www.w3.org/2003/01/geo/wgs84_pos#");
-
         return namespacePrefixes;
     }
 
@@ -251,18 +250,24 @@ public class SparqlUtilities {
     /**
      * Method to prepare the part of teh query with all prefix.
      * @return string part of the query with the prefixes.
+     * e.g. PREFIX foaf:  http://xmlns.com/foaf/0.1/
      */
     public static String preparePrefix(){
-       return preparePrefix("");
+       return preparePrefix("",false);
+    }
+
+    public static String preparePrefixNoPoint(){
+        return preparePrefix("",true);
     }
 
     public static String preparePrefix(Character characterPrefix){
-        StringBuilder sb = new StringBuilder();
+        /*StringBuilder sb = new StringBuilder();
         for(Map.Entry<String,String> entry : getDefaultNamespacePrefixes().entrySet()){
             sb.append(characterPrefix).append("prefix ")
                     .append(entry.getKey()).append(": <").append(entry.getValue()).append("> .\n");
         }
-        return sb.toString();
+        return sb.toString();*/
+        return preparePrefix(characterPrefix.toString(),false);
     }
 
     /**
@@ -273,19 +278,37 @@ public class SparqlUtilities {
     public static String preparePrefix(Map<String,String> map){
         StringBuilder sb = new StringBuilder();
         for(Map.Entry<String,String> entry : map.entrySet()){
-            sb.append("prefix ").append(entry.getKey()).append(": <").append(entry.getValue()).append("> .\n");
+            sb.append("PREFIX ").append(entry.getKey()).append(": <").append(entry.getValue()).append(">  \n");//"\n"
         }
         return sb.toString();
     }
 
-    public static String preparePrefix(String domainUri){
+    public static String preparePrefix(String domainUri,boolean noPoint){
+        if(domainUri.length() <= 1) return preparePrefixNoUri(domainUri,noPoint);
+        else return preparePrefixUri(domainUri);
+    }
+
+    private static String preparePrefixNoUri(String symbolPrefix,boolean noPoint){
+        StringBuilder sb = new StringBuilder();
         for(Map.Entry<String,String> entry : getDefaultNamespacePrefixes().entrySet()){
-             if(entry.getValue().contains(domainUri)){
-                 return entry.getKey() +":";
-             }
+            sb.append(symbolPrefix).append("PREFIX ")
+                    .append(entry.getKey()).append(": <").append(entry.getValue()).append(">")
+                    .append(noPoint ? " \n" : ". \n");//"\n"
         }
-        logger.warn(gm() + "No prefix found on the map for the domain uri you have specified we create a automatic" +
-                "by getting the first two caracther after the protocoll on the uri.");
+        return sb.toString();
+    }
+
+    private static String preparePrefixUri(String domainUri){
+        StringBuilder sb = new StringBuilder();
+        for(Map.Entry<String,String> entry : getDefaultNamespacePrefixes().entrySet()){
+            if (entry.getValue().contains(domainUri)) {
+                return entry.getKey();
+               /* return  sb.append("PREFIX ").append(entry.getKey())
+                        .append(": <").append(entry.getValue()).append("> .\n").toString();*/
+            }
+        }
+        logger.warn("No prefix found on the map for the domain uri you have specified we create a automatic" +
+                "by getting the first two Caracther after the protocol on the uri.");
         return getDomainName(domainUri).substring(0,2);
     }
 
@@ -388,5 +411,41 @@ public class SparqlUtilities {
         return "INSERT DATA { GRAPH <"+uriGraph+"> { ... } }";
     }
 
+
+    //Validation from web service
+    /**
+     * <form accept-charset="UTF-8" method="post" action="validate/query">
+     <p>
+     <textarea rows="30" cols="70" name="query">PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl: <http://www.w3.org/2002/07/owl#> PREFIX fn: <http://www.w3.org/2005/xpath-functions#> PREFIX apf: <http://jena.hpl.hp.com/ARQ/property#> PREFIX dc: <http://purl.org/dc/elements/1.1/> SELECT ?book ?title WHERE { ?book dc:title ?title }</textarea>
+     Input syntax:
+     <input type="radio" checked="checked" value="SPARQL" name="languageSyntax">
+     SPARQL
+     <input type="radio" value="ARQ" name="languageSyntax">
+     SPARQL extended syntax
+     Output:
+     <input type="checkbox" checked="checked" value="sparql" name="outputFormat">
+     SPARQL
+     <input type="checkbox" value="algebra" name="outputFormat">
+     SPARQL algebra
+     <input type="checkbox" value="quads" name="outputFormat">
+     SPARQL algebra (quads)
+     <input type="checkbox" value="opt" name="outputFormat">
+     SPARQL algebra (general optimizations)
+     <input type="checkbox" value="optquads" name="outputFormat">
+     SPARQL algebra (quads, general optimizations)
+     Line numbers:
+     <input type="radio" checked="checked" value="true" name="linenumbers">
+     Yes
+     <input type="radio" value="false" name="linenumbers">
+     No
+     <br>
+     <input type="submit" value="Validate SPARQL Query">
+     </p>
+     </form>
+     */
+   /*  public boolean validateSparqlQuery(String query){
+        String url = "" ;
+        HttpUtilities.execute
+    }*/
 
 }

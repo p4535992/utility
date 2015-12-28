@@ -1,5 +1,6 @@
 package com.github.p4535992.util.database.sql;
 
+import com.github.p4535992.util.collection.ArrayUtilities;
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 
@@ -18,10 +19,6 @@ public class SQLQuery {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(SQLQuery.class);
-
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
 
     /**
      * CREATE TABLE  nameTableCopied LIKE  nameTableToCopy;
@@ -42,7 +39,7 @@ public class SQLQuery {
      * @return string query.
      */
     public static String alterAddColumn(String yourTable,String nameNewColumn,int SQLTypes,Integer size){
-        return "ALTER TABLE " + yourTable + " ADD nameNewColumn "+SQLHelper.convertSQLTypes2String(SQLTypes)+"("+size+");";
+        return "ALTER TABLE " + yourTable + " ADD nameNewColumn "+ SQLUtilities.convertSQLTypes2String(SQLTypes)+"("+size+");";
     }
 
     /**
@@ -173,13 +170,13 @@ public class SQLQuery {
     public static String deleteDuplicateRecord(String yourTable,String nameKeyColumn,String[] cols){
         return
         "WHILE EXISTS (SELECT COUNT(*) FROM "+yourTable+" GROUP BY "+
-                CollectionUtilities.toString(cols)+" HAVING COUNT(*) > 1)\n" +
+                ArrayUtilities.toString(cols)+" HAVING COUNT(*) > 1)\n" +
         "BEGIN\n" +
         "    DELETE FROM "+yourTable+" WHERE "+nameKeyColumn+" IN \n" +
         "    (\n" +
         "        SELECT MIN("+nameKeyColumn+") as [DeleteID]\n" +
         "        FROM "+yourTable+"\n" +
-        "        GROUP BY "+CollectionUtilities.toString(cols)+"\n" +
+        "        GROUP BY "+ArrayUtilities.toString(cols)+"\n" +
         "        HAVING COUNT(*) > 1\n" +
         "    )\n" +
         "END";
@@ -193,8 +190,8 @@ public class SQLQuery {
      */
     public String deleteDuplicateRecord(String yourTable,String[] cols){
         return "WITH "+yourTable+" AS ( " +
-                "SELECT ROW_NUMBER() OVER(PARTITION BY "+CollectionUtilities.toString(cols)+
-                " ORDER BY "+CollectionUtilities.toString(cols)+") AS ROW " +
+                "SELECT ROW_NUMBER() OVER(PARTITION BY "+ArrayUtilities.toString(cols)+
+                " ORDER BY "+ArrayUtilities.toString(cols)+") AS ROW " +
                 "FROM "+yourTable+") " +
                 "DELETE FROM "+yourTable+" " +
                 "WHERE ROW > 1;";
@@ -206,7 +203,7 @@ public class SQLQuery {
         boolean statement = false;
         //PREPARE THE QUERY STRING
         bQuery.append("SELECT ");
-        if(CollectionUtilities.isEmpty(columns) || (columns.length==1 && columns[0].equals("*"))){
+        if(ArrayUtilities.isEmpty(columns) || (columns.length==1 && columns[0].equals("*"))){
             bQuery.append(" * ");
         }else{
             for(int i = 0; i < columns.length; i++){
@@ -217,7 +214,7 @@ public class SQLQuery {
             }
         }
         bQuery.append(" FROM ").append(mySelectTable).append(" ");
-        if(!CollectionUtilities.isEmpty(columns_where)) {
+        if(!ArrayUtilities.isEmpty(columns_where)) {
             if(values_where==null){
                 statement = true;
                 //values_where = new Object[columns_where.length];
@@ -256,7 +253,7 @@ public class SQLQuery {
         int f = 0;
         for (int k = 0; k < columns.length; k++) {
             bQuery.append(columns[k]).append("=? ");
-            if(CollectionUtilities.isEmpty(values)) {
+            if(ArrayUtilities.isEmpty(values)) {
                 if (values[k] == null) {
                     values[f] = "NULL";
                     f++;
@@ -269,7 +266,7 @@ public class SQLQuery {
                 bQuery.append(", ");
             }
         }
-        if(!CollectionUtilities.isEmpty(columns_where)) {
+        if(!ArrayUtilities.isEmpty(columns_where)) {
             if(values_where==null){
                 statement = true;
             }
@@ -349,8 +346,8 @@ public class SQLQuery {
             }
             bQuery.append(");");
         }catch (NullPointerException e){
-            logger.error(gm() +"Attention: you probably have forgotten  to put some column for the SQL query");
-            logger.error(gm() + e.getMessage(),e);
+            logger.error("Attention: you probably have forgotten  to put some column for the SQL query:"
+                    +e.getMessage(),e);
         }
         return bQuery.toString();
     }
@@ -399,8 +396,8 @@ public class SQLQuery {
             }
             bQuery.append(");");
         }catch (NullPointerException e){
-            logger.error(gm() + "Attention: you probably have forgotten to put some column for the SQL query");
-            logger.error(gm() + e.getMessage(),e);
+            logger.error("Attention: you probably have forgotten to put some column for the SQL query:"
+                    +e.getMessage(),e);
         }
         return bQuery.toString();
     }
@@ -496,8 +493,8 @@ public class SQLQuery {
         bQuery.append("CREATE TABLE ").append(nameTable).append(" (").append("\n");
         for(int i=0; i < columns.length; i++){
             bQuery.append(columns[i]).append(" ") .append(
-                    SQLHelper.convertSQLTypes2String(
-                            SQLHelper.convertStringToSQLTypes(columns[i]))).append("(255)");
+                    SQLUtilities.convertSQLTypes2String(
+                            SQLUtilities.convertStringToSQLTypes(columns[i]))).append("(255)");
             if(i < columns.length) bQuery.append(", ");
 
         }
@@ -532,12 +529,12 @@ public class SQLQuery {
                     .append("' INTO TABLE ").append(nameTable).append(" FIELDS TERMINATED BY '")
                     .append(fieldSeparator).append("'").append(" LINES TERMINATED BY '")
                     .append(linesSeparator).append(" ( ")
-                    .append(CollectionUtilities.toString(columns)).append(") ");
-            logger.info(gm() + loadQuery.toString());
+                    .append(ArrayUtilities.toString(columns)).append(") ");
+            logger.info(loadQuery.toString());
             //SQLHelper.executeSQL(loadQuery,connection);
         }
         catch (Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error("Cannot import the CSV file to the Databse:"+e.getMessage(),e);
         }
         return loadQuery.toString();
     }

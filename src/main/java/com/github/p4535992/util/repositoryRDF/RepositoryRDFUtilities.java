@@ -1,7 +1,7 @@
 package com.github.p4535992.util.repositoryRDF;
 
 import com.github.p4535992.util.repositoryRDF.cumulusrdf.CumulusRDFKit;
-import com.github.p4535992.util.repositoryRDF.sesame.Sesame28Kit;
+import com.github.p4535992.util.repositoryRDF.sesame.SesameUtilities;
 import com.hp.hpl.jena.graph.Triple;
 import org.openrdf.model.*;
 import org.openrdf.query.Operation;
@@ -30,7 +30,7 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public class RepositoryRDFUtilities {
 
-    private static Sesame28Kit s;
+    private static SesameUtilities s;
 
     protected RepositoryRDFUtilities() {}
 
@@ -41,7 +41,7 @@ public class RepositoryRDFUtilities {
             instance = new RepositoryRDFUtilities();
             //help with very large repository....
             System.setProperty("entityExpansionLimit", "1000000");
-            RepositoryRDFUtilities.s = Sesame28Kit.getInstance();
+            RepositoryRDFUtilities.s = SesameUtilities.getInstance();
         }
         return instance;
     }

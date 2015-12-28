@@ -24,10 +24,6 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger( BeansKit.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     private ResourceLoader resourceLoader;
 
     public static <T> T getBeanFromContext(String nameOfBean, Class<T> requiredType,AbstractApplicationContext context){
@@ -71,7 +67,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
                         abstractContext = new ClassPathXmlApplicationContext(path);
                         context = abstractContext;
                     } catch (Exception e4) {
-                        logger.error(gm() + e4.getMessage(),e4);
+                        logger.error(e4.getMessage(),e4);
                     }
                 }
             }
@@ -102,7 +98,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
                     abstractContext = new ClassPathXmlApplicationContext(paths);
                     context = abstractContext;
                 } catch (Exception e4) {
-                    logger.error(gm() + e4.getMessage(), e4);
+                    logger.error(e4.getMessage(), e4);
                 }
 
             }
@@ -119,7 +115,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         try {
             return new File(thisClass.getClassLoader().getResource(name).getFile());
         }catch(java.lang.NullPointerException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -130,7 +126,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
             result = org.apache.commons.io.IOUtils.toString(thisClass.getClassLoader().getResourceAsStream(fileName));
             return result;
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -140,12 +136,12 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
             final org.springframework.core.io.Resource yourfile = new org.springframework.core.io.ClassPathResource(fileName);
             return yourfile.getFile();
         }catch(IOException e){
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
 
-    public static org.springframework.core.io.Resource getResourceSpringFromString(String uri) throws MalformedURLException {
+    public static org.springframework.core.io.Resource getResourceSpringAsResource(String uri) throws MalformedURLException {
         org.springframework.core.io.Resource resource;
         File file=new File(uri);
         if (file.exists()) {
@@ -173,7 +169,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
             br.close();
             return stringBuilder.toString();
         } catch (Exception e) {
-            logger.error(gm() + e.getMessage(), e);
+            logger.error(e.getMessage(), e);
             return null;
         }
     }
@@ -197,7 +193,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
             }
             return stringBuilder.toString();
         }catch (IOException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }

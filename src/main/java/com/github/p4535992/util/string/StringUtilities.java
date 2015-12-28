@@ -1,6 +1,9 @@
 package com.github.p4535992.util.string;
 
+import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.regex.pattern.Patterns;
+import org.apache.tika.exception.TikaException;
+
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -9,7 +12,10 @@ import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -30,6 +36,10 @@ public class StringUtilities {
     
     private static final org.slf4j.Logger logger = 
             org.slf4j.LoggerFactory.getLogger(StringUtilities.class);
+
+    private static String gm() {
+        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
+    }
 
      public enum special{
         WHITESPACE(0), NBSP(1),NEWLINE(2),PROJECTDIR(3),LINE_FEED(4),LINE_SEP(5),EMPTY_STR(6),
@@ -79,7 +89,8 @@ public class StringUtilities {
     public static final String LINE_FEED = "\r\n";
     public static final String LINE_SEP = System.getProperty("line.separator");
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
-    public static final String PROJECT_DIR = System.getProperty("user.dir");
+    //public static final String PROJECT_DIR = System.getProperty("user.dir");
+    public static final String PROJECT_DIR = FileUtilities.getDirectoryUser();
     public static final String EMPTY_STR = "";
     public static final String LT = "<";
     public static final String GT = ">";
@@ -145,10 +156,10 @@ public class StringUtilities {
      * @param url Address to check
      * @return true if the <code>url</code> is a valid web address.
      */
-    public  static boolean isValidURL(String url) {
+   /* public  static boolean isValidURL(String url) {
         return url != null && Patterns.WEB_URL.matcher(url).matches();
     }
-
+*/
     /**
      * Method to  check if an url is valid.
      * @param url Address to check
@@ -161,10 +172,15 @@ public class StringUtilities {
     /**
      * Method to check if an url has the valid protocol.
      * @param url Address to check
-     * @return true if the <code>url</code> is a valid web address.
+     * @return true if the url is a valid web address.
      */
     public static boolean isURLWithProtocol(String url){
-        return isValidURL(url) && Patterns.Protocol_URL.matcher(url).matches();
+        if(isURL(url)) {
+            return Patterns.Protocol_URL.matcher(url).matches() || url.matches("^(https?|ftp)://.*$");
+        }else{
+            logger.warn(gm() + "This is not a URL:"+url+" return false");
+            return false;
+        }
     }
 
     /**
@@ -173,8 +189,14 @@ public class StringUtilities {
      * @return true if the url is a valid web address.
      */
     public static boolean isURLWithoutProtocol(String url){
-        return Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() &&
-                !Patterns.Protocol_URL.matcher(url).matches();
+        if(isURL(url)) {
+            return Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() ||
+                    Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() &&
+                            !(Patterns.Protocol_URL.matcher(url).matches() || url.matches("^(https?|ftp)://.*$"));
+        }else{
+            logger.warn(gm() + "This is not a URL:"+url+ " return false");
+            return false;
+        }
     }
 
     /**
@@ -183,7 +205,7 @@ public class StringUtilities {
      * @return if tru is a url address web.
      */
     public static boolean isURL(String url){
-        return isValidURL(url);
+        return url != null && Patterns.WEB_URL.matcher(url).matches();
     }
 
     /**
@@ -208,7 +230,7 @@ public class StringUtilities {
 
     /**
      * Method for check if a string rappresent a Double value.
-     * @param str string rapresentative of a number.
+     * @param str string rappresentative of a number.
      * @return boolean value if the string rappresent a number or not.
      */
     public static boolean isDouble(String str) {
@@ -226,7 +248,7 @@ public class StringUtilities {
 
     /**
      * Method for check if a string rappresent a Float value.
-     * @param str string rapresentative of a number.
+     * @param str string rappresentative of a number.
      * @return boolean value if the string rappresent a number or not.
      */
     public static boolean isDecimal(String str) {
@@ -242,6 +264,15 @@ public class StringUtilities {
      */
     public static boolean isNullOrEmpty(String text) {
         return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty() ;
+    }
+
+    /**
+     * Method for check if a string rappresent a line separator.
+     * @param str string rappresentative a line separator.
+     * @return boolean value if the string rappresent a line separator or not.
+     */
+    public static boolean isLineSeparator(String str){
+        return Patterns.IS_LINE_SEPARATOR().matcher(str).matches();
     }
     
     //--------------------------------------------------------
@@ -485,7 +516,34 @@ public class StringUtilities {
      * @return InputStream with the string value.
      */
     public static InputStream toStream(String string) {
-       return toStream(string, UTF_8);
+       return toStream(string, StringUtilities.UTF_8);
+    }
+
+    /**
+     * Method to convert a Reader to a String.
+     * href: http://www.baeldung.com/java-convert-reader-to-string.
+     * @param reader the Reader object to convert.
+     * @return the String content of the Reader.
+     */
+    public static String toString(Reader reader){
+        char[] arr = new char[8 * 1024];
+        StringBuilder buffer = new StringBuilder();
+        int numCharsRead;
+        try {
+            while ((numCharsRead = reader.read(arr, 0, arr.length)) != -1) {
+                buffer.append(arr, 0, numCharsRead);
+            }
+            reader.close();
+            return buffer.toString();
+        }catch(IOException e){
+            //With commons Apache
+            try {
+                return org.apache.commons.io.IOUtils.toString(reader);
+            }catch(IOException e1){
+                logger.error(e1.getMessage(),e1);
+                return null;
+            }
+        }
     }
 
    /**
@@ -677,7 +735,7 @@ public class StringUtilities {
      * @param s string of text you want to convert to HEX
      * @return the text in HEX encoding
      */
-    private static String unicodeEscape(String s) {
+    public static String unicodeEscape(String s) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
@@ -709,13 +767,17 @@ public class StringUtilities {
         return toHexString(bytes);
     }
 
+    public static String encodeTo(String text,Charset charset){
+        return new String(text.getBytes(charset), charset);
+    }
+
     enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
     /**
      *  convert unicode escapes back to char.
      * @param s string to convert to ascii.
      * @return string ascii.
      */
-    private static String convertUnicodeEscapeToASCII(String s) {
+    public static String convertUnicodeEscapeToASCII(String s) {
         char[] out = new char[s.length()];
         ParseState state = ParseState.NORMAL;
         int j = 0, k = 0, unicode = 0;
@@ -947,17 +1009,17 @@ public class StringUtilities {
 
     /**
      * Method to Deserializing an Object.
-     * @param object object.
      * @param nameTempSer string serializable.
      * @param <T> generic type.
      * @return object serializable.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T toObject(T object,String nameTempSer){
+    public static <T> T toObject(String nameTempSer){
+        T object ;
         try{
             try (FileInputStream fileIn = new FileInputStream("/tmp/"+nameTempSer+".ser");
                  ObjectInputStream in = new ObjectInputStream(fileIn)) {
-                object = (T) in.readObject();
+                 object = (T) in.readObject();
             }
         }catch(IOException|ClassNotFoundException i){
             logger.error(i.getMessage(),i);
@@ -1364,10 +1426,60 @@ public class StringUtilities {
      * @param source The string that has to be transformed into a valid Html string.
      * @return The encoded String object.
      */
-    public static String encodeHtml(String source){
+    public static String encodeToHtml(String source){
         return encode(source, mHtmlEncodeMap);
     }
 
+    /**
+     * Method to check the encoding charset with JDK code.
+     * href: http://www.java2s.com/Code/Java/I18N/Howtoautodetectafilesencoding.htm
+     * @param text the String to check.
+     * @return the Encoding Charset.
+     */
+    public static Charset getCharset(String text){
+        //with Apache Tika...
+        try {
+            org.apache.tika.detect.AutoDetectReader adr =
+                    new org.apache.tika.detect.AutoDetectReader(new ByteArrayInputStream(text.getBytes()));
+            return adr.getCharset();
+        } catch (IOException|TikaException e) {
+            //wihtout any external lirary....
+            String[] charsetsToBeTested = {"UTF-8", "windows-1253", "ISO-8859-7"};
+            return detectCharset(new ByteArrayInputStream(text.getBytes()), charsetsToBeTested);
+        }
+    }
+
+    //DETECT CHARSET WITHOUT ANY EXTERNAL LIBRARY
+    private static Charset detectCharset(InputStream inputStream, String[] charsets) {
+        Charset charset = null;
+        for (String charsetName : charsets) {
+            charset = detectCharset(inputStream, Charset.forName(charsetName));
+            if (charset != null) break;
+        }
+        return charset;
+    }
+
+    private static Charset detectCharset(InputStream inputStream, Charset charset) {
+        try {
+            BufferedInputStream input = new BufferedInputStream(inputStream);
+            CharsetDecoder decoder = charset.newDecoder();
+            decoder.reset();
+            byte[] buffer = new byte[512];
+            boolean identified = false;
+            while ((input.read(buffer) != -1) && (!identified)) {
+                identified = identify(buffer, decoder);
+            }
+            input.close();
+            if (identified) return charset;
+            else  return null;
+        } catch (Exception e) {return null;}
+    }
+
+    private static  boolean identify(byte[] bytes, CharsetDecoder decoder) {
+        try {decoder.decode(ByteBuffer.wrap(bytes));
+        } catch (CharacterCodingException e) {return false;}
+        return true;
+    }
 
 
     //------------------------------------------------------------------------------------------------

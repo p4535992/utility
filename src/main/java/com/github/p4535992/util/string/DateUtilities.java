@@ -3,10 +3,7 @@ package com.github.p4535992.util.string;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * Created by 4535992 on 16/07/2015.
@@ -14,10 +11,10 @@ import java.util.TimeZone;
  * @version 2015-12-15.
  */
 @SuppressWarnings("unused")
-public class DateAndTimeKit {
+public class DateUtilities {
     
     private static final org.slf4j.Logger logger = 
-            org.slf4j.LoggerFactory.getLogger(DateAndTimeKit.class);
+            org.slf4j.LoggerFactory.getLogger(DateUtilities.class);
 
     /**
      * Method to get the current GMT time for user notification.
@@ -110,6 +107,30 @@ public class DateAndTimeKit {
         return date;
     }
 
+    /**
+     * Method to print the RFC2822 Date.
+     * href: https://github.com/azeckoski/reflectutils/blob/master/src/main/java/org/azeckoski/reflectutils/DateUtils.java
+     * @param date the Date Object to modify.
+     * @return the String of the Date modified.
+     */
+    public static String getDateRFC2822(Date date) {
+        SimpleDateFormat df = new SimpleDateFormat("EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", Locale.US);
+        return df.format(date);
+    }
+
+    /**
+     * Method to print the RFC2822 Date.
+     * href: https://github.com/azeckoski/reflectutils/blob/master/src/main/java/org/azeckoski/reflectutils/DateUtils.java
+     * @param date the Date Object to modify.
+     * @return the String of the Date modified.
+     */
+    public static String getDateISO8601(Date date) {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        String result = df.format(date);
+        // convert YYYYMMDDTHH:mm:ss+HH00 into YYYYMMDDTHH:mm:ss+HH:00
+        result = result.substring(0, result.length() - 2) + ":" + result.substring(result.length() - 2);
+        return result;
+    }
    
 
 }

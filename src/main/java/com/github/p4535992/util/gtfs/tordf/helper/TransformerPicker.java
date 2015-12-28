@@ -9,6 +9,7 @@ import java.util.Objects;
 
 /**
  * Created by 4535992 on 30/11/2015.
+ * @author 4535992.
  */
 public class TransformerPicker {
 
@@ -16,14 +17,14 @@ public class TransformerPicker {
 
     protected TransformerPicker(){}
 
-    protected TransformerPicker(String fileName,String baseUri,String version){
+    /*protected TransformerPicker(String fileName,String baseUri,String version){
         for(Map.Entry<String,Transformer> gtfsFileName : gtfsFilenames().entrySet()){
             if (Objects.equals(gtfsFileName.getKey(), fileName.toLowerCase())){
                 this.transformer = gtfsFileName.getValue();
                 break;
             }
         }
-    }
+    }*/
 
     protected TransformerPicker(String fileName){
         for(Map.Entry<String,Transformer> gtfsFileName : gtfsFilenames().entrySet()){
@@ -50,12 +51,12 @@ public class TransformerPicker {
         return instance;
     }
 
-    public static TransformerPicker getInstance(String fileName,String baseUri,String version){
+   /* public static TransformerPicker getInstance(String fileName,String baseUri,String version){
         if(instance == null) {
             instance = new TransformerPicker(fileName,baseUri,version);
         }
         return instance;
-    }
+    }*/
 
     public Transformer getTransformer() {
         return transformer;

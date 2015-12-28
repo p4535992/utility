@@ -14,10 +14,6 @@ public class ZipStreamer implements Runnable {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(ZipStreamer.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private AtomicLong counter = new AtomicLong();
     private PipedOutputStream out;
@@ -85,7 +81,7 @@ public class ZipStreamer implements Runnable {
             outStream.close();
             inStream.close();
         } catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
         }
     }
 
@@ -105,11 +101,11 @@ public class ZipStreamer implements Runnable {
                 zipOut.closeEntry();
                 System.out.println("Wrote " + counter.get());
             } catch (Exception e) {
-                logger.error(gm() + e.getMessage(),e);
+                logger.error(e.getMessage(),e);
                 try {
                     zipOut.close();
                 } catch (IOException e1) {
-                    logger.warn(gm() + e1.getMessage(),e1);
+                    logger.warn(e1.getMessage(),e1);
                 }
                 break;
             }

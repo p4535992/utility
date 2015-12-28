@@ -23,16 +23,16 @@ import java.util.zip.ZipInputStream;
  * Created by 4535992 on 23/10/2015.
  */
 @SuppressWarnings( "deprecation" )
-public class OneBusKit {
+public class OneBusUtilities {
 
-    protected OneBusKit() {
+    protected OneBusUtilities() {
     }
 
-    private static OneBusKit instance = null;
+    private static OneBusUtilities instance = null;
 
-    public static OneBusKit getInstance() {
+    public static OneBusUtilities getInstance() {
         if (instance == null) {
-            instance = new OneBusKit();
+            instance = new OneBusUtilities();
             //help with very large repository....
             System.setProperty("entityExpansionLimit", "1000000");
         }
