@@ -57,7 +57,7 @@ public class FusekiUtilities {
     }
 
     public static Model execSparqlSelectOnFuseki(String hostFuseki,String selectQuerySparql,String filePathOutput) {
-        Model model = Jena2Kit.createModel();
+        Model model = JenaUtilities.createModel();
         //Query the collection, dump output
         //OutputStream out = new FileOutputStream(filePathOutput);
         QueryExecution qe = QueryExecutionFactory.sparqlService(

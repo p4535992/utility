@@ -1703,31 +1703,41 @@ public class JenaUtilities {
         return createResource(null, localNameOrUri);
     }
 
+    public static Resource createResource(RDFNode localNameOrUri){
+        return createResource(null, localNameOrUri);
+    }
+
     /**
      * Method to create a Jena Resource.
-     * @param graphUriAndModel the String iri or the Jena Model.
-     * @param localNameorUri the String name local Graph or the String iri of the subject.
+     * @param graphUriOrModel the String iri or the Jena Model.
+     * @param localNameOrUri the String name local Graph or the String iri of the subject.
      * @return the Jena Resource.
      */
-    public static Resource createResource(Object graphUriAndModel,Object localNameorUri){
-        localNameorUri = toId(localNameorUri);
-        if(graphUriAndModel == null){
-            if(isIRI(localNameorUri) || isUri(localNameorUri))return ResourceFactory.createResource(toString(localNameorUri));
-            else return null;
+    public static Resource createResource(Object graphUriOrModel,Object localNameOrUri){
+        if(!(localNameOrUri instanceof RDFNode))localNameOrUri = toId(localNameOrUri);
+        if(graphUriOrModel == null){
+            if(localNameOrUri instanceof RDFNode){
+                RDFNode rdfNode = (RDFNode) localNameOrUri;
+                if(rdfNode.isResource()||rdfNode.isURIResource()||rdfNode.isAnon())return rdfNode.asResource();
+                else return null;
+            }else{
+                if(isIRI(localNameOrUri) || isUri(localNameOrUri))return ResourceFactory.createResource(toString(localNameOrUri));
+                else return null;
+            }
         }else {
-            if (isString(graphUriAndModel)) {
-                if (toString(graphUriAndModel).endsWith("/") || toString(graphUriAndModel).endsWith("#")) {
-                    String uri = toString(graphUriAndModel) + localNameorUri;
+            if (isString(graphUriOrModel)) {
+                if (toString(graphUriOrModel).endsWith("/") || toString(graphUriOrModel).endsWith("#")) {
+                    String uri = toString(graphUriOrModel) + localNameOrUri;
                     if(isIRI(uri) || isUri(uri))return ResourceFactory.createResource(uri);
                     else return null;
                 } else {
-                    String uri = toString(graphUriAndModel)  + "/" +  localNameorUri;
+                    String uri = toString(graphUriOrModel)  + "/" +  localNameOrUri;
                     if(isIRI(uri) || isUri(uri))return ResourceFactory.createResource(uri);
                     else return null;
                 }
             }
-            else if (graphUriAndModel instanceof Model) {
-                return (Resource) createRDFNode(graphUriAndModel, localNameorUri);
+            else if (graphUriOrModel instanceof Model) {
+                return createRDFNode(graphUriOrModel, localNameOrUri).asResource();
             }
             else return null;
         }
@@ -1744,11 +1754,13 @@ public class JenaUtilities {
         if(stringOrModelGraph == null){
             if(impl){
                 if(predicateUri!=null){
-                    if(isIRI(predicateUri) || isUri(predicateUri))return new PropertyImpl(toString(predicateUri));
+                    if(predicateUri instanceof RDFNode) return (Property) ((RDFNode) predicateUri).asResource();
+                    else if(isIRI(predicateUri) || isUri(predicateUri))return new PropertyImpl(toString(predicateUri));
                     else return null;
                 }
                 else return null;
             }else{
+                if(predicateUri instanceof RDFNode) return (Property) ((RDFNode) predicateUri).asResource();
                 if(predicateUri!=null) {
                     if (isIRI(predicateUri) || isUri(predicateUri))  return ResourceFactory.createProperty(toString(predicateUri));
                     else return ResourceFactory.createProperty(toString(predicateUri));
@@ -1821,6 +1833,15 @@ public class JenaUtilities {
 
     /**
      * Method to create a Jena Property.
+     * @param localNameOrSubject the RDFNode name local Graph or the String iri of the subject.
+     * @return the Jena Predicate.
+     */
+    public static Property createProperty(RDFNode localNameOrSubject){
+        return  createPropertyBase(null, localNameOrSubject, false);
+    }
+
+    /**
+     * Method to create a Jena Property.
      * @param localNameOrSubject the String name local Graph or the String iri of the subject.
      * @return the Jena Predicate.
      */
@@ -1838,7 +1859,8 @@ public class JenaUtilities {
      */
     private static Literal createLiteralBase(Model model,Object stringOrObject,RDFDatatype datatype){
         if(model == null) {
-            if (isString(stringOrObject)) {
+            if(stringOrObject instanceof RDFNode)return ((RDFNode) stringOrObject).asLiteral();
+            else if (isString(stringOrObject)) {
                 if (datatype != null) return ResourceFactory.createTypedLiteral(toString(stringOrObject), datatype);
                 else return ResourceFactory.createPlainLiteral(toString(stringOrObject));
             } else {
@@ -1846,7 +1868,11 @@ public class JenaUtilities {
                 return ResourceFactory.createTypedLiteral(stringOrObject);
             }
         }else{
-            if (isString(stringOrObject)) {
+            if(stringOrObject instanceof RDFNode){
+                if (datatype != null)return model.createTypedLiteral(stringOrObject,datatype);
+                else return model.createTypedLiteral(stringOrObject);
+            }
+            else if (isString(stringOrObject)) {
                 if (datatype != null) return model.createTypedLiteral(toString(stringOrObject), datatype);
                 else return model.createLiteral(toString(stringOrObject));
             } else {
@@ -1894,6 +1920,15 @@ public class JenaUtilities {
      * @return the Jena Literal.
      */
     public static Literal createLiteral(Object stringOrObject){
+        return createLiteralBase(null, stringOrObject, null);
+    }
+
+    /**
+     * Method utility: create new typed literal from uri.
+     * @param stringOrObject  the RDFNode of the Jena Literal.
+     * @return the Jena Literal.
+     */
+    public static Literal createLiteral(RDFNode stringOrObject){
         return createLiteralBase(null, stringOrObject, null);
     }
 
@@ -1976,9 +2011,20 @@ public class JenaUtilities {
      * @param graphUri the iri of the graph.
      * @return Statement.
      */
-        public static Statement createStatement(String subject,String predicate,String object,String graphUri){
-            return createStatementBase(null, subject, predicate, object, graphUri, null);
-        }
+    public static Statement createStatement(String subject,String predicate,String object,String graphUri){
+        return createStatementBase(null, subject, predicate, object, graphUri, null);
+    }
+
+    /**
+     * Method utility: create statement form a jena Model.
+     * @param subject the iri subject.
+     * @param predicate the iri predicate.
+     * @param object the iri object.
+     * @return Statement.
+     */
+    public static Statement createStatement(RDFNode subject,RDFNode predicate,RDFNode object){
+        return createStatementBase(null, subject, predicate, object, null, null);
+    }
 
     /**
      * Method utility: create statement form a jena Model.
@@ -2271,23 +2317,22 @@ public class JenaUtilities {
         QueryExecution qexec = QueryExecutionFactory.create(query,ds);
         if (query.isSelectType()) {
             timer.startTimer() ;
-            ResultSet results = qexec.execSelect();
-            //ResultSetFormatter.consume(results) ;
+            qexec.execSelect();
             return timer.endTimer();   // Time in milliseconds.
         } else if (query.isConstructType()) {
             timer.startTimer() ;
-            Model results = qexec.execConstruct();
+            qexec.execConstruct();
             return timer.endTimer();   // Time in milliseconds.
         }else if (query.isAskType()) {
             timer.startTimer() ;
-            boolean results = qexec.execAsk();
+            qexec.execAsk();
             return timer.endTimer();   // Time in milliseconds.
         }else if (query.isDescribeType()) {
             timer.startTimer() ;
-            Model results = qexec.execDescribe();
+            qexec.execDescribe();
             return timer.endTimer();   // Time in milliseconds.
         }else{
-            return null;
+            return 0L;
         }
     }
 

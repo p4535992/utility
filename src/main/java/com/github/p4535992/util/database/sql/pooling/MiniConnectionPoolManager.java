@@ -4,7 +4,6 @@ import java.sql.Statement;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.Stack;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +27,7 @@ public class MiniConnectionPoolManager {
 
     private ConnectionPoolDataSource  dataSource;
 
-    private static PrintWriter  logWriter;
+    //private static PrintWriter  logWriter;
     private Semaphore  semaphore;
     private Stack<PooledConnection> recycledConnections;
 
@@ -49,13 +48,18 @@ public class MiniConnectionPoolManager {
     private static final Object  shutdownObj = new Object();
     private static Random random = new Random();
 
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(MiniConnectionPoolManager.class);
+
     /**
      * Thrown in {@link #getConnection()} when no free connection becomes available within <code>timeout</code> seconds.
      */
     public static class TimeoutException extends RuntimeException {
         private static final long serialVersionUID = 1;
         public TimeoutException () {
-            super ("Timeout while waiting for a free database connection."); }}
+            super ("Timeout while waiting for a free database connection.");
+        }
+    }
 
     /**
      * Constructs a MiniConnectionPoolManager object with a timeout of 60 seconds.
@@ -63,7 +67,8 @@ public class MiniConnectionPoolManager {
      * @param maxConnections  the maximum number of connections.
      */
     public MiniConnectionPoolManager (ConnectionPoolDataSource dataSource, int maxConnections) {
-        this (dataSource, maxConnections, itimeout); }
+        this (dataSource, maxConnections, itimeout);
+    }
 
     /**
      * Constructs a MiniConnectionPoolManager object.
@@ -75,13 +80,14 @@ public class MiniConnectionPoolManager {
         this.dataSource = dataSource;
         imaxConnections = maxConnections;
         itimeout = timeout;
-        try {
+       /* try {
             logWriter = dataSource.getLogWriter(); }
-        catch (SQLException ignored) {}
+        catch (SQLException ignored) {}*/
         if (maxConnections < 1) throw new IllegalArgumentException("Invalid maxConnections value.");
         semaphore = new Semaphore(maxConnections,true);
         recycledConnections = new Stack<>();
-        poolConnectionEventListener = new PoolConnectionEventListener(); }
+        poolConnectionEventListener = new PoolConnectionEventListener();
+    }
 
     /**
      * Closes all unused pooled connections.
@@ -97,7 +103,8 @@ public class MiniConnectionPoolManager {
                 pconn.close(); }
             catch (SQLException e2) {
                 if (e == null) e = e2; }}
-        if (e != null) throw e; }
+        if (e != null) throw e;
+    }
 
     /**
      * Retrieves a connection from the connection pool.
@@ -124,7 +131,8 @@ public class MiniConnectionPoolManager {
             ok = true;
             return conn; }
         finally {
-            if (!ok) semaphore.release(); }}
+            if (!ok) semaphore.release(); }
+    }
 
     private synchronized Connection getConnection2() throws SQLException {
         if (isDisposed) throw new IllegalStateException("Connection pool has been disposed.");   // test again with lock
@@ -137,7 +145,8 @@ public class MiniConnectionPoolManager {
         activeConnections++;
         pconn.addConnectionEventListener (poolConnectionEventListener);
         assertInnerState();
-        return conn; }
+        return conn;
+    }
 
     private synchronized void recycleConnection (PooledConnection pconn) {
         if (isDisposed) { disposeConnection (pconn); return; }
@@ -145,46 +154,44 @@ public class MiniConnectionPoolManager {
         activeConnections--;
         semaphore.release();
         recycledConnections.push (pconn);
-        assertInnerState(); }
+        assertInnerState();
+    }
 
     private synchronized void disposeConnection (PooledConnection pconn) {
         if (activeConnections <= 0) throw new AssertionError();
         activeConnections--;
         semaphore.release();
         closeConnectionNoEx (pconn);
-        assertInnerState(); }
+        assertInnerState();
+    }
 
     private void closeConnectionNoEx (PooledConnection pconn) {
         try {
             pconn.close(); }
         catch (SQLException e) {
-            log ("Error while closing database connection: "+e.toString()); }}
-
-    private void log (String msg) {
-        String s = "MiniConnectionPoolManager: "+msg;
-        try {
-            if (logWriter == null)
-                System.err.println (s);
-            else
-                logWriter.println (s); }
-        catch (Exception ignored) {}}
+            logger.error("Error while closing database connection: "+e.toString()); }
+    }
 
     private void assertInnerState() {
         if (activeConnections < 0) throw new AssertionError();
         if (activeConnections+recycledConnections.size() > imaxConnections) throw new AssertionError();
-        if (activeConnections+semaphore.availablePermits() > imaxConnections) throw new AssertionError(); }
+        if (activeConnections+semaphore.availablePermits() > imaxConnections) throw new AssertionError();
+    }
 
     private class PoolConnectionEventListener implements ConnectionEventListener {
         @Override
         public void connectionClosed (ConnectionEvent event) {
             PooledConnection pconn = (PooledConnection)event.getSource();
             pconn.removeConnectionEventListener (this);
-            recycleConnection (pconn); }
+            recycleConnection (pconn);
+        }
         @Override
         public void connectionErrorOccurred (ConnectionEvent event) {
             PooledConnection pconn = (PooledConnection)event.getSource();
             pconn.removeConnectionEventListener (this);
-            disposeConnection (pconn); }}
+            disposeConnection (pconn);
+        }
+    }
 
     /**
      * Returns the number of active (open) connections of this pool.
@@ -194,11 +201,8 @@ public class MiniConnectionPoolManager {
      * @return the number of active connections.
      **/
     public synchronized int getActiveConnections() {
-        return activeConnections; }
-
-
-
-
+        return activeConnections;
+    }
 
     public class WorkerThread extends Thread {
         public int threadNo;
@@ -243,8 +247,6 @@ public class MiniConnectionPoolManager {
           dataSource.setPassword (System.getProperty("saPassword"));
           dataSource.setLogWriter (new PrintWriter(System.out));
        */
-
-
         return dataSource;
     }
     
@@ -254,42 +256,48 @@ public class MiniConnectionPoolManager {
             WorkerThread thread = new WorkerThread();
             threads[threadNo] = thread;
             thread.threadNo = threadNo;
-            thread.start(); }}
+            thread.start(); }
+    }
 
     public void stopWorkerThreads() throws Exception {
         setShutdownFlag();
         for (int threadNo=0; threadNo<inoOfThreads; threadNo++) {
-            threads[threadNo].join(); }}
+            threads[threadNo].join(); }
+    }
 
     public void setShutdownFlag() {
         synchronized (shutdownObj) {
             shutdownFlag = true;
-            shutdownObj.notifyAll(); }}
+            shutdownObj.notifyAll(); }
+    }
 
     public void threadMain (int threadNo) {
         try {
             threadMain2 (threadNo); }
         catch (Throwable e) {
-            System.out.println ("\nException in thread "+threadNo+": "+e);
-            e.printStackTrace (System.out);
-            setShutdownFlag(); }}
+            logger.error("Exception in thread "+threadNo+": "+e.getMessage(),e);
+            setShutdownFlag(); }
+    }
 
     public void threadMain2 (int threadNo) throws Exception {
-        // System.out.println ("Thread "+threadNo+" started.");
+        logger.info("Thread "+threadNo+" started.");
         while (true) {
             if (!pauseRandom(iThreadPauseTime1)) return;
-            threadTask (threadNo); }}
+            threadTask (threadNo); }
+    }
 
     public void threadTask (int threadNo) throws Exception {
         try (Connection conn = getConnection()) {
             if (shutdownFlag) return;
-            System.out.print (threadNo+" ");
+            logger.info(threadNo+" ");
             incrementThreadCounter (conn,threadNo);
-            pauseRandom (iThreadPauseTime2); }
+            pauseRandom (iThreadPauseTime2);
+        }
     }
 
     public boolean pauseRandom (int maxPauseTime) throws Exception {
-        return pause (random.nextInt(maxPauseTime)); }
+        return pause (random.nextInt(maxPauseTime));
+    }
 
     public boolean pause (int pauseTime) throws Exception {
         synchronized (shutdownObj) {
@@ -297,28 +305,34 @@ public class MiniConnectionPoolManager {
             if (pauseTime <= 0) return true;
             int ms = pauseTime / 1000;
             int ns = (pauseTime % 1000) * 1000;
-            shutdownObj.wait (ms,ns); }
-        return true; }
+            shutdownObj.wait (ms,ns);
+        }
+        return true;
+    }
 
     public void initDb() throws SQLException {
         try (Connection conn = getConnection()) {
-            System.out.println ("initDb connected");
+            logger.info("initDb connected:"+conn.getMetaData().getURL());
             initDb2 (conn); }
-        System.out.println ("initDb done"); }
+        logger.info("initDb done");
+    }
 
     public void initDb2 (Connection conn) throws SQLException {
         execSqlNoErr (conn,"drop table temp");
         execSql (conn,"create table temp (threadNo integer, ctr integer)");
         for (int i=0; i<inoOfThreads; i++)
-            execSql (conn,"insert into temp values("+i+",0)"); }
+            execSql (conn,"insert into temp values("+i+",0)");
+    }
 
     public void incrementThreadCounter (Connection conn, int threadNo) throws SQLException {
-        execSql (conn,"update temp set ctr = ctr + 1 where threadNo="+threadNo); }
+        execSql (conn,"update temp set ctr = ctr + 1 where threadNo="+threadNo);
+    }
 
     public void execSqlNoErr (Connection conn, String sql) {
         try {
             execSql (conn,sql); }
-        catch (SQLException ignored) {}}
+        catch (SQLException ignored) {}
+    }
 
     public void execSql (Connection conn, String sql) throws SQLException {
         try (Statement st = conn.createStatement()) {

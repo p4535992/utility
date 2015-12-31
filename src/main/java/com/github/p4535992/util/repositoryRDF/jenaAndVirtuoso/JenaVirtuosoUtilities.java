@@ -1,5 +1,6 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndVirtuoso;
 
+import com.github.p4535992.util.repositoryRDF.jena.JenaUtilities;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.query.*;
@@ -27,10 +28,6 @@ public class JenaVirtuosoUtilities {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(JenaVirtuosoUtilities.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     private static final String DEFAULT_URL_VIRTUOSO = "jdbc:virtuoso://localhost:1111/charset=UTF-8";
     private static final String DEFAUL_USERNAME= "dba";
     private static final String DEFAUL_PASSWORD= "dba";
@@ -54,19 +51,10 @@ public class JenaVirtuosoUtilities {
      * @return if true all the operation are done. 
      */
     public boolean connectToVirtuoso(){
-        try {
-            virtGraph = new virtuoso.jena.driver.VirtGraph(DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
-            virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
-            virtDataset = new virtuoso.jena.driver.VirtDataset(DEFAULT_URL_VIRTUOSO, DEFAUL_USERNAME, DEFAUL_PASSWORD);
-            logger.info("Connection to the Virtuoso Repository Success!");
-            return true;
-        }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
-            return false;
-        }
+        return connectToVirtuoso(DEFAULT_URL_VIRTUOSO,DEFAUL_USERNAME,DEFAUL_PASSWORD);
     }
 
-    public boolean connectToVirtuoso(String serverVirtuoso,String username,String password,String baseModel){
+    public boolean connectToVirtuoso(String serverVirtuoso,String username,String password){
         try {
             virtGraph = new virtuoso.jena.driver.VirtGraph(serverVirtuoso, username, password);
             virtModel = new virtuoso.jena.driver.VirtModel(virtGraph);
@@ -75,7 +63,7 @@ public class JenaVirtuosoUtilities {
             logger.info("Connection to the Virtuoso Repository Success!");
             return true;
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -88,7 +76,7 @@ public class JenaVirtuosoUtilities {
             logger.info("Connection to the Virtuoso Repository Success!");
             return true;
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -177,11 +165,43 @@ public class JenaVirtuosoUtilities {
     }
 
     /**
+     * Method to make SPARQL query to a virtuoso server remote.
+     * href: http://stackoverflow.com/questions/5531224/setup-rdf-ontology-with-virtuoso
+     * @param urlResourceGraph the URL/URI to the Service Web.
+     * @return the Jena Model result of the SPARQL query.
+     */
+    public Model execSparqlSelectAllToWebService(String urlResourceGraph){
+        if(!urlResourceGraph.endsWith("/sparql")){
+            if(urlResourceGraph.endsWith("/"))  urlResourceGraph = urlResourceGraph + "sparql";
+            else urlResourceGraph = urlResourceGraph + "/sparql";
+        }
+        Model model = JenaUtilities.createModel();
+        String query = "SELECT * WHERE {?s ?p ?o}";
+        QueryExecution qe = QueryExecutionFactory.sparqlService(urlResourceGraph, query);
+        try {
+            ResultSet results = qe.execSelect() ;
+            for ( ; results.hasNext() ; ) {
+                QuerySolution soln = results.nextSolution() ;
+                RDFNode x = soln.get("s") ;
+                RDFNode r = soln.get("p") ;
+                RDFNode l = soln.get("o") ;
+                Statement stmt = JenaUtilities.createStatement(x,r,l);
+                model.add(stmt);
+            }
+        } catch (Exception e) {
+            logger.error("Query error:"+e.getMessage(),e);
+        } finally {
+            qe.close();
+        }
+        return model;
+    }
+
+    /**
      * Method to execute a Select SPARQL query on the virtuoso graph VirtGraph.
      * @param urlResourceGraph uri web address where is the endpoint SPARQL of the virtuoso repository.
      * @return the Jena Model result of the SPARQL query.
      */
-    public Model execSparqlSelectAllFromRepository(String urlResourceGraph){
+    public Model execSparqlSelectAllToRepository(String urlResourceGraph){
         String rdfFormat = "";
         virtGraph.read(urlResourceGraph, null);
         Query sparql = QueryFactory.create("SELECT ?s ?p ?o WHERE { ?s ?p ?o }");

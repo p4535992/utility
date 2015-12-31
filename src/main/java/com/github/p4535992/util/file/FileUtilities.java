@@ -2204,7 +2204,6 @@ public class FileUtilities {
             if(f.isFile() && !f.isDirectory())return true;
             f = new File(getDirectoryUser()+file);
             if(f.isFile() && !f.isDirectory())return true;
-
             f = new File(getDirectoryUser()+file);
             if(f.isFile() && !f.isDirectory())return true;
             else{

@@ -1,7 +1,8 @@
-package com.github.p4535992.util.database.sql;
+package com.github.p4535992.util.database.sql.query;
 
 import com.github.p4535992.util.collection.ArrayUtilities;
 import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.database.sql.SQLUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 
 

@@ -54,7 +54,6 @@ public class SQLUtilities {
     private static DataSource dataSource;
     private static Connection conn;
     private static Statement stmt;
-    private static String query;
 
     private static final String DEFAULT_DELIMITER = ";";
     //private static final Pattern NEW_DELIMITER_PATTERN = Pattern.compile("(?:--|\\/\\/|\\#)?!DELIMITER=(.+)");
@@ -452,25 +451,7 @@ public class SQLUtilities {
     }
 
     public static Connection getMySqlConnection(String fullUrl) {
-        //jdbc:mysql://localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
-        //localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
-        /*if(fullUrl.toLowerCase().contains("jdbc:mysql://")) fullUrl = fullUrl.replace("jdbc:mysql://","");
-        String[] split = fullUrl.split("\\?");
-        String hostAndDatabase = split[0];//localhost:3306/geodb
-        Pattern pat = Pattern.compile("(\\&|\\?)?(user|username)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
-        String username = StringUtilities.findWithRegex(fullUrl, pat);
-        if(Objects.equals(username, "?")) username = "root";
-        pat = Pattern.compile("(\\&|\\?)?(pass|password)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
-        String password = StringUtilities.findWithRegex(fullUrl, pat);
-        if(Objects.equals(password, "?")) password ="";
-        split = hostAndDatabase.split("/");
-        String database = split[split.length-1];
-        hostAndDatabase = hostAndDatabase.replace(database,"");
-        pat = Pattern.compile("([0-9])+", Pattern.CASE_INSENSITIVE);
-        String port = StringUtilities.findWithRegex(hostAndDatabase, pat);
-        if(Objects.equals(port, "?")) port = null;
-        else  hostAndDatabase = hostAndDatabase.replace(port, "").replace(":","").replace("/","");
-        return getMySqlConnection(hostAndDatabase,port,database,username,password);*/
+        //e.g. "jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true&user=siimobility&password=siimobility"
         try {
             invokeClassDriverForDbType(DBType.MYSQL);
             try {
@@ -490,6 +471,28 @@ public class SQLUtilities {
         }
         return conn;
     }
+
+   /* private static Connection getMySqlConnection2(String fullUrl){
+        //jdbc:mysql://localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
+        //localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
+        if(fullUrl.toLowerCase().contains("jdbc:mysql://")) fullUrl = fullUrl.replace("jdbc:mysql://","");
+        String[] split = fullUrl.split("\\?");
+        String hostAndDatabase = split[0];//localhost:3306/geodb
+        Pattern pat = Pattern.compile("(\\&|\\?)?(user|username)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
+        String username = StringUtilities.findWithRegex(fullUrl, pat);
+        if(Objects.equals(username, "?")) username = "root";
+        pat = Pattern.compile("(\\&|\\?)?(pass|password)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
+        String password = StringUtilities.findWithRegex(fullUrl, pat);
+        if(Objects.equals(password, "?")) password ="";
+        split = hostAndDatabase.split("/");
+        String database = split[split.length-1];
+        hostAndDatabase = hostAndDatabase.replace(database,"");
+        pat = Pattern.compile("([0-9])+", Pattern.CASE_INSENSITIVE);
+        String port = StringUtilities.findWithRegex(hostAndDatabase, pat);
+        if(Objects.equals(port, "?")) port = null;
+        else  hostAndDatabase = hostAndDatabase.replace(port, "").replace(":","").replace("/","");
+        return getMySqlConnection(hostAndDatabase,port,database,username,password);
+    }*/
 
     /**
      * Method to get a Oracle connection.
@@ -597,8 +600,7 @@ public class SQLUtilities {
         //stmt.setFetchSize(DATABASE_TABLE_FETCH_SIZE);
         try (Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_READ_ONLY)) {
             //stmt.setFetchSize(DATABASE_TABLE_FETCH_SIZE);
-            query = "Select * FROM " + tablename;
-            try (ResultSet r = statement.executeQuery(query)) {
+            try (ResultSet r = statement.executeQuery("Select * FROM " + tablename)) {
                 ResultSetMetaData meta = r.getMetaData();
                 // Get the column names
                 map = new HashMap<>();
@@ -671,9 +673,7 @@ public class SQLUtilities {
      * @throws SQLException throw if any error is occurred during the execution of the query SQL.
      */
     public static ResultSet executeSQL(String sql) throws SQLException {
-        stmt = conn.createStatement();
-        return stmt.executeQuery(sql);
-        //stmt.executeUpdate(sql);
+       return executeSQL(sql,conn);
     }
 
     /**
@@ -684,16 +684,60 @@ public class SQLUtilities {
      * @throws SQLException throw if any error is occurred during the execution of the query SQL.
      */
     public static ResultSet executeSQL(String sql,Connection conn) throws SQLException  {
+        //if the String query is a apth to a File batch
         if(sql.contains(FileUtilities.pathSeparatorReference)){ //Reference path
              if(FileUtilities.isValidFile(sql)){
                  executeSQL(new File(sql),conn);
+                 return null;
              }
         }
         // create the java statement
         stmt = conn.createStatement();
-        // execute the query, and get a java resultset
-        return stmt.executeQuery(sql);
-        //stmt.executeUpdate(sql);
+        //if are multiple statements
+        if(sql.endsWith(";")) sql = sql.substring(0, sql.length() - 1);
+        if(sql.split(";").length > 1){
+            for(String singleQuery : sql.split(";")){
+                if(singleQuery.toLowerCase().startsWith("select")){
+                    logger.warn("You execute a SELECT query:"+singleQuery+" with the 'executeBatch' ," +
+                            " in this case we can't return a resultSet");
+                }
+                stmt.addBatch(singleQuery+";");
+            }
+            try {
+                stmt.executeBatch();
+            }catch (BatchUpdateException ex) {
+                int[] updateCount = ex.getUpdateCounts();
+                int count = 1;
+                for (int i : updateCount) {
+                    if (i == Statement.EXECUTE_FAILED) {
+                        logger.error("Error on request " + count + ": Execute failed");
+                    } else {
+                        logger.warn("Request " + count + ": OK");
+                    }
+                    count++;
+                }
+            }
+            stmt.clearBatch();
+            return null;
+        }else {
+            // execute the query, and get a java resultset
+            try {
+                //Executes the given SQL statement, which returns a single ResultSet object.
+                return stmt.executeQuery(sql);
+            } catch (SQLException e) {
+                try {
+                    //Executes the given SQL statement, which may be an INSERT, UPDATE,
+                    // or DELETE statement or an SQL statement that returns nothing,
+                    // such as an SQL DDL statement.
+                    stmt.executeUpdate(sql);
+                    return null;
+                } catch (SQLException e1) {
+                    //if a mix separated from ";"
+                    stmt.execute(sql);
+                    return null;
+                }
+            }
+        }
     }
 
     /**

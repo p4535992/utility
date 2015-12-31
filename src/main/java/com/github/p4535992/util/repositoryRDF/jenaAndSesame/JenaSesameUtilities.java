@@ -1,6 +1,6 @@
 package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 
-import com.github.p4535992.util.repositoryRDF.jena.Jena2Kit;
+import com.github.p4535992.util.repositoryRDF.jena.JenaUtilities;
 import com.github.p4535992.util.repositoryRDF.sesame.SesameUtilities;
 import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.*;
@@ -24,10 +24,6 @@ public class JenaSesameUtilities {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(JenaSesameUtilities.class);
-
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
 
     private static JenaSesameUtilities instance = null;
     protected JenaSesameUtilities(){}
@@ -266,7 +262,7 @@ public class JenaSesameUtilities {
         }
         else if (theLiteral.getDatatype() != null) {
             //return mInternalModel.createTypedLiteral(theLiteral.getLabel(),theLiteral.getDatatype().toString());
-            RDFDatatype rdft = Jena2Kit.convertStringToRDFDatatype(theLiteral.getDatatype().toString());
+            RDFDatatype rdft = JenaUtilities.convertStringToRDFDatatype(theLiteral.getDatatype().toString());
             return ResourceFactory.createTypedLiteral(theLiteral.getLabel(),rdft);
         }
         else {
@@ -446,7 +442,7 @@ public class JenaSesameUtilities {
             }
             return jenaModel;
         }catch(java.lang.NullPointerException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -533,7 +529,7 @@ public class JenaSesameUtilities {
         if ( value instanceof org.openrdf.model.URI )return asNode((org.openrdf.model.URI)value) ;
         if ( value instanceof org.openrdf.model.BNode )return asNode((org.openrdf.model.BNode) value) ;
         else {
-            logger.error(gm() + "Not a concrete value:"+value.stringValue());
+            logger.error("Not a concrete value:"+value.stringValue());
             return null;
         }
     }
@@ -641,7 +637,7 @@ public class JenaSesameUtilities {
         if ( node.isBlank() )return asBNode(factory, node) ;
         else if (node.matches(Node.ANY) || node.isVariable()) return null;
         else {
-            logger.error(gm() + "Not a concrete value:"+node.toString());
+            logger.error("Not a concrete value:"+node.toString());
             return null;
         }
     }

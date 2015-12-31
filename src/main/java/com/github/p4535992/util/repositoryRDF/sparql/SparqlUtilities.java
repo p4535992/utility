@@ -47,6 +47,14 @@ public class SparqlUtilities {
             this.value = value;
         }
 
+        public URI getURI(){
+            return URI.create(toString());
+        }
+
+        public String getPrefix(){
+            return this.name();
+        }
+
         @Override
         public String toString() {
             String uri ="";
