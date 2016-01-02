@@ -9,8 +9,10 @@
             http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
             http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd">
 
-    <context:component-scan base-package="net.petrikainulainen.spring.jooq.todo"/>
-    <context:property-placeholder location="classpath:application.properties" ignore-resource-not-found="false"/>
+    <!--<context:component-scan base-package="net.petrikainulainen.spring.jooq.todo"/>-->
+    <context:property-placeholder
+            location="classpath:com/github/p4535992/util/spring/config/jdbc/spring_jdbc.properties"
+            ignore-resource-not-found="false"/>
 
     <bean id="dataSource" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
         <property name="driverClass" value="${db.driver}"/>
@@ -41,7 +43,8 @@
         <constructor-arg ref="config" />
     </bean>
 
-    <bean id="jooqToSpringExceptionTransformer" class="net.petrikainulainen.spring.jooq.config.exception.JOOQToSpringExceptionTransformer"/>
+    <bean id="jooqToSpringExceptionTransformer"
+          class="com.github.p4535992.util.database.jooq.spring.config.exception.JOOQToSpringExceptionTransformer"/>
 
     <bean class="org.jooq.impl.DefaultConfiguration" name="config">
         <constructor-arg index="0" ref="connectionProvider" />

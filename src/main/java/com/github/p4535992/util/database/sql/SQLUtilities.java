@@ -9,7 +9,7 @@ import com.github.p4535992.util.database.sql.performance.JDBCLogger;
 import com.github.p4535992.util.database.sql.runScript.ScriptRunner;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.log.logback.LogBackUtil;
-import com.github.p4535992.util.string.StringUtilities;
+import com.github.p4535992.util.string.*;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.opencsv.CSVReader;
 
@@ -55,15 +55,12 @@ public class SQLUtilities {
     private static Connection conn;
     private static Statement stmt;
 
-    private static final String DEFAULT_DELIMITER = ";";
     //private static final Pattern NEW_DELIMITER_PATTERN = Pattern.compile("(?:--|\\/\\/|\\#)?!DELIMITER=(.+)");
     //private static final Pattern COMMENT_PATTERN = Pattern.compile("^(?:--|\\/\\/|\\#).+");
 
-    public enum DBType {MYSQL,SQL,ORACLE,DB2,H2,HSQLDB,HSQL,MARIADB}
+    private static SQLUtilities instance = null;
 
     protected SQLUtilities() {}
-
-    private static SQLUtilities instance = null;
 
     public static SQLUtilities getInstance(){
         if(instance == null) {
@@ -274,7 +271,6 @@ public class SQLUtilities {
         return "?";
     }
 
-
     public static XSDDatatype convertSQLTypesToXDDTypes(int type){
         switch (type) {
             case Types.BIT: return XSDDatatype.XSDbyte;
@@ -363,11 +359,11 @@ public class SQLUtilities {
      * @param password string password.
      * @return the connection.
      */
-    public static Connection getHSQLConnection(String host,String port,String database,String username,String password) {
+    public static Connection getHSQLDBConnection(String host,String port,String database,String username,String password) {
         // The newInstance() call is a work around for some broken Java implementations
         try {
-            invokeClassDriverForDbType(DBType.HSQL);
-            String url = "jdbc:hsqldb:hsql://" + host;
+            invokeClassDriverForDbType(DBType.HSQLDB);
+            String url = DBConnector.HSQLDB.getConnector() + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port; //jdbc:hsqldb:data/database
             }
@@ -399,7 +395,7 @@ public class SQLUtilities {
         // The newInstance() call is a work around for some broken Java implementations
         try {
             invokeClassDriverForDbType(DBType.MYSQL);
-            String url = "jdbc:mysql://" + host;
+            String url = DBConnector.MYSQL.getConnector() + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
@@ -444,7 +440,6 @@ public class SQLUtilities {
      */
     public static Connection getMySqlConnection( String hostAndDatabase,String username,String password) {
         String[] split = hostAndDatabase.split("/");
-        //localhost:3306/geodb
         if(hostAndDatabase.startsWith("/")) hostAndDatabase = split[1];
         else hostAndDatabase = split[0];
         return getMySqlConnection(hostAndDatabase,null,split[split.length-1],username,password);
@@ -472,6 +467,33 @@ public class SQLUtilities {
         return conn;
     }
 
+    /**
+     * Method to get a Oracle connection.
+     * @param host string name of the host where is it the database
+     * @param port number of the port of the server.
+     * @param database string name of the database.
+     * @param username string username.
+     * @param password string password.
+     * @return the connection.
+     */
+    public static Connection getOracleConnection(String host,String port,String database,String username,String password){
+        try {
+            invokeClassDriverForDbType(DBType.ORACLE);
+            //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
+            String url = DBConnector.ORACLE.getConnector() + host;
+            if (port != null && StringUtilities.isNumeric(port)) {
+                url += ":" + port;
+            }
+            url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
+            conn = DriverManager.getConnection(url, username, password);
+        } catch(ClassNotFoundException|IllegalAccessException|InstantiationException e){
+            logger.error("Unable to load driver class!:"+e.getMessage(),e);
+        } catch (SQLException e) {
+            logger.error("The URL is not correct:" + e.getMessage(), e);
+        }
+        return conn;
+    }
+
    /* private static Connection getMySqlConnection2(String fullUrl){
         //jdbc:mysql://localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
         //localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
@@ -495,38 +517,6 @@ public class SQLUtilities {
     }*/
 
     /**
-     * Method to get a Oracle connection.
-     * @param host string name of the host where is it the database
-     * @param port number of the port of the server.
-     * @param database string name of the database.
-     * @param username string username.
-     * @param password string password.
-     * @return the connection.
-     */
-    public static Connection getOracleConnection(String host,String port,String database,String username,String password){
-        try {
-            invokeClassDriverForDbType(DBType.ORACLE);
-            //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
-            String url = "jdbc:oracle:thin:@" + host;
-            if (port != null && StringUtilities.isNumeric(port)) {
-                url += ":" + port;
-            }
-            url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
-            conn = DriverManager.getConnection(url, username, password);
-       /* }catch (InstantiationException e) {
-            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
-        }catch(IllegalAccessException e){
-            logger.error("Access problem while loading!:"+e.getMessage(),e);*/
-        } catch(ClassNotFoundException|IllegalAccessException|InstantiationException e){
-            logger.error("Unable to load driver class!:"+e.getMessage(),e);
-        } catch (SQLException e) {
-            logger.error("The URL is not correct:" + e.getMessage(), e);
-        }
-        return conn;
-    }
-
-
-    /**
      * Method to connect to a h2  database.
      * href: http://www.h2database.com/html/features.html.
      * @param host string name of the host where is it the database.
@@ -546,7 +536,7 @@ public class SQLUtilities {
             jdbc:h2:tcp://dbserv:8084/~/sample
             jdbc:h2:tcp://localhost/mem:test
             */
-            String url = "jdbc:h2:tcp://" + host;
+            String url = DBConnector.H2.getConnector() + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
@@ -559,8 +549,6 @@ public class SQLUtilities {
         }
         return conn;
     }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Method to get the columns from a specific Table.
@@ -593,6 +581,8 @@ public class SQLUtilities {
         }
         return map;
     }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Map<String,Integer> getColumns(Connection conn,String tablename) throws SQLException {
         conn.setAutoCommit(false);
@@ -845,17 +835,7 @@ public class SQLUtilities {
      * @return the Long value of the time for execute the query.
      */
     public static Long getExecutionTime(String sql){
-        long startTime,endTime;
-        try {
-            stmt = conn.createStatement();
-            startTime = System.currentTimeMillis();
-            ResultSet rs = stmt.executeQuery(sql);
-            endTime   = System.currentTimeMillis();
-        }catch (SQLException e) {
-            logger.error(e.getMessage(), e);
-            return 0L;
-        }
-        return endTime - startTime;
+        return getExecutionTime(sql,conn);
     }
 
     /**
@@ -865,20 +845,21 @@ public class SQLUtilities {
      * @return the Long value of the time for execute the query.
      */
     public static Long getExecutionTime(String sql,Connection conn){
-        long startTime,endTime;
+        //sql = sql.replaceAll("''","''''");
         //Connection dbConnection = getConnectionFromDriver(  );
         ConnectionWrapper dbConnection = new ConnectionWrapper(conn);
+        Long calculate;
         try {
-            Statement statement = dbConnection.createStatement();
-            startTime = System.currentTimeMillis();
-            ResultSet rs = statement.executeQuery(sql);
-            endTime   = System.currentTimeMillis();
-        }catch (SQLException e) {
-            logger.error(e.getMessage(),e);
+            stmt = dbConnection.createStatement();
+            com.github.p4535992.util.string.Timer timer = new com.github.p4535992.util.string.Timer();
+            timer.startTimer();
+            ResultSet rs = stmt.executeQuery(sql);
+            calculate = timer.endTimer();
+        }catch (Exception e) {
+            logger.error("Can't get the execution time for the query:"+sql,e);
             return 0L;
         }
-        Long calculate = endTime - startTime;
-        Long calculate2 = JDBCLogger.getTime();
+        Long calculate2 = JDBCLogger.getTime()/1000;
         if(calculate < calculate2) return calculate;
         else return calculate2;
     }
@@ -886,11 +867,11 @@ public class SQLUtilities {
     /**
      * Method to import a file CSV to a Database.
      * @param fileCSV the File CSv to import.
-     * @param firstLine if true the firstline of the file CSV contains the headers of the fields.
+     * @param firstLine if true the first line of the file CSV contains the headers of the fields.
      * @param separator the Cgaracter of the separator field on the CSV file.
      * @param nameTable the String name of the table.
      * @param connection the Connection to the Database where execute the query.
-     * @return if true all the operation are done. 
+     * @return if true all the operation are done.
      */
     public static boolean importCsvInsertInto(File fileCSV, boolean firstLine,Character separator,
                                        String nameTable,Connection connection) {
@@ -923,7 +904,7 @@ public class SQLUtilities {
         } catch (SQLException |IOException e) {
             logger.error(e.getMessage(),e);
             return false;
-        } 
+        }
     }
 
     /**
@@ -1041,6 +1022,15 @@ public class SQLUtilities {
         }
     }
 
+    public static String getURL(Connection conn){
+        try {
+            return conn.getMetaData().getURL();
+        } catch (SQLException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
     /*public enum DATABASE_URL{ HOST,PATH,USERNAME,PASSWORD,DRIVER,PORT}
 
     public static String getInfoFromUrl(String url,DATABASE_URL database_url){
@@ -1066,15 +1056,6 @@ public class SQLUtilities {
         }
     }*/
 
-    public static String getURL(Connection conn){
-        try {
-            return conn.getMetaData().getURL();
-        } catch (SQLException e) {
-            logger.error(e.getMessage(),e);
-            return null;
-        }
-    }
-
     public static String getURL(DatabaseMetaData databaseMetadata){
         try {
             return databaseMetadata.getURL();
@@ -1090,147 +1071,61 @@ public class SQLUtilities {
         switch(name){
             case "MYSQL": {
                 try {
-                    Class.forName("com.mysql.jdbc.Driver").newInstance(); //load driver//"com.sql.jdbc.Driver"
+                    invokeClassDriver(DBDriver.MYSQL.getDriver()); //load driver//"com.sql.jdbc.Driver"
                     break;
                 } catch (ClassNotFoundException e) {
-                    Class.forName("org.gjt.mm.mysql.Driver").newInstance();
+                    invokeClassDriver(DBDriver.MYSQL_GJT.getDriver());
                     break;
                 }
             }
             case "ORACLE":{
-                Class.forName("oracle.jdbc.driver.OracleDriver").newInstance();
+                invokeClassDriver(DBDriver.ORACLE.getDriver());//"oracle.jdbc.driver.OracleDriver"
                 break;
             }
             case "H2":{
-                Class.forName("org.h2.Driver").newInstance(); //Loading driver connection
+                invokeClassDriver(DBDriver.H2.getDriver()); //"org.h2.Driver"
                 break;
             }
             case "HSQL":{
-                Class.forName("org.hsqldb.jdbcDriver").newInstance();
+                invokeClassDriver(DBDriver.HSQLDB.getDriver());//"org.hsqldb.jdbcDriver"
                 break;
             }
         }
     }
 
-    public static void invokeClassDriverForDbType(String driverClassName)
+    public static void invokeClassDriver(String driverClassName)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         Class.forName(driverClassName).newInstance(); //load driver//"com.sql.jdbc.Driver"
     }
 
-    //--------------------------------------------------------------------------------
-
-    /**
-     * https://www.safaribooksonline.com/library/view/java-enterprise-best/0596003846/ch04.html
-     * http://penguindreams.org/blog/running-beans-that-use-application-server-datasources-locally/
-     */
-    /*public void connectToDatabase( ) {
-        try {
-            InitialContext ctx = new InitialContext(parms);
-            ConnectionPoolDataSource poolDataSource =
-                    (ConnectionPoolDataSource) ctx.lookup(cpsource);
-            poolDataSource.setLoginTimeout(30); // seconds
-            PooledConnection poolConnection =
-                    poolDataSource.getPooledConnection();
-            Connection connection = poolConnection.getConnection();
-            DataSource ds = (DataSource)ctx.lookup("dsname");
-            //  Do whatever you would typically do with the connection here.
-        } catch (Exception e) {
-            //  Handle exceptions.
-        } finally {
-            connection.close();
-        }
-    }*/
-
-    /*private static Connection getPooledConnection(String dataSourceName,String url,String driverDbClassName){
-        logger.info("Attempting to connect to " + dataSourceName);
-        logger.info("Initializing the naming context...");
-        try {
-            InitialContext initCtx;
-            try {
-                initCtx = createContext(url, driverDbClassName);
-            }catch(Exception e){
-                try {
-                    invokeClassDriverForDbType(driverDbClassName);
-                    initCtx = createContext(url, driverDbClassName);
-                } catch (ClassNotFoundException|IllegalAccessException|InstantiationException e1) {
-                    logger.error(e1.getMessage(),e);
-                    return conn;
-                }
-            }
-            //String dataSourceName = "HrDS";
-            ConnectionPoolDataSource poolDataSource = (ConnectionPoolDataSource) initCtx.lookup(dataSourceName);
-            PooledConnection pooledConnection = poolDataSource.getPooledConnection();
-            dataSource = (DataSource) initCtx.lookup(dataSourceName);
-            logger.info("Establishing a connection...");
-            logger.info("Connect to " + dataSource.getConnection().getCatalog() + " a success!");
-            conn = pooledConnection.getConnection(); // Obtain connection from pool
-        }catch(NamingException|SQLException e){
-            logger.error(e.getMessage(),e);
-        }
-        return conn;
-    }*/
-
-   /* private static InitialContext createContext(String url,String driverDbClassName) throws NamingException {
-        Properties env = new Properties();
-        //Hashtable<Object,Object> env = new Hashtable<>();
-        //env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.rmi.registry.RegistryContextFactory");
-        //env.put(Context.PROVIDER_URL, "rmi://localhost:1099");
-        //"com.sun.jndi.rmi.registry.RegistryContextFactory" -> "rmi://localhost:1099"
-        //"com.sun.jndi.ldap.LdapCtxFactory" -> "ldap://localhost:389/o=JNDITutorial"
-        //"com.sun.jndi.fscontext.RefFSContextFactory" -> "file:/tmp/marketing"
-
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.fscontext.RefFSContextFactory");
-        env.put(Context.DNS_URL, url);
-        // Use anonymous authentication
-        env.put(Context.SECURITY_AUTHENTICATION, "none");
-        return new InitialContext(env);
-    }*/
-
-   /* private static Connection getPooledLocalConnection(
-            String dataSourceName,String jdbcUrl,String driverDbClassName, String username,String password){
-        try {
-            //Use LocalContext (all context setted outer)
-           *//* LocalContext ctx = LocalContextFactory.createLocalContext("com.mysql.jdbc.Driver");
-            ctx.addDataSource("jdbc/js1","jdbc:mysql://dbserver1/dboneA", "username", "xxxpass");*//*
-            LocalContext ctx = LocalContextFactory.createLocalContext(driverDbClassName);
-            ctx.addDataSource(dataSourceName,jdbcUrl, username, password);
-            callDataSource(dataSourceName);
-        } catch (NamingException e) {
-            logger.error(e.getMessage(),e);
-        }
-        return conn;
-    }*/
-
-    /*private static Connection getPooledLocalConnection(String dataSourceName){
-        try {
-            //Use DatabaseContext (all context setted inner)
-            try {
-                NamingManager.setInitialContextFactoryBuilder(new DatabaseContextFactory());
-            }catch( java.lang.IllegalStateException e){
-                logger.warn("InitialContextFactoryBuilder already set");
-               *//* DatabaseContextFactory factory = new DatabaseContextFactory();
-                Properties env = new Properties();
-                env.put(Context.INITIAL_CONTEXT_FACTORY, driverDbClassName);
-                env.put(Context.PROVIDER_URL, url);
-                factory.createInitialContextFactory(env);*//*
-            }
-            //Start to invoke
-            callDataSource(dataSourceName);
-        } catch (NamingException e) {
-            logger.error(e.getMessage(),e);
-        }
-        return conn;
-    }*/
-
-    private static DataSource getLocalPooledConnection(String dataSourceName) {
-        return getPooledLocalConnectionBase(dataSourceName,null,null,null,null);
+    public static void invokeClassDriverForDbDriver(DBDriver driverClassName)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+        Class.forName(driverClassName.getDriver()).newInstance(); //load driver//"com.sql.jdbc.Driver"
     }
+
+
+    //--------------------------------------------------------------------------------
 
     public static DataSource getLocalPooledConnection(
             String dataSourceName,String jdbcUrl,String driverDbClassName,
             String username,String password) {
         return getPooledLocalConnectionBase(dataSourceName,jdbcUrl,driverDbClassName,username,password);
     }
+
+    public static DataSource createDataSource(
+            String dataSourceName,String jdbcUrl,String driverDbClassName,
+            String username,String password) {
+        return getPooledLocalConnectionBase(dataSourceName,jdbcUrl,driverDbClassName,username,password);
+    }
+
+    public static DataSource getLocalPooledConnection(String dataSourceName) {
+        return getPooledLocalConnectionBase(dataSourceName,null,null,null,null);
+    }
+
+    public static DataSource getDataSource(String dataSourceName) {
+        return getPooledLocalConnectionBase(dataSourceName,null,null,null,null);
+    }
+
 
     /**
      * https://www.safaribooksonline.com/library/view/java-enterprise-best/0596003846/ch04.html
@@ -1280,12 +1175,6 @@ public class SQLUtilities {
         return dataSource;
     }
 
-
-
-
-
-
-
     public static void main(String[] args) throws IOException, SQLException, URISyntaxException {
         String userDir = new File(".").getCanonicalPath();
         String userDir2 = StringUtilities.PROJECT_DIR;  String userDir3 = LogBackUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -1318,4 +1207,58 @@ public class SQLUtilities {
         String test = "";
 
     }
+
+    //UTILITY ENUMERATOR
+
+    public enum DBType {MYSQL,H2,ORACLE,HSQLDB,SQL,DB2,HSQL,MARIADB}
+
+    public enum DBDriver{MYSQL(0),MYSQL_GJT(1),H2(2),ORACLE(3),HSQLDB(4);
+
+        private final Integer value;
+        DBDriver(Integer value) {
+            this.value = value;
+        }
+
+        public String getDriver(){
+            return toString();
+        }
+
+        @Override
+        public String toString() {
+            String driver ="";
+            switch (this) {
+                case MYSQL: driver = "com.mysql.jdbc.Driver"; break;
+                case MYSQL_GJT: driver = "org.gjt.mm.mysql.Driver"; break;
+                case ORACLE: driver = "oracle.jdbc.driver.OracleDriver"; break;
+                case H2: driver = "org.h2.Driver"; break;
+                case HSQLDB: driver = "org.hsqldb.jdbcDriver"; break;
+            }
+            return driver;
+        }
+    }
+
+    public enum DBConnector{MYSQL(0),H2(1),ORACLE(2),HSQLDB(3);
+
+        private final Integer value;
+        DBConnector(Integer value) {
+            this.value = value;
+        }
+
+        public String getConnector(){
+            return toString();
+        }
+
+        @Override
+        public String toString() {
+            String driver ="";
+            switch (this) {
+                case MYSQL: driver = "jdbc:mysql://"; break;
+                case HSQLDB: driver = "jdbc:hsqldb:hsql://"; break;
+                case H2: driver = "jdbc:h2:tcp://"; break;
+                case ORACLE: driver = "jdbc:oracle:thin:@"; break;
+            }
+            return driver;
+        }
+    }
+
 }

@@ -20,10 +20,10 @@ import javax.swing.text.html.parser.ParserDelegator;
  * href: http://www.java2s.com/Tutorial/Java/0120__Development/UsejavaxswingtexthtmlHTMLEditorKittoparseHTML.htm
  */
 @SuppressWarnings("unused")
-public class HtmlKit {
+public class HtmlUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(HtmlKit.class);
+            org.slf4j.LoggerFactory.getLogger(HtmlUtilities.class);
 
     public static void callPageSaver(InputStream is,URL url) throws IOException {
         ParserGetter kit = new ParserGetter();

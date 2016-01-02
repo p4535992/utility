@@ -11,10 +11,7 @@ import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
 import org.openrdf.http.client.SesameClientImpl;
 import org.openrdf.model.*;
-import org.openrdf.model.impl.LinkedHashModel;
-import org.openrdf.model.impl.TreeModel;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.impl.*;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.*;
 import org.openrdf.repository.*;
@@ -3765,17 +3762,9 @@ public class SesameUtilities {
         //these value are taken manually from the multiple test on the running of the project....
         logger.warn("Time before:"+time);
         //over 100ms there some time lost on connection on the server...
-        if(time > 100 ) time = time - ThreadLocalRandom.current().nextInt(80, 90 + 1);
-        else if(time >= 200) time = time - ThreadLocalRandom.current().nextInt(150, 190 + 1);
-        else if(time >= 300) time = time - ThreadLocalRandom.current().nextInt(250, 290 + 1);
-        else if(time >= 400) time = time - ThreadLocalRandom.current().nextInt(350, 390 + 1);
-        else if(time >= 500) time = time - ThreadLocalRandom.current().nextInt(450, 490 + 1);
-        else if(time >= 600) time = time - ThreadLocalRandom.current().nextInt(550, 590 + 1);
-        else if(time >= 1000) time = time - ThreadLocalRandom.current().nextInt(1050, 1090 + 1);
-        else if(time >= 2000) time = time - ThreadLocalRandom.current().nextInt(1950, 1990 + 1);
-        else if(time >= 3000) time = time - ThreadLocalRandom.current().nextInt(2950, 2990 + 1);
-        else if(time >= 4000) time = time - ThreadLocalRandom.current().nextInt(3950, 3990 + 1);
-        else if(time >= 4500) time = time - ThreadLocalRandom.current().nextInt(4950, 4990 + 1);
+        while(time > 100){
+            time = time - ThreadLocalRandom.current().nextInt(0, 50 + 1);
+        }
         logger.warn("Time after:"+time);
         return time;
     }
@@ -3837,23 +3826,85 @@ public class SesameUtilities {
     }
 
     /**
-     * Method toc reate a OpenRDF Literal.
-     * @param literalObject the Object value of the Literal.
+     * Method to create a OpenRDF Literal.
+     * @param literalObject the Object value of the Literal and DataType Uri.
      * @return the OpenRDF Literal Object.
      */
     public Literal createLiteral(Object literalObject){
+        return createLiteralBase(literalObject);
+    }
+
+    /**
+     * Method to create a OpenRDF Literal.
+     * @param literalObject the Object value of the Literal and DataType Uri.
+     * @param dataType the the URI DataType of the Literal.
+     * @return the OpenRDF Literal Object.
+     */
+    public Literal createLiteral(Object literalObject,URI dataType){
+        return createLiteralBase(literalObject,dataType);
+    }
+
+    /**
+     * Method to create a OpenRDF Literal.
+     * @param literalObject the Object value of the Literal and DataType Uri.
+     * @param languageOrDataType the String Language of the Literal or the URI DataType.
+     * @return the OpenRDF Literal Object.
+     */
+    public Literal createLiteral(Object literalObject,String languageOrDataType){
+        if(StringUtilities.isURI(languageOrDataType)){
+            return createLiteralBase(literalObject, StringUtilities.toURI(languageOrDataType));
+        }else {
+            return createLiteralBase(literalObject, languageOrDataType);
+        }
+    }
+
+    /**
+     * Method to create a OpenRDF Literal.
+     * @param arrayLiteralObject the Array collection of Object value of the Literal and DataType Uri.
+     * @return the OpenRDF Literal Object.
+     */
+    private Literal createLiteralBase(Object... arrayLiteralObject){
+        Object lo;
         ValueFactory factory = createValueFactory();
-        if(literalObject instanceof String) return factory.createLiteral((String) literalObject);
-        if(literalObject instanceof Boolean) return factory.createLiteral((Boolean) literalObject);
-        if(literalObject instanceof Byte) return factory.createLiteral((Byte) literalObject);
-        if(literalObject instanceof Short) return factory.createLiteral((Short) literalObject);
-        if(literalObject instanceof Integer) return factory.createLiteral((Integer) literalObject);
-        if(literalObject instanceof Long) return factory.createLiteral((Long) literalObject);
-        if(literalObject instanceof Float) return factory.createLiteral((Float) literalObject);
-        if(literalObject instanceof Double) return factory.createLiteral((Double) literalObject);
-        if(literalObject instanceof XMLGregorianCalendar) return factory.createLiteral((XMLGregorianCalendar) literalObject);
-        if(literalObject instanceof Date) return factory.createLiteral((Date) literalObject);
-        else return null;
+        if(arrayLiteralObject.length == 1) {
+            lo = arrayLiteralObject[0];
+            if (lo instanceof String) return factory.createLiteral((String) lo);
+            else if (lo instanceof Boolean) return factory.createLiteral((Boolean) lo);
+            else if (lo instanceof Byte) return factory.createLiteral((Byte) lo);
+            else if (lo instanceof Short) return factory.createLiteral((Short) lo);
+            else if (lo instanceof Integer) return factory.createLiteral((Integer) lo);
+            else if (lo instanceof Long) return factory.createLiteral((Long) lo);
+            else if (lo instanceof Float) return factory.createLiteral((Float) lo);
+            else if (lo instanceof Double) return factory.createLiteral((Double) lo);
+            else if (lo instanceof XMLGregorianCalendar) return factory.createLiteral((XMLGregorianCalendar) lo);
+            else if (lo instanceof Date) return factory.createLiteral((Date) lo);
+            else{
+                logger.warn("Can\'t create the Literal because the first arguments is not a validate element:"
+                        + String.valueOf(arrayLiteralObject[1]));
+                return null;
+            }
+        }else if(arrayLiteralObject.length == 2){
+            lo = arrayLiteralObject[0];
+            if (arrayLiteralObject[1] instanceof String) { //Language
+                if (StringUtilities.isURI(arrayLiteralObject[1])) {
+                    return factory.createLiteral(String.valueOf(lo), (URI) arrayLiteralObject[1]);
+                }else {
+                    return factory.createLiteral(String.valueOf(lo), String.valueOf(arrayLiteralObject[1]));
+                }
+            }
+            else if (arrayLiteralObject[1] instanceof URI) { //DataType
+                return factory.createLiteral(String.valueOf(lo), (URI) arrayLiteralObject[1]);
+            }else{
+                logger.warn("Can\'t create the Literal because the second arguments is not a String or a URI:"
+                    + String.valueOf(arrayLiteralObject[1]));
+                return null;
+            }
+        }
+        else{
+            logger.warn("Can\'t create the Literal because the Arrays of Objects has more of two elements:"
+                    + Arrays.toString(arrayLiteralObject));
+            return null;
+        }
     }
 
     /**
@@ -3905,8 +3956,15 @@ public class SesameUtilities {
         else return null;
     }
 
-
-
+    /**
+     * Method to create OpenRDF BNode.
+     * @param nodeID the String or OpenRDF Uri.
+     * @return the OpenRDF URI.
+     */
+    public BNode createBNode(Object nodeID){
+        ValueFactory factory = createValueFactory();
+        return factory.createBNode(String.valueOf(nodeID));
+    }
 
     /*public OntologyTupleQuery  createQuery(String query) {
         if(mRepositoryConnection != null) {
@@ -3918,6 +3976,11 @@ public class SesameUtilities {
             throw new SesameManagerException("Cannot create a query, no connection");
         }
     }*/
+
+
+    //-------------------------------------------------------------------------------------------------------
+    //Support Method Utility
+
 
 
 }

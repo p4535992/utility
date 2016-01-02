@@ -39,10 +39,6 @@ public class HttpUtilities {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(HttpUtilities.class);
     
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-    
     public enum HTTP_METHOD {
         GET, POST, PUT, DELETE, HEAD
     }
@@ -555,7 +551,7 @@ public class HttpUtilities {
 
             return p.toString();
         } catch (MalformedURLException | URISyntaxException | NullPointerException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -934,7 +930,7 @@ public class HttpUtilities {
             httpConn.setDoOutput(false); // false indicates this is a GET request
             return httpConn;
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -969,7 +965,7 @@ public class HttpUtilities {
             }
             return httpConn;
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -990,7 +986,7 @@ public class HttpUtilities {
             }
             return response;
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -1015,7 +1011,7 @@ public class HttpUtilities {
             }
             return response.toArray(new String[response.size()]);
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -1048,7 +1044,7 @@ public class HttpUtilities {
             return httpConn.getOutputStream();
             //return new PrintWriter(new OutputStreamWriter(outputStream, charset),true);
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -1071,7 +1067,7 @@ public class HttpUtilities {
             writer.flush();
             return true;
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -1110,7 +1106,7 @@ public class HttpUtilities {
             writer.flush();
             return true;
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -1128,7 +1124,7 @@ public class HttpUtilities {
             writer.flush();
             return true;
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -1161,7 +1157,7 @@ public class HttpUtilities {
             }
             return response;
         }catch (IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -1243,6 +1239,27 @@ public class HttpUtilities {
             logger.error("Error encountered while uploading file", ex);
         }
         return uploadedFile;
+    }
+
+    public static String readURL(URL url){
+        try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+            StringBuilder sb = new StringBuilder();
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                // Process each line.
+                //System.out.println(inputLine);
+                sb.append(inputLine);
+            }
+            in.close();
+            return sb.toString();
+        } catch (MalformedURLException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
     }
 
 }

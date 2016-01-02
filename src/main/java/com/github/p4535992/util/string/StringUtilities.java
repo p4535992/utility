@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * href: http://stackoverflow.com/questions/11404086/how-could-i-initialize-a-generic-array
  * href: https://github.com/ku-fpg/armatus/blob/master/Armatus%20Android%20App/src/edu/kufpg/armatus/util/StringUtils.java
  * @author 4535992.
- * @version 2015-11-10.
+ * @version 2016-01-01.
  */
 @SuppressWarnings("unused")
 public class StringUtilities {
@@ -86,6 +86,8 @@ public class StringUtilities {
      * will prevent from applying their normal line-breaking behavior.
      */
     public static final char NBSP_CHAR = '\u00A0';
+    public static final char NULL_CHAR1 = '\u0000';
+    public static final char NULL_CHAR2 = '\0';
     public static final String LINE_FEED = "\r\n";
     public static final String LINE_SEP = System.getProperty("line.separator");
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
@@ -174,13 +176,8 @@ public class StringUtilities {
      * @param url Address to check
      * @return true if the url is a valid web address.
      */
-    public static boolean isURLWithProtocol(String url){
-        if(isURL(url)) {
-            return Patterns.Protocol_URL.matcher(url).matches() || url.matches("^(https?|ftp)://.*$");
-        }else{
-            logger.warn(gm() + "This is not a URL:"+url+" return false");
-            return false;
-        }
+    public static boolean isURLWithProtocol(String url) {
+        return isURL(url) && (Patterns.Protocol_URL.matcher(url).matches() || url.matches("^(https?|ftp)://.*$"));
     }
 
     /**
@@ -188,15 +185,10 @@ public class StringUtilities {
      * @param url Address to check
      * @return true if the url is a valid web address.
      */
-    public static boolean isURLWithoutProtocol(String url){
-        if(isURL(url)) {
-            return Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() ||
-                    Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() &&
-                            !(Patterns.Protocol_URL.matcher(url).matches() || url.matches("^(https?|ftp)://.*$"));
-        }else{
-            logger.warn(gm() + "This is not a URL:"+url+ " return false");
-            return false;
-        }
+    public static boolean isURLWithoutProtocol(String url) {
+        return isURL(url) &&
+                (Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() || Patterns.WEB_URL_NO_PROTOCOL.matcher(url).matches() &&
+                 !(Patterns.Protocol_URL.matcher(url).matches() || url.matches("^(https?|ftp)://.*$")));
     }
 
     /**
@@ -267,14 +259,96 @@ public class StringUtilities {
     }
 
     /**
-     * Method for check if a string rappresent a line separator.
+     * Method for check if a String rappresent a line separator.
      * @param str string rappresentative a line separator.
-     * @return boolean value if the string rappresent a line separator or not.
+     * @return true if the String rappresent a line separator or not.
      */
     public static boolean isLineSeparator(String str){
         return Patterns.IS_LINE_SEPARATOR().matcher(str).matches();
     }
-    
+
+    /**
+     * Method for check if a String rappresent a URI.
+     * @param text the Object to check, can be a String or a URI, or a IRI.
+     * @return true if the text rappresent a line separator or not.
+     */
+    public static boolean isURI(Object text){
+        if(text instanceof URI)return true;
+        else if(isIRI(text)) return true;
+        else{
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                URI.create(String.valueOf(text));
+                return true;
+            }catch(Exception e){
+                return false;
+            }
+        }
+    }
+
+    /**
+     * Method for check if a String not empty or Null.
+     * @param text the Object to check, can be a String.
+     * @return true if the text rappresent a String not empty or Null.
+     */
+    public static boolean isStringNoEmpty(Object text){
+        return (text instanceof String && !isNullOrEmpty(String.valueOf(text)));
+    }
+
+    /**
+     * Method for check if a String empty or Null.
+     * @param text the Object to check, can be a String.
+     * @return true if the text rappresent a String empty or Null.
+     */
+    public static boolean isStringEmpty(Object text){
+        return (text instanceof String && isNullOrEmpty(toString(text)));
+    }
+
+    /**
+     * Method for check if a String or URI is empty or Null.
+     * @param text the Object to check, can be a String.
+     * @return true if the text rappresent a String or URI is empty or Null.
+     */
+    public static boolean isStringOrUriEmpty(Object text){
+        return (
+                (text instanceof String && isNullOrEmpty(toString(text))) ||
+                        (text instanceof URI && isNullOrEmpty(toString(text)))
+        );
+    }
+
+    /**
+     * Method to check if a String uri is a IRI normalized.
+     * http://stackoverflow.com/questions/9419658/normalising-possibly-encoded-uri-strings-in-java
+     * @param uri the String to verify.
+     * @return if true the String is a valid IRI.
+     */
+    public static Boolean isIRI(Object uri){
+        try {
+            if(isString(uri)) {
+                org.apache.jena.iri.IRIFactory.uriImplementation().construct(toString(uri));
+           /* ArrayList<String> a = new ArrayList<>();
+            a.add(iri.getScheme());
+            a.add(iri.getRawUserinfo());
+            a.add(iri.getRawHost());
+            a.add(iri.getRawPath());
+            a.add(iri.getRawQuery());
+            a.add(iri.getRawFragment());*/
+                return true;
+            }else return false;
+        }catch(Exception e){
+            return false;
+        }
+    }
+
+    /**
+     * Method for check if a String .
+     * @param text the Object to check, can be a String.
+     * @return true if the text rappresent a String.
+     */
+    public  static boolean isString(Object text){
+        return (text instanceof String);
+    }
+
     //--------------------------------------------------------
     //StringRegex
     //--------------------------------------------------------
@@ -659,7 +733,7 @@ public class StringUtilities {
     }
 
     /**
-     * Remove/collapse multiple spaces.
+     * Method to Remove/collapse multiple spaces.
      * @param argStr string to remove multiple spaces from.
      * @return String
      */
@@ -1124,6 +1198,20 @@ public class StringUtilities {
     }
 
     /**
+     * Method to convert a String rapperesent a URi toa URI Objwect.
+     * @param uri the String rappresent a URI.
+     * @return the URI Object.
+     */
+    public static URI toURI(String uri){
+        try {
+            return URI.create(uri);
+        }catch(Exception e){
+            logger.warn("Can\'t convert the String:"+uri+" to a URI Object:"+e.getMessage(),e);
+            return null;
+        }
+    }
+
+    /**
      * Method to normalize a URI.
      * @param inputUri the URI String of input.
      * @return the URI Normalized.
@@ -1333,6 +1421,15 @@ public class StringUtilities {
     }
 
     /**
+     * Method to convert a String URI to a Sting IRI.
+     * @param uriResource the String URI to the Resource.
+     * @return the String IRI.
+     */
+    public static String toIri(String uriResource){
+        return org.apache.jena.iri.IRIFactory.uriImplementation().construct(uriResource).toString();
+    }
+
+    /**
      * Method to convert a object to a String.
      * @param object the Object to convert.
      * @return the String of the object.
@@ -1342,6 +1439,16 @@ public class StringUtilities {
         if(object instanceof URI) return object.toString();
         //TODO add all the other constructor.
         return String.valueOf(object);
+    }
+
+    /**
+     * Method to convert a URI os String reference to a resource to a good ID.
+     * NOTE: URI string: scheme://authority/path?query#fragment
+     * @param uriResource the String or URI reference Resource.
+     * @return the String id of the Resource.
+     */
+    public static String toId(String uriResource){
+        return URI.create(uriResource.replaceAll("\\r\\n|\\r|\\n", " ").replaceAll("\\s+", "_").trim()).toString();
     }
 
     /**

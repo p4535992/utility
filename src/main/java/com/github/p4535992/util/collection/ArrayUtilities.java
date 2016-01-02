@@ -281,7 +281,7 @@ public class ArrayUtilities {
      */
     @SuppressWarnings("unchecked")
     public static <T> T[] concatenateArraysForInput(T[] param, T[] value) {
-       return (T[]) concatenateDifferentArrays(param,value);
+       return (T[]) concatenateDifferentArraysForInput(param,value);
     }
 
     /**

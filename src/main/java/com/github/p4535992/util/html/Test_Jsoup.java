@@ -1,11 +1,7 @@
 package com.github.p4535992.util.html;
-import com.github.p4535992.util.object.RPC;
 
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Marco on 26/04/2015.
@@ -59,7 +55,7 @@ public class Test_Jsoup {
         }*/
 
         String url = "http://www.dossier.net/utilities/coordinate-geografiche/";
-        List<List<List<String>>> listaComuni = JSoupKit.TablesExtractor(url, false);
+        List<List<List<String>>> listaComuni = JSoupUtilities.TablesExtractor(url, false);
         List<String> support = new ArrayList<>();
     }
 }

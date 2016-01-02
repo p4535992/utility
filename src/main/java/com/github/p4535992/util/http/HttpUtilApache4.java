@@ -244,7 +244,7 @@ public class HttpUtilApache4 {
         try {
             CloseableHttpResponse response = httpclient.execute(httpget);
             //HttpResponse response = httpclient.execute(httpget);
-            System.out.println(response);
+           logger.info("Response GET:"+response.toString());
             org.apache.http.HttpEntity entity = response.getEntity();
             if (entity != null) {
                 try (InputStream instream = entity.getContent()) {

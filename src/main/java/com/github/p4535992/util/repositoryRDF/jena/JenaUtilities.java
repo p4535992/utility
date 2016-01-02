@@ -2373,7 +2373,7 @@ public class JenaUtilities {
      * @param uri the String to verify.
      * @return if true the String is a valid IRI.
      */
-    public static Boolean isIRI(Object uri){
+    private static Boolean isIRI(Object uri){
         try {
             if(isString(uri)) {
                 IRIFactory factory = IRIFactory.uriImplementation();
@@ -2409,7 +2409,9 @@ public class JenaUtilities {
     private static boolean isUri(Object uriResource){
         if(uriResource instanceof URI)return true;
         else{
-            try { URI.create(String.valueOf(uriResource));return true;
+            try {
+                //noinspection ResultOfMethodCallIgnored
+                URI.create(String.valueOf(uriResource));return true;
             }catch(Exception e){ return false;}
         }
     }
@@ -2433,7 +2435,7 @@ public class JenaUtilities {
         return (uriResource instanceof String);
     }
 
-    public static IRI toIri(Object uriResource){
+    private static IRI toIri(Object uriResource){
         return IRIFactory.uriImplementation().construct(toString(uriResource));
     }
 

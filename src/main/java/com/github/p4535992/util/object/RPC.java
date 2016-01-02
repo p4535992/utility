@@ -1,6 +1,6 @@
 package com.github.p4535992.util.object;
 
-import com.github.p4535992.util.html.JSoupKit;
+import com.github.p4535992.util.html.JSoupUtilities;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -149,7 +149,7 @@ public class RPC {
     public static List<RPC> getInfoRPCFromSite() throws Exception {
         String urlBaseComuni = "http://www.comuni-italiani.it/alfa/";
         URL url = new URL(urlBaseComuni);
-        List<List<List<String>>> listaComuni = JSoupKit.TablesExtractor(url, false);
+        List<List<List<String>>> listaComuni = JSoupUtilities.TablesExtractor(url, false);
         List<String> support = new ArrayList<>();
         boolean flag = false;
         for (List<List<String>> listListHtml : listaComuni) {
@@ -168,14 +168,14 @@ public class RPC {
         for (String html : support) {
             //http://www.comuni-italiani.it/alfa/001.html
             String urlLetter = urlBaseComuni + html.replace("[HREF=", "").replace("]", "");
-            List<List<List<String>>> listaComuniForLetter = JSoupKit.TablesExtractor(urlLetter, false);
+            List<List<List<String>>> listaComuniForLetter = JSoupUtilities.TablesExtractor(urlLetter, false);
             for (List<String> listHtml : listaComuniForLetter.get(5)) {
                 for (int i =0; i < listHtml.size(); i++) {
                     RPC rpc = new RPC();
                     rpc.setCity(listHtml.get(i));
                     i++;
                     String urlName = "http://www.comuni-italiani.it/" + listHtml.get(i).replace("[HREF=", "").replace("]", "").replace("../","");
-                    List<List<List<String>>> listaComuneForName = JSoupKit.TablesExtractor(urlName, false);
+                    List<List<List<String>>> listaComuneForName = JSoupUtilities.TablesExtractor(urlName, false);
                     for(List<String> codici : listaComuneForName.get(6)){
                         if(codici.get(0).equalsIgnoreCase("Regione")) rpc.setRegion(codici.get(1));
                         if(codici.get(0).equalsIgnoreCase("Provincia")) rpc.setProvince(codici.get(1));

@@ -26,10 +26,6 @@ public class SQLJooqKit2 {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(SQLJooqKit2.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     private static DSLContext dslContext;
     private static SQLJooqKit2 instance = null;
     private static SQLDialect sqlDialect;
@@ -72,7 +68,7 @@ public class SQLJooqKit2 {
     public static void setConnection(Connection conn) {
         connection = conn;
         connProvider= new DefaultConnectionProvider(connection);
-        sqlDialect = getJOOQDSLContext(connection);
+        sqlDialect = getSQLDialect(connection);
         dslContext = DSL.using(connection,sqlDialect);
     }
 
@@ -83,7 +79,6 @@ public class SQLJooqKit2 {
      */
     public static SQLDialect convertDialectDBToSQLDialectJOOQ(String dialectDb){
         return convertStringToSQLDialectJOOQ(dialectDb);
-
     }
 
     /**
@@ -105,27 +100,30 @@ public class SQLJooqKit2 {
             case "postgres93": return SQLDialect.POSTGRES_9_3;
             case "postgres94": return SQLDialect.POSTGRES_9_4;
             case "sqlite": return SQLDialect.SQLITE;
-            default: return SQLDialect.DEFAULT;
+            default: {
+                logger.warn("Can't found a correct SQLDialect for the String:"+sqlDialect);
+                return SQLDialect.DEFAULT;
+            }
         }
     }
 
     /**
-     * Methoc getSQLDialect JooQ from Connection.
+     * Method get SQLDialect JOOQ from Connection.
      * @param conn the Connection java SQL.
-     * @return the JooQ SQLDialect.
+     * @return the JOOQ SQLDialect.
      */
-    public static SQLDialect getJOOQDSLContext(Connection conn){
+    public static SQLDialect getSQLDialect(Connection conn){
         DatabaseMetaData m;
         if(conn!=null) {
             try {
                 m = conn.getMetaData();
                 return convertDialectDBToSQLDialectJOOQ(m.getDatabaseProductName());
             } catch (SQLException e) {
-                logger.error(gm() + e.getMessage(),e);
+                logger.error(e.getMessage(),e);
                 return null;
             }
         }else{
-            logger.error(gm() + "No SQL Connection open, the Connection is NULL");
+            logger.error("No SQL Connection open,can't create a JOOQ SQLDialect the Connection is NULL");
             return null;
         }
     }
@@ -577,11 +575,7 @@ public class SQLJooqKit2 {
      */
     @SuppressWarnings({"rawtypes","unchecked"})
     public static DataType createDataType(Class<?> clazzType,String typeName){
-        return new DefaultDataType(
-                sqlDialect,
-                clazzType,
-                typeName
-        );
+        return new DefaultDataType(sqlDialect,clazzType,typeName );
     }
 
     /**
@@ -608,6 +602,41 @@ public class SQLJooqKit2 {
         );
     }
 
+    /**
+     * Method to cretae a JOOQ DataType.
+     * @param clazzType the class type of the datatype.
+     * @param typeName the string of the SQL type of the datatype.
+     * @return a JOOQ DataType
+     */
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public static DataType createDataType(Class<?> clazzType,String typeName,SQLDialect sqlDialect){
+        return new DefaultDataType(sqlDialect,clazzType,typeName );
+    }
+
+    /**
+     * Method to cretae a JOOQ DataType.
+     * @param clazzType the class type of the datatype.
+     * @return a JOOQ DataType
+     */
+    @SuppressWarnings("rawtypes")
+    public static DataType createDataType(Class<?> clazzType,SQLDialect sqlDialect){
+        return DefaultDataType.getDataType(sqlDialect,clazzType);
+    }
+
+    /**
+     * Method to cretae a JOOQ DataType.
+     * @param sqlTypes java.sql.Type related to the object.
+     * @return a JOOQ DataType
+     */
+    @SuppressWarnings({"rawtypes","unchecked"})
+    public static DataType createDataType(int sqlTypes,SQLDialect sqlDialect){
+        return new DefaultDataType(
+                sqlDialect,
+                SQLUtilities.convertSQLTypes2JavaClass(sqlTypes),
+                SQLUtilities.convertSQLTypes2String(sqlTypes)
+        );
+    }
+
 
     /**
      * Method to create a new DSLContext.
@@ -624,6 +653,23 @@ public class SQLJooqKit2 {
         }
         setConnection(connection, sqlDialect);
         return dslContext;
+    }
+
+    /**
+     * Method to create a new DSLContext.
+     * @return the JOOQ DSLContext.
+     */
+    public static DSLContext createDSLContext(Connection connection,SQLDialect sqlDialect){
+        if(connection==null){
+            logger.error("No Connection is initialized for this operation, the Connection is NULL");
+            return null;
+        }
+        if(sqlDialect==null){
+            logger.error("No SQLDialect is initialized for this operation, the SQLDialect is NULL");
+            return null;
+        }
+        //setConnection(connection, sqlDialect);
+        return  DSL.using(connection, sqlDialect);
     }
 
     /**
@@ -776,7 +822,7 @@ public class SQLJooqKit2 {
      * @return the JOOQ Datatype.
      */
     @SuppressWarnings("unchecked")
-    public static <T> DataType<T> convertFieldToDatatype(Field<T> field){
+    public static <T> DataType<T> convertFieldToDataType(Field<T> field){
         return (DataType<T>) (field == null ? SQLDataType.OTHER : field.getDataType());
     }
 
@@ -809,13 +855,15 @@ public class SQLJooqKit2 {
      * @param database string name of the database.
      * @param username string username.
      * @param password string password.
+     * @return the DSLContext set with Connection.
      */
-    public static void getMySQLConnection(String host,String port,String database,String username,String password){
+    public static DSLContext getMySQLConnection(String host,String port,String database,String username,String password){
         connection = SQLUtilities.getMySqlConnection(host, port, database, username, password);
         connProvider= new DefaultConnectionProvider(connection);
         connProvider.acquire();
         sqlDialect = SQLDialect.MYSQL;
         dslContext = DSL.using(connection,SQLDialect.MYSQL);
+        return dslContext;
     }
 
     @SuppressWarnings("unchecked")

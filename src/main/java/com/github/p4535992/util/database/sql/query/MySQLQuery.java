@@ -1,6 +1,7 @@
 package com.github.p4535992.util.database.sql.query;
 
 import com.github.p4535992.util.database.sql.SQLUtilities;
+import com.github.p4535992.util.string.StringUtilities;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -55,6 +56,7 @@ public class MySQLQuery extends SQLQuery{
      */
     public static Long getExecutionTime(String sql,Connection conn){
         preparePerformanceSchema(conn);
+        String duration = "";
         try {
             SQLUtilities.executeSQL(sql,conn);
             if(sql.endsWith(";")) sql = sql.substring(0, sql.length() - 1);
@@ -68,17 +70,21 @@ public class MySQLQuery extends SQLQuery{
                     "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, \n" +
                             "FROM performance_schema.events_statements_history_long"
             );*/
-            String duration = "";
+
 
             //noinspection LoopStatementThatDoesntLoop
             while(resultSet.next()) {
                 //String sql_text = resultSet.getString("SQL_TEXT");
                 duration = resultSet.getString("Duration");
-                break; // i'M SURE IS A UNIQUE RECORD.
+                if(!StringUtilities.isNullOrEmpty(duration)) break;
             }
+            if(StringUtilities.isNullOrEmpty(duration)) return 0L;
             return Math.round((Double.parseDouble(duration)*1000));
-        } catch (SQLException e) {
-            logger.error(e.getMessage(),e);
+        } catch(java.lang.NumberFormatException e){
+            logger.error("The duration String is:'"+duration+"' -> "+e.getMessage(),e);
+            return 0L;
+        }catch (SQLException e) {
+            logger.error("Can\'t execute the query:"+sql+" -> "+e.getMessage(),e);
             return 0L;
         }
     }

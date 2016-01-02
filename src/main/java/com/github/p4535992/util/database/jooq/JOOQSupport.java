@@ -22,26 +22,30 @@ public class JOOQSupport {
      */
     public static String getQueryInsertValuesParam(String queryString, String[] columns){
         String preQuery = StringUtilities.findWithRegex(queryString, Patterns.MANAGE_SQL_PREQUERY_INSERT);
-        String postQuery = queryString.replace(preQuery, "");
-        if (StringUtilities.isMatch(postQuery,Patterns.MANAGE_SQL_QUERY_INSERT_CHECK_WHERE )){
-            String[] val = postQuery.split(Patterns.MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3.pattern());
-            if(val.length > 2) {
-                String postQuery0 = val[0].replace("(","").replace(")", "");
-                String postQuery1 = val[1].replace("(","").replace(")","");
+        if(preQuery != null) {
+            String postQuery = queryString.replace(preQuery, "");
+            if (StringUtilities.isMatch(postQuery, Patterns.MANAGE_SQL_QUERY_INSERT_CHECK_WHERE)) {
+                String[] val = postQuery.split(Patterns.MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3.pattern());
+                if (val.length > 2) {
+                    String postQuery0 = val[0].replace("(", "").replace(")", "");
+                    String postQuery1 = val[1].replace("(", "").replace(")", "");
+                }
+            } else {
+                //queryString = queryString.replace(preQuery, "");
+                postQuery = "";
             }
-        }else {
-            //queryString = queryString.replace(preQuery, "");
-            postQuery = "";
+            preQuery = StringUtilities.findWithRegex(preQuery, Patterns.MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
+            //values = values.substring(0, values.length() - 1);
+            //String[] param = values.split(",");
+            //for(String s: param)values = values.replace(s.trim(),"?");
+            String[] array = ArrayUtilities.createSingleton("?", columns.length);
+            String values = ArrayUtilities.toString(array);
+            //return queryString + " values (" + values +")" + supportQuery;
+            return preQuery + ArrayUtilities.toString(columns)
+                    + ") values (" + values + ")" + postQuery;
+        }else{
+            return null;
         }
-        preQuery = StringUtilities.findWithRegex(preQuery,Patterns.MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
-        //values = values.substring(0, values.length() - 1);
-        //String[] param = values.split(",");
-        //for(String s: param)values = values.replace(s.trim(),"?");
-        String[] array = ArrayUtilities.createSingleton("?", columns.length);
-        String values = ArrayUtilities.toString(array);
-        //return queryString + " values (" + values +")" + supportQuery;
-        return preQuery + ArrayUtilities.toString(columns)
-                + ") values (" + values +")" + postQuery;
     }
 
     /**

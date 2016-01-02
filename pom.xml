@@ -82,6 +82,7 @@
         <org.hibernate.version>4.3.10.Final</org.hibernate.version>
         <mysql.version>5.1.6</mysql.version>
         <org.jooq.jooq.version>3.6.2</org.jooq.jooq.version>
+        <org.jooq.joor.version>0.9.5</org.jooq.joor.version>
         <!-- Support Hibernate -->
         <joda-time.version>2.3</joda-time.version>
         <org.jadira.usertype.core.version>3.0.0.CR1</org.jadira.usertype.core.version>
@@ -332,6 +333,11 @@
             <groupId>org.jooq</groupId>
             <artifactId>jooq-codegen</artifactId>
             <version>${org.jooq.jooq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>joor</artifactId>
+            <version>${org.jooq.joor.version}</version>
         </dependency>
 
         <!-- Pooling database -->

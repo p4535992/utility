@@ -934,7 +934,7 @@ public class ReflectionUtilities {
             if(field!=null)setField(field,target, value);
             else  logger.error("The field you try to set is NULL, checlk if the Field name is correct");
         } catch (NullPointerException|NoSuchFieldException e) {
-            logger.error("ReflectionUtilities::setField ->",e);
+            logger.error(e.getMessage(),e);
         }
 
     }
@@ -1715,7 +1715,7 @@ public class ReflectionUtilities {
                     try {
                         return clazz.getMethod(setter, iface);
                     } catch (NoSuchMethodException ex1) {
-                        logger.error("ReflectionUtilities::findSetter -> ",ex1);
+                        logger.error(ex.getMessage(),ex1);
                     }
                 }
                 clazzField = clazzField.getSuperclass();
@@ -2524,30 +2524,6 @@ public class ReflectionUtilities {
 
     /**
      * Method to invoke a getter method from a class.
-     * OLD_NAME: invokeSetterClass.
-     * @param MyObject object target.
-     * @param methodName string name of the method getter.
-     * @param value value to set with the setter method.
-     * @param clazzValue class of the calue to set.
-     * @param <T> generic type.
-     * @return the returned value from the getter method is exists.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T invokeSetter(T MyObject,String methodName,Object value,Class<?> clazzValue) {
-        try {
-            Method method = getMethodByNameAndParam(
-                    MyObject.getClass(), methodName, new Class<?>[]{clazzValue});
-            MyObject = (T) method.invoke(MyObject,value);
-            return MyObject;
-        } catch (InvocationTargetException|IllegalAccessException|
-                SecurityException|ClassCastException|NullPointerException  e) {
-            logger.error("ReflectionUtilities::invokeSetter ->",e);
-        }
-        return null;
-    }
-
-    /**
-     * Method to invoke a getter method from a class.
      * OLD_NAME: invokeGetterClass.
      * @param MyObject object target.
      * @param methodName string name of the method getter.
@@ -2578,7 +2554,7 @@ public class ReflectionUtilities {
      * @return the return value of the invoke on the getter method.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T invokeSetter(T MyObject, Method method, Object value) {
+    public static <T> T invokeSetter(T MyObject, Method method,Object... value) {
         T MyObject2;
         try {
             try {
@@ -2589,35 +2565,48 @@ public class ReflectionUtilities {
                 MyObject2 = (T) method.invoke(MyObject, value);
             }
         }catch(IllegalAccessException|InvocationTargetException e){
-            logger.error("ReflectionUtilities::invokeSetter ->",e);
+            logger.error(e.getMessage(),e);
             return null;
         }
         return MyObject2;
     }
 
     /**
-     * Method to invoke a setter method from  a Object.
-     * OLD_NAME: invokeSetterMethod.
-     * @param MyObject object where invoke the getter method.
-     * @param method the setter method.
-     * @param value to set with the setter method.
-     * @return the return value of the invoke on the setter method.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws NoSuchMethodException throw if any error is occurred.
+     * Method to invoke a getter method from a class.
+     * OLD_NAME: invokeSetterClass.
+     * @param MyObject object target.
+     * @param methodName string name of the method getter.
+     * @param value value to set with the setter method.
+     * @param clazzValue class of the calue to set.
+     * @param <T> generic type.
+     * @return the returned value from the getter method is exists.
      */
-    /*public static Object invokeSetter(Object MyObject, Method method, Object value)
-            throws IllegalAccessException,InvocationTargetException,NoSuchMethodException{
-        Object MyObject2;
-        try{
-            //if the method you try to invoke is static...
-            MyObject2 = method.invoke(null, value);
-        }catch(NullPointerException ne) {
-            //...The method is not static
-            MyObject2 = method.invoke(MyObject, value);
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeSetter(T MyObject,String methodName,Object value,Class<?> clazzValue) {
+        try {
+            Method method = getMethodByNameAndParam(
+                    MyObject.getClass(), methodName, new Class<?>[]{clazzValue});
+            MyObject = (T) method.invoke(MyObject,value);
+            return MyObject;
+        } catch (InvocationTargetException|IllegalAccessException|
+                SecurityException|ClassCastException|NullPointerException  e) {
+            logger.error(e.getMessage(),e);
         }
-        return MyObject2;
-    }*/
+        return null;
+    }
+
+    /**
+     * Method to invoke a getter method from a class.
+     * @param MyObject object target.
+     * @param methodName string name of the method getter.
+     * @param value value to set with the setter method.
+     * @param <T> generic type.
+     * @return the returned value from the getter method is exists.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T invokeSetter(T MyObject,String methodName,Object value) {
+        return invokeSetter(MyObject,methodName,value,value.getClass());
+    }
 
     /**
      * Method to invoke a getter method from  a Object.
@@ -2755,9 +2744,33 @@ public class ReflectionUtilities {
         try {
             return method.invoke(target, args);
         }catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-            logger.error("ReflectionUtilities:invokeMethod ->",ex);
+            logger.error(ex.getMessage(),ex);
         }
         throw new IllegalStateException("Should never get here");
+    }
+
+    public static <T> boolean checkMethod(T foo,Method method){
+        return checkMethod(foo.getClass(),method.getName());
+    }
+
+    public static <T> boolean checkMethod(Class<T> clazz,Method method){
+        return checkMethod(clazz,method.getName());
+    }
+
+    public static <T> boolean checkMethod(T foo,String nameMethod){
+        return checkMethod(foo.getClass(),nameMethod);
+    }
+
+    public static <T> boolean checkMethod(Class<T> clazz,String nameMethod){
+        /*boolean hasMethod = false;
+        for (Method m : clazz.getMethods()) {
+            if (m.getName().equals(nameMethod)) {
+                hasMethod = true;
+                break;
+            }
+        }
+        return hasMethod;*/
+        return findMethod(clazz,nameMethod) != null;
     }
 
     /**
@@ -2785,11 +2798,11 @@ public class ReflectionUtilities {
         try {
             return method.invoke(target, args);
         } catch (IllegalAccessException ex) {
-            logger.error("ReflectionUtilities::invokeJdbcMethod -> ",ex);
+            logger.error(ex.getMessage(),ex);
         }
         catch (InvocationTargetException ex) {
             if (ex.getTargetException() instanceof SQLException) {
-                logger.error("ReflectionUtilities::invokeJdbcMethod -> ",new Throwable(ex.getTargetException()));
+                logger.error(ex.getMessage(),ex);
             }
         }
         throw new IllegalStateException("Should never get here");
@@ -2917,7 +2930,7 @@ public class ReflectionUtilities {
                 }
             }
         }catch (Throwable ignored){
-            logger.warn("ReflectionUtilities::getDeclaredFields ->",ignored);
+            logger.warn(ignored.getMessage(),ignored);
         }
         return local;
     }

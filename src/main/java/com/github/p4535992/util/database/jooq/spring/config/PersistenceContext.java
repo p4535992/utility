@@ -45,12 +45,10 @@ public class PersistenceContext {
     @Bean(destroyMethod = "close")
     public DataSource dataSource() {
         BoneCPDataSource dataSource = new BoneCPDataSource();
-
         dataSource.setDriverClass(env.getRequiredProperty(PROPERTY_NAME_DB_DRIVER));
         dataSource.setJdbcUrl(env.getRequiredProperty(PROPERTY_NAME_DB_URL));
         dataSource.setUsername(env.getRequiredProperty(PROPERTY_NAME_DB_USERNAME));
         dataSource.setPassword(env.getRequiredProperty(PROPERTY_NAME_DB_PASSWORD));
-
         return dataSource;
     }
 
