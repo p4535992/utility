@@ -6,6 +6,7 @@ import com.github.p4535992.util.string.StringUtilities;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * Created by 4535992 on 29/12/2015.
@@ -16,6 +17,8 @@ public class MySQLQuery extends SQLQuery{
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(MySQLQuery.class);
+
+    private static boolean isPerformanceSetted = false;
 
     /**
      * Method to prepare the server MySQL  to use the performance utility.
@@ -56,35 +59,53 @@ public class MySQLQuery extends SQLQuery{
      */
     public static Long getExecutionTime(String sql,Connection conn){
         preparePerformanceSchema(conn);
-        String duration = "";
+        String duration = "0";
         try {
             SQLUtilities.executeSQL(sql,conn);
             if(sql.endsWith(";")) sql = sql.substring(0, sql.length() - 1);
-            sql = sql.replaceAll("''","''''");
-            ResultSet resultSet = SQLUtilities.executeSQL(
-                    "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT\n" +
-                    "FROM performance_schema.events_statements_history_long WHERE SQL_TEXT like\n '%"+
-                     sql+"%'"
-            );
+            ResultSet resultSet;
+            try{
+                //sql = sql.replaceAll("''","''''");
+                resultSet = SQLUtilities.executeSQL(
+                        "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT\n" +
+                        "FROM performance_schema.events_statements_history_long WHERE SQL_TEXT like\n '%"+
+                         sql+"%'");
+            }catch(Exception e){
+                sql = sql.replaceAll("''","''''");
+                resultSet = SQLUtilities.executeSQL(
+                        "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT\n" +
+                                "FROM performance_schema.events_statements_history_long WHERE SQL_TEXT like\n '%"+
+                                sql+"%'");
+            }
            /* ResultSet resultSet = SQLUtilities.executeSQL(
                     "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, \n" +
                             "FROM performance_schema.events_statements_history_long"
             );*/
-
-
             //noinspection LoopStatementThatDoesntLoop
-            while(resultSet.next()) {
-                //String sql_text = resultSet.getString("SQL_TEXT");
-                duration = resultSet.getString("Duration");
-                if(!StringUtilities.isNullOrEmpty(duration)) break;
+            if(resultSet.getFetchSize()==0){
+                resultSet = SQLUtilities.executeSQL(
+                        "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT\n" +
+                                "FROM performance_schema.events_statements_history_long");
             }
-            if(StringUtilities.isNullOrEmpty(duration)) return 0L;
-            return Math.round((Double.parseDouble(duration)*1000));
+
+            //logger.info("Size:"+resultSet.getFetchSize());
+            while(resultSet.next()) {
+                String sql_text2 = resultSet.getString("SQL_TEXT");
+                //logger.info(sql_text2);
+                if(sql !=null && sql_text2  != null &&  sql.contains(sql_text2)){
+                    duration = resultSet.getString("Duration");
+                    //if(!StringUtilities.isNullOrEmpty(duration)) break;
+                }
+            }
+            long calculate = 0L;
+            if(!StringUtilities.isNullOrEmpty(duration)) calculate = Math.round((Double.parseDouble(duration)*1000));
+            logger.info("Query MYSQL result(s) in "+calculate+"ms.");
+            return calculate;
         } catch(java.lang.NumberFormatException e){
             logger.error("The duration String is:'"+duration+"' -> "+e.getMessage(),e);
             return 0L;
         }catch (SQLException e) {
-            logger.error("Can\'t execute the query:"+sql+" -> "+e.getMessage(),e);
+            logger.error("Can't execute the query:"+sql+" -> "+e.getMessage(),e);
             return 0L;
         }
     }

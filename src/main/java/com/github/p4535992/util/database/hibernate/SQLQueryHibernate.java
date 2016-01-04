@@ -1,6 +1,6 @@
 package com.github.p4535992.util.database.hibernate;
 
-import com.github.p4535992.util.calendar.DateKit;
+import com.github.p4535992.util.calendar.DateUtilities;
 import org.hibernate.Query;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -28,10 +28,6 @@ public class SQLQueryHibernate {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(SQLQueryHibernate.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     /**
      * Method to convert a Query Hibernate Object to a String.
      * @param query the Query Hibernate Object.
@@ -51,7 +47,7 @@ public class SQLQueryHibernate {
             f.setAccessible(true);
             sql = (String)f.get(loader);
         } catch (NoSuchFieldException|IllegalAccessException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
         }
         return sql;
     }
@@ -84,7 +80,7 @@ public class SQLQueryHibernate {
                 Object o = value.getValue();
                 String valueStr;
                 if (o instanceof Calendar) {
-                    valueStr = DateKit.printCal((Calendar) o);
+                    valueStr = DateUtilities.printCal((Calendar) o);
                 } else {
                     valueStr = o.toString();
                 }
@@ -101,7 +97,7 @@ public class SQLQueryHibernate {
                 Object o = value.getValue();
                 String valueStr;
                 if (o instanceof Calendar) {
-                    valueStr = DateKit.printCal((Calendar) o);
+                    valueStr = DateUtilities.printCal((Calendar) o);
                 } else {
                     valueStr = o.toString();
                 }
@@ -112,7 +108,7 @@ public class SQLQueryHibernate {
             }
         } catch (NoSuchFieldException | SecurityException | 
                 IllegalArgumentException | IllegalAccessException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             /*if (logger.isDebugEnabled()) {
                 logger.debug("Error intercepting query parameters", t);
             }*/

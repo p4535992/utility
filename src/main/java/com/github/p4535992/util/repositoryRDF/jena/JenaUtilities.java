@@ -2314,26 +2314,29 @@ public class JenaUtilities {
         com.hp.hpl.jena.sparql.util.Timer timer = new com.hp.hpl.jena.sparql.util.Timer() ;
         //Dataset ds = qexec.getDataset();
         Dataset ds = getDataSetFromModel(model);
+        long calculate;
         QueryExecution qexec = QueryExecutionFactory.create(query,ds);
         if (query.isSelectType()) {
             timer.startTimer() ;
             qexec.execSelect();
-            return timer.endTimer();   // Time in milliseconds.
+            calculate = timer.endTimer();   // Time in milliseconds.
         } else if (query.isConstructType()) {
             timer.startTimer() ;
             qexec.execConstruct();
-            return timer.endTimer();   // Time in milliseconds.
+            calculate = timer.endTimer();   // Time in milliseconds.
         }else if (query.isAskType()) {
             timer.startTimer() ;
             qexec.execAsk();
-            return timer.endTimer();   // Time in milliseconds.
+            calculate =  timer.endTimer();   // Time in milliseconds.
         }else if (query.isDescribeType()) {
             timer.startTimer() ;
             qexec.execDescribe();
-            return timer.endTimer();   // Time in milliseconds.
+            calculate = timer.endTimer();   // Time in milliseconds.
         }else{
-            return 0L;
+            calculate = 0L;
         }
+        logger.info(" Query JENA Model result(s) in "+calculate+"ms.");
+        return calculate;
     }
 
     /**

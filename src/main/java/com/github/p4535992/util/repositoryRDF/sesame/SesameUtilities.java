@@ -120,7 +120,11 @@ public class SesameUtilities {
         if(mRepository!=null){
             isRepositoryInitialized();
             mRepositoryConnection = mRepository.getConnection();
-            logger.info("The RepositoryConnection:"+mRepositoryConnection.toString()+" is setted!");
+            if(mRepositoryConnection != null) {
+                logger.info("The RepositoryConnection:" + mRepositoryConnection.toString() + " is setted!");
+            }else{
+                logger.error("Attention, you try to set a NULL RepositoryConnection");
+            }
         }else{
             logger.warn("Attention, you try to set a RepositoryConnection on a inexistent Repository!");
         }
@@ -429,8 +433,12 @@ public class SesameUtilities {
 
     public void setPrefixes(Map<String,String> mapPrefixes,RepositoryConnection repositoryConnection){
         try {
-            for(Map.Entry<String,String> entry : mapPrefixes.entrySet()){
-                repositoryConnection.setNamespace(entry.getKey(),entry.getValue());
+            if(repositoryConnection != null) {
+                for (Map.Entry<String, String> entry : mapPrefixes.entrySet()) {
+                    repositoryConnection.setNamespace(entry.getKey(), entry.getValue());
+                }
+            }else{
+                logger.error("The RepositoryConnection is NULL");
             }
         } catch (RepositoryException e) {
             logger.error(e.getMessage(),e);
@@ -3760,12 +3768,12 @@ public class SesameUtilities {
 
     private static Long avoidTimeLostForTheCommunication(Long time){
         //these value are taken manually from the multiple test on the running of the project....
-        logger.warn("Time before:"+time);
+        //logger.warn("Time before:"+time);
         //over 100ms there some time lost on connection on the server...
         while(time > 100){
             time = time - ThreadLocalRandom.current().nextInt(0, 50 + 1);
         }
-        logger.warn("Time after:"+time);
+        //logger.warn("Time after:"+time);
         return time;
     }
 

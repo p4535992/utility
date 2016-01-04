@@ -855,13 +855,15 @@ public class SQLUtilities {
             timer.startTimer();
             ResultSet rs = stmt.executeQuery(sql);
             calculate = timer.endTimer();
+
         }catch (Exception e) {
             logger.error("Can't get the execution time for the query:"+sql,e);
             return 0L;
         }
         Long calculate2 = JDBCLogger.getTime()/1000;
-        if(calculate < calculate2) return calculate;
-        else return calculate2;
+        if(calculate > calculate2) calculate = calculate2;
+        logger.info("Query SQL result(s) in "+calculate+"ms.");
+        return calculate;
     }
 
     /**

@@ -14,7 +14,7 @@ public class JDBCLogger
     @SuppressWarnings("unchecked")
     public static void startLogSqlQuery(Thread t, String sql) {
        if (QueryTime.get(t) != null)
-       logger.warn("WARNING: overwriting sql query log time for " + sql);
+       //logger.warn("WARNING: overwriting sql query log time for " + sql);
        QueryTime.put(t, System.currentTimeMillis());
     }
 
@@ -27,10 +27,16 @@ public class JDBCLogger
     }
 
     public static void endLogSqlQuery(Thread t, String sql) {
-       time = System.currentTimeMillis();
-       time -= (QueryTime.get(t));
-       logger.info("Time: " + time + " millis for SQL query " + sql);
-       QueryTime.remove(t);
+        try {
+            time = System.currentTimeMillis();
+            if(QueryTime.get(t) != null) {
+                time -= (QueryTime.get(t));
+                QueryTime.remove(t);
+            }
+            //logger.info("Time: " + time + " millis for SQL query " + sql);
+        }catch(java.lang.NullPointerException e){
+            logger.warn("Error can't get the Time of the SQL query because a proble with thread collision");
+        }
     }
 
     public static void startLogSqlNext(Thread t, String sql) {}

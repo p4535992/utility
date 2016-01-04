@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+       <!-- The following declaration is for automatic transaction support for the SessionFactory:  -->
+       <tx:annotation-driven />
+       <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+              <property name="sessionFactory" ref="sessionFactory" />
+       </bean>
+
+       <!-- Configuring SessionFactory Bean: Hibernate 4 SessionFactory Bean definition with JPA-->
+       <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+              <property name="dataSource" ref="dataSource" />
+              <property name="annotatedClasses">
+                     <list>
+                            <value>com.github.p4535992.extractor.object.model.Website</value>
+                            <value>com.github.p4535992.extractor.object.model.GeoDocument</value>
+                            <value>com.github.p4535992.extractor.object.model.GeoDomainDocument</value>
+                            <value>com.github.p4535992.extractor.object.model.Document</value>
+                            <value>com.github.p4535992.extractor.object.model.InfoDocument</value>
+                     </list>
+              </property>
+              <property name="hibernateProperties">
+                     <props>
+                            <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                            <prop key="hibernate.current_session_context_class">thread</prop>
+                            <prop key="hibernate.show_sql">false</prop>
+                     </props>
+              </property>
+       </bean>
+
+       <!-- Configuring SessionFactory Bean: Hibernate 4 SessionFactory Bean definition with XML-->
+       <!--
+       <bean id="sessionFactory"  class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+           <property column="dataSource" ref="dataSource" />
+           <property column="configLocation" value="classpath:hibernate.cfg.xml" />
+       </bean>
+       -->
+
+       <!--
+      <bean id="sessionFactory"  class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+          <property column="dataSource" ref="dataSource"></property>
+          <property column="configLocation" value="classpath:hibernate.cfg.xml" />
+          <property column="mappingResources">
+              <list>
+                  <value>classpath:object.hbm.GeoDocument</value>
+              </list>
+          </property>
+          <property column="hibernateProperties">
+              <props>
+                  <prop key="hibernate.dialect">org.hibernate.dialect.Oracle9iDialect</prop>
+                  <prop key="hibernate.hbm2ddl.auto">update</prop>
+                  <prop key="hibernate.show_sql">true</prop>
+              </props>
+          </property>
+      </bean>
+      -->
+</beans>

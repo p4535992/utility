@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xmlns:gate="http://gate.ac.uk/ns/spring"
+             xmlns:mvc="http://www.springframework.org/schema/mvc"
+             xmlns:tx="http://www.springframework.org/schema/tx"
+             xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+             xmlns:webflow-config="http://www.springframework.org/schema/webflow-config"
+             xmlns:util="http://www.springframework.org/schema/util"
+             xmlns:jms="http://www.springframework.org/schema/jms"
+             xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/webflow-config http://www.springframework.org/schema/webflow-config/spring-webflow-config.xsd
+	    http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+	    http://gate.ac.uk/ns/spring http://gate.ac.uk/ns/spring.xsd
+	    http://www.springframework.org/schema/jms https://www.springframework.org/schema/jms/spring-jms.xsd
+		">
+    <!--<jms:annotation-driven/>-->
+    <util:properties id="nodeProperty"  location="classpath:gate/gate.properties" />
+    <context:property-placeholder properties-ref="nodeProperty" />
+    <context:component-scan base-package="com.github.p4535992.gatebasic.gate" />
+
+   <!-- <gate:init gate-home="path/to/GATE"
+               site-config-file="site/gate.xml"
+               user-config-file="user/gate.xml">
+        <gate:preload-plugins>
+            <value>plugins/ANNIE</value>
+            <value>http://plugins.org/another/plugin</value>
+        </gate:preload-plugins>
+    </gate:init>-->
+
+   <!-- <beans:bean class="gate.util.spring.Init" init-method="init">
+        <beans:property name="gateHome" value="classpath:gate_files" />
+        <beans:property name="pluginsHome" value="classpath:gate_files/plugins" />
+        <beans:property name="siteConfigFile" value="classpath:gate_files/gate.xml" />
+        <beans:property name="userConfigFile" value="classpath:gate_files/user-gate.xml" />
+       &lt;!&ndash; <beans:property name="preloadPlugins">
+            <beans:list>
+                <beans:value>classpath:gate_files/plugins/ANNIE</beans:value>
+                <beans:value>http://plugins.org/another/plugin</beans:value>
+            </beans:list>
+        </beans:property>&ndash;&gt;
+    </beans:bean>-->
+
+    <!-- Example Create resource gate directly on spring without load a gapp file-->
+   <!-- <gate:resource resource-class="gate.creole.SerialAnalyserController" scope="prototype" id="gateApplication">
+        <gate:customisers>
+            &lt;!&ndash; not 100% sure about this parameter name, the setter I'm
+                 trying to call is setPRs() &ndash;&gt;
+            <gate:set-parameter name="pRs">
+                <list>
+                    <gate:resource resource-name="tokeniser"
+                                   resource-class="gate.creole.tokeniser.DefaultTokeniser" />
+                    <gate:resource resource-name="splitter"
+                                   resource-class="gate.creole.splitter.SentenceSplitter" />
+                    <ref bean="anotherPrototypePr" />
+                    &lt;!&ndash; etc. &ndash;&gt;
+                </list>
+            </gate:set-parameter>
+        </gate:customisers>
+    </gate:resource>-->
+
+    <!-- Example with load ANNIE from GATE HOME-->
+    <!--<gate:resource id="customGrammar"
+                   resource-class="gate.creole.Transducer"
+                   scope="prototype">
+        <gate:parameters>
+            <beans:entry key="grammarURL">
+                <beans:value type="org.springframework.core.io.Resource">${jape.plugin.location}/main.jape</beans:value>
+            </beans:entry>
+        </gate:parameters>
+    </gate:resource>
+
+    <gate:saved-application id="myApplication"
+                            location="${annie.plugin.location}/ANNIE_with_defaults.gapp"
+                            scope="prototype">
+        <gate:customisers>
+            <gate:add-pr ref="customGrammar" />
+        </gate:customisers>
+    </gate:saved-application>-->
+
+    <!-- ========================================================== -->
+    <!-- GATE INTEGRATION WITH SPRING FRAMEWORK (NO BOOT)           -->
+    <!-- ========================================================== -->
+    <gate:init gate-home="classpath:gate_files" plugins-home="classpath:gate_files/plugins"/>
+    <!-- Load a file gapp on spring -->
+    <gate:duplicate id="gateApplication" return-template="true">
+        <gate:saved-application location="classpath:gate_files/custom/gapp/geoLocationPipeline06102014v7_fastMode.xgapp" />
+    </gate:duplicate>
+
+    <!-- Define Handler ben,Injection of the controller -->
+   <!--  <beans:bean id="mainHandler"  class="com.github.p4535992.gatebasic.gate.servlet.Gate8Handler" destroy-method="destroy">
+        <beans:property name="application" ref="gateApplication" />
+        <gate:pooled-proxy max-size="3" initial-size="3" />
+    </beans:bean>-->
+
+    <!--<gate:pooled-proxy max-size="3" initial-size="3" />-->
+
+    <!--<gate:pooled-proxy max-size="10" max-idle="3"-->
+                       <!--time-between-eviction-runs-millis="180000"-->
+                       <!--min-evictable-idle-time-millis="90000"-->
+                       <!--when-exhausted-action-name="WHEN_EXHAUSTED_FAIL"-->
+     <!--/>-->
+
+    <!-- Define the processor bean to be pooled -->
+    <beans:bean id="documentProcessor" class="gate.util.LanguageAnalyserDocumentProcessor" destroy-method="cleanup">
+            <beans:property name="analyser" ref="gateApplication" />
+            <gate:pooled-proxy max-size="3" />
+    </beans:bean>
+
+    <!--<beans:bean id="documentProcessor" class="gate.util.LanguageAnalyserDocumentProcessor">
+        <beans:property name="analyser" ref="gateApplication" />
+        <gate:pooled-proxy max-size="${gate.numThreads}" initial-size="${gate.numThreads}" />
+    </beans:bean>
+-->
+    <!-- Put the following code  to the web.xml file if is a webapp application-->
+    <!--
+    <listener>
+         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    -->
+    <!--
+    <servlet>
+        <servlet-name>mainHandler</servlet-name>
+        <servlet-class>org.springframework.web.context.support.HttpRequestHandlerServlet</servlet-class>
+    </servlet>
+    -->
+
+
+    <!-- ======================= -->
+    <!-- JMS SUPPORT             -->
+    <!-- ======================= -->
+
+    <!-- ======================= -->
+    <!-- JMS Without Spring      -->
+    <!-- ======================= -->
+
+    <!--<beans:bean id="myContainerFactory"
+          class="org.springframework.jms.config.DefaultJmsListenerContainerFactory">
+        &lt;!&ndash;<beans:property name="connectionFactory" ref="connectionFactory"/>
+        <beans:property name="destinationResolver" ref="destinationResolver"/>
+        <beans:property name="concurrency" value="3-10"/>&ndash;&gt;
+    </beans:bean>-->
+
+
+    <!--<beans:bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <beans:property name="brokerURL">
+            <beans:value>tcp://localhost:61616</beans:value>
+        </beans:property>
+    </beans:bean>-->
+
+   <!-- <beans:bean id="destinationResolver" class="org.apache.activemq.command.ActiveMQQueue">
+        <beans:constructor-arg value="myMessageQueue" />
+    </beans:bean>-->
+
+   <!-- <beans:bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <beans:property name="connectionFactory" ref="connectionFactory" />
+        <beans:property name="defaultDestination" ref="destinationResolver" />
+    </beans:bean>-->
+
+    <!-- ======================= -->
+    <!-- JMS with Spring         -->
+    <!-- ======================= -->
+
+    <!-- Default resolver -->
+  <!-- <beans:bean id="destinationResolver" class="org.springframework.jms.support.destination.DestinationResolver">
+       &lt;!&ndash;<beans:constructor-arg value="myMessageQueue" />&ndash;&gt;
+   </beans:bean>-->
+
+    <!-- A dynamic resolver -->
+    <!--<beans:bean id="jmsDynDestResolver" class=" org.springframework.jms.support.destination.DynamicDestinationResolver"/>-->
+
+    <!-- A JNDI resolver -->
+    <!--<beans:bean id="jmsDestResolver" class=" org.springframework.jms.support.destination.JndiDestinationResolver"/>-->
+
+    <!-- -->
+   <!-- <beans:bean id="connectionFactory" class="javax.jms.ConnectionFactory"/>-->
+
+   <!-- <jms:listener-container client-id="myContainerFactory"
+                            connection-factory="connectionFactory"
+                            destination-resolver="destinationResolver"
+                            concurrency="3-10"/>-->
+
+
+
+</beans:beans>

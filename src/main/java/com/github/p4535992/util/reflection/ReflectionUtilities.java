@@ -41,10 +41,6 @@ public class ReflectionUtilities {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(ReflectionUtilities.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     // ---------------------------------------------------------------------
     // Members
     // ---------------------------------------------------------------------
@@ -514,7 +510,7 @@ public class ReflectionUtilities {
                             return null;
                         }
                     }
-                    logger.warn(gm() + e.getMessage(),e);
+                    logger.warn(e.getMessage(),e);
                     throw e;
                 }
             }
@@ -580,7 +576,7 @@ public class ReflectionUtilities {
     private static Class<?> toClass(String name){
         try {return Class.forName(name);
         } catch (NullPointerException|ClassNotFoundException e) {
-            logger.error(gm() + e.getMessage());
+            logger.error(e.getMessage());
             return null;
         }
     }
@@ -800,37 +796,42 @@ public class ReflectionUtilities {
      * the previous value.
      * Usage: final Something annotation = (Something) Foobar.class.getAnnotations()[0];
      *         System.out.println("oldAnnotation = " + annotation.someProperty());
-     *         changeAnnotationValue(annotation, "someProperty", "another value");
+     *         updateAnnotationValue(annotation, "someProperty", "another value");
      *         System.out.println("modifiedAnnotation = " + annotation.someProperty());
      * href: http://stackoverflow.com/questions/14268981/modify-a-class-definitions-annotation-string-parameter-at-runtime/14276270#14276270
      * @param annotation annotation you want ot updte.
      * @param key key of the attribute you want to update.
      * @param newValue value of the attribute with the spceific key you want to update.
-     * @return the new object with the annotation update in runtime.
+     * @return if true all the operation are done.
      */
     @SuppressWarnings("unchecked")
-    private static Object updateAnnotationValue(Annotation annotation, String key, Object newValue){
-        Object handler = Proxy.getInvocationHandler(annotation);
-        Field f;
+    private static boolean updateAnnotationValue(Annotation annotation, String key, Object newValue){
         try {
-            //This is the name of the field.
-            f = handler.getClass().getDeclaredField("memberValues");
-        } catch (NoSuchFieldException | SecurityException e) {
-            throw new IllegalStateException(e);
+            Object handler = Proxy.getInvocationHandler(annotation);
+            Field f;
+            try {
+                //This is the name of the field.
+                f = handler.getClass().getDeclaredField("memberValues");
+            } catch (NoSuchFieldException | SecurityException e) {
+                throw new IllegalStateException(e);
+            }
+            f.setAccessible(true);
+            Map<String, Object> memberValues;
+            try {
+                memberValues = (Map<String, Object>) f.get(handler);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw new IllegalStateException(e);
+            }
+            Object oldValue = memberValues.get(key);
+            if (oldValue == null || oldValue.getClass() != newValue.getClass()) {
+                throw new IllegalArgumentException();
+            }
+            memberValues.put(key, newValue);
+            return true;
+        }catch(IllegalStateException|IllegalArgumentException e){
+            logger.error(e.getMessage(),e);
+            return false;
         }
-        f.setAccessible(true);
-        Map<String, Object> memberValues;
-        try {
-            memberValues = (Map<String, Object>) f.get(handler);
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
-        Object oldValue = memberValues.get(key);
-        if (oldValue == null || oldValue.getClass() != newValue.getClass()) {
-            throw new IllegalArgumentException();
-        }
-        memberValues.put(key, newValue);
-        return oldValue;
     }
 
     /**
@@ -840,16 +841,22 @@ public class ReflectionUtilities {
      * @param fieldName string field name.
      * @param attributeName the attribute name of the annotation to update.
      * @param attributeValue the new value for the specific attribute of the specific annotation.
+     * @return if true all the operation are done.
      */
-    public static void updateAnnotationFieldValue(
-            Class<?> aClass,Class<? extends Annotation> annotationClass,String fieldName,String attributeName,String attributeValue){
+    public static boolean updateAnnotationFieldValue(
+            Class<?> aClass,Class<? extends Annotation> annotationClass,
+            String fieldName,String attributeName,String attributeValue){
         try {
             Field fieldColumn = getFieldByName(aClass, fieldName);
             Annotation annColumn = fieldColumn.getAnnotation(annotationClass);
-            if (annColumn != null) ReflectionUtilities.updateAnnotationValue(annColumn, attributeName, attributeValue);
-            else logger.warn("No annotation for the class whit attribute:"+attributeName);
+            if (annColumn != null) return updateAnnotationValue(annColumn, attributeName, attributeValue);
+            else{
+                logger.warn("No annotation for the class:'"+annotationClass+"' whit attribute:'"+attributeName+"' is NULL");
+                return false;
+            }
         }catch(NoSuchFieldException e){
-            logger.error("ReflectionUtilities::updateAnnotationFieldValue -> ",e);
+            logger.error(e.getMessage(),e);
+            return false;
         }
     }
 
@@ -859,10 +866,16 @@ public class ReflectionUtilities {
      * @param annotationClass the annotation class to update.
      * @param attributeName the attribute name of the annotation to update.
      * @param attributeValue the new value for the specific attribute of the specific annotation.
+     * @return if true all the operation are done.
      */
-    public static void updateAnnotationClassValue(Class<?> aClass,Class<? extends Annotation> annotationClass,String attributeName,String attributeValue){
+    public static boolean updateAnnotationClassValue(Class<?> aClass, Class<? extends Annotation> annotationClass,
+                                                     String attributeName,String attributeValue){
         Annotation ann = aClass.getAnnotation(annotationClass);
-        if(ann!=null)  ReflectionUtilities.updateAnnotationValue(ann, attributeName, attributeValue);
+        if(ann!=null)  return updateAnnotationValue(ann, attributeName, attributeValue);
+        else{
+            logger.warn("The Annotation Class to update is NULL");
+            return false;
+        }
     }
 
     /**
@@ -2530,7 +2543,7 @@ public class ReflectionUtilities {
      * @param <T> generic type.
      * @return the returned value from the getter method is exists.
      */
-    public static <T> Object invokeGetterClass(T MyObject,String methodName) {
+    public static <T> Object invokeGetter(T MyObject,String methodName) {
         Object MyObject2;
         try {
             //Object MyObject = clazzValue.cast(new Object());
