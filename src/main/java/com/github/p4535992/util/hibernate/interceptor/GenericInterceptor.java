@@ -33,17 +33,20 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
 
     public enum InterceptorOperations{ INSERT,UPDATE,DELETE,SAVE}
 
+     @SuppressWarnings("rawtypes")
     private static GenericInterceptor instance = null;
 
+    @SuppressWarnings("unchecked")
     protected GenericInterceptor(){
         java.lang.reflect.Type t = getClass().getGenericSuperclass();
         java.lang.reflect.ParameterizedType pt = (java.lang.reflect.ParameterizedType) t;
-        this.cl = (Class<T>) pt.getActualTypeArguments()[0];
+        cl = (Class<T>) pt.getActualTypeArguments()[0];
     }
 
-    public static GenericInterceptor getInstance(){
+    @SuppressWarnings({"unchecked","rawtypes"})
+    public static <T> GenericInterceptor<T> getInstance(){
         if(instance == null) {
-            instance = new GenericInterceptor();
+            instance = new GenericInterceptor<>();
         }
         return instance;
     }
@@ -90,6 +93,7 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
 
     //called before commit into database
     @SuppressWarnings("rawtypes")
+    @Override
     public void preFlush(Iterator entities) {
         logger.info("preFlush: List of objects to flush... ");
         int i =0;
@@ -101,6 +105,7 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
 
     //called after committed into database
     @SuppressWarnings("rawtypes")
+    @Override
     public void postFlush(Iterator entities) {
         logger.info("postFlush: List of objects that have been flushed... ");
         try{
@@ -137,11 +142,13 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
     }
 
 
+    @Override
     public Boolean isTransient(Object entity) {
         logger.info("isTransient: Checking object for Transient state... " + entity);
         return null;
     }
 
+    @Override
     public Object instantiate(String entityName, EntityMode entityMode,
                               Serializable id) {
         logger.info("instantiate: Instantiating object " + entityName +
@@ -149,6 +156,7 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
         return null;
     }
 
+    @Override
     public int[] findDirty(Object entity, Serializable id,
                            Object[] currentState, Object[] previousState,
                            String[] propertyNames, Type[] types) {
@@ -169,11 +177,13 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
      * get a fully loaded entity instance that is cached externally
      */
 
+    @Override
     public String getEntityName(Object entity) {
         logger.info("getEntityName: name for entity " + entity);
         return null;
     }
 
+    @Override
     public Object getEntity(String entityName, Serializable id) {
         logger.info("getEntity: Returns fully loaded cached entity with name  " + entityName + " and id " + id);
         return null;
@@ -184,21 +194,29 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
      * completion and after transaction beginning.
      */
 
+    @Override
     public void afterTransactionBegin(Transaction tx) {
         logger.info("afterTransactionBegin: Called for transaction " + tx);
     }
 
+    @Override
     public void afterTransactionCompletion(Transaction tx) {
         logger.info("afterTransactionCompletion: Called for transaction " + tx);
     }
 
+    @Override
     public void beforeTransactionCompletion(Transaction tx) {
         logger.info("beforeTransactionCompletion: Called for transaction " + tx);
     }
 
-    /**The onPrepareStatement method is called when sql queries are to be executed.
+    /**
+     * The onPrepareStatement method is called when sql queries are to be executed.
      * The other methods are called when collections are fetched/updated/deleted.
+     * Called when sql string is being prepared. 
+     * @param sql sql to be prepared
+     * @return original or modified sql
      */
+    @Override
     public String onPrepareStatement(String sql) {
         logger.info("onPrepareStatement: Called for statement " + sql);
 
@@ -217,29 +235,67 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
 //        }
         return sql;
     }
-
+    
+    /**
+    * Called before a collection is deleted.
+    *
+    * @param collection The collection instance.
+    * @param key The collection key value.
+    *
+    * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+    */
+    @Override
     public void onCollectionRemove(Object collection, Serializable key)
             throws CallbackException {
         logger.info("onCollectionRemove: Removed object with key " + key
                 + " from collection " + collection);
     }
 
+    /**
+    * Called before a collection is (re)created.
+    *
+    * @param collection The collection instance.
+    * @param key The collection key value.
+    *
+    * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+    */
+    @Override
     public void onCollectionRecreate(Object collection, Serializable key)
             throws CallbackException {
         logger.info("onCollectionRemove: Recreated collection " + collection + " for key " + key);
     }
-
+    
+    /**
+    * Called before a collection is updated.
+    *
+    * @param collection The collection instance.
+    * @param key The collection key value.
+    *
+    * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+    */
+    @Override
     public void onCollectionUpdate(Object collection, Serializable key)
             throws CallbackException {
         logger.info("onCollectionUpdate: Updated collection " + collection + " for key " + key);
     }
 
-    /**
-     * Overriding this method allows us to plugin to the delete mechanism.
-     * The method receives the Entity being deleted, its identifier and arrays
-     * of details regarding the object. Similar intercept methods include:
-     */
-
+   /**
+    * Called just before an object is initialized. The interceptor may change the <tt>state</tt>, which will
+    * be propagated to the persistent object. Note that when this method is called, <tt>entity</tt> will be
+    * an empty uninitialized instance of the class.
+    * NOTE: The indexes across the <tt>state</tt>, <tt>propertyNames</tt> and <tt>types</tt> arrays match.
+    *
+    * @param entity The entity instance being loaded
+    * @param id The identifier value being loaded
+    * @param state The entity state (which will be pushed into the entity instance)
+    * @param propertyNames The names of the entity properties, corresponding to the <tt>state</tt>.
+    * @param types The types of the entity properties, corresponding to the <tt>state</tt>.
+    *
+    * @return {@code true} if the user modified the <tt>state</tt> in any way.
+    *
+    * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
+    */
+    @Override
     public boolean onSave(Object entity,Serializable id,
                           Object[] state,String[] propertyNames,Type[] types)
             throws CallbackException {
@@ -254,6 +310,7 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
         return tryToCastToCurrentObject(entity,cl,InterceptorOperations.INSERT);//as no change made to object here
     }
 
+    @Override
     public boolean onFlushDirty(Object entity,Serializable id,
                                 Object[] currentState,Object[] previousState,
                                 String[] propertyNames,Type[] types){
@@ -275,6 +332,7 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
 
     }
 
+    @Override
     public boolean onLoad(
             Object entity, Serializable id,
             Object[] state, String[] propertyNames, Type[] types) {
@@ -302,6 +360,7 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
     }
 
 
+    @Override
     public void onDelete(Object entity, Serializable id,
                          Object[] state, String[] propertyNames,
                          Type[] types) {
@@ -320,17 +379,18 @@ public class GenericInterceptor<T> extends EmptyInterceptor implements IGenericI
         tryToCastToCurrentObject(entity,cl,InterceptorOperations.DELETE);
     }
 
-    private <T> boolean tryToCastToCurrentObject(
+    @SuppressWarnings("unchecked")
+    private boolean tryToCastToCurrentObject(
             Object entity,Class<T> classToCast,InterceptorOperations interceptorOperations){
         try{
             T t2 = (T) entity;//entity instanceof t
             /* if (entity instanceof GeoDocument){*/
             switch(interceptorOperations.name()){
-                case "SAVE": saves.add(entity);
-                case "DELETE": deletes.add(entity);
-                case "INSERT": inserts.add(entity);
-                case "UPDATE": updates.add(entity);
-                default: /*do nothing*/
+                case "SAVE": saves.add(entity);     break;
+                case "DELETE": deletes.add(entity); break;
+                case "INSERT": inserts.add(entity); break;
+                case "UPDATE": updates.add(entity); break;
+                default: return false;
             }
             /*}*/
             return true;

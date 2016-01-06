@@ -4,10 +4,11 @@ import com.github.p4535992.util.file.archive.ArchiveUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.gtfs.tordf.helper.TransformerPicker;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
-import com.github.p4535992.util.repositoryRDF.jena.JenaUtilities;
+import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
 import com.github.p4535992.util.string.StringUtilities;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Statement;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -64,8 +65,8 @@ public class gtfsToRdf {
         return listStmt;
     }
 
-    private Model prepareModel(File zipFile,String baseUri) throws IOException {
-        Model jModel = JenaUtilities.createModel();
+    private Model prepareModel(File zipFile, String baseUri) throws IOException {
+        Model jModel = Jena3Utilities.createModel();
         jModel.setNsPrefixes(setPrefixes());
         for(List<Statement> list : mapper(zipFile,baseUri)){
             jModel.add(list);
@@ -75,7 +76,7 @@ public class gtfsToRdf {
 
     public void convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, String outputFormat) throws IOException {
         Model model = prepareModel(zipFile,baseUri);
-        JenaUtilities.write(fileOutput,model,outputFormat);
+        Jena3Utilities.write(fileOutput,model,outputFormat);
     }
 
 

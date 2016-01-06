@@ -3,7 +3,7 @@ package com.github.p4535992.util.repositoryRDF.sesame;
 
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.repositoryRDF.jenaAndSesame.JenaSesameUtilities;
+import com.github.p4535992.util.repositoryRDF.jenaAndSesame.Jena3SesameUtilities;
 import com.github.p4535992.util.repositoryRDF.sparql.SparqlUtilities;
 import com.github.p4535992.util.string.*;
 import com.github.p4535992.util.string.Timer;
@@ -40,7 +40,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,20 +53,20 @@ import java.util.zip.GZIPInputStream;
  *       Not Work with openrdf 4.0.X you need to use java 8.
  */
 @SuppressWarnings("unused")
-public class SesameUtilities {
+public class Sesame2Utilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(SesameUtilities.class);
+            org.slf4j.LoggerFactory.getLogger(Sesame2Utilities.class);
     
     private static String nameClass;
 
-    protected SesameUtilities() {}
+    protected Sesame2Utilities() {}
 
-    private static SesameUtilities instance = null;
+    private static Sesame2Utilities instance = null;
 
-    public static SesameUtilities getInstance(){
+    public static Sesame2Utilities getInstance(){
         if(instance == null) {
-            instance = new SesameUtilities();
+            instance = new Sesame2Utilities();
             //nameClass = instance.getClass().getSimpleName()+"::";
             //help with very large repository....
             System.setProperty("entityExpansionLimit", "1000000");
@@ -222,7 +221,7 @@ public class SesameUtilities {
      * @param repositoryLocation the Repository Location.
      */
     public void setRepositoryLocation(String repositoryLocation) {
-        SesameUtilities.mRepositoryLocation = repositoryLocation;
+        Sesame2Utilities.mRepositoryLocation = repositoryLocation;
     }
 
     /**
@@ -238,7 +237,7 @@ public class SesameUtilities {
      * @param repositoryName the repository Name.
      */
     public void setRepositoryName(String repositoryName) {
-        SesameUtilities.mRepositoryName = repositoryName;
+        Sesame2Utilities.mRepositoryName = repositoryName;
     }
 
     /**
@@ -254,7 +253,7 @@ public class SesameUtilities {
      * @param repositoryProvider the Repository Provider.
      */
     public void setRepositoryProvider(RepositoryProvider repositoryProvider) {
-        SesameUtilities.mRepositoryProvider = repositoryProvider;
+        Sesame2Utilities.mRepositoryProvider = repositoryProvider;
     }
 
     /**
@@ -3144,14 +3143,14 @@ public class SesameUtilities {
      * @param contexts The contexts to add statements to.
      * @return if true all the operations are done.
      */
-    public Boolean removeJenaTripleFromSesameRepository(com.hp.hpl.jena.graph.Triple triple,Resource contexts) {
-        com.hp.hpl.jena.graph.Node s = triple.getSubject() ;
-        com.hp.hpl.jena.graph.Node p = triple.getPredicate() ;
-        com.hp.hpl.jena.graph.Node o = triple.getObject() ;
+    public Boolean removeJenaTripleFromSesameRepository(org.apache.jena.graph.Triple triple,Resource contexts) {
+        org.apache.jena.graph.Node s = triple.getSubject() ;
+        org.apache.jena.graph.Node p = triple.getPredicate() ;
+        org.apache.jena.graph.Node o = triple.getObject() ;
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
-        Resource subj = JenaSesameUtilities.asResource(valueFactory, s) ;
-        URI pred = JenaSesameUtilities.asURI(valueFactory, p) ;
-        Value obj = JenaSesameUtilities.asValue(valueFactory, o) ;
+        Resource subj = Jena3SesameUtilities.asResource(valueFactory, s) ;
+        URI pred = Jena3SesameUtilities.asURI(valueFactory, p) ;
+        Value obj = Jena3SesameUtilities.asValue(valueFactory, o) ;
         try {
             Statement stmt = valueFactory.createStatement(subj, pred, obj) ;
             mRepositoryConnection.remove(stmt, contexts) ;
@@ -3168,14 +3167,14 @@ public class SesameUtilities {
      * @param contexts The contexts to add statements to.
      * @return if true all the operations are done.
      */
-    public Boolean addJenaTripleToSesameRepository(com.hp.hpl.jena.graph.Triple triple,Resource contexts) {
-        com.hp.hpl.jena.graph.Node s = triple.getSubject() ;
-        com.hp.hpl.jena.graph.Node p = triple.getPredicate() ;
-        com.hp.hpl.jena.graph.Node o = triple.getObject() ;
+    public Boolean addJenaTripleToSesameRepository(org.apache.jena.graph.Triple triple,Resource contexts) {
+        org.apache.jena.graph.Node s = triple.getSubject() ;
+        org.apache.jena.graph.Node p = triple.getPredicate() ;
+        org.apache.jena.graph.Node o = triple.getObject() ;
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
-        Resource subj  = JenaSesameUtilities.asResource(valueFactory, s) ;
-        URI pred       = JenaSesameUtilities.asURI(valueFactory, p) ;
-        Value obj      = JenaSesameUtilities.asValue(valueFactory, o) ;
+        Resource subj  = Jena3SesameUtilities.asResource(valueFactory, s) ;
+        URI pred       = Jena3SesameUtilities.asURI(valueFactory, p) ;
+        Value obj      = Jena3SesameUtilities.asValue(valueFactory, o) ;
         try {
             Statement stmt = valueFactory.createStatement(subj, pred, obj) ;
             mRepositoryConnection.add(stmt, contexts) ;
@@ -3192,25 +3191,25 @@ public class SesameUtilities {
      * @param contexts The contexts to add statements to.
      * @return the List of Jena Triple.
      */
-    public List<com.hp.hpl.jena.graph.Triple> findJenaTripleFromSesameRepository(
-            com.hp.hpl.jena.graph.Triple triple,
+    public List<org.apache.jena.graph.Triple> findJenaTripleFromSesameRepository(
+            org.apache.jena.graph.Triple triple,
             Resource contexts) {
 
         ValueFactory valueFactory = mRepositoryConnection.getValueFactory();
-        com.hp.hpl.jena.graph.Node s = triple.getMatchSubject() ;
-        com.hp.hpl.jena.graph.Node p = triple.getMatchPredicate() ;
-        com.hp.hpl.jena.graph.Node o = triple.getMatchObject() ;
+        org.apache.jena.graph.Node s = triple.getMatchSubject() ;
+        org.apache.jena.graph.Node p = triple.getMatchPredicate() ;
+        org.apache.jena.graph.Node o = triple.getMatchObject() ;
         Resource subj =
-                ( s==null ? null : JenaSesameUtilities.asResource(valueFactory, s) ) ;
+                ( s==null ? null : Jena3SesameUtilities.asResource(valueFactory, s) ) ;
         URI pred   =
-                ( p==null ? null : JenaSesameUtilities.asURI(valueFactory, p) ) ;
+                ( p==null ? null : Jena3SesameUtilities.asURI(valueFactory, p) ) ;
         Value obj  =
-                ( o==null ? null : JenaSesameUtilities.asValue(valueFactory, o) ) ;
-        List<com.hp.hpl.jena.graph.Triple> list = new ArrayList<>();
+                ( o==null ? null : Jena3SesameUtilities.asValue(valueFactory, o) ) ;
+        List<org.apache.jena.graph.Triple> list = new ArrayList<>();
         try {
             RepositoryResult<Statement> iter1 =
                     mRepositoryConnection.getStatements(subj, pred, obj, true, contexts) ;
-            com.hp.hpl.jena.util.iterator.ExtendedIterator<com.hp.hpl.jena.graph.Triple> ext =
+            org.apache.jena.util.iterator.ExtendedIterator<org.apache.jena.graph.Triple> ext =
                     new com.github.p4535992.util.repositoryRDF.jenaAndSesame.impl.RepositoryResultIterator(iter1);
             int i=0;
             while(ext.hasNext()){
@@ -3864,6 +3863,23 @@ public class SesameUtilities {
         }else {
             return createLiteralBase(literalObject, languageOrDataType);
         }
+    }
+
+    public Map<String,Object> getAllInfoSesame(){
+        Map<String,Object> map = new HashMap<>();
+        map.put("Repository",getRepository());
+        map.put("RepositoryConnection",getRepositoryConnection());
+        map.put("RepositoryConnectionWrapper",getRepositoryConnectionWrapper());
+        map.put("RepositoryManager",getRepositoryManager());
+        map.put("RepositoryLocation",getRepositoryLocation());
+        map.put("RepositoryName",getRepositoryName());
+        map.put("RepositoryProvider",getRepositoryProvider());
+        map.put("Prefixes",getNamespacePrefixesFromRepository());
+        map.put("Repositories",getRepositories());
+        map.put("ServerRepositories",getURL_REPOSITORIES());
+        map.put("ServerRepositoryID",getURL_REPOSITORY_ID());
+        map.put("ServerSesame",getURL_SESAME());
+        return map;
     }
 
     /**

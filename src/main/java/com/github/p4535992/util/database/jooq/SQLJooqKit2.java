@@ -606,6 +606,7 @@ public class SQLJooqKit2 {
      * Method to cretae a JOOQ DataType.
      * @param clazzType the class type of the datatype.
      * @param typeName the string of the SQL type of the datatype.
+     * @param sqlDialect the SQLDialect JOOQ.
      * @return a JOOQ DataType
      */
     @SuppressWarnings({"rawtypes","unchecked"})
@@ -616,6 +617,7 @@ public class SQLJooqKit2 {
     /**
      * Method to cretae a JOOQ DataType.
      * @param clazzType the class type of the datatype.
+     * @param sqlDialect the SQLDialect JOOQ.
      * @return a JOOQ DataType
      */
     @SuppressWarnings("rawtypes")
@@ -626,6 +628,7 @@ public class SQLJooqKit2 {
     /**
      * Method to cretae a JOOQ DataType.
      * @param sqlTypes java.sql.Type related to the object.
+     * @param sqlDialect the SQLDialect JOOQ.
      * @return a JOOQ DataType
      */
     @SuppressWarnings({"rawtypes","unchecked"})
@@ -657,6 +660,8 @@ public class SQLJooqKit2 {
 
     /**
      * Method to create a new DSLContext.
+     * @param connection the Connection SQL.
+     * @param sqlDialect the SQLDialect JOOQ.
      * @return the JOOQ DSLContext.
      */
     public static DSLContext createDSLContext(Connection connection,SQLDialect sqlDialect){

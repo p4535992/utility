@@ -2,9 +2,9 @@ package com.github.p4535992.util.gtfs.tordf.transformer.impl;
 
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
-import com.github.p4535992.util.repositoryRDF.jena.JenaUtilities;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.rdf.model.Statement;
+import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.Statement;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -45,12 +45,12 @@ public abstract class AbstractTransformer implements Transformer {
      * @param object the iri object.
      * @return Statement.
      */
-    protected Statement st(String subject,String predicate,Object object){
-        return JenaUtilities.createStatement(subject, predicate, object);
+    protected Statement st(String subject, String predicate, Object object){
+        return Jena3Utilities.toStatement(subject, predicate, object);
     }
 
     protected Statement st(String subject,String predicate,Object object,XSDDatatype xsdDatatype){
-        return JenaUtilities.createStatement(subject, predicate, object,xsdDatatype);
+        return Jena3Utilities.toStatement(subject, predicate, object,xsdDatatype);
     }
 
     /**

@@ -1,14 +1,12 @@
 package com.github.p4535992.util.gtfs.tordf.transformer.impl;
 
-import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
-import com.hp.hpl.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.Statement;
 
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Created by 4535992 on 30/11/2015.

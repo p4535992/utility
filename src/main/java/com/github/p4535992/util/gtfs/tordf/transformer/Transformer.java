@@ -1,10 +1,9 @@
 package com.github.p4535992.util.gtfs.tordf.transformer;
 
-import com.hp.hpl.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.Statement;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,6 +11,6 @@ import java.util.List;
  */
 public interface Transformer{
 
-    List<Statement> _Transform(File data,Charset encoding,String _feedbaseuri);
+    List<Statement> _Transform(File data, Charset encoding, String _feedbaseuri);
 
 }

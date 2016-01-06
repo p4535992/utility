@@ -1,7 +1,7 @@
 /* CVS $Id: $ */
 package com.github.p4535992.util.repositoryRDF.jena.jena_vocabulary;
-import com.hp.hpl.jena.rdf.model.*;
-import com.hp.hpl.jena.ontology.*;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.ontology.*;
  
 /**
  * Vocabulary definitions from http://www.heppnetz.de/ontologies/goodrelations/v1.owl 

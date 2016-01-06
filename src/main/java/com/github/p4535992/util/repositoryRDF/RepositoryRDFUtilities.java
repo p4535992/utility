@@ -1,8 +1,8 @@
 package com.github.p4535992.util.repositoryRDF;
 
-import com.github.p4535992.util.repositoryRDF.cumulusrdf.CumulusRDFKit;
-import com.github.p4535992.util.repositoryRDF.sesame.SesameUtilities;
-import com.hp.hpl.jena.graph.Triple;
+import com.github.p4535992.util.repositoryRDF.cumulusrdf.CumulusRDFUtilities;
+import com.github.p4535992.util.repositoryRDF.sesame.Sesame2Utilities;
+import org.apache.jena.graph.Triple;
 import org.openrdf.model.*;
 import org.openrdf.query.Operation;
 import org.openrdf.query.Query;
@@ -19,10 +19,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by 4535992 on 27/10/2015.
@@ -30,7 +28,7 @@ import java.util.Set;
 @SuppressWarnings("unused")
 public class RepositoryRDFUtilities {
 
-    private static SesameUtilities s;
+    private static Sesame2Utilities s;
 
     protected RepositoryRDFUtilities() {}
 
@@ -41,7 +39,7 @@ public class RepositoryRDFUtilities {
             instance = new RepositoryRDFUtilities();
             //help with very large repository....
             System.setProperty("entityExpansionLimit", "1000000");
-            RepositoryRDFUtilities.s = SesameUtilities.getInstance();
+            RepositoryRDFUtilities.s = Sesame2Utilities.getInstance();
         }
         return instance;
     }
@@ -150,7 +148,7 @@ public class RepositoryRDFUtilities {
         s.addJenaTripleToSesameRepository(triple, s.createResource(context));
     }
 
-    public List<com.hp.hpl.jena.graph.Triple> findToSesame(Triple triple, String context){
+    public List<Triple> findToSesame(Triple triple, String context){
         return s.findJenaTripleFromSesameRepository(triple, s.createResource(context));
     }
 
@@ -328,7 +326,7 @@ public class RepositoryRDFUtilities {
 
     public void showStatement(TupleQuery tupleQuery){s.showStatements(tupleQuery);}
 
-    public Map<String,Object> getAllInfoSesame(){
+   /* public Map<String,Object> getAllInfoSesame(){
         Map<String,Object> map = new HashMap<>();
         map.put("Repository",s.getRepository());
         map.put("RepositoryConnection",s.getRepositoryConnection());
@@ -343,7 +341,7 @@ public class RepositoryRDFUtilities {
         map.put("ServerRepositoryID",s.getURL_REPOSITORY_ID());
         map.put("ServerSesame",s.getURL_SESAME());
         return map;
-    }
+    }*/
 
     public void setURLRepositoryId(String repositoryId){
         s.setURLRepositoryId(repositoryId);
@@ -380,7 +378,7 @@ public class RepositoryRDFUtilities {
     //--------------------------------------------------------------------
 
     public Repository connectToCassandra(String host,String keySpace,boolean isQuadStore){
-        CumulusRDFKit cumulus = CumulusRDFKit.getInstance();
+        CumulusRDFUtilities cumulus = CumulusRDFUtilities.getInstance();
         return cumulus.connectToCassandraRepository(host,keySpace,isQuadStore);
     }
 

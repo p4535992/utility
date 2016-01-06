@@ -12,7 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import javax.xml.transform.TransformerConfigurationException;
 
 import org.xml.sax.SAXException;
-import com.github.p4535992.util.repositoryRDF.jena.JenaUtilities;
+import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
 
 /**
  *
@@ -31,7 +31,7 @@ public class Test_Jena {
          if(file.exists()) {
              //List<String> lines = EncodingUtil.convertUnicodeEscapeToUTF8(new File(outputN3Knime));
              //EncodingUtil.writeLargerTextFileWithReplace2(outputN3Knime, lines);
-             JenaUtilities.convertFileTripleToAnotherFormat(new File(outputN3Knime), "csv");
+             Jena3Utilities.convertFileTripleToAnotherFormat(new File(outputN3Knime), "csv");
              //JenaKit.convertTo(file, "turtle");
          }
 

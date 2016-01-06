@@ -1,9 +1,9 @@
 package com.github.p4535992.util.repositoryRDF.jena.jena_vocabulary;
 
 /* CVS $Id: $ */
- 
-import com.hp.hpl.jena.rdf.model.*;
-import com.hp.hpl.jena.ontology.*;
+
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.ontology.*;
  
 /**
  * Vocabulary definitions from SiiMobility1.3.4.owl 

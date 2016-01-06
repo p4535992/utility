@@ -1,9 +1,7 @@
 package com.github.p4535992.util.office.excel;
 
-import com.github.p4535992.util.file.FileUtilities;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
@@ -112,7 +110,7 @@ public class ExcelUtilities {
         try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
             workbook.write(outputStream);
         } catch (IOException e) {
-            e.printStackTrace();
+           logger.error(e.getMessage(),e);
         }
     }
 
@@ -157,7 +155,7 @@ public class ExcelUtilities {
 
     //-------------------------------------------------------------------------------------------------------------
 
-    public boolean exportLoadingSheets(String fileLoc, Hashtable<String, List<String[]>> hash,
+    public boolean exportLoadingSheets(String fileLoc, HashMap<String, List<String[]>> hash,
                                        String readFileLoc) {
         //create file
         Workbook wb;
@@ -167,15 +165,15 @@ public class ExcelUtilities {
         } else {
             wb = new XSSFWorkbook();
         }
-        Hashtable<String, List<String[]>> preparedHash = prepareLoadingSheetExport(hash);
+        HashMap<String, List<String[]>> preparedHash = prepareLoadingSheetExport(hash);
         Sheet sheet = wb.createSheet("Loader");
-        List<String[]> data = new ArrayList<>();
-        data.add(new String[]{"Sheet Name", "Type"});
+        List<String[]> localData = new ArrayList<>();
+        localData.add(new String[]{"Sheet Name", "Type"});
         for(String key : hash.keySet()) {
-            data.add(new String[]{key, "Usual"});
+            localData.add(new String[]{key, "Usual"});
         }
         int count=0;
-        for(String[] aData : data) {
+        for(String[] aData : localData) {
             Row row1 = sheet.createRow(count);
             count++;
             for (int col = 0; col < aData.length; col++) {
@@ -195,25 +193,25 @@ public class ExcelUtilities {
         return true;
     }
 
-    public void exportLoadingSheets(String fileLoc, Hashtable<String, List<String[]>> hash,
+    public void exportLoadingSheets(String fileLoc, HashMap<String, List<String[]>> hash,
                                     String readFileLoc, boolean formatData){
         //create file
         Workbook wb = getWorkbook(readFileLoc);
         if(wb == null) return;
-        Hashtable<String, List<String[]>> preparedHash;
+        HashMap<String, List<String[]>> preparedHash;
         if(formatData) {
             preparedHash = prepareLoadingSheetExport(hash);
         } else {
             preparedHash = hash;
         }
         Sheet sheet = wb.createSheet("Loader");
-        List<String[]> data = new ArrayList<>();
-        data.add(new String[]{"Sheet Name", "Type"});
+        List<String[]> localData = new ArrayList<>();
+        localData.add(new String[]{"Sheet Name", "Type"});
         for(String key : preparedHash.keySet()) {
-            data.add(new String[]{key, "Usual"});
+            localData.add(new String[]{key, "Usual"});
         }
         int count=0;
-        for (String[] aData : data) {
+        for (String[] aData : localData) {
             Row row1 = sheet.createRow(count);
             count++;
             for (int col = 0; col < aData.length; col++) {
@@ -278,11 +276,9 @@ public class ExcelUtilities {
         ExportLoadingSheets(fileLoc, hash, readFileLoc, formatData);
     }*/
 
-    public static void writeFile(Workbook wb, String fileLoc) {
-        try {
-            FileOutputStream newExcelFile = new FileOutputStream(fileLoc);
+    public static void writeFile(Workbook wb, String fileLoc) { 
+        try (FileOutputStream newExcelFile = new FileOutputStream(fileLoc)) {
             wb.write(newExcelFile);
-            newExcelFile.close();
         } catch (IOException e) {
             logger.error(e.getMessage(),e);
         }
@@ -290,8 +286,8 @@ public class ExcelUtilities {
 
     //pass in a hashtable that has the first or of every sheet as {"Relation", "*the relation*"}
     //turns it to look like a loading sheet
-    public Hashtable<String, List<String[]>> prepareLoadingSheetExport(Hashtable<String, List<String[]>> oldHash) {
-        Hashtable<String, List<String[]>> newHash = new Hashtable<>();
+    public HashMap<String, List<String[]>> prepareLoadingSheetExport(HashMap<String, List<String[]>> oldHash) {
+        HashMap<String, List<String[]>> newHash = new HashMap<>();
         for (String key : oldHash.keySet()) {
             List<String[]> sheetV = oldHash.get(key);
             List<String[]> newSheetV = new ArrayList<>();
@@ -358,7 +354,7 @@ public class ExcelUtilities {
         return newHash;
     }
 
-    public void runExport(Hashtable hash, String writeFile, String readFile, boolean formatData) {
+    public void runExport(HashMap<String, List<String[]>> hash, String writeFile, String readFile, boolean formatData) {
         //this function will write a hashtable to an xlsx sheet
         //keys from the hastable become sheet names
         //objects must be in format Vector<String[]>
@@ -399,7 +395,7 @@ public class ExcelUtilities {
                 String sheetToLoad = cell.getStringCellValue();
                 System.out.println("Cell Content is " + sheetToLoad);
                 // this is a relationship
-                if (cell2 != null  && cell2.getStringCellValue().contains("Matrix")) {
+                if (cell2.getStringCellValue().contains("Matrix")) {
                     if (cell2.getStringCellValue().contains("Dynamic")) {
                         loadMatrixSheet(sheetToLoad, book, true);
                         //createBaseRelations();
@@ -409,8 +405,7 @@ public class ExcelUtilities {
                         //createBaseRelations();
                         //sc.commit();
                     }
-                } else if (cell2 != null
-                        && cell2.getStringCellValue().contains("Dynamic")) {
+                } else if (cell2.getStringCellValue().contains("Dynamic")) {
                     loadSheet(sheetToLoad, book, true);
                     //createBaseRelations();
                     //sc.commit();
@@ -423,6 +418,7 @@ public class ExcelUtilities {
         }
     }
 
+    @SuppressWarnings("empty-statement")
     public void loadSheet(String sheetToLoad, Workbook book, boolean dynamic) throws Exception{
         Sheet lSheet = book.getSheet(sheetToLoad);
         // assumption is all the sheets are in the first column starting from row 2
@@ -432,12 +428,12 @@ public class ExcelUtilities {
         Row row = lSheet.getRow(0);
         System.out.println("Max columns " + row.getLastCellNum());
         // get the column names
-        String data = null;
+        String localData = null;
         int count = 0;
         String idxName = null;
-        String nodeType = null;
+        String nodeType;
         String otherIdx = null;
-        Vector propNames = new Vector();
+        List<String> propNames = new ArrayList<>();
         String relName = null;
         nodeType = row.getCell(0).getStringCellValue();
         idxName = row.getCell(1).getStringCellValue();
@@ -450,7 +446,7 @@ public class ExcelUtilities {
         // if relationship then starts with 2 else starts at 1, starting column is 0
         // loads it into vector propNames
         for (int colIndex = curCol + 1; colIndex < row.getLastCellNum(); propNames
-                .addElement(row.getCell(colIndex).getStringCellValue()), colIndex++)
+                .add(row.getCell(colIndex).getStringCellValue()), colIndex++)
             ;
         // now process the remaining nodes
         // finally the graph db YAY !!
@@ -476,7 +472,7 @@ public class ExcelUtilities {
                 thisNode = nextRow.getCell(1).getStringCellValue();
                 // get the second element - this is the name
                 String otherNode = null;
-                Hashtable propHash = new Hashtable();
+                HashMap<String, Object> propHash = new HashMap<>();
                 int startCol = 2;
                 int offset = 2;
                 if (nodeType.equalsIgnoreCase("Relation")) {
@@ -493,20 +489,19 @@ public class ExcelUtilities {
                     if(propNames.size() <= (colIndex-offset)) {
                         continue;
                     }
-                    String propName = (String) propNames.elementAt(colIndex
-                            - offset);
-                    String propValue = null;
+                    String propName = propNames.get(colIndex - offset);
+                    String propValue;
                     if (nextRow.getCell(colIndex) == null || nextRow.getCell(colIndex).getCellType() == Cell.CELL_TYPE_BLANK || nextRow.getCell(colIndex).toString().isEmpty()) {
                         continue;
                     }
                     if (nextRow.getCell(colIndex).getCellType() == Cell.CELL_TYPE_NUMERIC) {
                         if(DateUtil.isCellDateFormatted(nextRow.getCell(colIndex))){
-                            Date date = (Date) nextRow.getCell(colIndex).getDateCellValue();
+                            Date date = nextRow.getCell(colIndex).getDateCellValue();
                             propHash.put(propName, date);
                         }
                         else{
-                            Double dbl = new Double(nextRow.getCell(colIndex)
-                                    .getNumericCellValue());
+                            Double dbl = nextRow.getCell(colIndex)
+                                    .getNumericCellValue();
                             // propValue = nextRow.getCell(colIndex).getNumericCellValue() + "";
                             propHash.put(propName, dbl);
                         }
@@ -548,7 +543,7 @@ public class ExcelUtilities {
         Row row = lSheet.getRow(0);
         System.out.println("Max columns " + row.getLastCellNum());
         // get the column names
-        String data = null;
+        String localData = null;
         int count = 0;
         String idxName,nodeType,otherIdx, relName;
         List<String> propNames = new ArrayList<>();
@@ -582,13 +577,12 @@ public class ExcelUtilities {
                 // need to run through all of the columns and put the value
                 for (int colIndex2 = curCol + 1, cnIndex = 0; colIndex2 < nextRow
                         .getLastCellNum() && cnIndex < colNames.size(); colIndex2++, cnIndex++) {
-                    Hashtable propHash = new Hashtable();
+                    HashMap<String,Double> propHash = new HashMap<>();
                     String otherNode = colNames.get(cnIndex);
                     // XSSFCell.
                     if (nextRow.getCell(colIndex2).getCellType() == Cell.CELL_TYPE_NUMERIC)
-                        propHash.put("weight",
-                                new Double(nextRow.getCell(colIndex2)
-                                        .getNumericCellValue()));
+                        propHash.put("weight", nextRow.getCell(colIndex2)
+                                .getNumericCellValue());
                     // finally the graph db YAY !!
                    /* if (nodeType.equalsIgnoreCase("Relation"))
                         addRelation(idxName, otherIdx, thisNode, otherNode,

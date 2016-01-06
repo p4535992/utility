@@ -10,8 +10,9 @@ import com.github.p4535992.util.database.sql.runScript.ScriptRunner;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.log.logback.LogBackUtil;
 import com.github.p4535992.util.string.*;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+
 import com.opencsv.CSVReader;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;

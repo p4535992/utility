@@ -17,6 +17,8 @@ import java.util.Set;
  */
 @SuppressWarnings("unused")
 public class GeoDocumentInterceptor extends GenericInterceptor<GeoDocument>{
+    
+    private static final long serialVersionUID = 12L;
 
     public void setSession(Session session) {
         if(sessionFactory!=null) {
@@ -39,11 +41,13 @@ public class GeoDocumentInterceptor extends GenericInterceptor<GeoDocument>{
     }
 
     //called before commit into database
+    @SuppressWarnings("rawtypes")
     public void preFlush(Iterator entities) {
         super.preFlush(entities);
     }
 
     //called after committed into database
+    @SuppressWarnings("rawtypes")
     public void postFlush(Iterator entities) {
         super.postFlush(entities);
     }

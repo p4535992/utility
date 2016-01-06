@@ -85,6 +85,8 @@ public class Hibernate43Utilities<T> {
 
     /**
      * Method to set a interceptor to the current Session.
+     * @param newSession the Session Hibernate to cretae.
+     * @param newSessionFactory the SessionFactory to use.
      * @param interceptorClass the class interceptor you want to use.
      * @return the current session update with a interceptor class.
      */
@@ -167,6 +169,10 @@ public class Hibernate43Utilities<T> {
     /***
      * Method for try into o many ways to set a configuration object from a file XML configuration.
      * This method is a overkill, is try to load the configuration file in many ways before give up
+     * @param PATH_CFG_HIBERNATE the String path to the XML configuration file.
+     * @param configuration the Configuration of Hibernate.
+     * @param interceptorClass the Class Interceptor of Hibernate.
+     * @return the new Configuration of Hibernate with a Interceptor.
      */
     public org.hibernate.cfg.Configuration createNewConfiguration(File PATH_CFG_HIBERNATE,
             org.hibernate.cfg.Configuration configuration,
@@ -238,6 +244,7 @@ public class Hibernate43Utilities<T> {
     /***
      * Method for try into o many ways to set a configuration object from a file XML configuration.
      * This method is a overkill, is try to load the configuration file in many ways before give up
+     * @return the new Configuration Hibernate.
      */
     public org.hibernate.cfg.Configuration createNewConfiguration(){
        return createNewConfiguration(null,configuration,interceptorClass);
@@ -262,6 +269,7 @@ public class Hibernate43Utilities<T> {
 
     /**
      * Set the Service Registry.
+     * @param configuration the new Configuration Hibernate to registered.
      */
     public void setNewServiceRegistry(org.hibernate.cfg.Configuration configuration) {
         /**deprecated in Hibernate 4.3*/
@@ -329,6 +337,7 @@ public class Hibernate43Utilities<T> {
 
     /**
      * Method to create a new SessionFactory from internal resource.
+     * @param configXMLFile the File XML of configuration of Hibernate.
      */
     public void setNewSessionFactory(File configXMLFile){
         buildSessionFactory(configXMLFile);
@@ -746,7 +755,7 @@ public class Hibernate43Utilities<T> {
                 criteria =specificCriteria;
             }
             listT =  criteria.list();
-            if(listT.size() == 0){
+            if(listT.isEmpty()){
                 logger.warn("The returned list is empty!1");
             }
         } catch (RuntimeException e) {
@@ -774,7 +783,7 @@ public class Hibernate43Utilities<T> {
             trns = session.beginTransaction();
             criteria = session.createCriteria(cl);
             listT = query.list();
-            if(listT.size() == 0){
+            if(listT.isEmpty()){
                 logger.warn("The returned list is empty!1");
             }
         } catch (RuntimeException e) {

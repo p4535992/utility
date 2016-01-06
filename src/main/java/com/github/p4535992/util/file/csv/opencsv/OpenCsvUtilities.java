@@ -159,6 +159,7 @@ public class OpenCsvUtilities extends FileUtilities{
      * @param <T> generic value.
      * @return the List of Array of String content of the csv.
      */
+    @SuppressWarnings("unchecked")
     public static <T> List<String[]> toStringArray(List<T> beans,String[] addNewHeader) {
         List<String[]> records = new ArrayList<>();
         //add header record

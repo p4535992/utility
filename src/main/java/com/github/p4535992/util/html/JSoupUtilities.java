@@ -128,7 +128,7 @@ public class JSoupUtilities {
     }
 
     /**
-     * Method for the extraction of simple item list "<li></li>".
+     * Method for the extraction of simple item list "li".
      *
      * @param HTMLDocument   the String of the HTML Document.
      * @param HTML           if true get the HTML tag not only the value.
@@ -140,7 +140,7 @@ public class JSoupUtilities {
     }
 
     /**
-     * Method for the extraction of simple item list "<li></li>".
+     * Method for the extraction of simple item list "li".
      *
      * @param url            the URL address to the Web Page.
      * @param HTML           if true get the HTML tag not only the value.
@@ -152,7 +152,7 @@ public class JSoupUtilities {
     }
 
     /**
-     * Method for the extraction of simple item list "<li></li>".
+     * Method for the extraction of simple item list "li".
      *
      * @param HTMLDocument   the String of the HTML Document.
      * @param HTML           if true get the HTML tag not only the value.
@@ -164,7 +164,7 @@ public class JSoupUtilities {
     }
 
     /**
-     * Method for the extraction of a order list "<ol></ol>".
+     * Method for the extraction of a order list "ol".
      *
      * @param HTMLDocument   the String of the HTML Document.
      * @param HTML           if true get the HTML tag not only the value.
@@ -176,7 +176,7 @@ public class JSoupUtilities {
     }
 
     /**
-     * Method for the extraction of a order list "<ul></ul>".
+     * Method for the extraction of a order list "ul".
      *
      * @param HTMLDocument   the String of the HTML Document.
      * @param HTML           if true get the HTML tag not only the value.
@@ -444,8 +444,10 @@ public class JSoupUtilities {
      * @param ins the Stream of the HTML File to convert.
      * @param baseUri the String url for the JSoup Document.
      * @return the JSoup Document.
+     * @throws java.io.IOException throw if any error is occurred.
      */
-    public static org.jsoup.nodes.Document toJsoupDocument(InputStream ins,String baseUri) throws IOException {
+    public static org.jsoup.nodes.Document toJsoupDocument(InputStream ins,String baseUri) 
+            throws IOException {
         return org.jsoup.Jsoup.parse(ins, "UTF-8", baseUri);
     }
 

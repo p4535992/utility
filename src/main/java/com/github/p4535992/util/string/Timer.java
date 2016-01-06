@@ -25,7 +25,11 @@ public class Timer
         inTimer = true ;
     }
 
-    /** Return time in millisecods */
+    /** 
+     * Return time in millisecods.
+     * @return the Long value of the Timer when stopped.
+     * @throws java.lang.Exception throw if any error is occurred.
+     */
     public long endTimer() throws Exception {
         if ( ! inTimer )
             throw new Exception("Not in timer") ;

@@ -1,5 +1,6 @@
 package com.github.p4535992.util.gtfs.tordf.transformer.impl;
-import com.hp.hpl.jena.rdf.model.Statement;
+
+import org.apache.jena.rdf.model.Statement;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -19,7 +20,7 @@ public class StopsTransformer extends AbstractTransformer{
      *  Creates a gtfs:Station or gtfs:Stop with additional properties. Also creates a gtfs:Zone
      */
     @Override
-    public List<Statement> _Transform(File data,Charset encoding,String _feedbaseuri) {
+    public List<Statement> _Transform(File data, Charset encoding, String _feedbaseuri) {
         List<Statement> stmt = new ArrayList<>();
 
         List<String[]> content = CSVGetContent(data,true);

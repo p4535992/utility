@@ -21,7 +21,6 @@ import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
@@ -1205,7 +1204,9 @@ public class HttpUtilities {
     //New Methods
     //---------------------------------------------------------------------------------------------------------
 
-    public static File downloadFileFromHTTPRequest(HttpServletRequest request,File destinationDir) {
+    /*
+    public static File downloadFileFromHTTPRequest(
+            javax.servlet.http.HttpServletRequest request,File destinationDir) {
         // Download the file to the upload file folder
         //logger.debug("File upload destination directory: " + destinationDir.getAbsolutePath());
         DiskFileItemFactory fileItemFactory = new DiskFileItemFactory();
@@ -1240,6 +1241,7 @@ public class HttpUtilities {
         }
         return uploadedFile;
     }
+    */
 
     public static String readURL(URL url){
         try {

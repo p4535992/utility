@@ -20,22 +20,18 @@ import java.util.Iterator;
  * href: https://code.google.com/p/cumulusrdf/wiki/CodeExamples.
  */
 @SuppressWarnings("unused")
-public class CumulusRDFKit{
+public class CumulusRDFUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(CumulusRDFKit.class);
+            org.slf4j.LoggerFactory.getLogger(CumulusRDFUtilities.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
+    protected CumulusRDFUtilities() {}
 
-    protected CumulusRDFKit() {}
+    private static CumulusRDFUtilities instance = null;
 
-    private static CumulusRDFKit instance = null;
-
-    public static CumulusRDFKit getInstance(){
+    public static CumulusRDFUtilities getInstance(){
         if(instance == null) {
-            instance = new CumulusRDFKit();
+            instance = new CumulusRDFUtilities();
         }
         return instance;
     }
@@ -58,7 +54,7 @@ public class CumulusRDFKit{
         try {
             sail.initialize();
         } catch (SailException e) {
-           logger.error(gm() + e.getMessage(),e);
+           logger.error(e.getMessage(),e);
         }
         return  new SailRepository(sail);
     }
