@@ -1,17 +1,72 @@
 package com.github.p4535992.util.file;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
  * Utility to read parameters from a string of name-value pairs or an array
  * of string, each containing a name-value pair eg Subject=value.
- * Created by 4535992
+ * Created by 4535992.
+ * Usage:  SimpleParameters params =
  */
 public class SimpleParameters {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(SimpleParameters.class);
+
     // The storage for the command line parameters
-    private static Map<String,String> mParameters = new HashMap<String, String>();
+    private static Map<String,String> mParameters = new HashMap<>();
+
+    /**
+     * Get the name-value pairs as a Map.
+     * @return map of name-value.
+     */
+    public static Map<String, String> getParameters() {
+        return mParameters;
+    }
+
+    public static void setParameters(Map<String, String> mParameters) {
+        SimpleParameters.mParameters = mParameters;
+    }
 
     public SimpleParameters(){}
+
+    public SimpleParameters(File fileInputProperties, char separator){
+        readFile(fileInputProperties,separator);
+    }
+
+    /**
+     * Method to read the content of a file line by line.
+     * @param fileInput the file to read.
+     * @param separator the Char separator.
+     *
+     * the String content Mapped of the file.
+     */
+    private void readFile(File fileInput, char separator) {
+        //SimpleParameters params = new SimpleParameters();
+        //Map<String,String> map = new HashMap<>();
+        try{
+            String[] lines;
+            List<String> linesSupport;
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileInput), StandardCharsets.UTF_8))) {
+                String line;
+                linesSupport = new ArrayList<>();
+                while ((line = br.readLine()) != null) {
+                    if(line.trim().length() == 0 || line.startsWith("#")){
+                        continue;
+                    }
+                    linesSupport.add(line.trim());
+                }
+            }
+            lines = new String[ linesSupport.size()];
+            linesSupport.toArray(lines);
+            parseNameValuePairs(lines, separator, true);
+            //map = params.getParameters();
+        }catch(IOException e){
+            logger.error( e.getMessage(),e);
+        }
+    }
 
     /**
      * Construct the parameters from a string
@@ -160,14 +215,6 @@ public class SimpleParameters {
             else
                 setDefaultValue(name, value);
         }
-    }
-
-    /**
-     * Get the name-value pairs as a Map.
-     * @return map of name-value.
-     */
-    public Map<String, String> getParameters() {
-        return mParameters;
     }
 
     /**

@@ -6,6 +6,8 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.jena.query.Dataset;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -331,6 +333,11 @@ public class SparqlUtilities {
                 "WHERE { ?s ?p ?o .}";
     }
 
+    public static String countGraphes() {
+        // select all FROM
+        return "SELECT (Count(Distinct(?g)) AS ?numberGraphes) { GRAPH ?g { ?s ?p ?o }}";
+    }
+
     /**
      * ;ethod to count triples in the default graph and all triples in
      * named graphs. To account for them, you would need something like
@@ -417,6 +424,19 @@ public class SparqlUtilities {
      */
     public static String insertData(String uriGraph,List<String[]> listTriple){
         return "INSERT DATA { GRAPH <"+uriGraph+"> { ... } }";
+    }
+
+    /**
+     * Method to  cast a literal to an IRI within SPARQL in jena.
+     * @param uriGraph the String uri of the Subject og the Triple.
+     * @param uriProperty the String uri of the Property og the Triple.
+     * @param asIriName the String name assigned to the IRI Literal.
+     * @return the String SPARQL Query.
+     */
+    public static String bindObjectToIRI(String uriGraph,String uriProperty,String asIriName){
+        return ""+uriGraph+" "+uriProperty+" ?baz " +
+                "BIND(IRI(str(?baz)) as ?"+asIriName+") ";
+                //"?"+asIriName+" rdfs:label ?tiz";
     }
 
 

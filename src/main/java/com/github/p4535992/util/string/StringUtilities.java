@@ -37,10 +37,6 @@ public class StringUtilities {
     private static final org.slf4j.Logger logger = 
             org.slf4j.LoggerFactory.getLogger(StringUtilities.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
      public enum special{
         WHITESPACE(0), NBSP(1),NEWLINE(2),PROJECTDIR(3),LINE_FEED(4),LINE_SEP(5),EMPTY_STR(6),
         LT(7),GT(8),AMP(9),QUAT(10),SINGLE_QUAT(11),ESC_LT(12),ESC_GT(13),ESC_AMP(14),CRLF(15);
@@ -196,8 +192,10 @@ public class StringUtilities {
      * @param url the string address web.
      * @return if tru is a url address web.
      */
-    public static boolean isURL(String url){
-        return url != null && Patterns.WEB_URL.matcher(url).matches();
+    public static boolean isURL(Object url){
+        if(url == null) return false;
+        if(url instanceof String)return Patterns.WEB_URL.matcher(String.valueOf(url)).matches();
+        else return isURL(String.valueOf(url));
     }
 
     /**
@@ -205,10 +203,13 @@ public class StringUtilities {
      * @param str string rappresentative of a number.
      * @return boolean value if the string rappresent a number or not.
      */
-    public static boolean isNumeric(String str) {
+    public static boolean isNumeric(Object str) {
         //match a number with optional '-' and decimal.
-        str = str.replace(",",".").replace(" ",".");
-        return Patterns.IS_NUMERIC.matcher(str).matches();
+        if(str instanceof String){
+            String str2 = String.valueOf(str).replace(",",".").replace(" ",".");
+            return Patterns.IS_NUMERIC.matcher(str2).matches();
+        }
+        else return isNumeric(String.valueOf(str));
     }
 
     /**
@@ -216,8 +217,9 @@ public class StringUtilities {
      * @param str string rappresentative of a number.
      * @return boolean value if the string rappresent a number or not.
      */
-    public static boolean isInt(String str) {
-        return Patterns.IS_INT.matcher(str).matches();
+    public static boolean isInt(Object str) {
+        if(str instanceof String) return Patterns.IS_INT.matcher(String.valueOf(str)).matches();
+        else return isInt(String.valueOf(str));
     }
 
     /**
@@ -225,8 +227,9 @@ public class StringUtilities {
      * @param str string rappresentative of a number.
      * @return boolean value if the string rappresent a number or not.
      */
-    public static boolean isDouble(String str) {
-        return Patterns.IS_DOUBLE.matcher(str).matches();
+    public static boolean isDouble(Object str) {
+        if(str instanceof String)return Patterns.IS_DOUBLE.matcher(String.valueOf(str)).matches();
+        else return isDouble(String.valueOf(str));
     }
 
     /**
@@ -234,8 +237,9 @@ public class StringUtilities {
      * @param str string rapresentative of a number.
      * @return boolean value if the string rappresent a number or not.
      */
-    public static boolean isFloat(String str) {
-        return Patterns.IS_FLOAT.matcher(str).matches();
+    public static boolean isFloat(Object str) {
+        if(str instanceof String)return Patterns.IS_FLOAT.matcher(String.valueOf(str)).matches();
+        else return isFloat(String.valueOf(str));
     }
 
     /**
@@ -243,10 +247,11 @@ public class StringUtilities {
      * @param str string rappresentative of a number.
      * @return boolean value if the string rappresent a number or not.
      */
-    public static boolean isDecimal(String str) {
+    public static boolean isDecimal(Object str) {
        /* try {Float.parseFloat(str);return true;
         } catch (NumberFormatException e) {return false;}*/
-        return Patterns.IS_DECIMAL.matcher(str).matches();
+        if(str instanceof String) return Patterns.IS_DECIMAL.matcher(String.valueOf(str)).matches();
+        else return isDecimal(String.valueOf(str));
     }
 
     /**
@@ -275,6 +280,9 @@ public class StringUtilities {
     public static boolean isURI(Object text){
         if(text instanceof URI)return true;
         else if(isIRI(text)) return true;
+       /* else if(text instanceof  String){
+            return (getScheme(String.valueOf(text)) != null) ;
+        }*/
         else{
             try {
                 //noinspection ResultOfMethodCallIgnored
@@ -284,6 +292,49 @@ public class StringUtilities {
                 return false;
             }
         }
+    }
+
+    /**
+     * Method to check whether 'name' is possibly a file reference
+     *
+     * @param filePath the {@link String} of a path to a File.
+     * @return {@link Boolean} is False if clearly not a filename.
+     */
+    public static boolean isFile(String filePath) {
+        String scheme = getScheme(filePath) ;
+        // No URI scheme - treat as filename
+        if ( scheme == null  ) return true ;
+        // file: URI scheme
+        if ( scheme.equals("file") )return true ;
+        // Windows: "c:" etc
+        return scheme.length() == 1;
+    }
+
+    /**
+     * Method to get the Scheme name of a uri {@link String}
+     * @param uri the {@link String} of a uri.
+     * @return the {@link String} of the Scheme of the uri.
+     */
+    private static String getScheme(String uri){
+        // Find "[^/:]*:.*"
+        for ( int i = 0 ; i < uri.length() ; i++ ){
+            char ch = uri.charAt(i) ;
+            if ( ch == ':' )
+                return uri.substring(0,i) ;
+            if ( ! isASCIILetter(ch) )
+                // Some illegal character before the ':'
+                break ;
+        }
+        return null ;
+    }
+
+    /**
+     * Method to check if the {@link Character} is a ASCII letter.
+     * @param ch the {@link Character} to check.
+     * @return {@link Boolean} is true if is a ASCII letter.
+     */
+    public static boolean isASCIILetter(char ch) {
+        return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' ) ;
     }
 
     /**
@@ -734,8 +785,8 @@ public class StringUtilities {
 
     /**
      * Method to Remove/collapse multiple spaces.
-     * @param argStr string to remove multiple spaces from.
-     * @return String
+     * @param argStr the {@link String} to remove multiple spaces from.
+     * @return the {@link String} without space.
      */
     public static String cleanSpaces(String argStr) {
         char last = argStr.charAt(0);
@@ -751,12 +802,24 @@ public class StringUtilities {
     }
 
     /**
+     * Method to Remove/collapse multiple spaces with a symbol .
+     * @param argStr the {@link String} to remove multiple spaces from.
+     * @param symbol the {@link Character}
+     * @return the {@link String} without space.
+     */
+    public static String cleanSpaceAndReplaceToSymbol(String argStr,char symbol){
+        argStr = argStr.replaceAll("\\s+", String.valueOf(symbol)).trim(); //replace all space to symbol
+        return argStr;
+    }
+
+    /**
      * Method Read String from InputStream and closes it.
      * @param is input stream.
      * @param encoding charset for the encoding.
      * @return string.
      */
     public static String toString(InputStream is, Charset encoding) {
+        if(encoding == null) encoding = UTF_8;
         BufferedReader br = new BufferedReader(new InputStreamReader(is, encoding));
         StringBuilder sb = new StringBuilder(1024);
         try {
@@ -1198,6 +1261,33 @@ public class StringUtilities {
     }
 
     /**
+     * Turn a plain filename into a "file:" URL
+     * @param filename the {@link String} path to a file.
+     * @return the {@link String} URL of the path.
+     */
+    public static String toURL(String filename) {
+        if(new File(filename).exists() || filename.startsWith("file")) {
+            if (filename.length() > 5
+                    && filename.substring(0, 5).equalsIgnoreCase("file:"))
+                return filename;
+
+            /**
+             * Convert a File, note java.net.URI appears to do the right thing.
+             * viz:
+             *   Convert to absolute path.
+             *   Convert all % to %25.
+             *   then convert all ' ' to %20.
+             *   It quite probably does more e.g. ? #
+             * But has bug in only having one / not three at beginning
+
+             */
+            return "file://" + new File(filename).toURI().toString().substring(5);
+        }else{
+            return toURLWithProtocol(filename);
+        }
+    }
+
+    /**
      * Method to convert a String rapperesent a URi toa URI Objwect.
      * @param uri the String rappresent a URI.
      * @return the URI Object.
@@ -1359,64 +1449,59 @@ public class StringUtilities {
     }
 
     /**
-     * Method to convert a Integer to a int primitive.
-     * @param integer the integer to convert.
-     * @return the int primitive of the integer object.
-     */
-    @SuppressWarnings("UnnecessaryUnboxing")
-    public static int toInt(Integer integer){
-        return integer.intValue();
-    }
-
-    /**
      * Method to convert a int primitive to the Integer object .
-     * @param numInt the int primitive.
+     * @param object the int primitive.
      * @return the the integer object of the int primitive .
      */
     @SuppressWarnings("UnnecessaryBoxing")
-    public static Integer toInteger(int numInt){
-        return Integer.valueOf(numInt);
-    }
-
-    /**
-     * Method to convert a int primitive to the Integer object .
-     * @param numInt the int primitive.
-     * @return the the double object of the int primitive .
-     */
-    public static Double toDouble(int numInt){ return (double) numInt;}
-
-    /**
-     * Method to convert a int primitive to the Integer object .
-     * @param numInt the int primitive.
-     * @return the the double object of the int primitive .
-     */
-    public static Double toDouble(Integer numInt){ return (double) numInt;}
-
-    /**
-     * Method to convert a String to a Integer.
-     * @param numericText the numeric text string.
-     * @return the integer object.
-     */
-    public static Integer toInteger(String numericText){
-        if(isNumeric(numericText)){
-            return Integer.parseInt(numericText);
+    public static Integer toInteger(Object object){
+        if(object != null){
+            try {
+                if (object instanceof Integer) return (int) object;
+                else if (object instanceof String && isNumeric(object)) {
+                    return Integer.parseInt(String.valueOf(object));
+                }
+                logger.warn("The string text " + String.valueOf(object) + " with class :"
+                        + object.getClass().getName() + " is not a number!!!");
+                return null;
+            }catch(NumberFormatException e){
+                logger.warn("The string text " + String.valueOf(object) + " with class :"
+                        + object.getClass().getName() + " is not a number!!!");
+                return null;
+            }
         }else{
-            logger.warn("The string text:"+numericText+" is not a number!!!");
+            logger.warn("The string text NULL is not a number!!!");
             return null;
         }
+        //return Integer.valueOf(numInt);
     }
 
     /**
-     * Method to convert a String to a int.
-     * @param numericText the numeric text string.
-     * @return the int primitive.
+     * Method to convert a int primitive to the Integer object .
+     * @param object the int primitive.
+     * @return the the double object of the int primitive .
      */
-    public static int toInt(String numericText){
-        if(isNumeric(numericText)){
-            return toInt(Integer.parseInt(numericText));
+    public static Double toDouble(Object object){
+        if(object != null) {
+            try {
+                if (object instanceof Integer) {
+                    return (double) object;
+                } else if (object instanceof String && isDouble(object)) {
+                    return Double.parseDouble(String.valueOf(object));
+                } else if (object instanceof String && isNumeric(object)) {
+                    return Double.parseDouble(String.valueOf(object));
+                }
+                logger.warn("The string text " + String.valueOf(object) + " with class :"
+                        + object.getClass().getName() + " is not a number!!!");
+                return null;
+            }catch(NumberFormatException e) {
+                logger.warn("The string text " + String.valueOf(object) + " with class :"
+                        + object.getClass().getName() + " is not a number!!!");
+                return null;
+            }
         }else{
-            logger.warn("The string text:"+numericText+" is not a number!!!");
-            return 0;
+            logger.warn("The string text NULL is not a number!!!");
+            return null;
         }
     }
 
@@ -1437,7 +1522,7 @@ public class StringUtilities {
     public static String toString(Object object){
         if(object instanceof URL) return object.toString();
         if(object instanceof URI) return object.toString();
-        //TODO add all the other constructor.
+        // @@TODO add all the other constructor.
         return String.valueOf(object);
     }
 
@@ -1457,7 +1542,25 @@ public class StringUtilities {
      * @return the Int of the object.
      */
     public static int toInt(Object object){
-        return Integer.parseInt((String)object);
+        if(object != null){
+            try {
+                if (object instanceof Integer) return (int) object;
+                else if (object instanceof String && isNumeric(object)) {
+                    return Integer.parseInt(String.valueOf(object));
+                }
+                logger.warn("The string text " + String.valueOf(object) + " with class :"
+                        + object.getClass().getName() + " is not a number!!!");
+                return 0;
+            }catch(NumberFormatException e) {
+                logger.warn("The string text " + String.valueOf(object) + " with class :"
+                        + object.getClass().getName() + " is not a number!!!");
+                return 0;
+            }
+        }else{
+            logger.warn("The string text NULL is not a number!!!");
+            return 0;
+        }
+        //return Integer.parseInt(String.valueOf(object));
     }
 
     //-------------------------------------------------
@@ -1586,6 +1689,22 @@ public class StringUtilities {
         try {decoder.decode(ByteBuffer.wrap(bytes));
         } catch (CharacterCodingException e) {return false;}
         return true;
+    }
+
+    /**
+     * Method to abbreviate the content of all the objects have a stringable rappresentation.
+     * @param values the {@link Object[]} to update.
+     * @return the {@link Object[]} update.
+     */
+    public static Object[] abbreviateOnlyStringableObject(Object[] values) {
+        for (int i =0; i < values.length; i++) {
+            Object s = values[i];
+            if (s instanceof String || s instanceof URL || s instanceof URI) {
+                String newValue = org.apache.commons.lang3.StringUtils.abbreviate(String.valueOf(s),200);
+                values[i] = newValue;
+            }
+        }
+        return values;
     }
 
 

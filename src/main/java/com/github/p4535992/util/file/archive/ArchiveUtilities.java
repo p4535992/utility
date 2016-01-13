@@ -12,8 +12,8 @@ import java.util.zip.*;
 
 /**
  * Created by 4535992 on 30/11/2015.
+ * @author 4535992.
  */
-@SuppressWarnings("unused")
 public class ArchiveUtilities {
     
     private static final org.slf4j.Logger logger =
@@ -76,7 +76,6 @@ public class ArchiveUtilities {
             }
         }catch(IOException e){
             logger.error(e.getMessage(),e);
-            return null;
         }
         return filesListInZip;
     }
@@ -105,7 +104,11 @@ public class ArchiveUtilities {
     }
 
     public static File extractFileFromZipFile(File zipFile,String nameOfFile){
-        return extractFilesFromZipFile(zipFile,nameOfFile).get(0);
+        if(extractFilesFromZipFile(zipFile,nameOfFile).size() > 0){
+            return extractFilesFromZipFile(zipFile,nameOfFile).get(0);
+        }else{
+            return null;
+        }
     }
 
     public static List<File> unzip(File zipFilePath, String destDirectory){
@@ -124,7 +127,7 @@ public class ArchiveUtilities {
             List<File> files = new ArrayList<>();
             File destDir = new File(destDirectory);
             if (!destDir.exists()) {
-                destDir.mkdir();
+                boolean b = destDir.mkdir();
             }
             try (ZipInputStream zipIn = new ZipInputStream(
                     new BufferedInputStream(new FileInputStream(zipFilePath)))) {
@@ -259,6 +262,7 @@ public class ArchiveUtilities {
         try (FileInputStream inputFile = new FileInputStream(pathToTheArchive.toFile())) {
             checkedStream = new CheckedInputStream(inputFile, new Adler32());
             try (BufferedInputStream input = new BufferedInputStream(checkedStream)) {
+                //noinspection StatementWithEmptyBody
                 while (input.read() != -1) {
                     //Do nothing; simply reading file contents.
                 }
@@ -500,7 +504,7 @@ public class ArchiveUtilities {
 
     }
 
-    public boolean extractFileToFolder(Path file,Path folder) {
+    /*public boolean extractFileToFolder(Path file,Path folder) {
         Path newPath = folder.resolve(file);
         try {
             Files.createDirectories(newPath.getParent());
@@ -512,6 +516,6 @@ public class ArchiveUtilities {
             return false;
         }
         return true;
-    }
+    }*/
 
 }

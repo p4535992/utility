@@ -1,69 +1,46 @@
 package com.github.p4535992.util.repositoryRDF.jena;
 
-
-import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.string.StringUtilities;
-import com.github.p4535992.util.xml.XMLUtilities;
 
-/** if you use Jena 2.X.X */
-/*import com.hp.hpl.jena.datatypes.RDFDatatype;
-import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
-import com.hp.hpl.jena.graph.*;
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.GraphUtil;
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.impl.LiteralLabel;
-import com.hp.hpl.jena.graph.impl.LiteralLabelFactory;
-import com.hp.hpl.jena.ontology.OntModel;
-import com.hp.hpl.jena.ontology.OntModelSpec;
-import com.hp.hpl.jena.query.*;
-import com.hp.hpl.jena.rdf.model.*;
-import com.hp.hpl.jena.rdf.model.impl.PropertyImpl;
-import com.hp.hpl.jena.rdf.model.impl.SelectorImpl;
-import com.hp.hpl.jena.reasoner.Reasoner;
-import com.hp.hpl.jena.reasoner.ReasonerRegistry;
-import com.hp.hpl.jena.shared.PrefixMapping;
-import com.hp.hpl.jena.sparql.core.DatasetImpl;
-import com.hp.hpl.jena.sparql.resultset.RDFOutput;
-import com.hp.hpl.jena.sparql.util.NodeUtils;
-import com.hp.hpl.jena.tdb.TDB;
-import com.hp.hpl.jena.tdb.TDBFactory;
-import com.hp.hpl.jena.util.FileManager;
-import com.hp.hpl.jena.vocabulary.DCTerms;
-import com.hp.hpl.jena.vocabulary.OWL;
-import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RSS;*/
+import jena.schemagen;
 import org.apache.jena.atlas.lib.*;
+import org.apache.jena.atlas.lib.Timer;
 import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.enhanced.EnhGraph;
 import org.apache.jena.graph.*;
 import org.apache.jena.graph.impl.LiteralLabel;
 import org.apache.jena.graph.impl.LiteralLabelFactory;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.ontology.DatatypeProperty;
+import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.ontology.impl.DatatypePropertyImpl;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdf.model.impl.PropertyImpl;
 import org.apache.jena.rdf.model.impl.SelectorImpl;
 import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
+import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.system.*;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.sparql.core.DatasetImpl;
 import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.resultset.RDFOutput;
+import org.apache.jena.sparql.util.ModelUtils;
 import org.apache.jena.sparql.util.NodeUtils;
 import org.apache.jena.tdb.TDB;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.jena.util.FileManager;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RSS;
+import org.apache.jena.util.FileUtils;
+import org.apache.jena.vocabulary.*;
 
 import java.io.*;
 import java.net.URI;
@@ -131,8 +108,19 @@ public class Jena3Utilities {
      * @return if true all the operation are done.
      */
     public static boolean writeModelToFile(String fullPath, Model model, String outputFormat) {
-        fullPath = FileUtilities.getPath(fullPath) + File.separator + FileUtilities.getFilenameWithoutExt(fullPath) + "." + outputFormat.toLowerCase();
+        /*fullPath =
+                FileUtilities.getPath(fullPath) +
+                        File.separator +
+                        FileUtilities.getFilenameWithoutExt(fullPath)
+                        + "." + outputFormat.toLowerCase();*/
+
+        File outputFile = new File(fullPath);
+        fullPath = outputFile.getAbsolutePath()
+                .replace(FileUtils.getFilenameExt(outputFile.getAbsolutePath()),outputFormat);
+        outputFile = new File(fullPath);
+
         logger.info("Try to write the new file of triple from:" + fullPath + "...");
+
         OUTLANGFORMAT = toLang(outputFormat);
         OUTRDFFORMAT = toRDFFormat(outputFormat);
         OUTFORMAT = outputFormat.toUpperCase();
@@ -154,7 +142,9 @@ public class Jena3Utilities {
                     logger.warn("...there is was a problem to try the write the triple file at the third tentative...");
                     try {
                         Charset ENCODING = StandardCharsets.UTF_8;
-                        FileUtilities.createFile(fullPath);
+                        boolean b = outputFile.createNewFile();
+                        if(!b) throw new Exception("... exception during the writing of the file of triples:");
+                        //FileUtilities.createFile(fullPath);
                         Path path = Paths.get(fullPath);
                         try (BufferedWriter writer = Files.newBufferedWriter(path, ENCODING)) {
                             model.write(writer, null, OUTLANGFORMAT.getName());
@@ -448,6 +438,12 @@ public class Jena3Utilities {
         //... make exit from the thread the result of query
         results = ResultSetFactory.copyResults(results);
         logger.info("Exec query SELECT SPARQL :" + sparql);
+         // iterate over the result set
+         /*while(results.hasNext()) {
+             QuerySolution sol = results.next();
+             System.out.println("Solution:" + sol.toString() );
+         }*/
+        logger.info("Exec query SELECT SPARQL :" + sparql);
         return results;
     }
 
@@ -460,6 +456,12 @@ public class Jena3Utilities {
     public static Model toModel(ResultSet resultSet) {
         RDFOutput output = new RDFOutput();
         return output.asModel(resultSet);
+        //or
+       /* Model model = ModelFactory.createDefaultModel();
+        ResultSetRewindable result = ResultSetFactory.makeRewindable(model);
+        ResultSetFormatter.asText(resultSet);
+        result.reset();
+        return model;*/
     }
 
     /**
@@ -481,21 +483,16 @@ public class Jena3Utilities {
     }
 
     /**
-     * Metodo per il caricamento di un file di triple in un'oggetto model di JENA.
+     * Method for load a file of tuples to a jena model.
      *
-     * @param filename    name of the file of input.
-     * @param filepath    path to the file of input wihtout the name.
-     * @param inputFormat format of the file in input.
+     * @param fileInput the {@link File} input file.
      * @return the jena model of the file.
-     * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
+     * @throws FileNotFoundException throw if any "File Not Found" error is occurred.
      */
-    public static Model loadFileTripleToModel(String filename, String filepath, String inputFormat) throws FileNotFoundException {
+    public static Model loadFileTripleToModel(File fileInput) throws FileNotFoundException {
+        String rdfSyntax = toLang(FileUtils.getFilenameExt(fileInput.getAbsolutePath())).getLabel();
         Model m = ModelFactory.createDefaultModel();
-        INLANGFORMAT = toLang(inputFormat);
-        INRDFFORMAT = toRDFFormat(inputFormat);
-        INFORMAT = INLANGFORMAT.getLabel().toUpperCase();
         // use the FileManager to find the input file
-        File fileInput = new File(filepath + File.separator + filename + "." + inputFormat);
         InputStream in;
         try {
             in = FileManager.get().open(fileInput.getAbsolutePath());
@@ -509,13 +506,13 @@ public class Jena3Utilities {
         try {
             FileManager.get().addLocatorClassLoader(Jena3Utilities.class.getClassLoader());
             try {
-                m = FileManager.get().loadModel(fileInput.toURI().toString(), null, INFORMAT);
+                m = FileManager.get().loadModel(fileInput.toURI().toString(), null, rdfSyntax);
             }catch(Exception e){
-                m = FileManager.get().readModel(m,fileInput.toURI().toString(),null,INFORMAT);
+                m = FileManager.get().readModel(m,fileInput.toURI().toString(),null,rdfSyntax);
             }
         } catch (Exception e) {
             try {
-                m.read(in, null, INFORMAT);
+                m.read(in, null, rdfSyntax);
             } catch (Exception e1) {
                /* try {
                     RDFDataMgr.read(m, in, INLANGFORMAT);
@@ -546,17 +543,22 @@ public class Jena3Utilities {
     }
 
     /**
-     * Method for load a file of tuples to a jena model.
+     * Metodo per il caricamento di un file di triple in un'oggetto model di JENA.
      *
-     * @param file a input file.
+     * @param filename    name of the file of input.
+     * @param filepath    path to the file of input wihtout the name.
+     * @param inputFormat format of the file in input.
      * @return the jena model of the file.
-     * @throws FileNotFoundException throw if any "File Not Found" error is occurred.
+     * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
-    public static Model loadFileTripleToModel(File file) throws FileNotFoundException {
-        String filename = FileUtilities.getFilenameWithoutExt(file);
-        String filepath = FileUtilities.getPath(file);
-        String inputFormat = FileUtilities.getExtension(file);
-        return loadFileTripleToModel(filename, filepath, inputFormat);
+    public static Model loadFileTripleToModel(String filename, String filepath, String inputFormat)
+            throws FileNotFoundException {
+        //INLANGFORMAT = toLang(inputFormat);
+        //INRDFFORMAT = toRDFFormat(inputFormat);
+        //INFORMAT = INLANGFORMAT.getLabel().toUpperCase();
+        File fileInput = new File(filepath + File.separator + filename + "." + inputFormat);
+        return loadFileTripleToModel(fileInput);
+
     }
 
     /**
@@ -597,21 +599,13 @@ public class Jena3Utilities {
      * exception : "AWT-EventQueue-0" java.lang.NoSuchFieldError: RDFTHRIFT  or CSV.
      */
     private static final Lang allFormatsOfRiotLang[] = new Lang[]{
-            Lang.NTRIPLES, Lang.N3, Lang.RDFXML,
-            Lang.TURTLE, Lang.TRIG, Lang.TTL,
-            Lang.NQUADS,
-            Lang.NQ,
-            //org.apache.jena.riot.Lang.JSONLD,
-            Lang.NT, Lang.RDFJSON,
-            Lang.RDFNULL
-            //org.apache.jena.riot.Lang.CSV,
-            //org.apache.jena.riot.Lang.RDFTHRIFT
+            Lang.NTRIPLES, Lang.N3, Lang.RDFXML,Lang.TURTLE, Lang.TRIG, Lang.TTL,
+            Lang.NQUADS, Lang.NQ,Lang.JSONLD,Lang.NT, Lang.RDFJSON,Lang.RDFNULL,Lang.CSV,
+            Lang.RDFTHRIFT
     };
 
     /**
-     * A list of org.apache.jena.riot.RDFFormat file formats used in jena.
-     * if you are not using the last version of jena you can found in build:
-     * "AWT-EventQueue-0" java.lang.NoSuchFieldError: JSONLD_FLAT
+     * A list of {@link RDFFormat} file formats used in jena.
      */
     private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[]{
             RDFFormat.TURTLE, RDFFormat.TTL,
@@ -625,33 +619,35 @@ public class Jena3Utilities {
             RDFFormat.RDFXML, RDFFormat.RDFXML_ABBREV,
             RDFFormat.RDFXML_PLAIN, RDFFormat.RDFXML_PRETTY, RDFFormat.TRIG, RDFFormat.TRIG_BLOCKS,
             RDFFormat.TRIG_FLAT, RDFFormat.TRIG_PRETTY, RDFFormat.TURTLE_BLOCKS, RDFFormat.TURTLE_FLAT,
-            RDFFormat.TURTLE_PRETTY};
-    //org.apache.jena.riot.RDFFormat.RDF_THRIFT,org.apache.jena.riot.RDFFormat.RDF_THRIFT_VALUES,
+            RDFFormat.TURTLE_PRETTY
+    };
 
     /**
-     * A list of com.hp.hpl.jena.datatypes.RDFDatatype file formats used in jena.
-     * @return all the RDFFormat supported from jena.
-     */
-   /* private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[] {
-            RDFDatatype.
-    };*/
-
-    /**
-     * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
-     * return all the com.hp.hpl.jena.datatypes.RDFDatatype supported from jena.
+     * Method to convert a URI {@link String} to a correct {@link RDFDatatype}  jena.
      *
-     * @param uri the String of the uri resource.
-     * @return the RDFDatatype of the uri resource.
+     * @param uri the {@link String} of the uri resource.
+     * @return the {@link RDFDatatype} of the uri resource.
      */
     public static RDFDatatype toRDFDatatype(String uri) {
-        return toXSDDatatype(uri);
+        return TypeMapper.getInstance().getSafeTypeByName(toXSDDatatype(uri).getURI());
     }
 
-
-    /*public static com.hp.hpl.jena.datatypes.RDFDatatype convertXSDDatatypeToRDFDatatype(XSDDatatype xsdD){
-        return xsdD;
+    /**
+     * Method to convert a {@link XSDDatatype} to a correct {@link RDFDatatype}  jena.
+     *
+     * @param xsdDatatype the {@link XSDDatatype} of the uri resource.
+     * @return the {@link RDFDatatype} of the uri resource.
+     */
+    public static RDFDatatype toRDFDatatype(XSDDatatype xsdDatatype){
+        return TypeMapper.getInstance().getSafeTypeByName(xsdDatatype.getURI());
     }
 
+    public static RDFDatatype toRDFDatatype(XSD xsd){
+        Resource resource = toResource(xsd);
+        return TypeMapper.getInstance().getSafeTypeByName(resource.getURI());
+    }
+
+    /*
     public static XSSimpleType convertStringToXssSimpleType(String nameDatatype){
         SymbolHash fBuiltInTypes = new SymbolHash();
         return (XSSimpleType)fBuiltInTypes.get(nameDatatype);
@@ -660,13 +656,9 @@ public class Jena3Utilities {
     public static XSDDatatype convertStringToXSDDatatype(String nameDatatype){
         XSSimpleType xss = convertStringToXssSimpleType(nameDatatype);
         return new XSDDatatype(xss,xss.getNamespace());
-    }*/
+    }
 
-    /**
-     * A list of org.apache.xerces.impl.dv.XSSimpleType.
-     * return all the XSSimpleType supported from jena.
-     */
-   /* private static final short[] allFormatOfXSSimpleType = new short[]{
+    private static final short[] allFormatOfXSSimpleType = new short[]{
             XSSimpleType.PRIMITIVE_ANYURI,XSSimpleType.PRIMITIVE_BASE64BINARY,XSSimpleType.PRIMITIVE_BOOLEAN,
             XSSimpleType.PRIMITIVE_DATE,XSSimpleType.PRIMITIVE_DATETIME,XSSimpleType.PRIMITIVE_DECIMAL,XSSimpleType.PRIMITIVE_DOUBLE,
             XSSimpleType.PRIMITIVE_DURATION,XSSimpleType.PRIMITIVE_FLOAT,XSSimpleType.PRIMITIVE_GDAY,XSSimpleType.PRIMITIVE_GMONTH,
@@ -674,7 +666,8 @@ public class Jena3Utilities {
             XSSimpleType.PRIMITIVE_HEXBINARY,XSSimpleType.PRIMITIVE_NOTATION,XSSimpleType.PRIMITIVE_PRECISIONDECIMAL,
             XSSimpleType.PRIMITIVE_QNAME,XSSimpleType.PRIMITIVE_STRING,XSSimpleType.PRIMITIVE_TIME,XSSimpleType.WS_COLLAPSE,
             XSSimpleType.WS_PRESERVE,XSSimpleType.WS_REPLACE
-    };*/
+    };
+    */
 
     /**
      * A list of com.hp.hpl.jena.datatypes.xsd.XSDDatatype.
@@ -694,11 +687,19 @@ public class Jena3Utilities {
             XSDDatatype.XSDunsignedLong, XSDDatatype.XSDunsignedShort
     };
 
+    public static final Resource allFormatsOfXSD[] = new Resource[]{XSD.anyURI,XSD.base64Binary,XSD.date,XSD.dateTime,
+    XSD.dateTimeStamp,XSD.dayTimeDuration,XSD.decimal,XSD.duration,XSD.ENTITIES,XSD.ENTITY,XSD.gDay,XSD.gMonth,
+            XSD.gMonthDay,XSD.gYear,XSD.gYearMonth,XSD.hexBinary,XSD.ID,XSD.IDREF,XSD.IDREFS,XSD.integer,
+            XSD.language,XSD.Name,XSD.NCName,XSD.NMTOKEN,XSD.NMTOKENS,XSD.negativeInteger,XSD.nonNegativeInteger,
+    XSD.nonPositiveInteger,XSD.normalizedString,XSD.NOTATION,XSD.positiveInteger,XSD.QName,XSD.time,XSD.token,
+    XSD.unsignedByte,XSD.unsignedInt,XSD.unsignedLong,XSD.unsignedShort,XSD.xboolean,XSD.xbyte,XSD.xdouble,
+    XSD.xfloat,XSD.xint,XSD.xlong,XSD.xshort,XSD.xstring,XSD.yearMonthDuration};
+
     /**
-     * Method convert a string to XSDDatatype.
+     * Method convert a {@link String} to {@link XSDDatatype}.
      *
-     * @param uri string uri of the XSDDatatype.
-     * @return xsdDatatype of the string uri if exists.
+     * @param uri the {@link String} uri of the XSDDatatype.
+     * @return the {@link XSDDatatype} of the string uri if exists.
      */
     public static XSDDatatype toXSDDatatype(String uri) {
         for (XSDDatatype xsdDatatype : allFormatsOfXSDDataTypes) {
@@ -709,6 +710,54 @@ public class Jena3Utilities {
         logger.error("The XSD Datatype '" + uri + "' is not recognised");
         throw new IllegalArgumentException("The XSD Datatype '" + uri + "' is not recognised");
     }
+
+    /** Read RDF data..
+     * @param uriResource  URI to read from (includes file: and a plain file name).
+     */
+    public static StreamRDF  toStreamRDF(String uriResource){
+        StreamRDF streamRDF =new StreamRDFBase();
+        RDFDataMgr.parse(streamRDF, uriResource) ;
+        return streamRDF;
+    }
+
+    /** Send the triples of graph and it's prefix mapping to a StreamRDF, enclosed in stream.start()/steram.finish() */
+    public static StreamRDF toStreamRDF(OutputStream output,Lang lang,Model model){
+        StreamRDF writer = StreamRDFWriter.getWriterStream(output, lang) ;
+        StreamOps.graphToStream(model.getGraph(), writer);
+        return writer;
+    }
+
+    /*public static toStreamRDF(ResultSet resultSet,String sparqlService){
+        OutputStream os = new ByteArrayOutputStream();
+        StreamRDF stream = StreamRDFWriter.getWriterStream(os, Lang.RDFTHRIFT);
+        QueryExecution qe = QueryExecutionFactory.sparqlService(
+                "http://data.open.ac.uk/sparql", "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?A ?B ?C WHERE {?A a ?B . ?A rdf:type ?C} LIMIT 100");
+
+        Transform<QuerySolution, Iterator<Triple>> m = new Transform<QuerySolution, Iterator<Triple>>() {
+            Integer rowIndex = 0;
+
+            @Override
+            public Iterator<Triple> convert(QuerySolution qs) {
+                rowIndex++;
+                String ns = "http://www.example.org/test/row#";
+                String pns = "http://www.example.org/test/col#";
+                Resource subject = ResourceFactory.createResource(ns + Integer.toString(rowIndex));
+                Property property;
+                List<Triple> list = new ArrayList<Triple>();
+                Iterator<String> cn = qs.varNames();
+                while (cn.hasNext()) {
+                    String c = cn.next();
+                    property = ResourceFactory.createProperty(pns + c);
+                    list.add(new Triple(subject.asNode(), property.asNode(), qs.get(c).asNode()));
+                }
+                return list.iterator();
+            }
+        };
+        Iterator<Triple> iter = WrappedIterator.createIteratorIterator( Iter.map( qe.execSelect(), m ));
+        stream.start();
+        StreamOps.sendTriplesToStream(iter, stream);
+        stream.finish();
+    }*/
 
     /**
      * Method convert a string to a rdfformat.
@@ -740,6 +789,7 @@ public class Jena3Utilities {
      * @return lang the language Lang for the same name.
      */
     public static Lang toLang(String strFormat) {
+        if(strFormat.contains(".")) strFormat = strFormat.replace(".","");
         if (strFormat.toUpperCase().contains("NT") ||
                 strFormat.toUpperCase().contains("NTRIPLES") || strFormat.toUpperCase().contains("N3")) {
             strFormat = "N-Triples";
@@ -756,6 +806,16 @@ public class Jena3Utilities {
         }
         logger.error("The LANG format '" + strFormat + "' is not recognised");
         throw new IllegalArgumentException("The LANG format '" + strFormat + "' is not recognised");
+    }
+
+    /**
+     * Method convert a string name of a RDFFormat to a language Lang.
+     *
+     * @param file  {@link File} to inpect for the RDFFormat.
+     * @return {@link Lang} the language Lang for the same name.
+     */
+    public static Lang toLang(File file){
+        return toLang(FileUtils.guessLang(file.getAbsolutePath()));
     }
 
     /**
@@ -899,8 +959,11 @@ public class Jena3Utilities {
      */
     private static void convertTo(File file, String outputFormat) throws IOException {
         Model m = loadFileTripleToModel(file);
-        String newName = FileUtilities.getFilenameWithoutExt(file) + "." + outputFormat.toLowerCase();
-        String newPath = FileUtilities.getPath(file);
+        String newName =
+                file.getAbsolutePath().replace(FileUtils.getFilenameExt(file.getAbsolutePath()),outputFormat);
+                //FileUtilities.getFilenameWithoutExt(file) + "." + outputFormat.toLowerCase();
+        String fullPath = file.getAbsolutePath();
+        String newPath = fullPath.substring(0, fullPath.lastIndexOf(File.separator));
         String sparql;
         if (outputFormat.toLowerCase().contains("csv") || outputFormat.toLowerCase().contains("xml")
                 || outputFormat.toLowerCase().contains("json") || outputFormat.toLowerCase().contains("tsv")
@@ -1203,12 +1266,22 @@ public class Jena3Utilities {
     }
 
     /**
-     * Method convert a XSDDatatype to a string.
+     * Method convert a {@link XSDDatatype} or {@link Model} or {@link Node} to a {@link String}.
      *
-     * @param jenaObject XSDDatatype,Model of input.
-     * @param outputFormat String of the output format.
-     * @param baseURI String URI Graph Base.
-     * @return the String rappresentation of the Object.
+     * @param jenaObject {@link XSDDatatype} or {@link Model} of input.
+     * @return the {@link String} rappresentation of the Object.
+     */
+    public static String toString(Object jenaObject){
+        return toString(jenaObject,null,null);
+    }
+
+    /**
+     * Method convert a {@link XSDDatatype} or {@link Model} or {@link Node} to a {@link String}.
+     *
+     * @param jenaObject {@link XSDDatatype} or {@link Model} of input.
+     * @param outputFormat {@link String} of the output format.
+     * @param baseURI {@link String} URI Graph Base.
+     * @return the {@link String} rappresentation of the Object.
      */
     public static String toString(Object jenaObject,String outputFormat,String baseURI){
         if(jenaObject instanceof XSDDatatype){
@@ -1241,7 +1314,7 @@ public class Jena3Utilities {
                         // this can't happen
                     }
                     // Now encode it "safely" as XML
-                    return XMLUtilities.xmlEncode(rawString);
+                    return xmlEncode(rawString);
                 }else{
                     if (!isNullOrEmpty(outputFormat)) {
                         try {
@@ -1265,11 +1338,70 @@ public class Jena3Utilities {
                 logger.error(e.getMessage(), e);
                 return "N/A";
             }
+        }else if(jenaObject instanceof Node){
+            Node n = (Node)jenaObject;
+            if (n.isURI()) {
+                return "<" + n + ">";
+            } else if (n.isBlank()) {
+                return "<_:" + n + ">";
+            } else if (n.isLiteral()) {
+                String s;
+                StringBuilder sb = new StringBuilder();
+                sb.append("'");
+                sb.append(escapeString(n.getLiteralValue().toString()));
+                sb.append("'");
+
+                s = n.getLiteralLanguage();
+                if (s != null && s.length() > 0) {
+                    sb.append("@");
+                    sb.append(s);
+                }
+                s = n.getLiteralDatatypeURI();
+                if (s != null && s.length() > 0) {
+                    sb.append("^^<");
+                    sb.append(s);
+                    sb.append(">");
+                }
+                return sb.toString();
+            } else {
+                return "<" + n + ">";
+            }
         }else{
-            logger.error("Can't convert to String the Object:"+jenaObject.getClass().getName());
+            logger.error("Can't convert to String the Object:"+jenaObject.getClass().getName()+" this function " +
+                    "support Model,Node,XSDDatatype ");
             return "N/A";
         }
     }
+
+    /**
+     * Method to encode the xml text.
+     * @param rawtext string of the xml text.
+     * @return the encode string.
+     */
+     private static String xmlEncode(String rawtext) {
+        // Now turn that UTF-8 string into something "safe"
+        String rdfString ="<?xml version='1.0' encoding='ISO-8859-1'?>\n";
+        char[] sbuf = rawtext.toCharArray();
+        int lastPos = 0;
+        int pos = 0;
+        while(pos < sbuf.length){
+            char ch = sbuf[pos];
+            if(!(ch == '\n' || (ch >= ' ' && ch <= '~'))){
+                if(pos > lastPos){
+                    String range =new String(sbuf,lastPos,pos - lastPos);
+                    rdfString += range;
+                }
+                rdfString += "&#" + (int) ch + ";";
+                lastPos = pos + 1;
+            }
+            pos++;
+        }
+        if(pos > lastPos) {
+            String range =  new String(sbuf, lastPos, pos - lastPos);
+            rdfString += range;
+        }
+        return rdfString;
+    }//xmlEncode
 
     /**
      * Method to delete a specific resource , property on model jena
@@ -1310,15 +1442,6 @@ public class Jena3Utilities {
         }
         return null;
     }
-
-    /**
-     * Taken from com.idea.io.RdfUtils, modified for Jena 2
-     */
-    /*
-     public static Resource updateProperties(Resource resource, GraphVertexChangeEvent vertex){
-         setProperty(resource, RSS.title, vertex.getVertex())); return resource;
-     }
-    */
 
     /**
      * Method to update a property on a model jena.
@@ -1833,47 +1956,63 @@ public class Jena3Utilities {
      */
     private static RDFNode createRDFNodeBase(
             Object modelOrUri, Object subjectIri, Lang lang, RDFDatatype rdfDatatype, Boolean isXmL) {
-
-        if(subjectIri instanceof Node){
-            if(modelOrUri == null) return createModel().asRDFNode((Node) subjectIri);
-            else if(modelOrUri instanceof Model) return ((Model)modelOrUri).asRDFNode((Node) subjectIri);
-            else return (RDFNode) subjectIri;
-        }else if (subjectIri instanceof LiteralLabel) {
-            return toRDFNode(toNode(subjectIri));
-        } else if (lang != null && rdfDatatype != null) {
-            return toRDFNode(toNode(String.valueOf(subjectIri), lang.getLabel(), rdfDatatype));
-        } else if (lang != null && isXmL != null) {
-            return toRDFNode(toNode(String.valueOf(subjectIri), lang.getLabel(), isXmL));
-        } else if (rdfDatatype != null) {
-            return toRDFNode(toNode(String.valueOf(subjectIri), rdfDatatype));
-        } else {
-            subjectIri = toId(subjectIri);
-        }
-
-        if (isIRI(subjectIri) || isUri(subjectIri)) {
-            if (modelOrUri != null && modelOrUri instanceof Model) {
-                try {
-                    //return ((Model)modelOrUri).asRDFNode(NodeUtils.asNode(toIri(subjectIri)));
-                    return toRDFNode(toNode(toIri(subjectIri)),((Model) modelOrUri));
-                } catch (Exception e) {
-                    //return ((Model)modelOrUri).asRDFNode(NodeUtils.asNode(toString(subjectIri)));
-                    return toRDFNode(toNode(String.valueOf(subjectIri)),((Model) modelOrUri));
-                }
-            } else {
-                try {
-                    return toRDFNode(toNode(String.valueOf(toIri(subjectIri))));
-                } catch (Exception e) {
-                    return toRDFNode(toNode(String.valueOf(subjectIri)));
-                    //return ((Model)modelOrUri).asRDFNode(NodeUtils.asNode(toString(subjectIri)));
-                }
+        try {
+            if(subjectIri == null){
+                logger.warn("Try to create a DatatypeProperty from a 'NULL' value");
+                return null;
             }
-        } else { //maybe is a Literal
-            if (modelOrUri != null && modelOrUri instanceof Model) {
-                //return ((Model) modelOrUri).asRDFNode(NodeFactory.createLiteral(String.valueOf(subjectIri)));
-                return toRDFNode(toNode(String.valueOf(subjectIri)),((Model) modelOrUri));
-            } else {
-                return toRDFNode(toNode(String.valueOf(subjectIri)));
+            if(subjectIri instanceof RDFNode){
+                return (RDFNode) subjectIri;
             }
+            if (subjectIri instanceof Node) {
+                if (modelOrUri == null) return createModel().asRDFNode((Node) subjectIri);
+                else if (modelOrUri instanceof Model)
+                    return ModelUtils.convertGraphNodeToRDFNode(toNode(subjectIri), (Model) modelOrUri);
+                //else return (RDFNode) subjectIri;
+            } else if (subjectIri instanceof LiteralLabel) {
+                return toRDFNode(toNode(subjectIri));
+            } else if (lang != null && rdfDatatype != null) {
+                return toRDFNode(toNode(String.valueOf(subjectIri), lang.getLabel(), rdfDatatype));
+            } else if (lang != null && isXmL != null) {
+                return toRDFNode(toNode(String.valueOf(subjectIri), lang.getLabel(), isXmL));
+            } else if (rdfDatatype != null) {
+                return toRDFNode(toNode(String.valueOf(subjectIri), rdfDatatype));
+            }
+
+            if(subjectIri instanceof String) {
+                subjectIri = toId(subjectIri);
+                if (isIRI(subjectIri) || isUri(subjectIri)) {
+                    if (modelOrUri != null && modelOrUri instanceof Model) {
+                        try {
+                            //return ((Model)modelOrUri).asRDFNode(NodeUtils.asNode(toIri(subjectIri)));
+                            return toRDFNode(toNode(toIri(subjectIri)), ((Model) modelOrUri));
+                        } catch (Exception e) {
+                            //return ((Model)modelOrUri).asRDFNode(NodeUtils.asNode(toString(subjectIri)));
+                            return toRDFNode(toNode(String.valueOf(subjectIri)), ((Model) modelOrUri));
+                        }
+                    } else {
+                        try {
+                            return toRDFNode(toNode(String.valueOf(toIri(subjectIri))));
+                        } catch (Exception e) {
+                            return toRDFNode(toNode(String.valueOf(subjectIri)));
+                            //return ((Model)modelOrUri).asRDFNode(NodeUtils.asNode(toString(subjectIri)));
+                        }
+                    }
+                } else { //maybe is a Literal
+                    if (modelOrUri != null && modelOrUri instanceof Model) {
+                        //return ((Model) modelOrUri).asRDFNode(NodeFactory.createLiteral(String.valueOf(subjectIri)));
+                        return toRDFNode(toNode(String.valueOf(subjectIri)), ((Model) modelOrUri));
+                    } else{
+                        return toRDFNode(toNode(String.valueOf(subjectIri)));
+                    }
+                }
+            }else{
+                logger.error("The RDFNode Datatype '" + subjectIri.getClass().getName() + "' is not recognised");
+                return null;
+            }
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+            return null;
         }
     }
 
@@ -1901,6 +2040,7 @@ public class Jena3Utilities {
 
     /**
      * Method utility: create new property for a Model.
+     * href: http://willware.blogspot.it/2010/02/jena-node-versus-rdfnode.html
      *
      * @param subjectIri string of the subject.
      * @return RDFNode.
@@ -1917,29 +2057,8 @@ public class Jena3Utilities {
      * @param model the Model fo reference for create the RDFNode.
      * @return the RDFNode result.
      */
-    public static RDFNode toRDFNode(Node node,Model model) {
+    public static RDFNode toRDFNode(Object node,Model model) {
         return createRDFNodeBase(model,node, null, null, null);
-    }
-
-    /**
-     * Method to convert a Node to a RDFNode.
-     * href: http://willware.blogspot.it/2010/02/jena-node-versus-rdfnode.html
-     *
-     * @param node the Node to convert.
-     * @return the RDFNode result.
-     */
-    public static RDFNode toRDFNode(Node node) {
-        return createRDFNodeBase(null,node, null, null, null);
-    }
-
-    /**
-     * Method to create a Jena Resource.
-     *
-     * @param localNameOrUri the String name local Graph or the String iri of the subject.
-     * @return the Jena Resource.
-     */
-    public static Resource toResource(String localNameOrUri) {
-        return createResourceBase(null, localNameOrUri);
     }
 
     /**
@@ -1952,16 +2071,8 @@ public class Jena3Utilities {
         return createResourceBase(null, localNameOrUri);
     }
 
-    public static Resource toResource(RDFNode localNameOrUri) {
-        return createResourceBase(null, localNameOrUri);
-    }
-
-    public static Resource toResource(Model model, Object localNameOrUri) {
+    public static Resource toResource(Object localNameOrUri,Model model) {
         return createResourceBase(model, localNameOrUri);
-    }
-
-    public static Resource toResource(String graphUri, Object localNameOrUri) {
-        return createResourceBase(graphUri, localNameOrUri);
     }
 
     public static Resource toResource(Object graphUriOrModel, Object localNameOrUri) {
@@ -1976,34 +2087,52 @@ public class Jena3Utilities {
      * @return the Jena Resource.
      */
     private static Resource createResourceBase(Object graphUriOrModel, Object localNameOrUri) {
-        if (!(localNameOrUri instanceof RDFNode)) localNameOrUri = toId(localNameOrUri);
+        //if (!(localNameOrUri instanceof RDFNode)) localNameOrUri = toId(localNameOrUri);
+        if(localNameOrUri == null){
+            logger.warn("Try to create a Resource from a 'NULL' value");
+            return null;
+        }
+        if(localNameOrUri instanceof Resource){
+            return (Resource) localNameOrUri;
+        }
         if (graphUriOrModel == null) {
-            if (localNameOrUri instanceof RDFNode) {
+           if(localNameOrUri instanceof XSDDatatype) {
+               return ResourceFactory.createResource(((XSDDatatype) localNameOrUri).getURI());
+           }else if(localNameOrUri instanceof XSD) {
+               for (Resource xsd : allFormatsOfXSD) {
+                   if (xsd.getURI().equalsIgnoreCase(XSD.NS + String.valueOf(localNameOrUri)))
+                       return xsd;
+                   if (xsd.getURI().replace(XSDDatatype.XSD, "")
+                           .toLowerCase().contains(String.valueOf(localNameOrUri).toLowerCase()))
+                       return xsd;
+               }
+           }else if(localNameOrUri instanceof  RDFDatatype){
+               return ResourceFactory.createResource(((RDFDatatype) localNameOrUri).getURI());
+           }else if (localNameOrUri instanceof RDFNode) {
                 RDFNode rdfNode = (RDFNode) localNameOrUri;
-                if (rdfNode.isResource() || rdfNode.isURIResource() || rdfNode.isAnon()) return rdfNode.asResource();
-                else return null;
-            } else {
+                if (rdfNode.isResource() || rdfNode.isURIResource() || rdfNode.isAnon())
+                    return rdfNode.asResource();
+           } else {
+                localNameOrUri = toId(localNameOrUri);
                 if (isIRI(localNameOrUri) || isUri(localNameOrUri))
                     return ResourceFactory.createResource(String.valueOf(localNameOrUri));
-                else
-                    return null;
-            }
+           }
         } else {
-            if (isString(graphUriOrModel)) {
+            if (graphUriOrModel instanceof String) {
                 String s = String.valueOf(graphUriOrModel);
                 if (s.endsWith("/") || s.endsWith("#")) {
                     String uri = s + localNameOrUri;
                     if (isIRI(uri) || isUri(uri)) return ResourceFactory.createResource(uri);
-                    else return null;
                 } else {
                     String uri = s + "/" + localNameOrUri;
                     if (isIRI(uri) || isUri(uri)) return ResourceFactory.createResource(uri);
-                    else return null;
                 }
             } else if (graphUriOrModel instanceof Model) {
                 return toRDFNode(graphUriOrModel, localNameOrUri).asResource();
-            } else return null;
+            }
         }
+        logger.error("The Resource Datatype '" + localNameOrUri.getClass().getName() + "' is not recognised");
+        return null;
     }
 
     /**
@@ -2015,51 +2144,58 @@ public class Jena3Utilities {
      * @return the Jena Predicate.
      */
     private static Property createPropertyBase(Object stringOrModelGraph, Object predicateUri, boolean impl) {
-        if (stringOrModelGraph == null) {
-            if (impl) {
-                if (predicateUri != null) {
-                    if (predicateUri instanceof RDFNode) return (Property) ((RDFNode) predicateUri).asResource();
+        try {
+            if(predicateUri == null){
+                logger.warn("Try to create a Property from a 'NULL' value");
+                return null;
+            }
+            if(predicateUri instanceof Property){
+                return (Property) predicateUri;
+            }
+            if (stringOrModelGraph == null) {
+                if (impl) {
+                    if (predicateUri instanceof RDFNode)
+                        return (Property) ((RDFNode) predicateUri).asResource();
                     else if (isIRI(predicateUri) || isUri(predicateUri))
                         return new PropertyImpl(String.valueOf(predicateUri));
-                    else
-                        return null;
-                } else return null;
-            } else {
-                if (predicateUri instanceof RDFNode) return (Property) ((RDFNode) predicateUri).asResource();
-                if (predicateUri != null) {
-                    if (isIRI(predicateUri) || isUri(predicateUri))
+                } else {
+                    if (predicateUri instanceof RDFNode)
+                        return (Property) ((RDFNode) predicateUri).asResource();
+                    else if (isIRI(predicateUri) || isUri(predicateUri))
                         return ResourceFactory.createProperty(String.valueOf(predicateUri));
                     else
                         return ResourceFactory.createProperty(String.valueOf(predicateUri));
-                } else return null;
+
+                }
             }
-        }
-        if (isStringNoEmpty(stringOrModelGraph)) {
-            if (!String.valueOf(stringOrModelGraph).endsWith("/") || !String.valueOf(stringOrModelGraph).endsWith("#")) {
-                stringOrModelGraph = stringOrModelGraph + "/";
-            }
-            if (impl) {
-                if (predicateUri != null) {
+            if (isStringNoEmpty(stringOrModelGraph)) {
+                if (!String.valueOf(stringOrModelGraph).endsWith("/") || !String.valueOf(stringOrModelGraph).endsWith("#")) {
+                    stringOrModelGraph = stringOrModelGraph + "/";
+                }
+                if (impl) {
                     if (isIRI(predicateUri) || isUri(predicateUri) || String.valueOf(stringOrModelGraph).isEmpty()) {
                         return new PropertyImpl(String.valueOf(predicateUri));
                     } else if (isStringNoEmpty(stringOrModelGraph) &&
                             isIRI(String.valueOf(stringOrModelGraph) + "/" + String.valueOf(predicateUri))) {
                         return new PropertyImpl(String.valueOf(stringOrModelGraph), String.valueOf(predicateUri));
-                    } else return null;
-                } else return null;
-            } else {
-                if (predicateUri != null) {
+                    }
+                } else {
                     if (isIRI(predicateUri) || isUri(predicateUri) || String.valueOf(stringOrModelGraph).isEmpty()) {
                         return ResourceFactory.createProperty(String.valueOf(predicateUri));
                     } else if (isStringNoEmpty(stringOrModelGraph) &&
                             isIRI(String.valueOf(stringOrModelGraph) + "/" + String.valueOf(predicateUri))) {
                         return ResourceFactory.createProperty(String.valueOf(stringOrModelGraph), String.valueOf(predicateUri));
-                    } else return null;
-                } else return null;
+                    }
+                }
+            } else if (stringOrModelGraph instanceof Model && isStringNoEmpty(predicateUri)) {
+                return toRDFNode(stringOrModelGraph, predicateUri).as(Property.class);
             }
-        } else if (stringOrModelGraph instanceof Model && isStringNoEmpty(predicateUri)) {
-            return toRDFNode(stringOrModelGraph, predicateUri).as(Property.class);
-        } else return null;
+            logger.warn("The Property Datatype '" + predicateUri.getClass().getName() + "' is not recognised");
+            return null;
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+            return null;
+        }
     }
 
     /**
@@ -2097,16 +2233,6 @@ public class Jena3Utilities {
     /**
      * Method to create a Jena Property.
      *
-     * @param localNameOrSubject the RDFNode name local Graph or the String iri of the subject.
-     * @return the Jena Predicate.
-     */
-    public static Property toProperty(RDFNode localNameOrSubject) {
-        return createPropertyBase(null, localNameOrSubject, false);
-    }
-
-    /**
-     * Method to create a Jena Property.
-     *
      * @param localNameOrSubject the String name local Graph or the String iri of the subject.
      * @return the Jena Predicate.
      */
@@ -2123,48 +2249,60 @@ public class Jena3Utilities {
      * @return the Jena Literal.
      */
     private static Literal createLiteralBase(Model model, Object stringOrObject, RDFDatatype datatype) {
-        if (model == null) {
-            if (stringOrObject instanceof RDFNode) {
-                RDFNode x = (RDFNode) stringOrObject;
-                if (x.asLiteral().getDatatype().equals(XSDDatatype.XSDstring)) {
-                    return ResourceFactory.createPlainLiteral(x.asLiteral().getLexicalForm());
-                    //return ((RDFNode) stringOrObject).asLiteral();
-                } else if (x.isURIResource()) {
-                    //TODO try to avoid this because is wrong but works....
-                    return (Literal) x.asResource();
-                } else {
-                    return ResourceFactory.createTypedLiteral(stringOrObject);
-                }
-            } else if (isString(stringOrObject)) {
-                if (datatype != null)
-                    return ResourceFactory.createTypedLiteral(String.valueOf(stringOrObject), datatype);
-                else return ResourceFactory.createPlainLiteral(String.valueOf(stringOrObject));
-            } else {
-                if (datatype != null)
-                    return ResourceFactory.createTypedLiteral(String.valueOf(stringOrObject), datatype);
-                return ResourceFactory.createTypedLiteral(stringOrObject);
+        try {
+            if(stringOrObject == null){
+                logger.warn("Try to create a Literal from a 'NULL' value");
+                return null;
             }
-        } else {
-            if (stringOrObject instanceof RDFNode) {
+            if(stringOrObject instanceof Literal){
+                return (Literal) stringOrObject;
+            }
+            if (model == null) {
+                if (stringOrObject instanceof RDFNode) {
+                    RDFNode x = (RDFNode) stringOrObject;
+                    if (x.asLiteral().getDatatype().equals(XSDDatatype.XSDstring)) {
+                        return ResourceFactory.createPlainLiteral(x.asLiteral().getLexicalForm());
+                        //return ((RDFNode) stringOrObject).asLiteral();
+                    } else if (x.isURIResource()) {
+                        //try to avoid this because is wrong but works....
+                        return (Literal) x.asResource();
+                    } else {
+                        return ResourceFactory.createTypedLiteral(stringOrObject);
+                    }
+                } else if (stringOrObject instanceof String) {
+                    if (datatype != null)
+                        return ResourceFactory.createTypedLiteral(String.valueOf(stringOrObject), datatype);
+                    else return ResourceFactory.createPlainLiteral(String.valueOf(stringOrObject));
+                } else {
+                    if (datatype != null)
+                        return ResourceFactory.createTypedLiteral(String.valueOf(stringOrObject), datatype);
+                }
+                logger.warn("The Literal  Datatype '" + stringOrObject.getClass().getName() + "' is not recognised");
+                return ResourceFactory.createTypedLiteral(stringOrObject);
+            } else if (stringOrObject instanceof RDFNode) {
                 if (datatype != null) return model.createTypedLiteral(stringOrObject, datatype);
                 else {
                     RDFNode x = (RDFNode) stringOrObject;
                     if (x.asLiteral().getDatatype().equals(XSDDatatype.XSDstring)) {
                         return model.createLiteral(x.toString());
                     } else if (x.isURIResource()) {
-                        //TODO try to avoid this because is wrong but works....
+                        //try to avoid this because is wrong but works....
                         return (Literal) x.asResource();
                     } else {
                         return model.createTypedLiteral(stringOrObject);
                     }
                 }
-            } else if (isString(stringOrObject)) {
+            } else if (stringOrObject instanceof String) {
                 if (datatype != null) return model.createTypedLiteral(String.valueOf(stringOrObject), datatype);
                 else return model.createLiteral(String.valueOf(stringOrObject));
             } else {
                 if (datatype != null) return model.createTypedLiteral(stringOrObject, datatype);
-                return model.createTypedLiteral(stringOrObject);
             }
+            logger.warn("The Literal  Datatype '" + stringOrObject.getClass().getName() + "' is not recognised");
+            return model.createTypedLiteral(stringOrObject);
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+            return null;
         }
     }
 
@@ -2195,11 +2333,11 @@ public class Jena3Utilities {
      * Method utility: create new typed literal from uri.
      *
      * @param stringOrObject the value of the Jena Literal.
-     * @param typeUri        the Jena RDFDatatype of the literal.
+     * @param datatype        the Jena RDFDatatype of the literal.
      * @return the Jena Literal.
      */
-    public static Literal toLiteral(Object stringOrObject, String typeUri) {
-        return createLiteralBase(null, stringOrObject, toRDFDatatype(typeUri));
+    public static Literal toLiteral(Object stringOrObject, String datatype) {
+        return createLiteralBase(null, stringOrObject, toRDFDatatype(datatype));
     }
 
     /**
@@ -2213,26 +2351,6 @@ public class Jena3Utilities {
     }
 
     /**
-     * Method utility: create new typed literal from uri.
-     *
-     * @param stringOrObject the RDFNode of the Jena Literal.
-     * @return the Jena Literal.
-     */
-    public static Literal toLiteral(RDFNode stringOrObject) {
-        return createLiteralBase(null, stringOrObject, null);
-    }
-
-    /**
-     * Method utility: create new typed literal from uri.
-     *
-     * @param stringOrObject the value of the Jena Literal.
-     * @return the Jena Literal.
-     */
-    public static Literal toLiteral(String stringOrObject) {
-        return createLiteralBase(null, stringOrObject, null);
-    }
-
-    /**
      * Method utility: create statement form a jena Model.
      *
      * @param model     the Jena Model.
@@ -2241,17 +2359,12 @@ public class Jena3Utilities {
      * @param object    the iri object.
      * @return Statement.
      */
-    public static Statement toStatement(Model model, String subject, String predicate, String object) {
+    public static Statement toStatement(Model model, Object subject, Object predicate, Object object) {
         return createStatementBase(model, subject, predicate, object, null, null);
     }
 
     public static Statement toStatement(
-            Model model, String subject, String predicate, Object object, String graphUri, XSDDatatype xsdDatatype) {
-        return createStatementBase(model, subject, predicate, object, graphUri, xsdDatatype);
-    }
-
-    public static Statement toStatement(
-            Model model, URI subject, URI predicate, URI object, String graphUri, XSDDatatype xsdDatatype) {
+            Model model, Object subject, Object predicate, Object object, String graphUri, XSDDatatype xsdDatatype) {
         return createStatementBase(model, subject, predicate, object, graphUri, xsdDatatype);
     }
 
@@ -2259,7 +2372,7 @@ public class Jena3Utilities {
      * Method utility: create statement form a jena Model.
      *
      * @param model       the Jena Model.
-     * @param subject     the iri subject.
+     * @param subject     the iri subject. String,RDFNode,URI
      * @param predicate   the iri predicate.
      * @param object      the iri object.
      * @param graphUri    the iri of the graph.
@@ -2268,19 +2381,40 @@ public class Jena3Utilities {
      */
     private static Statement createStatementBase(
             Model model, Object subject, Object predicate, Object object, Object graphUri, XSDDatatype xsdDatatype) {
-        if (model == null) {
-            if (graphUri == null || isStringOrUriEmpty(graphUri)) {
-                return ResourceFactory.createStatement(toResource(subject),
-                        toProperty(predicate), toLiteral(object, xsdDatatype));
-            } else {
-                return ResourceFactory.createStatement(toResource(graphUri, subject),
-                        toProperty(graphUri, predicate), toLiteral(object, xsdDatatype));
+        try {
+            if (subject == null || predicate == null || object == null) {
+                logger.warn("Try to create a Statement from a 'NULL' value");
+                return null;
             }
-        } else {
-            return model.createStatement(toResource(model, subject),
-                    toProperty(model, predicate), toLiteral(object, xsdDatatype));
-        }
 
+            if (subject instanceof Triple) {
+                if (model != null) return ModelUtils.tripleToStatement(model, (Triple) subject);
+                else return ModelUtils.tripleToStatement(createModel(), (Triple) subject);
+            } else if (graphUri != null) {
+                if (isStringOrUriEmpty(graphUri) && xsdDatatype == null) {
+                    return ResourceFactory.createStatement(toResource(graphUri, subject),
+                            toProperty(graphUri, predicate), toLiteral(object));
+                } else if (xsdDatatype != null) {
+                    return ResourceFactory.createStatement(toResource(graphUri, subject),
+                            toProperty(graphUri, predicate), toLiteral(object, xsdDatatype));
+                }
+            } else {
+                if (xsdDatatype != null) {
+                    return ResourceFactory.createStatement(toResource(subject),
+                            toProperty(predicate), toLiteral(object, xsdDatatype));
+                } else {
+                    return ResourceFactory.createStatement(toResource(subject),
+                            toProperty(predicate), toLiteral(object));
+                }
+            }
+            logger.error("The Statement Datatype '" + subject.getClass().getName() + "' is not recognised");
+            return null;
+        /*return model.createStatement(toResource(model, subject),
+                toProperty(model, predicate), toLiteral(object, xsdDatatype));*/
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+            return null;
+        }
     }
 
     /**
@@ -2293,7 +2427,7 @@ public class Jena3Utilities {
      * @param graphUri  the iri of the graph.
      * @return Statement.
      */
-    public static Statement toStatement(Model model, String subject, String predicate, Object object, String graphUri) {
+    public static Statement toStatement(Model model, Object subject, Object predicate, Object object, String graphUri) {
         return createStatementBase(model, subject, predicate, object, graphUri, null);
     }
 
@@ -2306,7 +2440,7 @@ public class Jena3Utilities {
      * @param graphUri  the iri of the graph.
      * @return Statement.
      */
-    public static Statement toStatement(String subject, String predicate, String object, String graphUri) {
+    public static Statement toStatement(Object subject, Object predicate, Object object, String graphUri) {
         return createStatementBase(null, subject, predicate, object, graphUri, null);
     }
 
@@ -2318,45 +2452,8 @@ public class Jena3Utilities {
      * @param object    the iri object.
      * @return Statement.
      */
-    public static Statement toStatement(RDFNode subject, RDFNode predicate, RDFNode object) {
+    public static Statement toStatement(Object subject,Object predicate, Object object) {
         return createStatementBase(null, subject, predicate, object, null, null);
-    }
-
-    /**
-     * Method utility: create statement form a jena Model.
-     *
-     * @param subject   the iri subject.
-     * @param predicate the iri predicate.
-     * @param object    the iri object.
-     * @return Statement.
-     */
-    public static Statement toStatement(String subject, String predicate, String object) {
-        return createStatementBase(null, subject, predicate, object, null, null);
-    }
-
-    /**
-     * Method utility: create statement form a jena Model.
-     *
-     * @param subject   the iri subject.
-     * @param predicate the iri predicate.
-     * @param object    the iri object.
-     * @return Statement.
-     */
-    public static Statement toStatement(String subject, String predicate, Object object) {
-        return createStatementBase(null, subject, predicate, object, null, null);
-    }
-
-    /**
-     * Method utility: create statement form a jena Model.
-     *
-     * @param subject     the iri subject.
-     * @param predicate   the iri predicate.
-     * @param object      the iri object.
-     * @param xsdDatatype the XSDDatatype of the Literal
-     * @return Statement.
-     */
-    public static Statement toStatement(String subject, String predicate, Object object, XSDDatatype xsdDatatype) {
-        return createStatementBase(null, subject, predicate, object, null, xsdDatatype);
     }
 
     /**
@@ -2369,22 +2466,29 @@ public class Jena3Utilities {
      * @param xsdDatatype the XSDDatatype of the Literal
      * @return Statement.
      */
-    public static Statement toStatement(String subject, String predicate, Object object, String graphUri, XSDDatatype xsdDatatype) {
+    public static Statement toStatement(Object subject, Object predicate, Object object, String graphUri, XSDDatatype xsdDatatype) {
         return createStatementBase(null, subject, predicate, object, graphUri, xsdDatatype);
     }
 
+    public static Statement toStatement(Object triple) {
+        return createStatementBase(null, triple, null, null, null, null);
+    }
+
     /**
      * Method utility: create statement form a jena Model.
      *
-     * @param subject     the iri subject.
-     * @param predicate   the iri predicate.
-     * @param object      the iri object.
-     * @param graphUri    the URI to the graph base of the ontology.
-     * @param xsdDatatype the XSDDatatype of the Literal
+     * @param subject   the iri subject.
+     * @param predicate the iri predicate.
+     * @param object    the iri object.
      * @return Statement.
      */
-    public static Statement toStatement(String subject, String predicate, Object object, String graphUri, String xsdDatatype) {
-        return createStatementBase(null, subject, predicate, object, graphUri, toXSDDatatype(xsdDatatype));
+    public static Statement toStatement(Object subject, Object predicate, Object object,XSDDatatype xsdDatatype) {
+        return createStatementBase(null, subject, predicate, object, null, xsdDatatype);
+    }
+
+
+    public static Statement toStatement(Model model, Object triple) {
+        return createStatementBase(model, triple, null, null, null, null);
     }
 
     /**
@@ -2421,55 +2525,6 @@ public class Jena3Utilities {
     }
 
     /**
-     * Method to convert a Jena Model to a Jena Ontology Model.
-     *
-     * @param model the Jena Base Model.
-     * @return the Jena Ontology Model.
-     */
-    public static OntModel toOntoModel(Model model) {
-        return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, model);
-    }
-
-    /**
-     * Method to convert a standard Jena Model to a Jena InfModel.
-     *
-     * @param model the Jena Model.
-     * @return the Jena InfModel.
-     */
-    public static InfModel toInfModel(Model model) {
-        Reasoner reasoner = ReasonerRegistry.getRDFSReasoner();
-        return ModelFactory.createInfModel(reasoner, model);
-    }
-    /**
-     * Method to convert a standard Jena Model to a Jena InfModel.
-     *
-     * @param model the Jena Model.
-     * @param reasoner the Jena Reasoner to use.
-     * @return the Jena InfModel.
-     */
-    public static InfModel toInfModel(Model model,Reasoner reasoner) {
-        //Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
-        return ModelFactory.createInfModel(reasoner, model);
-    }
-
-    /**
-     * Method to convert a dataset to a OntoModel, now you can add some rule to uor TDB Model.
-     *
-     * @param dataset   the DataSet Jena Object.
-     * @param OwlOrSWRL the Rules to add to the DataSet Jena Object.
-     * @return the Ontology Model.
-     */
-    public static OntModel toOntoModel(Dataset dataset, URL OwlOrSWRL) {
-        Model m = dataset.getDefaultModel(); //the TDB data
-        Model toto = ModelFactory.createDefaultModel();
-        toto.read(OwlOrSWRL.toString()); // the OWL & SWRL rules inside
-        Model union = ModelFactory.createUnion(m, toto); //Merging both
-        OntModelSpec spec = OntModelSpec.RDFS_MEM_TRANS_INF;
-        //return ModelFactory.createOntologyModel(PelletReasonerFactory.THE_SPEC ,union); // Use Pellet reasonner
-        return ModelFactory.createOntologyModel(spec, union); // Use Pellet reasonner
-    }
-
-    /**
      * Method to convert a Jena TripleMatch to the Jena Triple.
      *
      * @param statement the Statement Jena.
@@ -2488,8 +2543,8 @@ public class Jena3Utilities {
      * @param object    the Jena Graph Node Object of the triple.
      * @return the Jena Graph Triple Object setted with the content of the jena Graph Nodes.
      */
-    public Triple toTriple(Node subject, Node predicate, Node object) {
-        return new Triple(subject, predicate, object);
+    public Triple toTriple(Object subject, Object predicate, Object object) {
+        return new Triple(toNode(subject), toNode(predicate), toNode(object));
     }
 
     /**
@@ -2501,32 +2556,101 @@ public class Jena3Utilities {
      * @return the Jena Graph Node.
      */
     private static Node createNodeBase(Object resource, String lang, RDFDatatype rdfDatatype, Boolean xml){
-        if(lang != null && rdfDatatype != null){
-            return NodeFactory.createLiteral(String.valueOf(resource),lang,rdfDatatype);
-        }else if(rdfDatatype != null){
-            return NodeFactory.createLiteral(String.valueOf(resource),rdfDatatype);
-        }else if(lang != null && xml != null){
-            return NodeFactory.createLiteral(String.valueOf(resource),lang,xml);
-        }else {
-            if (resource instanceof Literal) {
-                return ((Literal) resource).asNode();
-            } else if (resource instanceof Resource) {
-                return ((Resource) resource).asNode();
-            } else if (resource instanceof RDFNode) {
-                return ((RDFNode) resource).asNode();
-            } else if (resource instanceof LiteralLabel) {
-                return NodeFactory.createLiteral((LiteralLabel) resource);
-            } else if (resource instanceof String) {
-                if (isIRI(resource)) {
-                    return NodeUtils.asNode(String.valueOf(resource));
-                } else if (StringUtilities.isURI(resource)) {
-                    return NodeFactory.createURI(String.valueOf(resource));
-                } else {
-                    return NodeFactory.createLiteral(String.valueOf(resource));
+        try {
+            if (resource == null) {
+                logger.warn("Try to create a Node from a 'NULL' value");
+                return null;
+            }
+            if (resource instanceof Node) {
+                return (Node) resource;
+            }
+            if (lang != null && rdfDatatype != null) {
+                return NodeFactory.createLiteral(String.valueOf(resource), lang, rdfDatatype);
+            } else if (rdfDatatype != null) {
+                return NodeFactory.createLiteral(String.valueOf(resource), rdfDatatype);
+            } else if (lang != null && xml != null) {
+                return NodeFactory.createLiteral(String.valueOf(resource), lang, xml);
+            } else if (lang != null) {
+                return NodeFactory.createLiteral(String.valueOf(resource), lang);
+            } else {
+                if (resource instanceof Literal) {
+                    return ((Literal) resource).asNode();
+                } else if (resource instanceof Resource) {
+                    return ((Resource) resource).asNode();
+                } else if (resource instanceof RDFNode) {
+                    return ((RDFNode) resource).asNode();
+                } else if (resource instanceof LiteralLabel) {
+                    return NodeFactory.createLiteral((LiteralLabel) resource);
+                } else if (resource instanceof virtuoso.sql.ExtendedString) {
+                    virtuoso.sql.ExtendedString vs = (virtuoso.sql.ExtendedString) resource;
+                    if (vs.getIriType() == virtuoso.sql.ExtendedString.IRI
+                            && (vs.getStrType() & 0x01) == 0x01) {
+                        if (vs.toString().indexOf("_:") == 0)
+                            return NodeFactory.createBlankNode(BlankNodeId.create(String.valueOf(vs)
+                                    .substring(2))); // _:
+                        else
+                            return NodeFactory.createURI(String.valueOf(vs));
+
+                    } else if (vs.getIriType() == virtuoso.sql.ExtendedString.BNODE) {
+                        return NodeFactory.createBlankNode(BlankNodeId.create(String.valueOf(vs).substring(9))); // nodeID://
+
+                    } else {
+                        return NodeFactory.createLiteral(String.valueOf(vs));
+                    }
+                } else if (resource instanceof virtuoso.sql.RdfBox) {
+                    virtuoso.sql.RdfBox rb = (virtuoso.sql.RdfBox) resource;
+                    String rb_type = rb.getType();
+                    if (rb_type != null) {
+                        return NodeFactory.createLiteral(String.valueOf(rb), rb.getLang(), toRDFDatatype(rb_type));
+                    } else {
+                        return NodeFactory.createLiteral(String.valueOf(rb), rb.getLang());
+                    }
+                } else if (resource instanceof java.lang.Integer) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDinteger));
+                } else if (resource instanceof java.lang.Short) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDinteger));
+                } else if (resource instanceof java.lang.Float) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDfloat));
+                } else if (resource instanceof java.lang.Double) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDdouble));
+                } else if (resource instanceof java.math.BigDecimal) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDdecimal));
+                } else if (resource instanceof java.sql.Blob) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDhexBinary));
+                } else if (resource instanceof java.sql.Date) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDdate));
+                } else if (resource instanceof java.sql.Timestamp) {
+               /* return NodeFactory.createLiteral(
+                        Timestamp2String((java.sql.Timestamp) resource), toRDFDatatype(XSDDatatype.XSDdateTime));*/
+                    return NodeFactory.createLiteral(
+                            Timestamp2String((java.sql.Timestamp) resource), toRDFDatatype(XSDDatatype.XSDdateTimeStamp));
+                } else if (resource instanceof java.sql.Time) {
+                    return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDdateTime));
+                } else if (resource instanceof String) {
+                    if (isIRI(resource)) {
+                        return NodeUtils.asNode(String.valueOf(resource));
+                    } else if (StringUtilities.isURI(resource) || StringUtilities.isURL(resource)) {
+                        return NodeFactory.createURI(String.valueOf(resource));
+                    } else if (StringUtilities.isDouble(resource)) {
+                        return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDdouble));
+                    } else if (StringUtilities.isFloat(resource)) {
+                        return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDfloat));
+                    } else if (StringUtilities.isInt(resource)) {
+                        return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDinteger));
+                    } else if (StringUtilities.isNumeric(resource)) {
+                        return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDinteger));
+                    } else {
+                        return NodeFactory.createLiteral(String.valueOf(resource), toRDFDatatype(XSDDatatype.XSDstring));
+                    }
+                }else{
+                    logger.error("The Node Datatype '" + resource.getClass().getName() + "' is not recognised");
+                    return null;
                 }
             }
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+            return null;
         }
-        return null;
     }
 
     public static Node toNode(Object resource,String lang,RDFDatatype rdfDatatype){
@@ -2645,11 +2769,6 @@ public class Jena3Utilities {
         return new DatasetImpl(toModel(graph));
     }
 
-
-    //////////////////////////////////////////////////////7
-    //Some method with the deprecated Graph package.
-    ////////////////////////////////////////////////////////77
-
     /**
      * Method to add a List of jena Graph triple to a Jena Graph Object.
      *
@@ -2683,38 +2802,38 @@ public class Jena3Utilities {
      * @return the Long execution time for evaluate the query.
      */
     public static Long getExecutionQueryTime(Query query, Model model) {
-        org.apache.jena.atlas.lib.Timer timer = new org.apache.jena.atlas.lib.Timer();
-        //Dataset ds = qexec.getDataset();
-        //Dataset ds = toDataset(model);
-        long calculate;
-        QueryExecution qexec = QueryExecutionFactory.create(query, model);
-        if (query.isSelectType()) {
-            timer.startTimer();
-            qexec.execSelect();
-            calculate = timer.endTimer();   // Time in milliseconds.
-        } else if (query.isConstructType()) {
-            timer.startTimer();
-            qexec.execConstruct();
-            calculate = timer.endTimer();   // Time in milliseconds.
-        } else if (query.isAskType()) {
-            timer.startTimer();
-            qexec.execAsk();
-            calculate = timer.endTimer();   // Time in milliseconds.
-        } else if (query.isDescribeType()) {
-            timer.startTimer();
-            qexec.execDescribe();
-            calculate = timer.endTimer();   // Time in milliseconds.
-        } else {
-            calculate = 0L;
+        try {
+            Timer timer = new Timer();
+            //Dataset ds = qexec.getDataset();
+            //Dataset ds = toDataset(model);
+            long calculate;
+            QueryExecution qexec = QueryExecutionFactory.create(query, model);
+            if (query.isSelectType()) {
+                timer.startTimer();
+                qexec.execSelect();
+                calculate = timer.endTimer();   // Time in milliseconds.
+            } else if (query.isConstructType()) {
+                timer.startTimer();
+                qexec.execConstruct();
+                calculate = timer.endTimer();   // Time in milliseconds.
+            } else if (query.isAskType()) {
+                timer.startTimer();
+                qexec.execAsk();
+                calculate = timer.endTimer();   // Time in milliseconds.
+            } else if (query.isDescribeType()) {
+                timer.startTimer();
+                qexec.execDescribe();
+                calculate = timer.endTimer();   // Time in milliseconds.
+            } else {
+                calculate = 0L;
+            }
+            logger.info("Query JENA Model result(s) in " + calculate + "ms.");
+            return calculate;
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+            return 0L;
         }
-        logger.info(" Query JENA Model result(s) in " + calculate + "ms.");
-        return calculate;
     }
-
-
-    //-----------------------------------------------------------------------
-    // IMPORT and EXPORT
-    //-----------------------------------------------------------------------
 
     /**
      * This Jena example re-uses named graphs stored in a TDB model as the imports in an ontology.
@@ -2744,6 +2863,60 @@ public class Jena3Utilities {
         return importingOntologyToModel(ds, model);
     }
 
+    //--------------------------------
+    //Ontology methods
+    //--------------------------------
+
+    /**
+     * Method to convert a Jena Model to a Jena Ontology Model.
+     *
+     * @param model the Jena Base Model.
+     * @return the Jena Ontology Model.
+     */
+    public static OntModel toOntoModel(Model model) {
+        return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, model);
+    }
+
+    /**
+     * Method to convert a standard Jena Model to a Jena InfModel.
+     *
+     * @param model the Jena Model.
+     * @return the Jena InfModel.
+     */
+    public static InfModel toInfModel(Model model) {
+        Reasoner reasoner = ReasonerRegistry.getRDFSReasoner();
+        return ModelFactory.createInfModel(reasoner, model);
+        //return ModelFactory.createRDFSModel(model);
+    }
+    /**
+     * Method to convert a standard Jena Model to a Jena InfModel.
+     *
+     * @param model the Jena Model.
+     * @param reasoner the Jena Reasoner to use.
+     * @return the Jena InfModel.
+     */
+    public static InfModel toInfModel(Model model,Reasoner reasoner) {
+        //Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
+        return ModelFactory.createInfModel(reasoner, model);
+    }
+
+    /**
+     * Method to convert a dataset to a OntoModel, now you can add some rule to uor TDB Model.
+     *
+     * @param dataset   the DataSet Jena Object.
+     * @param OwlOrSWRL the Rules to add to the DataSet Jena Object.
+     * @return the Ontology Model.
+     */
+    public static OntModel toOntoModel(Dataset dataset, URL OwlOrSWRL) {
+        Model m = dataset.getDefaultModel(); //the TDB data
+        Model toto = ModelFactory.createDefaultModel();
+        toto.read(OwlOrSWRL.toString()); // the OWL & SWRL rules inside
+        Model union = ModelFactory.createUnion(m, toto); //Merging both
+        OntModelSpec spec = OntModelSpec.RDFS_MEM_TRANS_INF;
+        //return ModelFactory.createOntologyModel(PelletReasonerFactory.THE_SPEC ,union); // Use Pellet reasonner
+        return ModelFactory.createOntologyModel(spec, union); // Use Pellet reasonner
+    }
+
     /**
      * Now we create an ontology model that imports ont1 and ont2, but arrange
      * that these are obtained from the TDB image.
@@ -2765,6 +2938,104 @@ public class Jena3Utilities {
         return om;
     }
 
+    /**
+     * Method to create a {@link DatatypeProperty}.
+     * @param ontModel the {@link OntModel}
+     * @param uriName the {@link Node} or {@link String} of the Resource.
+     * @param domain the {@link Object} tdomain reference to the Resource.
+     * @param xsd the {@link XSD} vocabulary used.
+     * @return the {@link DatatypeProperty}.
+     */
+    private static DatatypeProperty createDatatypePropertyBase(
+            OntModel ontModel,Object uriName,Object domain,XSD xsd){
+        try {
+            if (uriName == null) {
+                logger.warn("Try to create a DatatypeProperty from a 'NULL' value");
+                return null;
+            }
+            if (uriName instanceof DatatypeProperty) {
+                return (DatatypeProperty) uriName;
+            }
+            if (ontModel != null) {
+                DatatypeProperty dp = ontModel.createDatatypeProperty(String.valueOf(uriName));
+                dp.setDomain(toResource(domain));
+                dp.setRange(toResource(xsd));
+                dp.setRDFType(toResource(xsd));
+                return dp;
+            } else {
+                if (uriName instanceof Node && domain instanceof EnhGraph) {
+                    return new DatatypePropertyImpl(toNode(uriName), null);
+                } else {
+                    logger.error("The DatatypeProperty Datatype '" + uriName.getClass().getName() + "' is not recognised");
+                    return null;
+                }
+            }
+        }catch(Exception e){
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    public static String validateModel(Model model){
+        return validateModel(toInfModel(model));
+    }
+
+    /**
+     * Method Utility function that returns a String displays results of validation
+     * @param infModel the {@link InfModel} of Jena.
+     * @return the {@link String} with the result of the validation of the Model.
+     */
+    public static String validateModel(InfModel infModel){
+        // VALIDITY CHECK against RDFS
+        StringBuilder buf = new StringBuilder();
+        ValidityReport validity = infModel.validate();
+        if (validity.isValid()) {
+            buf.append("The Model is VALID!");
+        }else {
+            buf.append("Model has CONFLICTS.");
+            for (Iterator iter = validity.getReports(); iter.hasNext(); ) {
+                buf.append(" - ").append(iter.next());
+            }
+        }
+        return buf.toString();
+    }
+
+    /* link database */
+   /* public static IDBConnection connectDB(String DB_URL, String DB_USER, String DB_PASSWD, String DB_NAME) {
+        return new DBConnection(DB_URL, DB_USER, DB_PASSWD, DB_NAME);
+    }*/
+
+    /* Read ontology from filesystem and store it into database */
+    /*public static OntModel createDBModelFromFile(IDBConnection con, String name, String filePath) {
+        ModelMaker maker = ModelFactory.createModelRDBMaker(con);
+        Model base = maker.createModel(name);
+        OntModel newmodel = ModelFactory.createOntologyModel( getModelSpec(maker), base );
+        newmodel.read(filePath);
+        return newmodel;
+    }
+*/
+    /* Get ontology from database */
+   /* public static OntModel getModelFromDB(IDBConnection con, String name) {
+        ModelMaker maker = ModelFactory.createModelRDBMaker(con);
+        Model base = maker.getModel(name);
+        OntModel newmodel = 	ModelFactory.createOntologyModel( getModelSpec(maker), base);
+        return newmodel;
+    }*/
+
+    public static OntModelSpec getModelSpec(ModelMaker maker) {
+        OntModelSpec spec = new OntModelSpec(OntModelSpec.OWL_MEM);
+        spec.setImportModelMaker(maker);
+        return spec;
+    }
+
+    public static List<String> simpleReadOntology(OntModel model) {
+        List<String> list = new ArrayList<>();
+        for (Iterator i = model.listClasses(); i.hasNext();) {
+            OntClass c = (OntClass) i.next();
+            list.add(c.getLocalName());
+        }
+        return list;
+    }
 
     //--------------------------------
     //Utility private methods
@@ -2779,9 +3050,8 @@ public class Jena3Utilities {
      */
     private static Boolean isIRI(Object uri) {
         try {
-            if (isString(uri)) {
-                IRIFactory factory = IRIFactory.uriImplementation();
-                IRI iri = factory.construct(String.valueOf(uri));
+            IRIFactory factory = IRIFactory.uriImplementation();
+            IRI iri = factory.construct(String.valueOf(uri));
            /* ArrayList<String> a = new ArrayList<>();
             a.add(iri.getScheme());
             a.add(iri.getRawUserinfo());
@@ -2789,8 +3059,7 @@ public class Jena3Utilities {
             a.add(iri.getRawPath());
             a.add(iri.getRawQuery());
             a.add(iri.getRawFragment());*/
-                return true;
-            } else return false;
+            return true;
         } catch (Exception e) {
             return false;
         }
@@ -2835,10 +3104,6 @@ public class Jena3Utilities {
         );
     }
 
-    private static boolean isString(Object uriResource) {
-        return (uriResource instanceof String);
-    }
-
     private static IRI toIri(Object uriResource) {
         return IRIFactory.uriImplementation().construct(String.valueOf(uriResource));
     }
@@ -2846,11 +3111,108 @@ public class Jena3Utilities {
     /**
      * Method to Returns true if the parameter is null or empty. false otherwise.
      *
-     * @param text string text.
-     * @return true if the parameter is null or empty.
+     * @param text the {@link String} text.
+     * @return the {@link Boolean} is true if the parameter is null or empty.
      */
     private static boolean isNullOrEmpty(String text) {
         return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty();
+    }
+
+    /**
+     * Method to corrected replace all '\' for a Node URI String
+     * @param s the {@link String} of the URI of the Node.
+     * @return the {@link String} with escape correct.
+     */
+    private static String escapeString(String s) {
+        StringBuilder buf = new StringBuilder(s.length());
+        int i = 0;
+        char ch;
+        while (i < s.length()) {
+            ch = s.charAt(i++);
+            if (ch == '\'')
+                buf.append('\\');
+            buf.append(ch);
+        }
+        return buf.toString();
+    }
+
+    /**
+     * Method to convert a {@link java.sql.Timestamp} to a {@link String}
+     * @param v the {@link java.sql.Timestamp}.
+     * @return the {@link String}
+     */
+    private static String Timestamp2String(java.sql.Timestamp v) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTime(v);
+
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH) + 1;
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        int minute = cal.get(Calendar.MINUTE);
+        int second = cal.get(Calendar.SECOND);
+        int nanos = v.getNanos();
+
+        String yearS,monthS,dayS,hourS,minuteS,secondS,nanosS;
+        String zeros = "000000000";
+        String yearZeros = "0000";
+        StringBuffer timestampBuf;
+
+        if (year < 1000) {
+            yearS = "" + year;
+            yearS = yearZeros.substring(0, (4 - yearS.length())) + yearS;
+        } else {
+            yearS = "" + year;
+        }
+
+        if (month < 10) monthS = "0" + month;
+        else monthS = Integer.toString(month);
+
+        if (day < 10) dayS = "0" + day;
+        else dayS = Integer.toString(day);
+
+        if (hour < 10) hourS = "0" + hour;
+        else hourS = Integer.toString(hour);
+
+        if (minute < 10) minuteS = "0" + minute;
+        else minuteS = Integer.toString(minute);
+
+        if (second < 10) secondS = "0" + second;
+        else secondS = Integer.toString(second);
+
+        if (nanos == 0) {
+            nanosS = "0";
+        } else {
+            nanosS = Integer.toString(nanos);
+
+            // Add leading 0
+            nanosS = zeros.substring(0, (9 - nanosS.length())) + nanosS;
+
+            // Truncate trailing 0
+            char[] nanosChar = new char[nanosS.length()];
+            nanosS.getChars(0, nanosS.length(), nanosChar, 0);
+            int truncIndex = 8;
+            while (nanosChar[truncIndex] == '0') {
+                truncIndex--;
+            }
+            nanosS = new String(nanosChar, 0, truncIndex + 1);
+        }
+
+        timestampBuf = new StringBuffer();
+        timestampBuf.append(yearS);
+        timestampBuf.append("-");
+        timestampBuf.append(monthS);
+        timestampBuf.append("-");
+        timestampBuf.append(dayS);
+        timestampBuf.append("T");
+        timestampBuf.append(hourS);
+        timestampBuf.append(":");
+        timestampBuf.append(minuteS);
+        timestampBuf.append(":");
+        timestampBuf.append(secondS);
+        timestampBuf.append(".");
+        timestampBuf.append(nanosS);
+        return (timestampBuf.toString());
     }
 
     /***********************************/
@@ -2888,6 +3250,65 @@ public class Jena3Utilities {
             return m;
         }
     } // LocalTDBModelGetter
+
+    /**
+     * Method to convert a Ontolotgy file .rdf,.owl to a Vocabolary Jena.
+     * e.g. -i <input> [-a <namespaceURI>] [-o <output file>] [-c <config uri>] [-e <encoding>]...
+     * @param inputOntology the {@link File} input of the Ontology.
+     * @param baseUri the {@link String} base uri.
+     * @param outputJenaVocabulary the {@link File} output Vocabulary class ojava of API Jena.
+     * @param alternativeConfig the {@link File} with an alternative configuration.
+     */
+    public static void invokeSchemaGen(
+            File inputOntology,String baseUri,File outputJenaVocabulary,File alternativeConfig){
+        //schemagen.SchemagenUtils.urlCheck("");
+        String[] arrayParams = new String[]{
+                "-i",inputOntology.getAbsolutePath(),
+                "-a",baseUri,
+                "-o",outputJenaVocabulary.getAbsolutePath(),
+                "-c",alternativeConfig.getAbsolutePath(),
+                "-e",StringUtilities.UTF_8.toString()
+        };
+        schemagen.main(arrayParams);
+    }
+
+    /*public static Collection<String[]> evalutateQueries(String manifestURI,File rqFile, String... excludes)
+            throws URISyntaxException, IOException {
+
+        Set<String> toExclude = new HashSet(Arrays.asList(excludes));
+        FileManager fm = FileManager.get();
+        Model manifest = fm.loadModel(manifestURI);
+        Query manifestExtract = QueryFactory.read(rqFile.toURI().toURL().toString());
+        Collection<String[]> tests = new ArrayList<>();
+        QueryExecution qe = QueryExecutionFactory.create(manifestExtract, manifest);
+        ResultSet results = qe.execSelect();
+
+        if (!results.hasNext()) {
+            throw new RuntimeException("No results");
+        }
+        while (results.hasNext()) {
+
+            QuerySolution soln = results.next();
+            String[] params = new String[6];
+            params[0] = soln.getResource("test").getURI();
+            params[1] = soln.getLiteral("title").getString();
+            params[2] = soln.getLiteral("purpose").getString();
+            params[3] = soln.getResource("input").getURI();
+            params[4] = soln.getResource("query").getURI();
+            // getBoolean not working??
+            //boolean expected = (soln.contains("expect")) ?
+            //    soln.getLiteral("expect").getBoolean() : true;
+            params[5] = soln.contains("expect") ? soln.getLiteral("expect").getLexicalForm() : "true";
+            if (toExclude.contains(params[0]) ||
+                    toExclude.contains(params[3]) ||
+                    toExclude.contains(params[4]) ) {
+                logger.warn("Skipping test <" + params[0] + ">");
+                continue;
+            }
+            tests.add(params);
+        }
+        return tests;
+    }*/
 
 
 }//end of the class JenaKit

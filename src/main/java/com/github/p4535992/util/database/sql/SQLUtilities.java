@@ -1,6 +1,6 @@
 package com.github.p4535992.util.database.sql;
 
-import com.github.p4535992.util.database.jooq.SQLJooqKit2;
+import com.github.p4535992.util.database.jooq.JOOQUtilities;
 import com.github.p4535992.util.database.sql.datasource.DatabaseContextFactory;
 import com.github.p4535992.util.database.sql.datasource.LocalContext;
 import com.github.p4535992.util.database.sql.datasource.LocalContextFactory;
@@ -883,7 +883,7 @@ public class SQLUtilities {
             logger.error("Can't load the CSV because we need a first line of headers instead the columns is NULL");
             return false;
         }
-        SQLJooqKit2.setConnection(connection);
+        JOOQUtilities.setConnection(connection);
         try {
             CSVReader reader = new CSVReader(new FileReader(fileCSV), separator);
             //String insertQuery =
@@ -898,7 +898,7 @@ public class SQLUtilities {
                         values[i] = rowData[i];
                         types[i] = SQLUtilities.convertStringToSQLTypes(values[i]);
                     }
-                    insertQuery = SQLJooqKit2.insert(nameTable, columns,values,types);
+                    insertQuery = JOOQUtilities.insert(nameTable, columns,values,types);
                     SQLUtilities.executeSQL(insertQuery,connection);
                 }
             }

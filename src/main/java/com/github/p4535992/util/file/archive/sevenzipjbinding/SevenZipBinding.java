@@ -34,7 +34,12 @@ public class SevenZipBinding extends ArchiveUtilities{
     private File outputDirectoryFile;
     private boolean test;
     private String filterRegex;
+
     private static List<File> filesListInZip = new ArrayList<>();
+
+    public static List<File> getFilesListInZip() {
+        return filesListInZip;
+    }
 
     /**
      *
@@ -84,7 +89,15 @@ public class SevenZipBinding extends ArchiveUtilities{
         }
     }
 
-    public void extractArchive() throws ExtractionException {
+    public Boolean extractArchive() throws ExtractionException {
+        return extractArchive(archive);
+    }
+
+    public Boolean extractArchive(String fileArchivePath) throws ExtractionException {
+        return extractArchive(new File(fileArchivePath));
+    }
+
+    public Boolean extractArchive(File archive) throws ExtractionException {
         RandomAccessFile randomAccessFile;
         boolean ok = false;
         try {
@@ -93,7 +106,8 @@ public class SevenZipBinding extends ArchiveUtilities{
             throw new ExtractionException("File not found", e);
         }
         try {
-            extractArchive(randomAccessFile);
+            if(outputDirectoryFile == null)outputDirectoryFile = new File(".");
+            extractArchive(randomAccessFile,outputDirectoryFile,archive.getAbsolutePath());
             ok = true;
         } finally {
             try {
@@ -104,15 +118,16 @@ public class SevenZipBinding extends ArchiveUtilities{
                 }
             }
         }
+        return true;
     }
 
-    public void extractArchive(String archive, String outputDirectoryFile) throws IOException {
+   /* public void extractArchive(String archive, String outputDirectoryFile,boolean test) throws IOException {
         IInArchive inArchive = null;
         RandomAccessFile randomAccessFile = null;
         try {
             randomAccessFile = new RandomAccessFile(new File(archive), "r");
             inArchive = SevenZip.openInArchive(null, new RandomAccessFileInStream(randomAccessFile));
-            inArchive.extract(null, false, new ExtractCallback(inArchive, outputDirectoryFile));
+            inArchive.extract(null, test, new ExtractCallback(inArchive, outputDirectoryFile));
         } finally {
             if (inArchive != null) {
                 inArchive.close();
@@ -121,19 +136,18 @@ public class SevenZipBinding extends ArchiveUtilities{
                 randomAccessFile.close();
             }
         }
-    }
+    }*/
 
     private String filterToRegex(String filter) {
         if (filter == null) return null;
         return "\\Q" + filter.replace("*", "\\E.*\\Q") + "\\E";
     }
 
-    private void extractArchive(RandomAccessFile file)throws ExtractionException {
+    private Boolean extractArchive(RandomAccessFile file,File outputDirectoryFile,String archive)throws ExtractionException {
         IInArchive inArchive;
         boolean ok = false;
         try {
-            inArchive = SevenZip.openInArchive(null,
-                    new RandomAccessFileInStream(file));
+            inArchive = SevenZip.openInArchive(null,new RandomAccessFileInStream(file));
         } catch (SevenZipException e) {
             throw new ExtractionException("Error opening archive", e);
         }
@@ -164,10 +178,11 @@ public class SevenZipBinding extends ArchiveUtilities{
                 inArchive.close();
             } catch (SevenZipException e) {
                 if (ok) {
-                    throw new ExtractionException("Error closing archive", e);
+                    logger.error("Error closing archive", e);
                 }
             }
         }
+        return true;
     }
 
     private int[] filterIds(IInArchive inArchive, String regex) throws SevenZipException {
@@ -230,7 +245,7 @@ public class SevenZipBinding extends ArchiveUtilities{
      * @param path the Path object of the Archive file to extract on the specific folder.
      * @return if true all the operations are succesfull.
      */
-    public boolean extract(Path path) {
+    public boolean extracArchive(Path path) throws ExtractionException {
         logger.info("Extracting:"+ path);
         try {
             long time = System.currentTimeMillis();
@@ -238,33 +253,48 @@ public class SevenZipBinding extends ArchiveUtilities{
             try (RandomAccessFile randomAccessFile = new RandomAccessFile(path.toFile(), "r"); 
                     IInArchive inArchive = SevenZip.openInArchive(null, 
                             new RandomAccessFileInStream(randomAccessFile))) {
-                for (ISimpleInArchiveItem item : inArchive.getSimpleInterface().getArchiveItems()) {
-                    //final ArchiveFile file = new ArchiveFile();
-                    //file.setPath(Paths.get(item.getPath()));
-                    Path pathArchiveFile = Paths.get(item.getPath());
-                    
-                    if (item.isFolder()) {
-                        logger.debug("{}", item.getPath());
-                        filesListInZip.add(pathArchiveFile.toFile());
-                        continue;
-                    }
-                    ExtractOperationResult result;
-                    final byte[] outputData = new byte[item.getSize().intValue()];
-                    result = item.extractSlow(new ISequentialOutStream() {
-                        int offset = 0;
-                        @Override
-                        public int write(byte[] data) throws SevenZipException {
-                            System.arraycopy(data, 0, outputData, offset, data.length);
-                            offset += data.length;
-                            return data.length;
+                try {
+                    //METHOD 1
+                    //inArchive.extract(null, false, new ExtractCallback(inArchive, outputDirectoryFile));
+
+                    //METHOD 2
+                    for (ISimpleInArchiveItem item : inArchive.getSimpleInterface().getArchiveItems()) {
+                        //final ArchiveFile file = new ArchiveFile();
+                        //file.setPath(Paths.get(item.getPath()));
+                        Path pathArchiveFile = Paths.get(item.getPath());
+
+                        if (item.isFolder()) {
+                            logger.debug("{}", item.getPath());
+                            filesListInZip.add(pathArchiveFile.toFile());
+                            continue;
                         }
-                    });
-                    FileUtilities.toPath(outputData,pathArchiveFile);
-                    if (result != ExtractOperationResult.OK) return false;
-                    filesListInZip.add(pathArchiveFile.toFile());
+                        ExtractOperationResult result;
+                        final byte[] outputData = new byte[item.getSize().intValue()];
+                        result = item.extractSlow(new ISequentialOutStream() {
+                            int offset = 0;
+
+                            @Override
+                            public int write(byte[] data) throws SevenZipException {
+                                System.arraycopy(data, 0, outputData, offset, data.length);
+                                offset += data.length;
+                                return data.length;
+                            }
+                        });
+                        pathArchiveFile = FileUtilities.toPath(outputData, pathArchiveFile);
+                        if (result != ExtractOperationResult.OK) return false;
+                        if (pathArchiveFile == null) return false;
+                        filesListInZip.add(pathArchiveFile.toFile());
+                    }
+                }finally{
+                    if (inArchive != null) {
+                        inArchive.close();
+                    }
+                    randomAccessFile.close();
                 }
+            } catch (FileNotFoundException e) {
+                throw new ExtractionException("File not found", e);
             }
-            logger.info("Time to extract '"+path+"' to memory: "+(System.currentTimeMillis() - time)+"ms");
+            logger.info("Time to extract '" + path + "' to memory: " + (System.currentTimeMillis() - time) + "ms");
             return true;
         } catch (IOException  e) {
             logger.error("Extracting archive: "+ path, e);

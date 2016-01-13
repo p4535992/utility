@@ -24,7 +24,10 @@ import java.util.*;
  * href: http://www.java2s.com/Tutorial/Java/0140__Collections/UseXMLwithProperties.htm
  */
 @SuppressWarnings("unused")
-public class PropertiesKit extends PropertyPlaceholderConfigurer {
+public class PropertiesUtilities extends PropertyPlaceholderConfigurer {
+
+    private static final org.slf4j.Logger logger =
+            org.slf4j.LoggerFactory.getLogger(PropertiesUtilities.class);
 
     private static Map<String,String> propertiesMap;
     private static final HashMap<Class<?>, HashMap<String,PropertyDescriptor>> descriptorCache = new HashMap<>();
@@ -95,7 +98,7 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
                 throw new FileNotFoundException("property file '" + nameFile + "' not found in the classpath");
             }
         } catch (Exception e) {
-            System.out.println("Exception: " + e);
+            logger.error(e.getMessage(),e);
         } finally {
             if (inputStream != null) {
                 inputStream.close();
@@ -153,20 +156,21 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param bean the Bean Object.
      * @param property the String name of the Property.
      * @return the Property of the Bean.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
      */
-    public static Object getProperty(Object bean, String property)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        PropertyDescriptor descriptor = getPropertyDescriptor(bean.getClass(), property);
-        if (descriptor == null)
-            throw new NoSuchMethodException("Cannot find property " + bean.getClass().getName() + "." + property);
-        Method method = descriptor.getReadMethod();
-        if (method == null)
-            throw new NoSuchMethodException("Cannot find getter for " + bean.getClass().getName() + "." + property);
-        //return method.invoke(bean, null);
-        return method.invoke(bean, new Object[]{null});
+    public static Object getProperty(Object bean, String property){
+        try {
+            PropertyDescriptor descriptor = getPropertyDescriptor(bean.getClass(), property);
+            if (descriptor == null)
+                throw new NoSuchMethodException("Cannot find property " + bean.getClass().getName() + "." + property);
+            Method method = descriptor.getReadMethod();
+            if (method == null)
+                throw new NoSuchMethodException("Cannot find getter for " + bean.getClass().getName() + "." + property);
+            //return method.invoke(bean, null);
+            return method.invoke(bean, new Object[]{null});
+        }catch(NoSuchMethodException|IllegalAccessException|InvocationTargetException e){
+            logger.error(e.getMessage(),e);
+            return new Object();
+        }
     }
 
     /**
@@ -174,12 +178,8 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param bean the Bean Object.
      * @param property the String name of the Property.
      * @return the Property of the Bean.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
      */
-    public static Object getNestedProperty(Object bean, String property)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public static Object getNestedProperty(Object bean, String property){
         if (property.indexOf('.') > 0) {
             String[] path = property.split("\\.");
             for (int i = 0; i < path.length && bean != null; i++) {
@@ -196,20 +196,20 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param bean the Bean Object.
      * @param property the String name of the Property.
      * @param value the new Object Value of the property.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
      */
-    public static void setProperty(Object bean, String property, Object value)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        PropertyDescriptor descriptor = getPropertyDescriptor(bean.getClass(), property);
-        if (descriptor == null)
-            throw new NoSuchMethodException("Cannot find property " + bean.getClass().getName() + "." + property);
-        Method method = descriptor.getWriteMethod();
-        if (method == null)
-            throw new NoSuchMethodException("Cannot find setter for " + bean.getClass().getName() + "." + property);
-        //method.invoke(bean, new Object[]{ value });
-        method.invoke(bean, value);
+    public static void setProperty(Object bean, String property, Object value) {
+        try {
+            PropertyDescriptor descriptor = getPropertyDescriptor(bean.getClass(), property);
+            if (descriptor == null)
+                throw new NoSuchMethodException("Cannot find property " + bean.getClass().getName() + "." + property);
+            Method method = descriptor.getWriteMethod();
+            if (method == null)
+                throw new NoSuchMethodException("Cannot find setter for " + bean.getClass().getName() + "." + property);
+            //method.invoke(bean, new Object[]{ value });
+            method.invoke(bean, value);
+        }catch(NoSuchMethodException|IllegalAccessException|InvocationTargetException e){
+            logger.error(e.getMessage(),e);
+        }
     }
 
     /**
@@ -219,23 +219,23 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param bean the Bean Object.
      * @param path String path package to the Class of the Bean.
      * @param value the new Object Value of the property.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
      */
-    private static void setNestedPropertyWithCreate(Object bean, String[] path, int start, Object value)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    private static void setNestedPropertyWithCreate(Object bean, String[] path, int start, Object value){
         for (int i = start; i < path.length - 1; i++) {
-            Object object = getProperty(bean, path[i]);
-            if (object == null) {
-                PropertyDescriptor descr =
-                        getPropertyDescriptor(bean.getClass(), path[i]);
-                object = descr.getPropertyType().newInstance();
-                setNestedPropertyWithCreate(object, path, i + 1, value);
-                setProperty(bean, path[i], object);
-                return;
+            try {
+                Object object = getProperty(bean, path[i]);
+                if (object == null) {
+                    PropertyDescriptor descr =
+                            getPropertyDescriptor(bean.getClass(), path[i]);
+                    object = descr.getPropertyType().newInstance();
+                    setNestedPropertyWithCreate(object, path, i + 1, value);
+                    setProperty(bean, path[i], object);
+                    return;
+                }
+                bean = object;
+            }catch(IllegalAccessException|InstantiationException e){
+                logger.error(e.getMessage(),e);
             }
-            bean = object;
         }
         setProperty(bean, path[path.length - 1], value);
     }
@@ -245,13 +245,8 @@ public class PropertiesKit extends PropertyPlaceholderConfigurer {
      * @param bean the Bean Object.
      * @param property the String name of the Property.
      * @param value the new Object Value of the property.
-     * @throws NoSuchMethodException throw if any error is occurred.
-     * @throws IllegalAccessException throw if any error is occurred.
-     * @throws InvocationTargetException throw if any error is occurred.
-     * @throws java.lang.InstantiationException throw if any error is occurred.
      */
-    public static void setNestedProperty(Object bean, String property, Object value)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public static void setNestedProperty(Object bean, String property, Object value){
         int lastDot = property.lastIndexOf('.');
         if (lastDot > 0) {
             setNestedPropertyWithCreate(bean, property.split("\\."), 0, value);

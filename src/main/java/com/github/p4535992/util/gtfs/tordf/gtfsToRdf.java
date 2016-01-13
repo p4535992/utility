@@ -4,6 +4,7 @@ import com.github.p4535992.util.file.archive.ArchiveUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.gtfs.tordf.helper.TransformerPicker;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
+import com.github.p4535992.util.log.logback.LogBackUtil;
 import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
 import com.github.p4535992.util.string.StringUtilities;
 import org.apache.jena.rdf.model.Model;
@@ -80,14 +81,14 @@ public class gtfsToRdf {
     }
 
 
-    /*public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
+        LogBackUtil.console();
         File zip = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.zip");
 
         File output = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.n3");
 
         gtfsToRdf.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output,"n-triples");
     }
-*/
 
 
 

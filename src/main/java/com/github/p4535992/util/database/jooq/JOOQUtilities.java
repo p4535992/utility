@@ -21,28 +21,28 @@ import java.util.Map;
  * @version 2015-09-30.
  */
 @SuppressWarnings("unused")
-public class SQLJooqKit2 {
+public class JOOQUtilities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(SQLJooqKit2.class);
+            org.slf4j.LoggerFactory.getLogger(JOOQUtilities.class);
 
     private static DSLContext dslContext;
-    private static SQLJooqKit2 instance = null;
+    private static JOOQUtilities instance = null;
     private static SQLDialect sqlDialect;
     private static Connection connection;
     private static ConnectionProvider connProvider;
     private static ConnectionProvider connSpringProvider;
 
-    protected SQLJooqKit2(){}
+    protected JOOQUtilities(){}
 
-    public static SQLJooqKit2 getIstance(){
+    public static JOOQUtilities getIstance(){
         if(instance == null){
-            instance = new SQLJooqKit2();
+            instance = new JOOQUtilities();
         }
         return instance;
     }
-    public static SQLJooqKit2 getNewIstance(){
-        return new SQLJooqKit2();
+    public static JOOQUtilities getNewIstance(){
+        return new JOOQUtilities();
     }
 
     public static DSLContext getDslContext() {
@@ -50,7 +50,7 @@ public class SQLJooqKit2 {
     }
 
     public static void setDslContext(DSLContext dslContext) {
-        SQLJooqKit2.dslContext = dslContext;
+        JOOQUtilities.dslContext = dslContext;
     }
 
     public static SQLDialect getSqlDialect() {
@@ -58,7 +58,7 @@ public class SQLJooqKit2 {
     }
 
     public static void setSqlDialect(SQLDialect sqlDialect) {
-        SQLJooqKit2.sqlDialect = sqlDialect;
+        JOOQUtilities.sqlDialect = sqlDialect;
     }
 
     public static Connection getConnection() {

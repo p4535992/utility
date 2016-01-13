@@ -1,0 +1,24 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rep: <http://www.openrdf.org/config/repository#>.
+@prefix sr: <http://www.openrdf.org/config/repository/sail#>.
+@prefix sail: <http://www.openrdf.org/config/sail#>.
+@prefix owlim: <http://www.ontotext.com/trree/owlim#>.
+[] a rep:Repository ;
+    rep:repositoryID "owlim" ;
+    rdfs:label "OWLIM Getting Started" ;
+    rep:repositoryImpl [
+    rep:repositoryType "openrdf:SailRepository" ;
+    sr:sailImpl [
+        sail:sailType "swiftowlim:Sail" ;
+        owlim:ruleset "owl-horst-optimized" ;
+        owlim:noPersist "true" ;
+        owlim:storage-folder "storage" ;
+        owlim:base-URL "http://example.org/owlim#" ;
+        owlim:new-triples-file "new-triples-file.nt" ;
+        owlim:entity-index-size "200000" ;
+        owlim:jobsize "200" ;
+        owlim:repository-type "in-memory-repository" ;
+        owlim:imports "./ontology/owl.rdfs " ;
+        owlim:defaultNS " http://example.org/owlim#" .
+    ]
+].

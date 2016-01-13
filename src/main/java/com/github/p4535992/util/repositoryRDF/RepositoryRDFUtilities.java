@@ -2,7 +2,6 @@ package com.github.p4535992.util.repositoryRDF;
 
 import com.github.p4535992.util.repositoryRDF.cumulusrdf.CumulusRDFUtilities;
 import com.github.p4535992.util.repositoryRDF.sesame.Sesame2Utilities;
-import org.apache.jena.graph.Triple;
 import org.openrdf.model.*;
 import org.openrdf.query.Operation;
 import org.openrdf.query.Query;
@@ -68,8 +67,8 @@ public class RepositoryRDFUtilities {
         return s.connectToInferencingRepository(directory, nameRepositoryId);
     }
 
-    public Repository connectToSesameMemory(boolean inferencing) {
-        return s.connectToMemoryRepository(inferencing);
+    public Repository connectToSesameMemory(File dataDir,boolean inferencing) {
+        return s.connectToMemoryRepository(dataDir,inferencing);
     }
 
     public Repository connectToSesameMemory(String directory,String nameRepositoryId) {
@@ -120,31 +119,23 @@ public class RepositoryRDFUtilities {
         s.closeRepository();
     }
 
-    public void closeSesameRepository(String filePath) {
-        s.convertFileNameToRDFFormat(filePath);
-    }
-
-    public void convertTo(String filePath,String inputFormatName,String outputFormatName) {
-        s.convertFileNameToRDFFormat(filePath, inputFormatName, outputFormatName);
-    }
-
-    public void convertTo(String filePath) {
-        s.convertFileNameToRDFFormat(filePath);
-    }
+    /*public void convertTo(String filePath,String inputFormatName,String outputFormatName) {
+        s.toRDFFormat(filePath, inputFormatName, outputFormatName);
+    }*/
 
     public QueryLanguage toLanguage(String queryString) {
         return s.checkLanguageOfQuery(queryString);
     }
 
     public Operation toOperation(Query queryString) {
-        return s.convertQueryToOperation(queryString);
+        return s.toOperation(queryString);
     }
 
     public Operation toOperation(String queryString) {
-        return s.convertQueryToOperation(queryString);
+        return s.toOperation(queryString);
     }
 
-    public void addToSesame(Triple triple, String context) {
+   /* public void addToSesame(Triple triple, String context) {
         s.addJenaTripleToSesameRepository(triple, s.createResource(context));
     }
 
@@ -154,30 +145,30 @@ public class RepositoryRDFUtilities {
 
     public void removeFromSesame(Triple triple, String context){
         s.removeJenaTripleFromSesameRepository(triple, s.createResource(context));
-    }
+    }*/
 
     public List<String> getSesameRepositories(){
         return s.getRepositories();
     }
 
     public Model toSesameModel(Repository repository,String queryGraph){
-       return s.convertGraphQueryEvalutationToSesameModel(repository,queryGraph);
+       return s.toModel(repository,queryGraph);
     }
 
     public Model toSesameModel(Repository repository){
-        return s.convertRepositoryToModel(repository);
+        return s.toModel(repository);
     }
 
     public Model toSesameModel(Repository repository,int limit){
-        return s.convertRepositoryToModel(repository,limit);
+        return s.toModel(repository,limit);
     }
 
     public List<String[]> toSesameTupleResult(String queryString,String[] bindingName){
-        return s.TupleQueryEvalutation(queryString, bindingName);
+        return s.evalutationTupleQuery(queryString, bindingName);
     }
 
     public List<Statement> toSesameGraphResult(String queryString){
-        return s.GraphQueryEvalutation(queryString);
+        return s.evalutationGraphQuery(queryString);
     }
 
     public void disconnectSesameRepository(){
@@ -192,9 +183,9 @@ public class RepositoryRDFUtilities {
 
     public void execUpdateOnSesame(String query){ s.execSparqlUpdateOnRepository(query);}
 
-    public void execQueryOnSesame(String query){ s.executeQuerySPARQLFromString(query);}
+    public void execQueryOnSesame(String query){ s.execSparqlFromStringOnRepository(query);}
 
-    public void execQueryOnSesame(File fileQueries){s.executeQuerySPARQLFromFile(fileQueries);}
+    public void execQueryOnSesame(File fileQueries){s.execSparqlFromFileOnRepository(fileQueries);}
 
     public RepositoryConnection openSesameRepository(String repositorId){ return s.openRepository(repositorId);}
 
@@ -240,7 +231,8 @@ public class RepositoryRDFUtilities {
         return s.createRepositoryManagerLocal(baseDirectory);
     }
 
-    public boolean createRepository(String pathToTheConfigFile){return s.createRepository(pathToTheConfigFile);}
+    public boolean createRepository(String pathToTheConfigFile){
+        return s.createRepository(pathToTheConfigFile);}
 
     public RepositoryConnectionWrapper createRepositoryConnectionWrapper(
             Repository repository,RepositoryConnection repositoryConnection){
@@ -261,23 +253,23 @@ public class RepositoryRDFUtilities {
     }
 
     public Statement createStatement(Object subject,Object predicate,Object objectOrUri,Object context){
-        return s.createStatement(subject,predicate,objectOrUri,context);
+        return s.toStatement(subject,predicate,objectOrUri,context);
     }
 
     public Literal createLiteral(Object literalObject){
-      return s.createLiteral(literalObject);
+      return s.toLiteral(literalObject);
     }
 
     public Resource createResource(Object uriOrString){
-        return s.createResource(uriOrString);
+        return s.toResource(uriOrString);
     }
 
     public Value createValue(Object resourceOrLiteral){
-       return s.createValue(resourceOrLiteral);
+       return s.toValue(resourceOrLiteral);
     }
 
     public URI createURI(Object uri){
-       return s.createURI(uri);
+       return s.toURI(uri);
     }
 
     public Long numberOfExplicitStatements(RepositoryConnection repConn){
@@ -301,7 +293,7 @@ public class RepositoryRDFUtilities {
     }
 
     public QueryLanguage toQueryLanguage(String queryLanguage){
-        return s.stringToQueryLanguage(queryLanguage);
+        return s.toQueryLanguage(queryLanguage);
     }
 
     public QueryLanguage checkQueryLanguage(String queryString){

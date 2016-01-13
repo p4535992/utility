@@ -854,8 +854,22 @@ public class HttpUtilities {
     public static void waiter() throws InterruptedException{
         Random generator = new Random();
         long stopRndm = (long) (generator.nextFloat() * 1000);
-        stopExecution(stopRndm);
+        //stopExecution(stopRndm);
+        long t0,t1;
+        t0 = System.currentTimeMillis();
+        do{t1=System.currentTimeMillis();}
+        while (t1-t0<stopRndm);
         Thread.sleep((generator.nextInt(5)*1000 + generator.nextInt(6)*1000));
+        //Thread.sleep((generator.nextInt(6)+5)*1000);
+    }
+
+    public static void waiter(long timeWait) throws InterruptedException{
+        //stopExecution(timeWait);
+        long t0,t1;
+        t0 = System.currentTimeMillis();
+        do{t1=System.currentTimeMillis();}
+        while (t1-t0<timeWait);
+        Thread.sleep(timeWait);
         //Thread.sleep((generator.nextInt(6)+5)*1000);
     }
 
@@ -863,12 +877,12 @@ public class HttpUtilities {
      * Method for set a waiting from a request to another.
      * @param millisec input in milliseconds.
      */
-    public static void stopExecution(long millisec){
+    /*private static void stopExecution(long millisec){
         long t0,t1;
         t0 = System.currentTimeMillis();
         do{t1=System.currentTimeMillis();}
         while (t1-t0<millisec);
-    }
+    }*/
 
     /**
      * Method for read a resource allocated on a Reader object.

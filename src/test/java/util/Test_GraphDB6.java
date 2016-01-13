@@ -81,7 +81,7 @@ public class Test_GraphDB6 {
 					null,
 					null);*/
 			//s.evaluateQueries("queryFile");
-			s.executeQuerySPARQLFromString(queryString);
+			s.execSparqlFromStringOnRepository(queryString);
 			// Demonstrate the basic operations on a repository
 			/*
 			gettingStartedApplication.loadFiles();

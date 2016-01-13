@@ -48,7 +48,7 @@
             <id>cumulusrdf-repo</id>
             <url>http://cumulusrdf.googlecode.com/svn/repository</url>
         </repository>
-        <!-- Jena-Virtuosos Driver-->
+        <!-- Jena-Virtuoso Driver-->
         <repository>
             <id>maven.aksw.internal</id>
             <name>University Leipzig, AKSW Maven2 Repository</name>
@@ -59,7 +59,19 @@
             <name>University Leipzig, AKSW Maven2 Repository</name>
             <url>http://maven.aksw.org/archiva/repository/snapshots</url>
         </repository>
+        <!-- Sesame-Virtuoso Driver -->
+        <repository>
+            <id>ldstack</id>
+            <url>http://mvn.linkeddata.org/content/groups/linkeddata.org/</url>
+        </repository>
+        <!-- Alternative repository for import dependency -->
+        <repository>
+            <id>fortytwo</id>
+            <name>fortytwo.net Maven repository</name>
+            <url>http://fortytwo.net/maven2</url>
+        </repository>
     </repositories>
+
 
     <properties>
         <!-- Generic properties -->
@@ -381,6 +393,7 @@
             <version>${com.fasterxml.jackson.core.version}</version>
         </dependency>
 
+
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -473,7 +486,7 @@
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-querybuilder</artifactId>
             <type>jar</type>
-            <version>${org.apache.jena.jena-querybuilder.version}</version>
+            <version>${org.apache.jena.apache-jena-libs.3.version}</version>
             <optional>true</optional>
             <exclusions>
                 <exclusion>
@@ -498,21 +511,33 @@
                 </exclusion>
             </exclusions>
         </dependency>
-       <!-- <dependency>
-            <groupId>com.hp.hpl.jena</groupId>
-            <artifactId>jena</artifactId>
-            <version>2.6.4</version>
-        </dependency>
         <dependency>
-            <groupId>com.hp.hpl.jena</groupId>
-            <artifactId>jena</artifactId>
-            <version>2.6.4</version>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-spatial</artifactId>
+            <version>${org.apache.jena.apache-jena-libs.3.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.jena</groupId>
+                    <artifactId>apache-jena-libs</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-        <dependency>
-            <groupId>com.hp.hpl.jena</groupId>
-            <artifactId>arq</artifactId>
-            <version>2.8.8</version>
-        </dependency>-->
 
         <!-- =============== -->
         <!-- OpenRDF Sesame  -->
@@ -597,11 +622,6 @@
             <version>7.1.0</version>
             <optional>true</optional>
         </dependency>-->
-        <!-- <dependency>
-           <groupId>com.openlink.virtuoso</groupId>
-           <artifactId>virtjena</artifactId>
-           <version>7.1.0</version>
-       </dependency>-->
         <!-- The Jena Provider for Jena 2.10 requires the Virtuoso JDBC 4 Driver. -->
         <dependency>
             <groupId>com.openlink.virtuoso</groupId>
@@ -609,17 +629,51 @@
             <version>7.1.0</version>
             <optional>true</optional>
         </dependency>
-        <!--  The Jena Provider for Jena 2.6 requires the Virtuoso JDBC 3 Driver. -->
-      <!--  <dependency>
-            <groupId>com.openlink.virtuoso</groupId>
-            <artifactId>virtjdbc3</artifactId>
-            <version>7.1.0</version>
-        </dependency>-->
-
-
+        <!-- The Jena Provider for Sesame 2.X.X -->
+        <dependency>
+            <groupId>virtuoso.sesame2</groupId>
+            <artifactId>driver</artifactId>
+            <version>2.7.3-build1.12</version>
+        </dependency>
 
         <!-- =============== -->
-        <!-- JDBC4SPARQL   -->
+        <!-- OWL2VOWL        -->
+        <!-- =============== -->
+
+       <!-- <dependency>
+            <groupId>com.github.VisualDataWeb</groupId>
+            <artifactId>OWL2VOWL</artifactId>
+            <version>4f7675a503</version>
+            <optional>true</optional>
+        </dependency>-->
+        <dependency>
+            <groupId>org.visualdataweb.vowl.owl2vowl</groupId>
+            <artifactId>OWL2VOWL</artifactId>
+            <version>0.2.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+            </exclusions>
+            <optional>true</optional>
+        </dependency>
+        <!-- Support dependency -->
+        <!--<dependency>
+            <groupId>edu.stanford.protege</groupId>
+            <artifactId>org.semanticweb.owl.owlapi</artifactId>
+            <version>3.4.4</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.13</version>
+            <optional>true</optional>
+        </dependency>-->
+
+        <!-- =============== -->
+        <!-- JDBC4SPARQL     -->
         <!-- =============== -->
 
        <!-- <dependency>
@@ -752,7 +806,6 @@
             <groupId>org.fusesource.jansi</groupId>
             <artifactId>jansi</artifactId>
             <version>${org.fusesource.jansi.jansi.version}</version>
-            <optional>true</optional>
         </dependency>
         <!-- The SLF4J - take out because already present in logback classic -->
          <dependency>
@@ -796,30 +849,44 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- log4j 2 to slf4j bridge
+        http://www.ffbit.com/blog/2014/05/12/a-brand-new-log4j-2-and-its-slf4j-binding/-->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
-
-        <!--<dependency>
+        <!-- Add implementation of log4j -->
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.4.1</version>
-        </dependency>-->
+            <version>2.5</version>
+        </dependency>
        <!-- <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <version>2.4.1</version>
         </dependency>-->
 
-
-
-
-
+        <!-- =============== -->
         <!-- CSV -->
+        <!-- =============== -->
         <dependency>
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
             <version>${com.opencsv.opencsv.version}</version>
             <optional>true</optional>
         </dependency>
+        <!-- =============== -->
+        <!-- GTFS            -->
+        <!-- =============== -->
         <!-- Core GTFS Library -->
         <dependency>
             <groupId>org.onebusaway</groupId>
@@ -937,6 +1004,22 @@
                     <additionalparam>-Xdoclint:none</additionalparam>
                     <failOnError>false</failOnError>
                 </configuration>-->
+            </plugin>
+            <!-- Plugin Jena Schemagen -->
+            <plugin>
+                <groupId>org.apache.jena</groupId>
+                <artifactId>jena-maven-tools</artifactId>
+                <version>${org.apache.jena.apache-jena-libs.3.version}</version>
+                <configuration>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>schemagen</id>
+                        <goals>
+                            <goal>translate</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -32,7 +32,7 @@ public class Test_Sesame {
         //sesame.setURLRepositoryId("km4city04");
         Repository rep = sesame.connectToHTTPRepository("http://localhost:8080/openrdf-sesame/repositories/km4city04");
         RepositoryConnectionWrapper wrap = sesame.createRepositoryConnectionWrapper(rep);
-        QueryLanguage sparql = sesame.stringToQueryLanguage("SPARQL");
+        QueryLanguage sparql = sesame.toQueryLanguage("SPARQL");
         //String query = (SparqlKit.preparePrefix()+SPARQL).replaceAll("[\uFEFF-\uFFFF]", "").trim();
         //String query2 = new String(query.getBytes(), "UTF-8").replaceAll("[\uFEFF-\uFFFF]", "").trim();
         /*GraphQuery xx = wrap.prepareGraphQuery(
@@ -40,7 +40,7 @@ public class Test_Sesame {
                 query,
                 "http://www.disit.org/km4city/schema");*/
         //String ww = xx.toString();
-        sesame.executeQuerySPARQLFromString(SPARQL);
+        sesame.execSparqlFromStringOnRepository(SPARQL);
 
     }
 }

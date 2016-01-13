@@ -14,10 +14,9 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.StatusPrinter;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.string.StringUtilities;
-import com.github.p4535992.util.xml.XMLUtilities;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.bridge.SLF4JBridgeHandler;
-import uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J;
+
+
+
 
 import java.io.*;
 import java.text.DateFormat;
@@ -295,15 +294,18 @@ public class LogBackUtil {
             //String pathToLogBackXML = "C:\\Users\\tenti\\Desktop\\EAT\\utility\\src\\main\\resources\\logback.xml";
 
             //Redirect all System.out and System.err to SLF4J.
-            SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
+            uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
+
+            //org.apache.log4j.Logger logger = LogManager.getLogger(LogBackUtil.class.getName());
+
 
             //Redirect all java util logging to SLF4J
             java.util.logging.LogManager.getLogManager().reset();
             // Optionally remove existing handlers attached to j.u.l root logger (since SLF4J 1.6.5)
-            SLF4JBridgeHandler.removeHandlersForRootLogger();
+            org.slf4j.bridge.SLF4JBridgeHandler.removeHandlersForRootLogger();
             // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
             // the initialization phase of your application
-            SLF4JBridgeHandler.install();
+            org.slf4j.bridge.SLF4JBridgeHandler.install();
             java.util.logging.Logger.getLogger("global").setLevel(java.util.logging.Level.FINEST);
 
             // assume SLF4J is bound to logback in the current environment

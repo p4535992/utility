@@ -39,11 +39,6 @@ public class XMLUtilities {
     private static final org.slf4j.Logger logger = 
             org.slf4j.LoggerFactory.getLogger(XMLUtilities.class);
     
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
-
     //FIELD
     private static javax.xml.parsers.DocumentBuilderFactory docFactory;
     private static javax.xml.parsers.DocumentBuilder docBuilder;
@@ -80,7 +75,7 @@ public class XMLUtilities {
             doc = docBuilder.parse(fileXML);
             logger.info("Document W3C loaded from file:" + fileXML.getAbsolutePath());
          }catch (SAXException|IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
         return doc;
@@ -99,7 +94,7 @@ public class XMLUtilities {
             logger.info("Document W3C loaded from file:" + xml);
             return doc;
         }catch (SAXException|IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
     }
@@ -116,7 +111,7 @@ public class XMLUtilities {
             //doc = docBuilder.parse(new InputSource(new StringReader(xml)));
             logger.info("Document W3C loaded from stream:" + in);
         }catch (SAXException|IOException e) {
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return null;
         }
         return doc;
@@ -136,9 +131,10 @@ public class XMLUtilities {
             logger.info("Document W3C loaded from file:" + fileXML.getAbsolutePath());
             return doc.getDocumentElement();
         }catch(SAXException|IOException e){
-            if (defElement != null) return getDocumentBuilder().newDocument().createElement(defElement);
+            if (defElement != null && getDocumentBuilder() != null)
+                return getDocumentBuilder().newDocument().createElement(defElement);
             else {
-                logger.warn(gm() + "Document W3C loaded from stream:" + fileXML + " is NULL");
+                logger.warn("Document W3C loaded from stream:" + fileXML + " is NULL");
                 return null;
             }
         }
@@ -152,9 +148,10 @@ public class XMLUtilities {
             logger.info("Document W3C loaded from stream:" + in);
             return doc.getDocumentElement();
         }catch(SAXException|IOException e){
-            if (defElement != null) return getDocumentBuilder().newDocument().createElement(defElement);
+            if (defElement != null && getDocumentBuilder()!= null)
+                return getDocumentBuilder().newDocument().createElement(defElement);
             else {
-                logger.warn(gm() +"Document W3C loaded from stream:" + in + " is NULL");
+                logger.warn("Document W3C loaded from stream:" + in + " is NULL");
                 return null;
             }
         }
@@ -280,8 +277,26 @@ public class XMLUtilities {
             return true;
             //saveToXml(doc, xmlFile.getAbsolutePath());
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
+        }
+    }
+
+    /**
+     * Method for update the value of a attribute.
+     * @param xmlFile file xml.
+     * @param tagName string tag root xml file.
+     * @param nameAttribute string name of attribute.
+     * @param newValueAttribute string new value attribute.
+     */
+    public void updateValueOfAttribute2(File xmlFile,String tagName,String nameAttribute,
+                                       String newValueAttribute){
+        doc = loadDocumentFromFile(xmlFile);
+        if (doc != null) {
+            Node n = doc.getDocumentElement().getElementsByTagName(tagName).item(0);
+            Element e = convertNodeToElement(n);
+            e.setAttribute(nameAttribute, newValueAttribute);
+            writeDocumentToXmlFile(doc, xmlFile.getAbsolutePath());
         }
     }
 
@@ -313,7 +328,7 @@ public class XMLUtilities {
             writeDocumentToXmlFile(doc, xmlFile.getAbsolutePath());
             return true;
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -369,7 +384,7 @@ public class XMLUtilities {
             }
             return true;
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -398,7 +413,7 @@ public class XMLUtilities {
             person.setAttribute(newAttribute,valueAttribute);
             return true;
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -482,21 +497,24 @@ public class XMLUtilities {
         doc = loadDocumentFromFile(xmlFile);
         //optional, but recommended
         //read this - http://stackoverflow.com/questions/13786607/normalization-in-dom-parsing-with-java-how-does-it-work
-        doc.getDocumentElement().normalize();
-        logger.info("Root element XML document:" + doc.getDocumentElement().getNodeName());
-        String tagName = doc.getDocumentElement().getNodeName();
-        NodeList nList = doc.getElementsByTagName(tagName);
-        for (int temp = 0; temp < nList.getLength(); temp++){
-            Node nNode = nList.item(temp);
-            logger.info("\nCurrent Element :" + nNode.getNodeName());
-            //NodeList nList = doc.getElementsByTagName("staff");
-            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                Element eElement = (Element) nNode;
-               //you can do something wtih this node
+        if (doc != null) {
+            doc.getDocumentElement().normalize();
+
+            logger.info("Root element XML document:" + doc.getDocumentElement().getNodeName());
+            String tagName = doc.getDocumentElement().getNodeName();
+            NodeList nList = doc.getElementsByTagName(tagName);
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                Node nNode = nList.item(temp);
+                logger.info("\nCurrent Element :" + nNode.getNodeName());
+                //NodeList nList = doc.getElementsByTagName("staff");
+                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eElement = (Element) nNode;
+                    //you can do something wtih this node
+                }
             }
-        }
-        if (doc.hasChildNodes()) {
-            printNode(doc.getChildNodes());
+            if (doc.hasChildNodes()) {
+                printNode(doc.getChildNodes());
+            }
         }
     }
 
@@ -552,21 +570,7 @@ public class XMLUtilities {
 
     }//updateValueOfattributeSAX*/
 
-    /**
-     * Method for update the value of a attribute.
-     * @param xmlFile file xml.
-     * @param tagName string tag root xml file.
-     * @param nameAttribute string name of attribute.
-     * @param newValueAttribute string new value attribute.
-     */
-    public void updateValueofAttribute(File xmlFile,String tagName,String nameAttribute,
-              String newValueAttribute){
-        doc = loadDocumentFromFile(xmlFile);
-        Node n = doc.getDocumentElement().getElementsByTagName(tagName).item(0);
-        Element e = convertNodeToElement(n);
-        e.setAttribute(nameAttribute, newValueAttribute);
-        writeDocumentToXmlFile(doc, xmlFile.getAbsolutePath());
-    }
+
 
     /**
      * To get DOM Document from the xml file.
@@ -578,7 +582,10 @@ public class XMLUtilities {
      */
     public static Document getDocument(String filePath) throws ParserConfigurationException, SAXException, IOException {
         docBuilder = getDocumentBuilder();
-        return docBuilder.parse(filePath);
+        if (docBuilder != null) {
+            return docBuilder.parse(filePath);
+        }
+        return null;
     }
 
     /**
@@ -928,7 +935,7 @@ public class XMLUtilities {
                 throw new IllegalArgumentException("Missing prefix: " + qname);
             }
         }catch(IllegalArgumentException e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
         }
     }
 
@@ -1036,7 +1043,7 @@ public class XMLUtilities {
             parser.parse(xmlFile, handler);
         } catch(ParserConfigurationException | SAXException | IOException e) {
             // Maybe FileNotFound, maybe something else, anyway, life goeson...
-            logger.error(gm() + "Maybe FileNotFound:"+e.getMessage(),e);
+            logger.error("Maybe FileNotFound:"+e.getMessage(),e);
             return null;
         }
         // Add any newly discovered prefixes to the namespace bindings
@@ -1110,7 +1117,7 @@ public class XMLUtilities {
             }
             return true;
         }catch(Exception e){
-            logger.error(gm() + e.getMessage(),e);
+            logger.error(e.getMessage(),e);
             return false;
         }
     }
@@ -1523,7 +1530,7 @@ public class XMLUtilities {
     public static Node getPreviousSibling(Node node, short nodeType) {
         Node parent = node.getParentNode();
         if(parent == null) {
-            logger.warn(gm() + "Cannot get node [" + node + "] previous sibling. " +
+            logger.warn("Cannot get node [" + node + "] previous sibling. " +
                     "[" + node + "] has no parent.");
             return null;
         }
@@ -1563,7 +1570,7 @@ public class XMLUtilities {
     public static int countNodesBefore(Node node, short nodeType) {
         Node parent = node.getParentNode();
         if(parent == null) {
-            logger.warn(gm() +"Cannot count nodes before [" + node + "]. [" + node + "] has no parent.");
+            logger.warn("Cannot count nodes before [" + node + "]. [" + node + "] has no parent.");
             return 0;
         }
         NodeList siblings = parent.getChildNodes();
@@ -1596,18 +1603,18 @@ public class XMLUtilities {
     public static int countNodesBetween(Node node1, Node node2, short nodeType) {
         Node parent1 = node1.getParentNode();
         if(parent1 == null) {
-            logger.warn(gm() + "Cannot count nodes between [" + node1 + "] " +
+            logger.warn("Cannot count nodes between [" + node1 + "] " +
                     "and [" + node2 + "]. [" + node1 + "] has no parent.");
             return 0;
         }
         Node parent2 = node2.getParentNode();
         if(parent2 == null) {
-            logger.warn(gm() + "Cannot count nodes between [" + node1 + "] " +
+            logger.warn("Cannot count nodes between [" + node1 + "] " +
                     "and [" + node2 + "]. [" + node2 + "] has no parent.");
             return 0;
         }
         if(parent1 != parent2) {
-            logger.warn(gm() + "Cannot count nodes between [" + node1 + "] " +
+            logger.warn("Cannot count nodes between [" + node1 + "] " +
                     "and [" + node2 + "]. These nodes do not share the same sparent.");
             return 0;
         }
@@ -1960,9 +1967,9 @@ public class XMLUtilities {
             children.item(i).getNodeType() == Node.CDATA_SECTION_NODE){
            result += children.item(i).getNodeValue();
         }
-        else if( children.item(i).getNodeType() == Node.COMMENT_NODE ) {
+        /*else if( children.item(i).getNodeType() == Node.COMMENT_NODE ) {
            // Ignore comment nodes
-        }
+        }*/
      }
      return result.trim();
   }
@@ -1989,7 +1996,7 @@ public class XMLUtilities {
               ("expected one " + tagName + " tag");
         }
     }catch(IllegalArgumentException e){
-        logger.error(gm() + "Child was not found or was not unique:"+e.getMessage(),e);
+        logger.error("Child was not found or was not unique:"+e.getMessage(),e);
         return null;
     }
   
@@ -2035,6 +2042,7 @@ public class XMLUtilities {
      * @param entityReferenceExpansion if true abilitate the Entity refrence Expansion.
      * @return String format XML converted from the target DOM
      */
+    @SuppressWarnings("ConstantConditions")
     public String toXMLString(
             Document document,NodeFilter nodeFilter,boolean entityReferenceExpansion) {
         String LINE_SEP = System.getProperty("line.separator");
@@ -2133,11 +2141,11 @@ public class XMLUtilities {
                                     .append(" SYSTEM \"").append(docType.getSystemId()).append("\">").append(line_sep);
                         }
                     } else {
-                        logger.warn(gm() + "Document Type node does not implement DocumentType: "+ tmpN);
+                        logger.warn("Document Type node does not implement DocumentType: "+ tmpN);
                     }
                     break;
                 default:
-                    logger.warn(gm() + tmpN.getNodeType() + " : " + tmpN.getNodeName());
+                    logger.warn(tmpN.getNodeType() + " : " + tmpN.getNodeName());
             }
 
             Node next = treeWalker.firstChild();
@@ -2168,7 +2176,7 @@ public class XMLUtilities {
                         if (indentS.length() > 0) {
                             indentS = indentS.substring(1);
                         } else {
-                            logger.error(gm() + "indent: " + next.getNodeName() + " " + next);
+                            logger.error("indent: " + next.getNodeName() + " " + next);
                         }
                     }
                     tmpSB.append(line_sep).append(indentS).append(lt).append("/")
