@@ -1,0 +1,412 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html idmmzcc-ext-docid="852271104" xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" dir="ltr" lang="ko"><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>
+    egovframework:rte3:fdl:logging:slf4j    [eGovFrame]
+  </title>
+
+  <meta name="generator" content="DokuWiki Release 2009-02-14">
+<meta name="robots" content="index,follow">
+<meta name="date" content="2015-04-14T11:24:42+0900">
+<meta name="keywords" content="egovframework,rte3,fdl,logging,slf4j">
+<link rel="search" type="application/opensearchdescription+xml" href="http://www.egovframe.go.kr/wiki/lib/exe/opensearch.php" title="eGovFrame">
+<link rel="start" href="http://www.egovframe.go.kr/wiki/">
+<link rel="contents" href="http://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte3:fdl:logging:slf4j&amp;do=index" title="색인">
+<link rel="alternate" type="application/rss+xml" title="Recent Changes" href="http://www.egovframe.go.kr/wiki/feed.php">
+<link rel="alternate" type="application/rss+xml" title="Current Namespace" href="http://www.egovframe.go.kr/wiki/feed.php?mode=list&amp;ns=egovframework:rte3:fdl:logging">
+<link rel="alternate" type="text/html" title="Plain HTML" href="http://www.egovframe.go.kr/wiki/doku.php?do=export_xhtml&amp;id=egovframework:rte3:fdl:logging:slf4j">
+<link rel="alternate" type="text/plain" title="Wiki Markup" href="http://www.egovframe.go.kr/wiki/doku.php?do=export_raw&amp;id=egovframework:rte3:fdl:logging:slf4j">
+<link rel="stylesheet" media="all" type="text/css" href="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/css.css">
+<link rel="stylesheet" media="screen" type="text/css" href="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/css_003.css">
+<link rel="stylesheet" media="print" type="text/css" href="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/css_002.css">
+<script type="text/javascript" charset="utf-8" src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/js.php"></script>
+
+  <link rel="shortcut icon" href="http://www.egovframe.go.kr/wiki/lib/tpl/default/images/favicon.ico">
+
+  </head>
+
+<body>
+<div class="dokuwiki">
+  
+  <div class="stylehead">
+
+    <div class="header">
+      <div class="pagename">
+        [[<a href="http://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte3:fdl:logging:slf4j&amp;do=backlink" title="이전 링크">egovframework:rte3:fdl:logging:slf4j</a>]]
+      </div>
+      <div class="logo">
+        <a href="http://www.egovframe.go.kr/wiki/doku.php" name="dokuwiki__top" id="dokuwiki__top" accesskey="h" title="[H]">eGovFrame</a>      </div>
+
+      <div class="clearer"></div>
+    </div>
+
+    
+    <div class="bar" id="bar__top">
+      <div class="bar-left" id="bar__topleft">
+        <form class="button btn_source" method="post" action="/wiki/doku.php"><div class="no"><input name="do" value="edit" type="hidden"><input name="rev" value="" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="소스 보기" class="button" accesskey="v" title="소스 보기 [V]" type="submit"></div></form>        <form class="button btn_revs" method="get" action="/wiki/doku.php"><div class="no"><input name="do" value="revisions" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="이전 버전들" class="button" accesskey="o" title="이전 버전들 [O]" type="submit"></div></form>    	 <form class="button btn_show_print_view" method="get" action="/wiki/doku.php"><div class="no"><input name="do" value="export_html" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="Print view" class="button" accesskey="v" title="Print view [V]" type="submit"></div></form>
+		 <!--<form class="button btn_exportpdf" method="get" action="/wiki/doku.php"><div class="no"><input type="hidden" name="do" value="export_pdf" /><input type="hidden" name="id" value="egovframework:rte3:fdl:logging:slf4j" /><input type="submit" value="Export to PDF" class="button" title="Export to PDF" /></div></form> --> <!-- inserted line -->
+
+
+      </div>
+
+      <div class="bar-right" id="bar__topright">
+        <form class="button btn_recent" method="get" action="/wiki/doku.php"><div class="no"><input name="do" value="recent" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="최근 변경 목록" class="button" accesskey="r" title="최근 변경 목록 [R]" type="submit"></div></form>        <form action="/wiki/doku.php" accept-charset="utf-8" class="search" id="dw__search"><div class="no"><input name="do" value="search" type="hidden"><input id="qsearch__in" accesskey="f" name="id" class="edit" title="[F]" type="text"><input value="찾기" class="button" title="찾기" type="submit"><div style="display: none;" id="qsearch__out" class="ajax_qsearch JSpopup"></div></div></form>&nbsp;
+      </div>
+
+      <div class="clearer"></div>
+    </div>
+
+        <div class="breadcrumbs">
+      <span class="bchead">추적:</span> <span class="bcsep">»</span> <span class="curid"><a href="http://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte3:fdl:logging:slf4j" class="breadcrumbs" title="egovframework:rte3:fdl:logging:slf4j">slf4j</a></span>          </div>
+    
+    
+  </div>
+  
+  
+  <div class="page">
+    <!-- wikipage start -->
+    <!-- TOC START -->
+<div class="toc">
+<div style="cursor: pointer;" class="tocheader toctoggle" id="toc__header"><span style="cursor: pointer;" class="toc_close" id="toc__toggle"><span>−</span></span>목차</div>
+<div id="toc__inside">
+
+<ul class="toc">
+<li class="clear">
+
+<ul class="toc">
+<li class="level2"><div class="li"><span class="li"><a href="#slf4j" class="toc">SLF4J</a></span></div>
+<ul class="toc">
+<li class="level3"><div class="li"><span class="li"><a href="#getting_started" class="toc">Getting Started</a></span></div></li>
+<li class="level3"><div class="li"><span class="li"><a href="#migration_to_slf4j_from_legacy_apis" class="toc">Migration to SLF4J from Legacy APIs</a></span></div></li>
+<li class="level3"><div class="li"><span class="li"><a href="#%EC%B0%B8%EA%B3%A0_%EC%9E%90%EB%A3%8C" class="toc">참고 자료</a></span></div></li></ul>
+</li></ul>
+</li></ul>
+</div>
+</div>
+<!-- TOC END -->
+
+
+
+<h2><a name="slf4j" id="slf4j">SLF4J</a></h2>
+<div class="level2">
+
+</div>
+
+<h3><a name="getting_started" id="getting_started">Getting Started</a></h3>
+<div class="level3">
+
+<p>
+SLF4J(Simple Logging Facade For Java)는 특정 Logging 서비스 구현체에 종속되지 않도록 추상화 계층을 제공하며,<br>
+
+Jakarta Commons Logging(JCL), Log4j, Logback 등과 함께 사용할 수 있다.<br>
+
+다음은 SLF4J 샘플 예제이다.
+
+</p>
+<pre class="code java"><span class="kw1">import</span> <span class="co2">org.slf4j.Logger</span>;
+<span class="kw1">import</span> <span class="co2">org.slf4j.LoggerFactory</span>;
+&nbsp;
+<span class="kw1">public</span> <span class="kw1">class</span> Slf4JLoggerTest <span class="br0">{</span>
+&nbsp;
+   <span class="co1">// SLF4J를 이용한 Logger 오브젝트 생성</span>
+   <span class="kw1">private</span> <span class="kw1">static</span> <span class="kw1">final</span> Logger LOGGER <span class="sy0">=</span> LoggerFactory.<span class="me1">getLogger</span><span class="br0">(</span>Slf4JLoggerTest.<span class="kw1">class</span><span class="br0">)</span>;
+&nbsp;
+   <span class="co1">// Parameterized logging - String 타입</span>
+   <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> message <span class="sy0">=</span> <span class="st0">"Hello, eGovFrame 3.0"</span>;
+   <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> message2 <span class="sy0">=</span> <span class="st0">"Welcome to eGovFrame 3.0"</span>;
+&nbsp;
+   LOGGER.<span class="me1">debug</span><span class="br0">(</span><span class="st0">"SLF4J Logger - {}"</span>, message<span class="br0">)</span>; <span class="co1">// 출력결과 - SLF4J Logger - Hello, eGovFrame 3.0</span>
+   LOGGER.<span class="me1">debug</span><span class="br0">(</span><span class="st0">"SLF4J Logger - {} and {}"</span>, message, message2<span class="br0">)</span>; <span class="co1">// 출력결과 - SLF4J Logger - Hello, eGovFrame 3.0 and Welcome to eGovFrame 3.0</span>
+&nbsp;
+   <span class="co1">// Parameterized logging - Object 타입</span>
+   <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aobject+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Object</span></a><span class="br0">[</span><span class="br0">]</span> args <span class="sy0">=</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Aobject+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Object</span></a><span class="br0">[</span><span class="nu0">3</span><span class="br0">]</span>;
+   args<span class="br0">[</span>0<span class="br0">]</span> <span class="sy0">=</span> <span class="st0">"1"</span>;
+   args<span class="br0">[</span><span class="nu0">1</span><span class="br0">]</span> <span class="sy0">=</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Ainteger+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Integer</span></a>.<span class="me1">valueOf</span><span class="br0">(</span><span class="st0">"2"</span><span class="br0">)</span>;
+   args<span class="br0">[</span><span class="nu0">2</span><span class="br0">]</span> <span class="sy0">=</span> <span class="kw1">new</span> <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Adate+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">Date</span></a><span class="br0">(</span><span class="br0">)</span>.<span class="me1">toString</span><span class="br0">(</span><span class="br0">)</span>;
+&nbsp;
+   LOGGER.<span class="me1">debug</span><span class="br0">(</span><span class="st0">"SLF4J Logger - {}, {}, {}"</span>, args<span class="br0">)</span>; <span class="co1">// 출력결과 - SLF4J Logger - 1, 2, Fri Mar 23 11:08:28 KST 2014</span>
+<span class="br0">}</span></pre>
+</div>
+
+<h4><a name="slf4j_기본_설정" id="slf4j_기본_설정">1. SLF4J 기본 설정</a></h4>
+<div class="level4">
+
+<p>
+
+1) SLF4J API를 사용하기 위해 <strong>slf4j-api.jar를 추가</strong>한다.
+
+</p>
+<pre class="code xml"><span class="sc-1">&lt;!-- SLF4J --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.slf4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>slf4j-api<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>x.x.x<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span></pre>
+<p>
+2) Logging 충돌 방지를 위해 Spring의 Default Logging Framework인 <strong>commons-logging.jar를 제거</strong>하되,<br>
+ 기존 Commons Logging API가 적절하게 변환되어 처리될 수 있도록 SLF4j JCL Bridge인 <strong>jcl-over-slf4j.jar를 추가</strong>한다.
+
+</p>
+<pre class="code xml"><span class="sc-1">&lt;!-- Exclude Commons Logging in favor of SLF4J --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.springframework<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>spring-context<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>${spring.maven.artifact.version}<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;exclusions<span class="re2">&gt;</span></span></span>
+    <span class="sc3"><span class="re1">&lt;exclusion<span class="re2">&gt;</span></span></span>
+      <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>commons-logging<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+      <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>commons-logging<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+    <span class="sc3"><span class="re1">&lt;/exclusion<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;/exclusions<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span>
+&nbsp;
+<span class="sc-1">&lt;!-- SLF4J JCL Bridge --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.slf4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>jcl-over-slf4j<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>x.x.x<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span></pre>
+</div>
+
+<h4><a name="logging_구현체_설정" id="logging_구현체_설정">2. Logging 구현체 설정</a></h4>
+<div class="level4">
+
+<p>
+
+1) SLF4J가 컴파일 시에 Logging 구현체를 사용할 수 있도록 구현체별 <strong>SLF4J Binding jar와 Implementation jar를 추가</strong>한다.
+
+</p>
+<table class="inline">
+	<tbody><tr class="row0">
+		<th class="col0 centeralign">  Logging 구현체  </th><th class="col1 centeralign">  SLF4J Binding jar  </th>
+	</tr>
+	<tr class="row1">
+		<td class="col0 centeralign">  Log4j 2  </td><td class="col1 leftalign"> log4j-slf4j-impl.jar  </td>
+	</tr>
+	<tr class="row2">
+		<td class="col0 centeralign">  Log4j 1.2  </td><td class="col1 leftalign"> slf4j-log4j12.jar  </td>
+	</tr>
+	<tr class="row3">
+		<td class="col0 centeralign">  <acronym title="Java Development Kit">JDK</acronym> 1.x Logging  </td><td class="col1 leftalign"> slf4j-jdk14.jar  </td>
+	</tr>
+	<tr class="row4">
+		<td class="col0 centeralign">  NOP  </td><td class="col1 leftalign"> slf4j-nop.jar  </td>
+	</tr>
+	<tr class="row5">
+		<td class="col0 centeralign">  JCL  </td><td class="col1 leftalign"> slf4j-jcl.jar  </td>
+	</tr>
+	<tr class="row6">
+		<td class="col0 centeralign">  Logback  </td><td class="col1 leftalign"> logback-classic.jar, logback-core.jar  </td>
+	</tr>
+</tbody></table>
+<ul>
+<li class="level1"><div class="li"> Log4j 1.2 구현체 사용 시</div>
+</li>
+</ul>
+<pre class="code xml"><span class="sc-1">&lt;!--  SLF4J Log4j1.2 Binding --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span> 
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.slf4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>slf4j-log4j12<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>x.x.x<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span>
+&nbsp;
+<span class="sc-1">&lt;!-- Log4j 1.2 --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>log4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>log4j<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>1.2<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span></pre><ul>
+<li class="level1"><div class="li"> Log4j 2 구현체 사용 시</div>
+</li>
+</ul>
+<pre class="code xml"><span class="sc-1">&lt;!-- Log4j2 SLF4J Binding --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.apache.logging.log4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>log4j-slf4j-impl<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>x.x.x<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span>
+&nbsp;
+<span class="sc-1">&lt;!-- Log4j 2 --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.apache.logging.log4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>log4j-api<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>x.x.x<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span></pre>
+</div>
+
+<h4><a name="slf4j_logger_객체_생성과_메서드_사용" id="slf4j_logger_객체_생성과_메서드_사용">3. SLF4J Logger 객체 생성과 메서드 사용</a></h4>
+<div class="level4">
+
+<p>
+1) Logger 객체 생성
+
+</p>
+<pre class="code java">  <span class="kw1">private</span> <span class="kw1">static</span> <span class="kw1">final</span> Logger LOGGER <span class="sy0">=</span> LoggerFactory.<span class="me1">getLogger</span><span class="br0">(</span>Slf4JLoggerTest.<span class="kw1">class</span><span class="br0">)</span>;</pre>
+<p>
+
+2) 로깅 메서드 호출<br>
+
+
+</p>
+<pre class="code java">  <span class="co1">// {}-placeholder를 이용한 Parameterized Logging</span>
+  <a href="http://www.google.com/search?hl=en&amp;q=allinurl%3Astring+java.sun.com&amp;btnI=I%27m%20Feeling%20Lucky"><span class="kw3">String</span></a> message <span class="sy0">=</span> <span class="st0">"Hello, eGovFrame 3.0"</span>;
+&nbsp;
+  LOGGER.<span class="me1">debug</span><span class="br0">(</span><span class="st0">"SLF4J Logger - {}"</span>, message<span class="br0">)</span>;</pre>
+</div>
+
+<h3><a name="migration_to_slf4j_from_legacy_apis" id="migration_to_slf4j_from_legacy_apis">Migration to SLF4J from Legacy APIs</a></h3>
+<div class="level3">
+
+<p>
+기존 Legacy API을 유지한 채 SLF4J를 함께 사용하려면, SLF4J와 레거시 API를 연결할 수 있는 Bridge jar가 필요하다.<br>
+
+아래에서는 Log4j 1.x와 JCL 레거시를 기준으로 설명한다.
+</p>
+
+</div>
+
+<h4><a name="logging_구현체_jar를_slf4j_bridge_jar로_대체" id="logging_구현체_jar를_slf4j_bridge_jar로_대체">1. Logging 구현체 jar를 SLF4J Bridge jar로 대체</a></h4>
+<div class="level4">
+
+<p>
+이는 각 구현체의 Logging 제어권을 SLF4J로 넘긴다는 것을 의미하며, 레거시 API를 유지하기 위해서 필요한 작업이다. 
+</p>
+
+<p>
+1) Log4j 1.x 유지 시, log4j.jar를 log4j-over-slf4j.jar로 대체
+
+</p>
+<pre class="code xml"><span class="sc-1">&lt;!-- Log4j 1.x --&gt;</span>
+<span class="sc-1">&lt;!-- </span>
+<span class="sc-1">&lt;dependency&gt;</span>
+<span class="sc-1">  &lt;groupId&gt;log4j&lt;/groupId&gt;</span>
+<span class="sc-1">  &lt;artifactId&gt;log4j&lt;/artifactId&gt;</span>
+<span class="sc-1">  &lt;version&gt;x.x.x&lt;/version&gt;</span>
+<span class="sc-1">&lt;/dependency&gt;</span>
+<span class="sc-1">--&gt;</span>
+&nbsp;
+<span class="sc-1">&lt;!-- SLF4J Log4j 1.x Bridge --&gt;</span>  
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.slf4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>log4j-over-slf4j<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>x.x.x<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span></pre>
+<p>
+
+(주의) log4j-over-slf4j.jar는 slf4j-log4j12.jar(SLF4j Binding)과 동시에 사용할 수 없다.
+</p>
+
+<p>
+2) JCL(Jakarta Commons Logging) 유지 시, commons-logging.jar를 jcl-over-slf4j.jar로 대체
+
+</p>
+<pre class="code xml"><span class="sc-1">&lt;!-- Commons Logging --&gt;</span>
+<span class="sc-1">&lt;!--</span>
+<span class="sc-1">&lt;dependency&gt;</span>
+<span class="sc-1">  &lt;groupId&gt;commons-logging&lt;/groupId&gt;</span>
+<span class="sc-1">  &lt;artifactId&gt;commons-logging&lt;/artifactId&gt;</span>
+<span class="sc-1">  &lt;version&gt;1.1.1&lt;/version&gt;</span>
+<span class="sc-1">&lt;/dependency&gt;</span>
+<span class="sc-1">--&gt;</span>
+&nbsp;
+<span class="sc-1">&lt;!-- SLF4j JCL Bridge --&gt;</span>
+<span class="sc3"><span class="re1">&lt;dependency<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;groupId<span class="re2">&gt;</span></span></span>org.slf4j<span class="sc3"><span class="re1">&lt;/groupId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;artifactId<span class="re2">&gt;</span></span></span>jcl-over-slf4j<span class="sc3"><span class="re1">&lt;/artifactId<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;version<span class="re2">&gt;</span></span></span>x.x.x<span class="sc3"><span class="re1">&lt;/version<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/dependency<span class="re2">&gt;</span></span></span></pre>
+</div>
+
+<h4><a name="환경설정_파일을_logback으로_변경" id="환경설정_파일을_logback으로_변경">2. 환경설정 파일을 logback으로 변경</a></h4>
+<div class="level4">
+
+<p>
+log4j 환경설정 파일은 SLF4J가 인식할 수 없기 때문에, 기존 환경설정을 logback으로 변경해야한다.<br>
+
+<a href="http://logback.qos.ch/translator/" class="urlextern" title="http://logback.qos.ch/translator/" rel="nofollow"> log4j properties file translator </a>를 이용하거나 <a href="http://logback.qos.ch/manual/index.html" class="urlextern" title="http://logback.qos.ch/manual/index.html" rel="nofollow"> logback manual </a>을 참조하여 변경할 수 있다. 
+</p>
+
+<p>
+다음은 logback.xml 샘플이다.
+
+</p>
+<pre class="code xml"><span class="sc3"><span class="re1">&lt;configuration<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;appender</span> <span class="re0">name</span>=<span class="st0">"STDOUT"</span> <span class="re0">class</span>=<span class="st0">"ch.qos.logback.core.ConsoleAppender"</span><span class="re2">&gt;</span></span>
+    <span class="sc-1">&lt;!-- encoders are assigned the type</span>
+<span class="sc-1">         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default --&gt;</span>
+    <span class="sc3"><span class="re1">&lt;encoder<span class="re2">&gt;</span></span></span>
+      <span class="sc3"><span class="re1">&lt;pattern<span class="re2">&gt;</span></span></span>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n<span class="sc3"><span class="re1">&lt;/pattern<span class="re2">&gt;</span></span></span>
+    <span class="sc3"><span class="re1">&lt;/encoder<span class="re2">&gt;</span></span></span>
+  <span class="sc3"><span class="re1">&lt;/appender<span class="re2">&gt;</span></span></span>
+&nbsp;
+  <span class="sc3"><span class="re1">&lt;root</span> <span class="re0">level</span>=<span class="st0">"debug"</span><span class="re2">&gt;</span></span>
+    <span class="sc3"><span class="re1">&lt;appender-ref</span> <span class="re0">ref</span>=<span class="st0">"STDOUT"</span> <span class="re2">/&gt;</span></span>
+  <span class="sc3"><span class="re1">&lt;/root<span class="re2">&gt;</span></span></span>
+<span class="sc3"><span class="re1">&lt;/configuration<span class="re2">&gt;</span></span></span></pre>
+</div>
+
+<h3><a name="참고_자료" id="참고_자료">참고 자료</a></h3>
+<div class="level3">
+<ul>
+<li class="level1"><div class="li"> <a href="http://www.slf4j.org/" class="urlextern" title="http://www.slf4j.org/" rel="nofollow"> SLF4J </a></div>
+</li>
+<li class="level1"><div class="li"> <a href="http://logback.qos.ch/" class="urlextern" title="http://logback.qos.ch/" rel="nofollow"> Logback </a></div>
+</li>
+</ul>
+
+</div>
+
+    <!-- wikipage stop -->
+  </div>
+
+  <div class="clearer">&nbsp;</div>
+
+  
+  <div class="stylefoot">
+
+    <div class="meta">
+      <div class="user">
+              </div>
+      <div class="doc">
+        egovframework/rte3/fdl/logging/slf4j.txt · 마지막 수정: 2015/04/14 11:24 (외부 편집기)      </div>
+    </div>
+
+   
+    <div class="bar" id="bar__bottom">
+      <div class="bar-left" id="bar__bottomleft">
+        <form class="button btn_source" method="post" action="/wiki/doku.php"><div class="no"><input name="do" value="edit" type="hidden"><input name="rev" value="" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="소스 보기" class="button" accesskey="v" title="소스 보기 [V]" type="submit"></div></form>        <form class="button btn_revs" method="get" action="/wiki/doku.php"><div class="no"><input name="do" value="revisions" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="이전 버전들" class="button" accesskey="o" title="이전 버전들 [O]" type="submit"></div></form>      </div>
+      <div class="bar-right" id="bar__bottomright">
+                                        <form class="button btn_login" method="get" action="/wiki/doku.php"><div class="no"><input name="do" value="login" type="hidden"><input name="sectok" value="6a42171b0d2ecde064fa397f20f628fd" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="로그인" class="button" title="로그인" type="submit"></div></form>        <form class="button btn_index" method="get" action="/wiki/doku.php"><div class="no"><input name="do" value="index" type="hidden"><input name="id" value="egovframework:rte3:fdl:logging:slf4j" type="hidden"><input value="색인" class="button" accesskey="x" title="색인 [X]" type="submit"></div></form>        <a class="nolink" href="#dokuwiki__top"><input class="button" value="맨위로" onclick="window.scrollTo(0, 0)" title="맨위로" type="button"></a>&nbsp;
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+  </div>
+
+  <div class="license">이 위키의 내용은 다음의 라이센스에 따릅니다 :<a href="http://creativecommons.org/licenses/by-nc-sa/3.0/" rel="license" class="urlextern">CC Attribution-Noncommercial-Share Alike 3.0 Unported</a></div>
+</div>
+
+<div class="footerinc">
+
+  <a href="http://www.egovframe.go.kr/wiki/feed.php" title="Recent changes RSS feed"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/button-rss.htm" alt="Recent changes RSS feed" height="15" width="80"></a>
+
+        <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/" rel="license" title="CC Attribution-Noncommercial-Share Alike 3.0 Unported"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/cc-by-nc-sa.htm" alt="CC Attribution-Noncommercial-Share Alike 3.0 Unported" height="15" width="80"></a>
+  
+  <a href="http://www.dokuwiki.org/donate" title="Donate"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/button-donate.htm" alt="Donate" height="15" width="80"></a>
+
+  <a href="http://www.php.net/" title="Powered by PHP"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/button-php.htm" alt="Powered by PHP" height="15" width="80"></a>
+
+  <a href="http://validator.w3.org/check/referer" title="Valid XHTML 1.0"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/button-xhtml.htm" alt="Valid XHTML 1.0" height="15" width="80"></a>
+
+  <a href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3" title="Valid CSS"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/button-css.htm" alt="Valid CSS" height="15" width="80"></a>
+
+  <a href="http://dokuwiki.org/" title="Driven by DokuWiki"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/button-dw.htm" alt="Driven by DokuWiki" height="15" width="80"></a>
+
+
+
+</div>
+
+<div class="no"><img src="egovframework%20rte3%20fdl%20logging%20slf4j%20%5BeGovFrame%5D_files/indexer.gif" alt="" height="1" width="1"></div>
+
+
+</body></html>

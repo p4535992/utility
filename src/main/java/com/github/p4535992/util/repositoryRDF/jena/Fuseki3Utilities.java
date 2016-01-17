@@ -12,12 +12,17 @@ import com.hp.hpl.jena.update.UpdateProcessor;*/
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.sdb.layout2.hash.FmtLayout2HashOracle;
+import org.apache.jena.sdb.sql.SDBConnection;
 import org.apache.jena.sparql.engine.http.Params;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.UUID;
 
 import static org.apache.jena.riot.web.HttpOp.execHttpPostForm;
@@ -195,6 +200,15 @@ public class Fuseki3Utilities {
         // The important point is to realize that the administrative forms are at the
         // “{your-fuseki-instance}/$” url. In your case you want the  “{your-fuseki-instance}/$/datasets”
         // section, to which you can POST your request for a new dataset.
+    }
+
+    public static void createOracleSDB() throws ClassNotFoundException, SQLException {
+        Class.forName("oracle.jdbc.driver.OracleDriver");
+        Connection conn = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE","dbuser","dbpassword");
+
+        SDBConnection sdbConn = new SDBConnection(conn);
+        FmtLayout2HashOracle oracleLayout = new FmtLayout2HashOracle(sdbConn);
+        oracleLayout.create();
     }
 
     /**
