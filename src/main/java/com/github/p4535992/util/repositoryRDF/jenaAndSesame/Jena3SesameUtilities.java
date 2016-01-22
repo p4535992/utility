@@ -27,7 +27,6 @@ import java.util.List;
  * @author 4535992.
  * @version 2015-07-02.
  */
-@SuppressWarnings("unused")
 public class Jena3SesameUtilities {
 
     private static final org.slf4j.Logger logger =

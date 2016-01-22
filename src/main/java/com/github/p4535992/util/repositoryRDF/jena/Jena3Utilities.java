@@ -43,6 +43,7 @@ import org.apache.jena.util.FileUtils;
 import org.apache.jena.vocabulary.*;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -60,7 +61,6 @@ import java.util.*;
  * @author 4535992.
  * @version 2015-12-07.
  */
-@SuppressWarnings("unused")
 public class Jena3Utilities {
 
     private static final org.slf4j.Logger logger =
@@ -487,48 +487,9 @@ public class Jena3Utilities {
      *
      * @param fileInput the {@link File} input file.
      * @return the jena model of the file.
-     * @throws FileNotFoundException throw if any "File Not Found" error is occurred.
      */
-    public static Model loadFileTripleToModel(File fileInput) throws FileNotFoundException {
-        String rdfSyntax = toLang(FileUtils.getFilenameExt(fileInput.getAbsolutePath())).getLabel();
-        Model m = ModelFactory.createDefaultModel();
-        // use the FileManager to find the input file
-        InputStream in;
-        try {
-            in = FileManager.get().open(fileInput.getAbsolutePath());
-        } catch (Exception e) {
-            in = new FileInputStream(fileInput);
-        }
-
-        if (in == null || !fileInput.exists()) throw new IllegalArgumentException("File: " + fileInput + " not found");
-
-        logger.info("Try to read file of triples from the path:" + fileInput.getAbsolutePath() + "...");
-        try {
-            FileManager.get().addLocatorClassLoader(Jena3Utilities.class.getClassLoader());
-            try {
-                m = FileManager.get().loadModel(fileInput.toURI().toString(), null, rdfSyntax);
-            }catch(Exception e){
-                m = FileManager.get().readModel(m,fileInput.toURI().toString(),null,rdfSyntax);
-            }
-        } catch (Exception e) {
-            try {
-                m.read(in, null, rdfSyntax);
-            } catch (Exception e1) {
-               /* try {
-                    RDFDataMgr.read(m, in, INLANGFORMAT);
-                } catch (Exception e2) {
-                    try {
-                        //If you are just opening the stream from a file (or URL) then Apache Jena
-                        RDFDataMgr.read(m, fileInput.toURI().toString());
-                    } catch (Exception e3) {
-                        logger.error("Failed read the file of triples from the path:" +
-                                fileInput.getAbsolutePath() + ":" + e.getMessage(), e);
-                    }
-                }*/
-            }
-        }
-        logger.info("...file of triples from the path:" + fileInput.getAbsolutePath() + " readed!!");
-        return m;
+    public static Model toModel(File fileInput){
+        return loadFileTripleToModel(fileInput,null,null);
     }
 
     /**
@@ -538,8 +499,123 @@ public class Jena3Utilities {
      * @return model model loaded with the file.
      * @throws java.io.FileNotFoundException throw if any "File Not Found" error is occurred.
      */
-    public static Model loadFileTripleToModel(String filePath) throws FileNotFoundException {
-        return loadFileTripleToModel(new File(filePath));
+    public static Model toModel(String filePath) throws FileNotFoundException {
+        return loadFileTripleToModel(filePath,null,null);
+    }
+
+    private static Model loadFileTripleToModel(Object filenameOrURI,String baseURI,String rdfSyntax){
+        Model m = ModelFactory.createDefaultModel();
+        // use the FileManager to find the input file
+        InputStream in;
+        if(filenameOrURI instanceof File){
+            File file = ((File)filenameOrURI);
+            logger.info("Try to read file of triples from the path:" + file.getAbsolutePath() + "...");
+            if(isNullOrEmpty(rdfSyntax)) {
+                rdfSyntax = toLang(FileUtils.getFilenameExt(file.getAbsolutePath())).getLabel();
+                if(isNullOrEmpty(rdfSyntax)) rdfSyntax = Lang.RDFXML.getLabel().toUpperCase();
+            }
+
+            try {
+                in = FileManager.get().open(file.getAbsolutePath());
+            } catch (Exception e) {
+                try {
+                    in = file.toURI().toURL().openStream();
+                }catch(Exception e2){
+                    try {
+                        in = new FileInputStream(file);
+                    } catch (FileNotFoundException e1) {
+                        logger.error("Can't set the InputStream for the File:"+file.getAbsolutePath());
+                        return null;
+                    }
+                }
+            }
+            if (in == null || !file.exists())
+                throw new IllegalArgumentException("File: " + filenameOrURI + " not found");
+
+            try {
+                //try load from resource folder...
+                FileManager.get().addLocatorClassLoader(Jena3Utilities.class.getClassLoader());
+                //try to load from uri...
+                try {
+                    m = FileManager.get().loadModel(file.toURI().toString(), null, rdfSyntax);
+                }catch(Exception e){
+                    m = FileManager.get().readModel(m,file.toURI().toString(),null,rdfSyntax);
+                }
+            } catch (Exception e) {
+                //try to load from inputStream....
+                try {
+                    m.read(in, null, rdfSyntax);
+                } catch (Exception e1) {
+                   /* try {
+                        RDFDataMgr.read(m, in, INLANGFORMAT);
+                    } catch (Exception e2) {
+                        try {
+                            //If you are just opening the stream from a file (or URL) then Apache Jena
+                            RDFDataMgr.read(m, fileInput.toURI().toString());
+                        } catch (Exception e3) {
+                            logger.error("Failed read the file of triples from the path:" +
+                                    fileInput.getAbsolutePath() + ":" + e.getMessage(), e);
+                        }
+                    }*/
+                    logger.error("Can't read the InputStream for the file:"+file.getAbsolutePath());
+                    return null;
+                }
+            }
+            logger.info("...file of triples from the path:" + file.getAbsolutePath() + " readed!!");
+            return m;
+        }else if(filenameOrURI instanceof URI){
+            URI uri = ((URI)filenameOrURI);
+            logger.info("Try to read URI of triples from the path:" + uri.toString() + "...");
+            if(isNullOrEmpty(rdfSyntax)) {
+                rdfSyntax = toLang(FileUtils.getFilenameExt(uri.toString())).getLabel();
+                if(isNullOrEmpty(rdfSyntax)) rdfSyntax = Lang.RDFXML.getLabel().toUpperCase();
+            }
+
+            try {
+                in = FileManager.get().open(uri.toString());
+            } catch (Exception e) {
+                try {
+                    in = uri.toURL().openStream();
+                }catch(Exception e2){
+                    try {
+                        in = new FileInputStream(uri.toURL().toString());
+                    } catch (FileNotFoundException|MalformedURLException e1) {
+                        logger.error("Can't set the InputStream for the URI:"+uri.toString());
+                        return null;
+                    }
+                }
+            }
+            if (in == null)
+                throw new IllegalArgumentException("URI: " + filenameOrURI + " not found");
+
+            try {
+                //try load from resource folder...
+                FileManager.get().addLocatorClassLoader(Jena3Utilities.class.getClassLoader());
+                //try to load from uri...
+                try {
+                    m = FileManager.get().loadModel(uri.toString(), null, rdfSyntax);
+                }catch(Exception e){
+                    m = FileManager.get().readModel(m,uri.toString(),null,rdfSyntax);
+                }
+            } catch (Exception e) {
+                //try to load from inputStream....
+                try {
+                    m.read(in, null, rdfSyntax);
+                }catch(Exception e1){
+                    logger.error("Can't read the InputStream for the URI:"+uri.toString());
+                    return null;
+                }
+            }
+            logger.info("...URI of triples from the path:" + uri.toString() + " readed!!");
+            return m;
+        }
+        else if(filenameOrURI instanceof String){
+            return loadFileTripleToModel(new File(String.valueOf(filenameOrURI)),null,null);
+        }else{
+            logger.warn("Can't load the File of Triple to the Jena Model, make sure the input is a File or a String or a URI," +
+                    " your current param is a :"+filenameOrURI.getClass().getName());
+            return null;
+        }
     }
 
     /**
@@ -551,13 +627,13 @@ public class Jena3Utilities {
      * @return the jena model of the file.
      * @throws FileNotFoundException thriow if any "File Not Found" error is occurred.
      */
-    public static Model loadFileTripleToModel(String filename, String filepath, String inputFormat)
+    public static Model toModel(String filename, String filepath, String inputFormat)
             throws FileNotFoundException {
-        //INLANGFORMAT = toLang(inputFormat);
-        //INRDFFORMAT = toRDFFormat(inputFormat);
-        //INFORMAT = INLANGFORMAT.getLabel().toUpperCase();
-        File fileInput = new File(filepath + File.separator + filename + "." + inputFormat);
-        return loadFileTripleToModel(fileInput);
+        if(!filepath.endsWith(File.separator)) filepath = filepath + File.separator;
+        if(filename.startsWith(File.separator)) filename = filename.substring(1,filename.length());
+        if(inputFormat.startsWith(".")) inputFormat = inputFormat.substring(1,inputFormat.length());
+        File fileInput = new File(filepath + filename + "." + inputFormat);
+        return loadFileTripleToModel(fileInput,null, toLang(inputFormat).getLabel().toUpperCase());
 
     }
 
@@ -609,13 +685,13 @@ public class Jena3Utilities {
      */
     private static final RDFFormat allFormatsOfRDFFormat[] = new RDFFormat[]{
             RDFFormat.TURTLE, RDFFormat.TTL,
-            //RDFFormat.JSONLD_FLAT,
-            //RDFFormat.JSONLD_PRETTY,
-            //RDFFormat.JSONLD,
+            RDFFormat.JSONLD_FLAT,
+            RDFFormat.JSONLD_PRETTY,
+            RDFFormat.JSONLD,
             RDFFormat.RDFJSON, RDFFormat.RDFNULL, RDFFormat.NQUADS, RDFFormat.NQ,
-            // RDFFormat.NQUADS_ASCII,RDFFormat.NQUADS_UTF8,
+            RDFFormat.NQUADS_ASCII,RDFFormat.NQUADS_UTF8,
             RDFFormat.NT, RDFFormat.NTRIPLES,
-            // RDFFormat.NTRIPLES_ASCII,RDFFormat.NTRIPLES_UTF8,
+            RDFFormat.NTRIPLES_ASCII,RDFFormat.NTRIPLES_UTF8,
             RDFFormat.RDFXML, RDFFormat.RDFXML_ABBREV,
             RDFFormat.RDFXML_PLAIN, RDFFormat.RDFXML_PRETTY, RDFFormat.TRIG, RDFFormat.TRIG_BLOCKS,
             RDFFormat.TRIG_FLAT, RDFFormat.TRIG_PRETTY, RDFFormat.TURTLE_BLOCKS, RDFFormat.TURTLE_FLAT,
@@ -958,7 +1034,7 @@ public class Jena3Utilities {
      * @throws IOException throw if any I/O is occurred.
      */
     private static void convertTo(File file, String outputFormat) throws IOException {
-        Model m = loadFileTripleToModel(file);
+        Model m = loadFileTripleToModel(file,null,null);
         String newName =
                 file.getAbsolutePath().replace(FileUtils.getFilenameExt(file.getAbsolutePath()),outputFormat);
                 //FileUtilities.getFilenameWithoutExt(file) + "." + outputFormat.toLowerCase();
@@ -1266,9 +1342,10 @@ public class Jena3Utilities {
     }
 
     /**
-     * Method convert a {@link XSDDatatype} or {@link Model} or {@link Node} to a {@link String}.
+     * Method convert a {@link XSDDatatype} or {@link Model} or {@link Node}
+     * or {@link ResultSet} to a {@link String}.
      *
-     * @param jenaObject {@link XSDDatatype} or {@link Model} of input.
+     * @param jenaObject the @link XSDDatatype} or {@link Model} or {@link Node} or {@link ResultSet}.
      * @return the {@link String} rappresentation of the Object.
      */
     public static String toString(Object jenaObject){
@@ -1276,11 +1353,12 @@ public class Jena3Utilities {
     }
 
     /**
-     * Method convert a {@link XSDDatatype} or {@link Model} or {@link Node} to a {@link String}.
+     * Method convert a {@link XSDDatatype} or {@link Model} or {@link Node}
+     * or {@link ResultSet} to a {@link String}.
      *
-     * @param jenaObject {@link XSDDatatype} or {@link Model} of input.
-     * @param outputFormat {@link String} of the output format.
-     * @param baseURI {@link String} URI Graph Base.
+     * @param jenaObject the @link XSDDatatype} or {@link Model} or {@link Node} or {@link ResultSet}.
+     * @param outputFormat the {@link String} of the output format.
+     * @param baseURI the {@link String} URI Graph Base.
      * @return the {@link String} rappresentation of the Object.
      */
     public static String toString(Object jenaObject,String outputFormat,String baseURI){
@@ -1338,8 +1416,8 @@ public class Jena3Utilities {
                 logger.error(e.getMessage(), e);
                 return "N/A";
             }
-        }else if(jenaObject instanceof Node){
-            Node n = (Node)jenaObject;
+        }else if(jenaObject instanceof Node) {
+            Node n = (Node) jenaObject;
             if (n.isURI()) {
                 return "<" + n + ">";
             } else if (n.isBlank()) {
@@ -1366,9 +1444,24 @@ public class Jena3Utilities {
             } else {
                 return "<" + n + ">";
             }
+        }else if(jenaObject instanceof ResultSet){
+            ResultSet results = (ResultSet) jenaObject;
+            StringBuilder b = new StringBuilder();
+            if(results.hasNext()){
+                ByteArrayOutputStream go = new ByteArrayOutputStream ();
+                ResultSetFormatter.out(go,results);
+                String s;
+                try {
+                    s = new String(go.toByteArray(), "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    s = new String(go.toByteArray());
+                }
+                b.append(s).append('\n');
+            }
+            return b.toString();
         }else{
             logger.error("Can't convert to String the Object:"+jenaObject.getClass().getName()+" this function " +
-                    "support Model,Node,XSDDatatype ");
+                    "support Model,Node,XSDDatatype,ResultSet ");
             return "N/A";
         }
     }
@@ -1378,7 +1471,8 @@ public class Jena3Utilities {
      * @param rawtext string of the xml text.
      * @return the encode string.
      */
-     private static String xmlEncode(String rawtext) {
+     @SuppressWarnings("Duplicates")
+     private static String xmlEncode(String rawtext){
         // Now turn that UTF-8 string into something "safe"
         String rdfString ="<?xml version='1.0' encoding='ISO-8859-1'?>\n";
         char[] sbuf = rawtext.toCharArray();
@@ -1523,7 +1617,6 @@ public class Jena3Utilities {
      */
     public static String findRdfType(Resource subject) {
         if (subject.isAnon()) {
-            // @@TODO this whole lot needs improving
             return "anon";
         }
         //show(resource);
@@ -2711,6 +2804,29 @@ public class Jena3Utilities {
     }
 
     /**
+     * Method to load a {@link File} of Triple to a {@link Model}.
+     * @param file the {@link File}.
+     * @return the {@link Model}.
+     */
+    public static Model toModel(File file,Lang lang) {
+       /* try {
+            Model model = ModelFactory.createDefaultModel();
+            InputStream stream = file.toURI().toURL().openStream();
+            return  model.read(stream, null,lang.getLabel().toUpperCase());
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }*/
+        return loadFileTripleToModel(file,null,lang.getLabel().toUpperCase());
+    }
+
+   /* public Model toModel(String uri) {
+        Model m = Repository.Instance().getNamedModel(uri);
+        if (m == null)return null;
+        return m;
+    }*/
+
+    /**
      * Method to convert a Jena DataSet to a Jena Model.
      *
      * @param dataSet the Jena dataSet.
@@ -2729,6 +2845,25 @@ public class Jena3Utilities {
      */
     public static Model toModel(Dataset dataSet, String uri) {
         return dataSet.getNamedModel(uri);
+    }
+
+    /**
+     * Method to load a OWL {@link File} to a {@link OntModel} of Jena.
+     * @param owlFile the {@link File} OWL to load.
+     * @return the {@link OntModel} of Jena.
+     */
+    public static OntModel toOntoModel(File owlFile){
+        OntModel ontoModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, null);
+        try {
+            InputStream in = FileManager.get().open(owlFile.toURI().toString());
+            ontoModel.read(in, null);
+            logger.info("Ontology " + owlFile + " loaded.");
+            return ontoModel;
+        }
+        catch (Exception je) {
+            logger.error(je.getMessage(),je);
+            return null;
+        }
     }
 
     /**
@@ -3037,6 +3172,109 @@ public class Jena3Utilities {
         return list;
     }
 
+    //--------------------------------------------------------------------------
+    // TDB
+    //--------------------------------------------------------------------------
+    public Boolean addModelToTDB(Dataset tdb,Model m, String name) {
+        if (name == null) {
+            logger.info("cannot add the model because the given name is null.");
+            return false;
+        }
+        Model namedModel = tdb.getNamedModel(name);
+        namedModel.removeAll();
+        namedModel.add(m.listStatements());
+        namedModel.setNsPrefixes(m.getNsPrefixMap());
+        namedModel.commit();
+        TDB.sync(tdb);
+        return true;
+    }
+
+    //-------------------------------------------------------------------------
+
+    public Model getNamedModel(Dataset dataset,String name) {
+        if (name == null) {
+            logger.info("cannot get the model because the given name is null.");
+            return null;
+        }
+        if (!dataset.containsNamedModel(name)) {
+            logger.info("The model: " + name + " does not exist in the repository.");
+            return null;
+        }
+        return dataset.getNamedModel(name);
+    }
+
+    public void clearNamedModel(Dataset dataset,String name) {
+        if (name == null) {
+            logger.info("cannot clear the model because the given name is null.");
+            return;
+        }
+        if (!dataset.containsNamedModel(name)) {
+            logger.info("The model " + name + " does not exist in the repository.");
+            return;
+        }
+        dataset.getNamedModel(name).removeAll();
+        dataset.getNamedModel(name).commit();
+    }
+
+    /**
+     * imports the named model from a directory or a file
+     * @param lang The language of the file specified by the lang argument.
+     * Predefined values are "RDF/XML", "RDF/XML-ABBREV", "N-TRIPLE", "TURTLE", (and "TTL") and "N3".
+     * The default value, represented by null is "RDF/XML".
+     * @param file the {@link File} to import
+     */
+    public Boolean importModel(Dataset dataset,File file, String lang) {
+        if (!file.exists()) {
+            logger.error("cannot find the file/dir at " + file.getAbsolutePath());
+            return false;
+        }
+        if (file.isFile() && file.exists()) {
+            return importModelFromSingleFile(dataset,file, lang);
+        } else if (file.isDirectory() && file.exists()) {
+            File[] files = file.listFiles();
+            if(files != null && files.length >0) {
+                for (File f : files) {
+                    importModelFromSingleFile(dataset, f, lang);
+                }
+                return true;
+            }else{
+                logger.error("cannot find the any  file on the dir at " + file.getAbsolutePath());
+                return false;
+            }
+        }
+        return false;
+    }
+
+    private Boolean importModelFromSingleFile(Dataset dataset,File file, String lang) {
+        Model m = ModelFactory.createDefaultModel();
+        try {
+            InputStream s = new FileInputStream(file);
+            m.read(s, null);
+            addModelToTDB(dataset,m, file.getName());
+            logger.info("The model " + file.getPath() + " successfully imported to repository");
+            return true;
+        } catch (Throwable t) {
+            logger.error("Error reading the model file!", t);
+            return false;
+        }
+    }
+
+    /**
+     * Method to get the file extension of a triple file from the Language used ont it.
+     * @param lang the {@link Lang} used on the File.
+     * @return the {@link String} name of the extension.
+     */
+    public String getFileExtension(String lang) {
+        String ext = ".rdf";
+        if (lang.equalsIgnoreCase("RDF/XML")) ext = ".rdf";
+        else if (lang.equalsIgnoreCase("RDF/XML-ABBREV")) ext = ".rdf";
+        else if (lang.equalsIgnoreCase("N-TRIPLE")) ext = ".ntriple";
+        else if (lang.equalsIgnoreCase("TURTLE")) ext = ".turtle";
+        else if (lang.equalsIgnoreCase("TTL")) ext = ".ttl";
+        else if (lang.equalsIgnoreCase("N3")) ext = ".n3";
+        return ext;
+    }
+
     //--------------------------------
     //Utility private methods
     //--------------------------------
@@ -3086,6 +3324,21 @@ public class Jena3Utilities {
             } catch (Exception e) {
                 return false;
             }
+        }
+    }
+
+    /**
+     * Validates an URI using Jena
+     * @param _uri URI String to be validated
+     * @return Returns true iff URI is valid for Jena
+     */
+    public static boolean isValidJenaURI(String _uri) {
+        String query = String.format("DESCRIBE <%s>", _uri);
+        try {
+            Query q = QueryFactory.create(query);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 

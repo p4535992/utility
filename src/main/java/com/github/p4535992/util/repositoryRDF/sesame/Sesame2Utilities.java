@@ -58,7 +58,6 @@ import java.util.zip.GZIPInputStream;
  *          NOTE: Work with Sesame openrdf version 2.8.X  and java 1.7
  *          Not Work with openrdf 4.0.X you need to use java 8.
  */
-@SuppressWarnings("unused")
 public class Sesame2Utilities {
 
     private static final org.slf4j.Logger logger =

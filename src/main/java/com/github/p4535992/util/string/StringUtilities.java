@@ -223,6 +223,97 @@ public class StringUtilities {
     }
 
     /**
+     * Determines whether string is valid integer
+     *
+     * @param _int Strign to be tested
+     * @return Returns true iff _int is a valid integer
+     */
+    public static boolean isInteger(String _int) {
+        boolean result = false;
+        try {
+            int i = Integer.parseInt(_int);
+            if(i!= -1)result = true;
+        } catch (NumberFormatException ignored) {}
+        return result;
+    }
+
+    /**
+     * Determines whether string is a valid natural number
+     *
+     * @param _int String to be tested
+     * @return Returns true iff _int is integer > 0
+     */
+    public static boolean isNaturalNumber(String _int) {
+        boolean result = false;
+        try {
+            int i = Integer.parseInt(_int);
+            if (i > 0)  result = true;
+        } catch (NumberFormatException ignored) {}
+        return result;
+    }
+
+    /**
+     * Determines whether string is a natural number or zero
+     *
+     * @param _int String to be tested
+     * @return Returns true iff _int is integer > -1
+     */
+    public static boolean isWholeNumber(String _int) {
+        boolean result = false;
+        try {
+            int i = Integer.parseInt(_int);
+            if (i > -1) result = true;
+        } catch (NumberFormatException ignored) {}
+        return result;
+    }
+
+    /**
+     * Determines whether _double is a real number
+     *
+     * @param _double String to be tested
+     * @return Returns true iff string is real number
+     */
+    public static boolean isRealNumber(String _double) {
+        boolean result = false;
+        try {
+            double i = Double.parseDouble(_double);
+            if(i!= -1)result = true;
+        } catch (NumberFormatException ignored) { }
+        return result;
+    }
+
+    /**
+     * Determines whether string is a real positive number
+     *
+     * @param _double String to be tested
+     * @return Returns true iff _double is real positive number
+     */
+    public static boolean isRealPositiveNumber(String _double) {
+        boolean result = false;
+        try {
+            double i = Double.parseDouble(_double);
+            if (i > 0.0) result = true;
+        } catch (NumberFormatException ignored) { }
+        return result;
+    }
+
+    /**
+     * Determines whether string is a real positive number
+     *
+     * @param _double String to be tested
+     * @return Returns true iff _double is real positive number
+     */
+    public static boolean isRealNonNegativeNumber(String _double) {
+        boolean result = false;
+        try {
+            double i = Double.parseDouble(_double);
+            if (i >= 0.0) result = true;
+        } catch (NumberFormatException ignored) {}
+        return result;
+    }
+
+
+    /**
      * Method for check if a string rappresent a Double value.
      * @param str string rappresentative of a number.
      * @return boolean value if the string rappresent a number or not.

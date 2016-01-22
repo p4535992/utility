@@ -40,6 +40,11 @@
     </licenses>
 
     <repositories>
+        <!-- Jitpack -->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
         <!-- Jena-Sesame-CumulusRDF Driver -->
         <repository>
             <snapshots>
@@ -79,9 +84,9 @@
         <downloadJavadocs>true</downloadJavadocs>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-        <java-version>1.7</java-version>
+        <java-version>1.8</java-version>
         <encoding>UTF-8</encoding>
-        <language-level>1.7</language-level>
+        <language-level>1.8</language-level>
         <!-- Version of the Maven properties -->
         <maven-eclipse-plugin.version>2.9</maven-eclipse-plugin.version>
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
@@ -989,7 +994,6 @@
             <version>${org.onebusaway.version}</version>
             <optional>true</optional>
         </dependency>
-
 
     </dependencies>
 

@@ -2466,6 +2466,28 @@ public class FileUtilities {
         return displaySize;
     }
 
+    public static Boolean isFileExists(String  pathToFile) {
+        File file = new File(pathToFile);
+        Path path = Paths.get(pathToFile);
+        /*
+        I would recommend using isFile() instead of exists().
+        Most of the time you are looking to check if the path points to a file not only that it exists.
+        Remember that exists() will return true if your path points to a directory.
+        */
+         /*
+        If both exists and notExists return false, the existence of the file cannot be verified.
+        (maybe no access right to this path)
+        */
+        return file.isFile() && file.exists() || Files.exists(path) && Files.isRegularFile(path);
+
+    }
+
+    public static Boolean isDirectoryExists(String  pathToFile) {
+        File file = new File(pathToFile);
+        Path path = Paths.get(pathToFile);
+        return file.isDirectory() && file.exists() || Files.exists(path) && Files.isDirectory(path);
+    }
+
     /**
      * Utility for a depth first traversal of a file-system starting from a
      * given node (file or directory). e.g.

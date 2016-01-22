@@ -22,11 +22,11 @@ public class SimpleParameters {
      * Get the name-value pairs as a Map.
      * @return map of name-value.
      */
-    public static Map<String, String> getParameters() {
+    public Map<String, String> getParameters() {
         return mParameters;
     }
 
-    public static void setParameters(Map<String, String> mParameters) {
+    public void setParameters(Map<String, String> mParameters) {
         SimpleParameters.mParameters = mParameters;
     }
 
