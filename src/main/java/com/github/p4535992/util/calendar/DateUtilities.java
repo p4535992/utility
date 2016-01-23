@@ -23,6 +23,57 @@ public class DateUtilities {
     public static final int LAST_WEEK = 1;
     public static final int LAST_MONTH = 2;
 
+    // List of all date formats that we want to parse.
+    // Add your own format here.
+    /*
+    private static final List<SimpleDateFormat> dateFormats = new ArrayList<SimpleDateFormat>() {
+        {
+            add(new SimpleDateFormat("M/dd/yyyy"));
+            add(new SimpleDateFormat("dd.M.yyyy"));
+            add(new SimpleDateFormat("M/dd/yyyy hh:mm:ss a"));
+            add(new SimpleDateFormat("dd.M.yyyy hh:mm:ss a"));
+            add(new SimpleDateFormat("dd.MMM.yyyy"));
+            add(new SimpleDateFormat("dd-MMM-yyyy"));
+        }
+    };
+    */
+
+    /**
+     * Convert String with various formats into java.util.Date
+     *
+     * @param input
+     *            Date as a string
+     * @return java.util.Date object if input string is parsed
+     *          successfully else returns null
+     */
+    public static Date convertToDate(String input) {
+        Date date = null;
+        if(null == input) {
+            return null;
+        }
+        List<SimpleDateFormat> dateFormats = new ArrayList<>();
+        dateFormats.add(new SimpleDateFormat("M/dd/yyyy"));
+        dateFormats.add(new SimpleDateFormat("dd.M.yyyy"));
+        dateFormats.add(new SimpleDateFormat("M/dd/yyyy hh:mm:ss a"));
+        dateFormats.add(new SimpleDateFormat("dd.M.yyyy hh:mm:ss a"));
+        dateFormats.add(new SimpleDateFormat("dd.MMM.yyyy"));
+        dateFormats.add(new SimpleDateFormat("dd-MMM-yyyy"));
+        
+        for (SimpleDateFormat format : dateFormats) {
+            try {
+                format.setLenient(false);
+                date = format.parse(input);
+            } catch (ParseException e) {
+                logger.error("Shhh.. try other date formats:"+e.getMessage(),e);
+            }
+            if (date != null) {
+                break;
+            }
+        }
+
+        return date;
+    }
+
     /**
      * Method to get the current GMT time for user notification.
      * @return timestamp value as string.

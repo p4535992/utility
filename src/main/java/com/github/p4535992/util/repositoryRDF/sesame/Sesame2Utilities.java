@@ -630,6 +630,7 @@ public class Sesame2Utilities {
      * Parses and loads all files specified in PARAM_PRELOAD.
      *
      * @param preloadFolder the {@link String} to the directory File e.home.  "./preload".
+     * @return if true all the operations are done.
      */
     public Boolean importIntoRepositoryDirectoryChunked(String preloadFolder) {
         if (!new File(preloadFolder).exists()) {
@@ -3553,9 +3554,10 @@ public class Sesame2Utilities {
      * @return the {@link Model} with setted namespaces.
      */
     public Model setNamespacePrefixesToModel(Map<String, String> namespacePrefixes, Model model) {
-        for (Map.Entry<String, String> entry : namespacePrefixes.entrySet()) {
+        //for (Map.Entry<String, String> entry : namespacePrefixes.entrySet()) {
+        namespacePrefixes.entrySet().stream().forEach((entry) -> {
             model.setNamespace(entry.getKey(), entry.getValue());
-        }
+        });
         return model;
     }
 

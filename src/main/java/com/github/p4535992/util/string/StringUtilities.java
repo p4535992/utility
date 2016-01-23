@@ -121,9 +121,9 @@ public class StringUtilities {
 
     public static String toString(Collection<String> collection){
         StringBuilder builder = new StringBuilder();
-        for(String line: collection){
+        collection.stream().forEach((line) -> {
             builder.append(line).append(LINE_SEPARATOR);
-        }
+        });
         return builder.toString();
     }
     
@@ -241,7 +241,7 @@ public class StringUtilities {
      * Determines whether string is a valid natural number
      *
      * @param _int String to be tested
-     * @return Returns true iff _int is integer > 0
+     * @return Returns true iff _int is integer is greater than 0
      */
     public static boolean isNaturalNumber(String _int) {
         boolean result = false;
@@ -256,7 +256,7 @@ public class StringUtilities {
      * Determines whether string is a natural number or zero
      *
      * @param _int String to be tested
-     * @return Returns true iff _int is integer > -1
+     * @return Returns true iff _int is integer not -1
      */
     public static boolean isWholeNumber(String _int) {
         boolean result = false;
@@ -1762,15 +1762,16 @@ public class StringUtilities {
 
     private static Charset detectCharset(InputStream inputStream, Charset charset) {
         try {
-            BufferedInputStream input = new BufferedInputStream(inputStream);
-            CharsetDecoder decoder = charset.newDecoder();
-            decoder.reset();
-            byte[] buffer = new byte[512];
-            boolean identified = false;
-            while ((input.read(buffer) != -1) && (!identified)) {
-                identified = identify(buffer, decoder);
+            boolean identified;
+            try (BufferedInputStream input = new BufferedInputStream(inputStream)) {
+                CharsetDecoder decoder = charset.newDecoder();
+                decoder.reset();
+                byte[] buffer = new byte[512];
+                identified = false;
+                while ((input.read(buffer) != -1) && (!identified)) {
+                    identified = identify(buffer, decoder);
+                }
             }
-            input.close();
             if (identified) return charset;
             else  return null;
         } catch (Exception e) {return null;}

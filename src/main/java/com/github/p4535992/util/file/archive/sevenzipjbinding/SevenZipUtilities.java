@@ -247,6 +247,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
      * href: http://www.programcreek.com/java-api-examples/index.php?source_dir=Starbound-Mod-Manager-master/src/main/java/net/krazyweb/helpers/Archive.java
      * @param path the Path object of the Archive file to extract on the specific folder.
      * @return if true all the operations are succesfull.
+     * @throws com.github.p4535992.util.file.archive.sevenzipjbinding.ExtractionException if any error is occurred.
      */
     public boolean extracArchive(Path path) throws ExtractionException {
         logger.info("Extracting the archive file "+ path.toString()+"...");
@@ -289,10 +290,10 @@ public class SevenZipUtilities extends ArchiveUtilities{
                         filesListInZip.add(pathArchiveFile.toFile());
                     }
                 }finally{
-                    if (inArchive != null) {
-                        inArchive.close();
-                    }
+                    /*
+                    if (inArchive != null)inArchive.close();             
                     randomAccessFile.close();
+                    */
                 }
             } catch (FileNotFoundException e) {
                 throw new ExtractionException("File not found", e);

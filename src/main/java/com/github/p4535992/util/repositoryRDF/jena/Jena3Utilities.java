@@ -789,6 +789,7 @@ public class Jena3Utilities {
 
     /** Read RDF data..
      * @param uriResource  URI to read from (includes file: and a plain file name).
+     * @return the {@link StreamRDF}.
      */
     public static StreamRDF  toStreamRDF(String uriResource){
         StreamRDF streamRDF =new StreamRDFBase();
@@ -796,7 +797,13 @@ public class Jena3Utilities {
         return streamRDF;
     }
 
-    /** Send the triples of graph and it's prefix mapping to a StreamRDF, enclosed in stream.start()/steram.finish() */
+    /** Send the triples of graph and it's prefix mapping to a StreamRDF, 
+     * enclosed in stream.start()/steram.finish() 
+     * @param output the {@link OutputStream} for the destination .
+     * @param lang the {@link Lang} of Jena.
+     * @param model the {@link Model} of Jena.
+     * @return the {@link StreamRDF}.
+     */
     public static StreamRDF toStreamRDF(OutputStream output,Lang lang,Model model){
         StreamRDF writer = StreamRDFWriter.getWriterStream(output, lang) ;
         StreamOps.graphToStream(model.getGraph(), writer);
@@ -1720,11 +1727,12 @@ public class Jena3Utilities {
      * @return the model jena with the prefix of namespace.
      */
     public static Model setCommonPrefixes(Model model, Map<String, String> namespaces) {
-        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+        //for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+        namespaces.entrySet().stream().forEach((entry) -> {
             //model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
             //model.setNsPrefix("vis", "http://ideagraph.org/xmlns/idea/graphic#");
             model.setNsPrefix(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
-        }
+        });
         return model;
     }
 
@@ -2570,10 +2578,11 @@ public class Jena3Utilities {
     /**
      * Method utility: create statement form a jena Model.
      *
-     * @param subject   the iri subject.
-     * @param predicate the iri predicate.
-     * @param object    the iri object.
-     * @return Statement.
+     * @param subject   the {@link Object} iri subject.
+     * @param predicate the {@link Object} iri predicate.
+     * @param object    the {@link Object} iri object.
+     * @param xsdDatatype the {@link XSDDatatype}
+     * @return the {@link Statement} of Jena.
      */
     public static Statement toStatement(Object subject, Object predicate, Object object,XSDDatatype xsdDatatype) {
         return createStatementBase(null, subject, predicate, object, null, xsdDatatype);
@@ -2806,6 +2815,7 @@ public class Jena3Utilities {
     /**
      * Method to load a {@link File} of Triple to a {@link Model}.
      * @param file the {@link File}.
+     * @param lang the {@link Lang} of Jena.
      * @return the {@link Model}.
      */
     public static Model toModel(File file,Lang lang) {
@@ -2888,9 +2898,10 @@ public class Jena3Utilities {
     public static Dataset toDataset(Model baseModel, Map<String, Model> listModel) {
         Dataset dataset = DatasetFactory.createGeneral();
         dataset.setDefaultModel(baseModel);
-        for (Map.Entry<String, Model> entry : listModel.entrySet()) {
+        // for (Map.Entry<String, Model> entry : listModel.entrySet()) {
+        listModel.entrySet().stream().forEach((entry) -> {
             dataset.addNamedModel(entry.getKey(), entry.getValue());
-        }
+        });
         return dataset;
     }
 
@@ -3120,6 +3131,7 @@ public class Jena3Utilities {
      * @param infModel the {@link InfModel} of Jena.
      * @return the {@link String} with the result of the validation of the Model.
      */
+    @SuppressWarnings("rawtypes")
     public static String validateModel(InfModel infModel){
         // VALIDITY CHECK against RDFS
         StringBuilder buf = new StringBuilder();
@@ -3165,8 +3177,8 @@ public class Jena3Utilities {
 
     public static List<String> simpleReadOntology(OntModel model) {
         List<String> list = new ArrayList<>();
-        for (Iterator i = model.listClasses(); i.hasNext();) {
-            OntClass c = (OntClass) i.next();
+        for (Iterator<OntClass> i = model.listClasses(); i.hasNext();) {
+            OntClass c = i.next();
             list.add(c.getLocalName());
         }
         return list;
@@ -3218,10 +3230,12 @@ public class Jena3Utilities {
 
     /**
      * imports the named model from a directory or a file
+     * @param dataset the {@link Dataset}.
      * @param lang The language of the file specified by the lang argument.
      * Predefined values are "RDF/XML", "RDF/XML-ABBREV", "N-TRIPLE", "TURTLE", (and "TTL") and "N3".
      * The default value, represented by null is "RDF/XML".
      * @param file the {@link File} to import
+     * @return the {@link Boolean}.
      */
     public Boolean importModel(Dataset dataset,File file, String lang) {
         if (!file.exists()) {
@@ -3506,7 +3520,7 @@ public class Jena3Utilities {
 
     /**
      * Method to convert a Ontolotgy file .rdf,.owl to a Vocabolary Jena.
-     * e.g. -i <input> [-a <namespaceURI>] [-o <output file>] [-c <config uri>] [-e <encoding>]...
+     * e.g. -i input [-a namespaceURI] [-o output_file] [-c config_uri] [-e encoding]...
      * @param inputOntology the {@link File} input of the Ontology.
      * @param baseUri the {@link String} base uri.
      * @param outputJenaVocabulary the {@link File} output Vocabulary class ojava of API Jena.

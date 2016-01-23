@@ -1,5 +1,6 @@
 package com.github.p4535992.util.file;
 
+import com.github.p4535992.util.file.csv.opencsv.OpenCsvUtilities;
 import com.github.p4535992.util.file.resources.ClassLoaderUtil;
 import com.github.p4535992.util.string.StringUtilities;
 
@@ -1435,50 +1436,18 @@ public class FileUtilities {
      * @return a String Array of the columns.
      */
     public static String[] CSVGetHeaders(File fileCSV, boolean hasFirstLine) {
-        String[] columns = new String[0];
-        try {
-            com.opencsv.CSVReader reader = new com.opencsv.CSVReader(new FileReader(fileCSV));
-            columns = reader.readNext(); // assuming first read
-            if (!hasFirstLine) {
-                int columnCount = 0;
-                if (columns != null) columnCount = columns.length;
-                columns = new String[columnCount];
-                for (int i = 0; i < columnCount; i++) {
-                    columns[i] = "Column#" + i;
-                }
-            }
-        } catch (IOException e) {
-            logger.error("Can't find the CSV File", e);
-        }
-        return columns;
+       return OpenCsvUtilities.getHeaders(fileCSV,hasFirstLine);
     }
-
 
     /**
      * Method to get the content of a comma separated file (.csv,.input,.txt)
      *
      * @param CSV    the File comma separated.
-     * @param header if true jump the first line of the content.
+     * @param noHeaders if true jump the first line of the content.
      * @return the List of Array of the content of the File comma separated.
      */
-    public static List<String[]> CSVGetContent(File CSV, boolean header) {
-        List<String[]> content;
-        try {
-            com.opencsv.CSVReader reader1 = new com.opencsv.CSVReader(new FileReader(CSV));
-            content = reader1.readAll();
-            /* List<String[]> myDatas = reader1.readAll();
-            String[] lineI = myDatas.get(i);
-            for (String[] line : myDatas) {
-                for (String value : line) {
-                    //do stuff with value
-                }
-            }*/
-            if (header) content.remove(0);
-            return content;
-        } catch (IOException e) {
-            logger.error("Can't find the CSV File:" + e.getMessage(), e);
-            return null;
-        }
+    public static List<String[]> CSVGetContent(File CSV, boolean noHeaders) {
+        return OpenCsvUtilities.parseCSVFileAsList(CSV,noHeaders);
     }
 
     /**

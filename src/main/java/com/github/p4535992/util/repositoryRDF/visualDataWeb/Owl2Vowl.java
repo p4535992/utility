@@ -1,7 +1,5 @@
 package com.github.p4535992.util.repositoryRDF.visualDataWeb;
 
-import com.github.p4535992.util.log.logback.LogBackUtil;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,16 +36,16 @@ public class Owl2Vowl {
      * e.g. java -jar owl2vowl.jar -file path/to/local/ontology
      * -dependencies path/to/dependency1 path/to/dependency2 ...
      * @param ontologyFile the {@link File} Ontology to convert.
-     * @param dependencies the {@link List} of ontologies with some dependency on the <code>ontologyFile</cod>.
+     * @param dependencies the {@link List} of ontologies with some dependency on the ontologyFile.
      */
     public static void convertOntologyByFile(File ontologyFile, List<File> dependencies){
         List<String> list = new ArrayList<>();
         list.add("-file");
         list.add(ontologyFile.getAbsolutePath());
         list.add("-dependencies");
-        for(File file : dependencies){
+        dependencies.stream().forEach((file) -> {
             list.add(file.getAbsolutePath());
-        }
+        });
         String[] arrayarams = list.toArray(new String[list.size()]);
         de.uni_stuttgart.vis.vowl.owl2vowl.Main.main(arrayarams);
     }
