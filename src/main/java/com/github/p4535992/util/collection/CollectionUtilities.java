@@ -19,10 +19,6 @@ public class CollectionUtilities {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(CollectionUtilities.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
     /**
      * Method to check if a Class is a Collection or not.
      * @param c the Class to inspect.
@@ -101,10 +97,15 @@ public class CollectionUtilities {
     @SuppressWarnings("unchecked")
     public static <T> Set<T> toSet(Object collection){
         if(isCollection(collection)) {
-            if(collection instanceof Enumeration) return EnumerationUtilities.toSet((Enumeration<T>) collection);
-            else if(collection instanceof List) return ListUtilities.toSet((List<T>) collection);
-            else if(collection instanceof Array) return ArrayUtilities.toSet((T[]) collection);
-            else return new HashSet<>();
+            try {
+                if (collection instanceof Enumeration) return EnumerationUtilities.toSet((Enumeration<T>) collection);
+                else if (collection instanceof List) return ListUtilities.toSet((List<T>) collection);
+                else if (collection instanceof Array) return ArrayUtilities.toSet((T[]) collection);
+                else return new HashSet<>();
+            }catch(ClassCastException e){
+                logger.error(e.getMessage(),e);
+                return null;
+            }
         }else{
             logger.error("The object:"+collection+ " is not a Collection");
             return new HashSet<>();

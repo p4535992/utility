@@ -4,9 +4,7 @@
  */
 package com.github.p4535992.util.file.resources;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -128,6 +126,19 @@ public class ClassLoaderUtil {
     }
 
     /**
+     * Creates a reader for a resource in the relative path
+     * @param relativePath relative path of the resource to be read
+     * @return a reader of the resource
+     */
+    public static Reader getResourceAsReader(String relativePath) {
+        try {
+            return new InputStreamReader(ClassLoaderUtil.class.getResourceAsStream(relativePath), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Unable to read input", e);
+        }
+    }
+
+    /**
     * Load a class with a given name.
     *
     * It will try to load the class in the following order:
@@ -223,6 +234,8 @@ public class ClassLoaderUtil {
     /**
      * Add a package name prefix if the name is not absolute Remove leading "/"
      * if name is absolute
+     * @param name the {@link String} of the resources.
+     * @return the {@link String} new name.
      */
     private static String resolveName(String name) {
         if (name == null) {

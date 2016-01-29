@@ -173,25 +173,22 @@ public class OpenCsvUtilities extends FileUtilities{
         //add header record
         //records.add(new String[]{"ID","Name","Role","Salary"});
         if(addNewHeader != null) records.add(addNewHeader);
-        //for(T bean : beans) {
-        beans.stream().map((bean) -> {
+        for(T bean : beans) {
+        //beans.stream().map((bean) -> {
             List<String> record = new ArrayList<>();
             //invoke getter method and convert to String
             Class<T> clazz = (Class<T>) bean.getClass();
             //T t = ReflectionUtilities.invokeConstructor(clazz);
             List<Method> getter = (List<Method>) ReflectionUtilities.findGetters(clazz,true);
-            /*
+
             for(Method method : getter){
-            record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method)));
+                 record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method)));
             }
-            */
-            getter.stream().forEach((method) -> {
-                record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method)));
-            });
-            return record;
-        }).forEach((record) -> {
+            //getter.stream().forEach((method) -> record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method))));
+            //return record;
+        //}).forEach((record) -> records.add(ListUtilities.toArray(record)));
             records.add(ListUtilities.toArray(record));
-        });
+        }
         return records;
     }
 
@@ -534,13 +531,13 @@ public class OpenCsvUtilities extends FileUtilities{
             logger.info(count + " records loaded into " + tableName + " DB table");
             con.commit();
         } catch (SQLException | IOException e) {
-            if(con != null)con.rollback();
+            con.rollback();
             throw new IOException(
                     "Error occured while loading data from file to database."
                             + e.getMessage());
         } finally {
             if (null != ps)ps.close();
-            if(con != null)con.close();
+            con.close();
             csvReader.close();
         }
     }

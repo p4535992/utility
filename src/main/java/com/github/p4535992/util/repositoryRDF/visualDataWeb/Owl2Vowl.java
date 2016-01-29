@@ -43,9 +43,11 @@ public class Owl2Vowl {
         list.add("-file");
         list.add(ontologyFile.getAbsolutePath());
         list.add("-dependencies");
-        dependencies.stream().forEach((file) -> {
-            list.add(file.getAbsolutePath());
-        });
+        for(File file : dependencies) {
+        //dependencies.stream().forEach((file) -> {
+                list.add(file.getAbsolutePath());
+        //});
+        }
         String[] arrayarams = list.toArray(new String[list.size()]);
         de.uni_stuttgart.vis.vowl.owl2vowl.Main.main(arrayarams);
     }

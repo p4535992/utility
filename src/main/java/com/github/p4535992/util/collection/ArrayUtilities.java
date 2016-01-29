@@ -8,8 +8,8 @@ import java.util.*;
 /**
  * Created by 4535992 on 21/12/2015.
  * href: https://github.com/azeckoski/reflectutils/blob/master/src/main/java/org/azeckoski/reflectutils/ArrayUtils.java
+ * @author 4535992.
  */
-@SuppressWarnings("unused")
 public class ArrayUtilities {
 
     private static final org.slf4j.Logger logger =
@@ -646,6 +646,10 @@ public class ArrayUtilities {
             map.put(keys[i], values[i]);
         }
         return map;
+    }
+
+    public static <T> Integer getIndexField(T[] array,T field){
+        return Arrays.asList(array).indexOf(field);
     }
 
 }

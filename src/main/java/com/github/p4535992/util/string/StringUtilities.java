@@ -121,9 +121,11 @@ public class StringUtilities {
 
     public static String toString(Collection<String> collection){
         StringBuilder builder = new StringBuilder();
-        collection.stream().forEach((line) -> {
-            builder.append(line).append(LINE_SEPARATOR);
-        });
+        for(String line : collection) {
+            //collection.stream().forEach((line) -> {
+                builder.append(line).append(LINE_SEPARATOR);
+            //});
+        }
         return builder.toString();
     }
     
@@ -1554,15 +1556,15 @@ public class StringUtilities {
                 }
                 logger.warn("The string text " + String.valueOf(object) + " with class :"
                         + object.getClass().getName() + " is not a number!!!");
-                return null;
+                return 0;
             }catch(NumberFormatException e){
                 logger.warn("The string text " + String.valueOf(object) + " with class :"
                         + object.getClass().getName() + " is not a number!!!");
-                return null;
+                return 0;
             }
         }else{
             logger.warn("The string text NULL is not a number!!!");
-            return null;
+            return 0;
         }
         //return Integer.valueOf(numInt);
     }

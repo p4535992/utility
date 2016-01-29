@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -116,7 +117,7 @@ public class FileUtilities {
         int iBack = fullPath.lastIndexOf( '\\' );
         int iExt = fullPath.lastIndexOf( '.' );
         if (iBack > iSlash) iSlash = iBack;
-        extension = iExt > iSlash ? fullPath.substring( iExt+1 ).toLowerCase() : "";
+        extension = iExt > iSlash ? fullPath.substring( iExt+1 ) : "";
 
         //WORK
         if(extension.isEmpty()) {
@@ -124,6 +125,12 @@ public class FileUtilities {
             extension = fullPath.substring(fullPath.lastIndexOf('.') + 1);
         }
 
+        if(extension.isEmpty()) {
+            int i = fullPath.lastIndexOf('.');
+            if (i > 0 &&  i < fullPath.length() - 1) {
+                extension = fullPath.substring(i + 1);
+            }
+        }
         return extension;
     }
 
@@ -486,12 +493,33 @@ public class FileUtilities {
      * @return list of files in the directory.
      */
     public static List<File> getFilesFromDirectory(String fullPathDir) {
+       return getFilesFromDirectory(fullPathDir,null,null);
+    }
+    /**
+     * Method to read all file ina directory/folder.
+     *
+     * @param fullPathDir string path to the location of the directory/folder.
+     * @param offset the {@link Integer} offset iundex of the Files.
+     * @param limit the {@link Integer} limit iundex of the Files.
+     * @return list of files in the directory.
+     */
+    public static List<File> getFilesFromDirectory(String fullPathDir,Integer offset,Integer limit) {
         String[] paths;
         List<File> files = new ArrayList<>();
         try {
             paths = new File(fullPathDir).list();
-            for (String path : paths) {
-                files.add(new File(fullPathDir + File.separator + path));
+            if (offset != null && limit != null &&
+                    offset + limit > paths.length) limit = paths.length;
+            for (int i =0; i < paths.length; i++) {
+                if(offset != null){
+                    if(i >= offset )files.add(new File(fullPathDir + File.separator + paths[i]));
+                    else continue;
+                }else{
+                    files.add(new File(fullPathDir + File.separator + paths[i]));
+                }
+                if(limit != null){
+                    if(i >= limit-1)break;
+                }
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -553,6 +581,7 @@ public class FileUtilities {
         StringBuilder result = new StringBuilder("");
         //Get file from resources folder
         ClassLoader classLoader = thisClass.getClassLoader();
+        //noinspection ConstantConditions
         String resourcePath = classLoader.getResource(fileNameResource).getFile();
         File file = new File(resourcePath);
         try (Scanner scanner = new Scanner(file)) {
@@ -800,6 +829,7 @@ public class FileUtilities {
      */
     public static File toFile(String referenceResourcePath, Class<?> thisClass) {
         try {
+            //noinspection ConstantConditions
             return new File(thisClass.getClassLoader().getResource(referenceResourcePath).getFile());
         } catch (NullPointerException e) {
             logger.error(e.getMessage(), e);
@@ -807,13 +837,14 @@ public class FileUtilities {
         }
     }
 
+
+
     /**
      * Convert filename string to a URI.
      * Map '\' characters to '/' (this might break if '\' is used in
      * a Unix filename, but this is assumed to be a very rare occurrence
      * as '\' is often used with special meaning on Unix.)
-     * For unix-like systems, the absolute filename begins with a '/'
-     * and is preceded by "file://".
+     * For unix-like systems, the absolute filename begins with a '/' and is preceded by "file://".
      * For other systems an extra '/' must be supplied.
      *
      * @param filePath string of the path to the file
@@ -980,6 +1011,7 @@ public class FileUtilities {
         SecureRandom secureRandom = new SecureRandom();
         long secureInitializer = secureRandom.nextLong();
         Random rand = new Random( secureInitializer + Runtime.getRuntime().freeMemory() );
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized ( rand ) {
             do {
                 result = new File( parent, prefix + fmt.format( Math.abs( rand.nextInt() ) ) + suffix );
@@ -1067,6 +1099,7 @@ public class FileUtilities {
         try {
             StringBuilder result = new StringBuilder("");
             //Get file from resources folder
+            //noinspection ConstantConditions
             File file = new File(clazz.getClassLoader().getResource(fileName).getFile());
             try (Scanner scanner = new Scanner(file)) {
                 while (scanner.hasNextLine()) {
@@ -1154,21 +1187,6 @@ public class FileUtilities {
      */
     public static GZIPInputStream toGZIP(String filePathToFile) {
         return toGZIP(new File(filePathToFile));
-    }
-
-    /**
-     * Method for check is a file is a directory/folder.
-     *
-     * @param file the file to inspect.
-     * @return if true is a directory else ia simple file.
-     */
-    public static boolean isDirectory(File file) {
-        if (file.exists()) {
-            return !file.isFile() && file.isDirectory();
-        } else {
-            logger.warn("The file:" + file.getAbsolutePath() + " not exists!");
-            return false;
-        }
     }
 
     /**
@@ -2201,7 +2219,7 @@ public class FileUtilities {
         try {
             in = new InputStreamReader(inputSreamfile, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
         }
         return in;
     }
@@ -2396,7 +2414,7 @@ public class FileUtilities {
      * @param file the String path to the File.
      * @return if true the String path reference to a File.
      */
-    public static boolean isValidFile(String file) {
+    public static boolean isFileValid(String file) {
         try {
             File f = new File(file);
             if (f.isFile() && !f.isDirectory()) return true;
@@ -2435,26 +2453,137 @@ public class FileUtilities {
         return displaySize;
     }
 
+    /**
+     * Method to check is a file exists and is valid.
+     * I would recommend using isFile() instead of exists().
+     * Most of the time you are looking to check if the path points to a file not only that it exists.
+     * Remember that exists() will return true if your path points to a directory.
+     *
+     * If both exists and notExists return false, the existence of the file cannot be verified.
+     * (maybe no access right to this path)
+     * @param pathToFile tje {@link String} path to the file to check.
+     * @return the {@link Boolean} is true the file exists and is valid.
+     */
     public static Boolean isFileExists(String  pathToFile) {
-        File file = new File(pathToFile);
+       /* File file = new File(pathToFile);
         Path path = Paths.get(pathToFile);
-        /*
-        I would recommend using isFile() instead of exists().
-        Most of the time you are looking to check if the path points to a file not only that it exists.
-        Remember that exists() will return true if your path points to a directory.
-        */
-         /*
-        If both exists and notExists return false, the existence of the file cannot be verified.
-        (maybe no access right to this path)
-        */
-        return file.isFile() && file.exists() || Files.exists(path) && Files.isRegularFile(path);
-
+        return file.isFile() && file.exists() || Files.exists(path) && Files.isRegularFile(path);*/
+        return isFileExists(new File(pathToFile));
     }
 
-    public static Boolean isDirectoryExists(String  pathToFile) {
-        File file = new File(pathToFile);
+    /**
+     * Method to check is a directory file exists and is valid.
+     * @param file tje {@link File} path to the file to check.
+     * @return the {@link Boolean} is true the file exists and is valid.
+     */
+    public static Boolean isFileExists(File file) {
+        Path path = Paths.get(file.getAbsolutePath());
+        return file.isFile() && file.exists() || Files.exists(path) && Files.isRegularFile(path);
+    }
+
+    /**
+     * Method to check is a directory file exists and is valid.
+     * @param pathToFile tje {@link String} path to the file to check.
+     * @return the {@link Boolean} is true the file exists and is valid.
+     */
+    public static Boolean isDirectoryExists(String pathToFile) {
+        /*File file = new File(pathToFile);
         Path path = Paths.get(pathToFile);
+        return file.isDirectory() && file.exists() || Files.exists(path) && Files.isDirectory(path);*/
+        return isDirectoryExists(new File(pathToFile));
+    }
+
+    /**
+     * Method to check is a directory file exists and is valid.
+     * @param file tje {@link File} path to the file to check.
+     * @return the {@link Boolean} is true the file exists and is valid.
+     */
+    public static Boolean isDirectoryExists(File file) {
+        Path path = Paths.get(file.getAbsolutePath());
         return file.isDirectory() && file.exists() || Files.exists(path) && Files.isDirectory(path);
+    }
+
+    /*public static boolean isDirectory(File file) {
+        if (file.exists()) {
+            return !file.isFile() && file.isDirectory();
+        } else {
+            logger.warn("The file:" + file.getAbsolutePath() + " not exists!");
+            return false;
+        }
+    }*/
+
+    /**
+     * Method to rename the extension of a file.
+     * @param source the {@link File} the file.
+     * @param newExtension the {@link String} name o f the new extension.
+     * @param tempMode the {@link Boolean} rename the file only on java memory not on the disk.
+     * @return the {@link String} name of the file without extension.
+     */
+    public static String renameExtension(File source, String newExtension,boolean tempMode){
+        return renameExtension(source.getAbsolutePath(),newExtension,tempMode);
+    }
+
+    /**
+     * Method to rename the extension of a file.
+     * @param source the {@link String} path to the file.
+     * @param newExtension the {@link String} name o f the new extension.
+     * @param tempMode the {@link Boolean} rename the file only on java memory not on the disk.
+     * @return the {@link String} name of the file without extension.
+     */
+    public static String renameExtension(String source, String newExtension,boolean tempMode){
+        String target;
+        String currentExtension = getExtension(source);
+        if (currentExtension.equals(""))target = source + "." + newExtension;
+        else {
+            //not work
+            /*target = source.replaceFirst(Pattern.quote("." +
+                    currentExtension) + "$", Matcher.quoteReplacement("." + newExtension));*/
+            target = source.replace("."+currentExtension,"."+newExtension);
+            try{target = target.replace("\\","\\\\");}catch(Exception ignored){}
+        }
+        File file = new File(source);
+        if(tempMode) return target;
+        if(file.renameTo(new File(target))){
+            if(isFileExists(target)) {
+                return target;
+            }else{
+                logger.error("Can't rename the extension of the file:"+file.getAbsolutePath()+" because not exists!");
+                return target;
+            }
+        }else{
+            logger.error("Can't rename the extension of the file the file to rename not exists:"+new File(source).getAbsolutePath());
+            return target;
+        }
+    }
+
+    /**
+     * Method to remove the extension from a file
+     * @param file the {@link File} path to the file.
+     * @return the {@link File} name of the file without extension.
+     */
+    public static File removeExtension(File file) {
+        String fileName = file.getAbsolutePath();
+        int extPos = fileName.lastIndexOf(".");
+        if(extPos == -1) return file;
+        else{
+            if(file.renameTo(new File(fileName.substring(0, extPos)))){
+                return file;
+            }else{
+                logger.error("Can't remove the extension of the file:"+file.getAbsolutePath());
+                return file;
+            }
+        }
+    }
+
+    /**
+     * Method to remove the extension from a file
+     * @param fileName the {@link String} path to the file.
+     * @return the {@link String} name of the file without extension.
+     */
+    public static String removeExtension(String fileName) {
+        int extPos = fileName.lastIndexOf(".");
+        if(extPos == -1)return fileName;
+        else return fileName.substring(0, extPos);
     }
 
     /**

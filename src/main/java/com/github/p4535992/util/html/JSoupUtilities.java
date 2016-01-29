@@ -2,6 +2,8 @@ package com.github.p4535992.util.html;
 
 import com.github.p4535992.util.http.HttpUtilities;
 import com.github.p4535992.util.string.StringUtilities;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.File;
@@ -397,25 +399,41 @@ public class JSoupUtilities {
     public static org.jsoup.nodes.Document toJsoupDocument(String htmlOrUri) {
         org.jsoup.nodes.Document htmldoc = new Document("");
         if (StringUtilities.isURL(htmlOrUri) || StringUtilities.isURI(htmlOrUri)) {
-            try {
-                htmldoc = org.jsoup.Jsoup.connect(htmlOrUri).get();
-            } catch (Exception e) {
-                try {
-                    String html = HttpUtilities.executeHTTPGetRequest(htmlOrUri);
-                    htmldoc = org.jsoup.Jsoup.parse(html);
-                } catch (Exception e1) {
+            try {//try 1
+                //htmldoc = org.jsoup.Jsoup.connect(htmlOrUri).get();
+                htmldoc = Jsoup.connect(htmlOrUri)
+                        .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+                        .referrer("http://www.google.com")
+                        .get();
+            }catch(Exception e11) {
+                try {//try 2 http://stackoverflow.com/questions/6581655/jsoup-useragent-how-to-set-it-right
+                    Connection.Response response = Jsoup.connect(htmlOrUri)
+                            .ignoreContentType(true)
+                            .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
+                            .referrer("http://www.google.com")
+                            .timeout(12000)
+                            .followRedirects(true)
+                            .execute();
+                    htmldoc = response.parse();
+
+                } catch (Exception e) {
                     try {
-                        htmldoc  = org.jsoup.Jsoup.connect(htmlOrUri)
-                                .data("query", "Java")
-                                .userAgent("Mozilla")
-                                .cookie("auth", "token")
-                                .timeout(3000)
-                                .post();
-                    } catch (IOException e2) {
+                        String html = HttpUtilities.executeHTTPGetRequest(htmlOrUri);
+                        htmldoc = org.jsoup.Jsoup.parse(html);
+                    } catch (Exception e1) {
                         try {
-                            htmldoc = Document.createShell(htmlOrUri);
-                        } catch (Exception e3) {
-                            logger.error(e3.getMessage(), e3);
+                            htmldoc = org.jsoup.Jsoup.connect(htmlOrUri)
+                                    .data("query", "Java")
+                                    .userAgent("Mozilla")
+                                    .cookie("auth", "token")
+                                    .timeout(3000)
+                                    .post();
+                        } catch (IOException e2) {
+                            try {
+                                htmldoc = Document.createShell(htmlOrUri);
+                            } catch (Exception e3) {
+                                logger.error(e3.getMessage(), e3);
+                            }
                         }
                     }
                 }

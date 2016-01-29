@@ -11,7 +11,7 @@
 
     <groupId>com.github.p4535992</groupId>
     <artifactId>utility</artifactId>
-    <version>1.6.5</version>
+    <version>1.6.7</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -89,9 +89,8 @@
         <downloadJavadocs>true</downloadJavadocs>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-        <java-version>1.8</java-version>
+        <java.language.level.version>1.7</java.language.level.version>
         <encoding>UTF-8</encoding>
-        <language-level>1.8</language-level>
         <!-- Version of the Maven properties -->
         <maven-eclipse-plugin.version>2.9</maven-eclipse-plugin.version>
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
@@ -901,7 +900,7 @@
         </dependency>
         <!-- log4j 2 to slf4j bridge
         http://www.ffbit.com/blog/2014/05/12/a-brand-new-log4j-2-and-its-slf4j-binding/-->
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>2.5</version>
@@ -934,16 +933,8 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-ext</artifactId>
                 </exclusion>
-              <!--  <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>-->
-               <!-- <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>-->
             </exclusions>
-        </dependency>
+        </dependency>-->
 
         <!-- Add implementation of log4j -->
         <dependency>
@@ -1006,6 +997,28 @@
             <optional>true</optional>
         </dependency>
 
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-gtfs-merge</artifactId>
+            <version>${org.onebusaway.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Other GTFS Support dependency -->
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-collections</artifactId>
+            <version>1.2.0</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.onebusaway</groupId>
+            <artifactId>onebusaway-gtfs-realtime-api</artifactId>
+            <version>1.2.0</version>
+            <optional>true</optional>
+        </dependency>
+
+
     </dependencies>
 
     <build>
@@ -1049,8 +1062,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>${language-level}</source>
-                    <target>${language-level}</target>
+                    <source>${java.language.level.version}</source>
+                    <target>${java.language.level.version}</target>
                     <compilerArgument>-Xlint:all</compilerArgument>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>

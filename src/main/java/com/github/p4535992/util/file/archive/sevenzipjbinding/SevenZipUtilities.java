@@ -5,11 +5,11 @@ import com.github.p4535992.util.file.archive.ArchiveUtilities;
 import net.sf.sevenzipjbinding.*;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
+import org.apache.commons.compress.archivers.sevenz.SevenZFile;
+import org.apache.jena.ext.com.google.common.io.Files;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -55,12 +55,24 @@ public class SevenZipUtilities extends ArchiveUtilities{
         this.filterRegex = filterToRegex(filter);
     }
 
+    /**
+     *
+     * @param archive the String path to the Archive.
+     * @param outputDirectory the String path to the directory output of the extraction.
+     * @param test if true abilitate the test extraction, no phisical extraction of the archive.
+     */
+    public SevenZipUtilities(String archive, String outputDirectory, boolean test) {
+        this.archive = archive;
+        this.outputDirectory = outputDirectory;
+        this.test = test;
+    }
+
     public SevenZipUtilities(String archive, String outputDirectory) {
         this.archive = archive;
         this.outputDirectory = outputDirectory;
     }
 
-    public SevenZipUtilities() {}
+    protected SevenZipUtilities() {}
 
     void extract() throws ExtractionException {
         checkArchiveFile();
@@ -89,6 +101,33 @@ public class SevenZipUtilities extends ArchiveUtilities{
         }
     }
 
+    /**
+     * href: http://stackoverflow.com/questions/21897286/how-to-extract-files-from-a-7-zip-stream-in-java-without-store-it-on-hard-disk
+     * @param zipFile the {@link File} of the Zip.
+     * @return the {@link List} of {@link File} into to the Zip. 
+     */
+    public List<File> extractFilesFromArchive(File zipFile){
+        List<File> files = new ArrayList<>();
+        try {
+            try (SevenZFile sevenZFile = new SevenZFile(zipFile)) {
+                SevenZArchiveEntry entry = sevenZFile.getNextEntry();
+                while (entry != null) {
+                    File file = new File(FileUtilities.getDirectoryFile(zipFile)+File.separator+entry.getName());
+                    try (FileOutputStream out = new FileOutputStream(file)) {
+                        byte[] content = new byte[(int) entry.getSize()];
+                        sevenZFile.read(content, 0, content.length);
+                        out.write(content);
+                    }
+                    entry = sevenZFile.getNextEntry();
+                    files.add(file);
+                }
+            }
+        }catch(IOException e){
+            logger.error(e.getMessage(),e);
+        }
+        return files;
+    }
+
     public Boolean extractArchive() throws ExtractionException {
         return extractArchive(archive);
     }
@@ -98,6 +137,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
     }
 
     public Boolean extractArchive(File archive) throws ExtractionException {
+        if(!FileUtilities.isFileExists(archive.getAbsolutePath())) return false;
         long time = System.currentTimeMillis();
         logger.info("Extracting the archive file "+ archive.getAbsolutePath()+"...");
         RandomAccessFile randomAccessFile;
@@ -157,7 +197,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
         try {
 
             int[] ids = null; // All items
-            if (filterRegex != null) {
+            if (filterRegex != null && !filterRegex.isEmpty()) {
                 ids = filterIds(inArchive, filterRegex);
             }
             inArchive.extract(ids, test, new ExtractCallback(inArchive,outputDirectoryFile));

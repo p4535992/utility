@@ -31,6 +31,15 @@ public class SQLSupport<T>{
     private String[] COLUMNS;
     private Object[] VALUES;
     private int[] TYPES;
+    private int[] LENGTH;
+
+    public int[] getLENGTH() {
+        return LENGTH;
+    }
+
+    public void setLENGTH(int[] LENGTH) {
+        this.LENGTH = LENGTH;
+    }
 
     public String[] getCOLUMNS() {
         return COLUMNS;
@@ -54,6 +63,14 @@ public class SQLSupport<T>{
 
     public void setTYPES(int[] TYPES) {
         this.TYPES = TYPES;
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected <E> SQLSupport(String[] columns,int[] types,int[] length){
+        //this.cl = ReflectionKit.getTheParentGenericClass(object.getClass());
+        this.COLUMNS=columns;
+        this.TYPES = types;
+        this.LENGTH = length;
     }
 
     @SuppressWarnings("rawtypes")

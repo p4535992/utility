@@ -1727,12 +1727,13 @@ public class Jena3Utilities {
      * @return the model jena with the prefix of namespace.
      */
     public static Model setCommonPrefixes(Model model, Map<String, String> namespaces) {
-        //for (Map.Entry<String, String> entry : namespaces.entrySet()) {
-        namespaces.entrySet().stream().forEach((entry) -> {
+        for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+            //namespaces.entrySet().stream().forEach((entry) -> {
             //model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
             //model.setNsPrefix("vis", "http://ideagraph.org/xmlns/idea/graphic#");
             model.setNsPrefix(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
-        });
+            //});
+        }
         return model;
     }
 
@@ -2898,10 +2899,11 @@ public class Jena3Utilities {
     public static Dataset toDataset(Model baseModel, Map<String, Model> listModel) {
         Dataset dataset = DatasetFactory.createGeneral();
         dataset.setDefaultModel(baseModel);
-        // for (Map.Entry<String, Model> entry : listModel.entrySet()) {
-        listModel.entrySet().stream().forEach((entry) -> {
+        for (Map.Entry<String, Model> entry : listModel.entrySet()) {
+        //listModel.entrySet().stream().forEach((entry) -> {
             dataset.addNamedModel(entry.getKey(), entry.getValue());
-        });
+        //});
+        }
         return dataset;
     }
 

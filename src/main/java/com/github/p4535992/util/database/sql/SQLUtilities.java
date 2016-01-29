@@ -1,5 +1,8 @@
 package com.github.p4535992.util.database.sql;
 
+import com.github.p4535992.util.collection.ArrayUtilities;
+import com.github.p4535992.util.collection.ListUtilities;
+import com.github.p4535992.util.collection.MapUtilities;
 import com.github.p4535992.util.database.jooq.JOOQUtilities;
 import com.github.p4535992.util.database.sql.datasource.DatabaseContextFactory;
 import com.github.p4535992.util.database.sql.datasource.LocalContext;
@@ -605,19 +608,52 @@ public class SQLUtilities {
 
     /**
      * Method to get the List of all Tables on a Specific connection.
+     * href:http://www.javaroots.com/2013/09/print-tables-details-in-schema-jdbc.html.
      * @param connection the SQL Connection.
+     * @param schemaName the String anme of the schema.
      * @return the List of Name of the Tables.
      * @throws SQLException throw if any error with the SQL is occurred.
      */
-    public static List<String> getTablesFromConnection(Connection connection) throws SQLException {
+    public static List<String> getTablesFromConnection(Connection connection,String schemaName) throws SQLException {
         List<String> tableNames = new ArrayList<>();
         DatabaseMetaData md = connection.getMetaData();
-        ResultSet rs = md.getTables(null, null, "%", null);
+        String SCHEMA_NAME="${"+schemaName+"}";
+        //ResultSet rs = md.getTables(null, null, "%", null);
+        ResultSet rs = md.getTables(null, null, "%", new String[]{"TABLE_TYPES"});
         while (rs.next()) {
-            tableNames.add(rs.getString(3)); //column 3 is TABLE_NAME
+            //tableNames.add(rs.getString(3)); //column 3 is TABLE_NAME
+            /*String tableName = resultSet.getString(3);
+            String tableCatalog = resultSet.getString(1);
+            String tableSchema = resultSet.getString(2);*/
+            tableNames.add(rs.getString("TABLE_NAME"));
+            //tableNames.add(rs.getString("TABLE_SCHEMA"));
         }
         return tableNames;
     }
+
+    public static Map<String,String[]> getTableAndColumn(Connection connection,String schemaName) throws SQLException {
+        Map<String,String[]> tableNames = new HashMap<>();
+        DatabaseMetaData md = connection.getMetaData();
+        String SCHEMA_NAME="${"+schemaName+"}";
+        String[] types = { "TABLE" };
+        //ResultSet rs = md.getTables(null, null, "%", null);
+        ResultSet rs = md.getTables(null,null,null, types);
+        //rs = md.getTables(null, SCHEMA_NAME, "%", new String[]{"TABLE_TYPES"});
+        while(rs.next()) {
+            String tableName = rs.getString(3);
+            ResultSet columns = md.getColumns(null,null,tableName,null);
+            List<String> array = new ArrayList<>();
+            while(columns.next()) {
+                String columnName = columns.getString(4);
+                array.add(columnName);
+            }
+            tableNames.put(tableName, ListUtilities.toArray(array));
+            array.clear();
+        }
+        return tableNames;
+    }
+
+
 
     /**
      * Method to close the actual connectiom.
@@ -664,26 +700,42 @@ public class SQLUtilities {
      * @throws SQLException throw if any error is occurred during the execution of the query SQL.
      */
     public static ResultSet executeSQL(String sql) throws SQLException {
-       return executeSQL(sql,conn);
+       return executeSQL(sql,conn,null);
+    }
+
+    /**
+     * Method to execute a query SQL.
+     * @param sql the String query SQL.
+     * @param conn the {@link Connection} SQL to the database.
+     * @return the ResultSet of the Query SQL.
+     * @throws SQLException throw if any error is occurred during the execution of the query SQL.
+     */
+    public static ResultSet executeSQL(String sql,Connection conn) throws SQLException {
+        return executeSQL(sql,conn,null);
     }
 
     /**
      * Method to execute a query SQL.
      * @param sql the String query SQL.
      * @param conn the Connection to the Database where execute the query.
+     * @param stmt the {@link Statement} SQL.
      * @return the ResultSet of the Query SQL.
      * @throws SQLException throw if any error is occurred during the execution of the query SQL.
      */
-    public static ResultSet executeSQL(String sql,Connection conn) throws SQLException  {
+    public static ResultSet executeSQL(String sql,Connection conn,Statement stmt) throws SQLException  {
         //if the String query is a apth to a File batch
         if(sql.contains(FileUtilities.pathSeparatorReference)){ //Reference path
-             if(FileUtilities.isValidFile(sql)){
+             if(FileUtilities.isFileValid(sql)){
                  executeSQL(new File(sql),conn);
+                 logger.info("Exeute the File SQL:"+new File(sql).getAbsolutePath());
                  return null;
              }
         }
         // create the java statement
-        stmt = conn.createStatement();
+        if(stmt == null) {
+            stmt = conn.createStatement();
+            SQLUtilities.stmt = stmt;
+        }
         //if are multiple statements
         if(sql.endsWith(";")) sql = sql.substring(0, sql.length() - 1);
         if(sql.split(";").length > 1){
@@ -709,11 +761,13 @@ public class SQLUtilities {
                 }
             }
             stmt.clearBatch();
+            logger.info("Execute the List of Queries SQL");
             return null;
         }else {
             // execute the query, and get a java resultset
             try {
                 //Executes the given SQL statement, which returns a single ResultSet object.
+                logger.info("Execute the Query SQL:"+sql);
                 return stmt.executeQuery(sql);
             } catch (SQLException e) {
                 try {
@@ -721,11 +775,18 @@ public class SQLUtilities {
                     // or DELETE statement or an SQL statement that returns nothing,
                     // such as an SQL DDL statement.
                     stmt.executeUpdate(sql);
+                    logger.info("Execute the Query SQL:"+sql);
                     return null;
                 } catch (SQLException e1) {
                     //if a mix separated from ";"
-                    stmt.execute(sql);
-                    return null;
+                    try {
+                        stmt.execute(sql);
+                        logger.info("Execute the Query SQL:" + sql);
+                        return null;
+                    }catch(Exception e42){
+                        logger.error(e42.getMessage(),e42);
+                        return null;
+                    }
                 }
             }
         }
@@ -1176,6 +1237,45 @@ public class SQLUtilities {
             logger.error(e.getMessage(),e);
         }
         return dataSource;
+    }
+
+    public static Boolean exportData(Connection conn,String filename,String tableName) {
+        Statement stmt;
+        String query;
+        try {
+            stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
+            //For comma separated file
+            query = "SELECT * INTO OUTFILE '"+filename+"' FIELDS TERMINATED BY ',' FROM "+tableName+";";
+            //stmt.executeQuery(query);
+            // stmt.executeUpdate("SELECT * INTO OUTFILE \"" + filename + "\" FROM " + tablename);
+            executeSQL(query,conn,stmt);
+            return true;
+        } catch(Exception e) {
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }
+
+    public static Boolean importData(Connection conn,File file,String databaseName,String tableName){
+        Statement stmt;
+        String query;
+        try {
+            Map<String,String[]> map = getTableAndColumn(conn,databaseName);
+            String[] columns = map.get(tableName);
+            stmt = conn.createStatement(
+                    ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            query = "LOAD DATA INFILE '"+file+"' INTO TABLE "+tableName+" "+
+                    "FIELDS TERMINATED BY ',' " +
+                    "LINES TERMINATED BY '\\r' " +
+                    "IGNORE 1 LINES " +
+                    "("+ ArrayUtilities.toString(columns,',')+");";
+            stmt.executeUpdate(query);
+            return true;
+        }catch(Exception e) {
+            logger.error(e.getMessage(),e);
+            return false;
+        }
     }
 
     public static void main(String[] args) throws IOException, SQLException, URISyntaxException {

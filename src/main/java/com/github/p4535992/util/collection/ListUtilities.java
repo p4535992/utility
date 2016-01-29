@@ -6,8 +6,8 @@ import java.util.*;
 
 /**
  * Created by 4535992 on 21/12/2015.
+ * @author 4535992.
  */
-@SuppressWarnings("unused")
 public class ListUtilities {
 
     /**

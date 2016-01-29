@@ -1668,6 +1668,18 @@ public class Sesame2Utilities {
     /**
      * Method to print the query result of Graph Query on a Sesame Repository.
      *
+     * @param queryString          the {@link String} SPARQL/SERQL query.
+     * @param filePath             the {@link File} file path to the output file.
+     * @param repositoryConnection the {@link RepositoryConnection} current of Sesame.
+     * @return the {@link Boolean} is true if all operation are done.
+     */
+    public Boolean writeGraphQueryResultToFile(String queryString, File filePath,RepositoryConnection repositoryConnection) {
+        return writeGraphQueryResultToFile(queryString,filePath,RDFFormat.RDFXML,repositoryConnection);
+    }
+
+    /**
+     * Method to print the query result of Graph Query on a Sesame Repository.
+     *
      * @param queryString         the {@link String} SPARQL/SERQL query.
      * @param filePath             the {@link File} file path to the output file.
      * @param rdfFormat            the {@link RDFFormat} of the output format.
@@ -1866,6 +1878,19 @@ public class Sesame2Utilities {
      *
      * @param queryString         the {@link String} SPARQL/SERQL query.
      * @param filePath            the {@link File} file path to the output file.
+     * @param repositoryConnection the {@link RepositoryConnection} current of Sesame.
+     * @return the {@link Boolean} is true if all operation are done.
+     */
+    public Boolean writeTupleQueryResultToFile(String queryString, File filePath,RepositoryConnection repositoryConnection) {
+        return writeTupleQueryResultToFile(
+                queryString,filePath,TupleQueryResultFormat.JSON,repositoryConnection);
+    }
+
+    /**
+     * Method to print the query result of Tuple Query on a Sesame Repository.
+     *
+     * @param queryString         the {@link String} SPARQL/SERQL query.
+     * @param filePath            the {@link File} file path to the output file.
      * @param outputFormat        the {@link TupleQueryResultFormat} output format.
      * @param repositoryConnection the {@link RepositoryConnection} current of Sesame. 
      * @return the {@link Boolean} is true if all operation are done.
@@ -1913,6 +1938,26 @@ public class Sesame2Utilities {
             return true;
         } catch (OpenRDFException | FileNotFoundException e) {
             logger.error(e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Method to print the query result of a Query on a Sesame Repository.
+     *
+     * @param queryString         the {@link String} SPARQL/SERQL query.
+     * @param filePath            the {@link File} file path to the output file.
+     * @param repositoryConnection the {@link RepositoryConnection} current of Sesame.
+     * @return the {@link Boolean} is true if all operation are done.
+     */
+    public Boolean writeSPARQLQueryToFile(String queryString, File filePath, RepositoryConnection repositoryConnection){
+        Query query = prepareQuery(queryString);
+        if(query instanceof TupleQuery){
+            return writeTupleQueryResultToFile(queryString,filePath,repositoryConnection);
+        }else if(query instanceof  GraphQuery){
+            return writeGraphQueryResultToFile(queryString,filePath,repositoryConnection);
+        }else{
+            logger.error("The query is not a Tuple or a Grpah Query something is wrong.");
             return false;
         }
     }
@@ -1966,11 +2011,17 @@ public class Sesame2Utilities {
      * @return correspondent {@link RDFFormat}.
      */
     public RDFFormat toRDFFormat(File filePath) {
+        String ext = FileUtilities.getExtension(filePath);
+        String supportName ="";
+        RDFFormat rdfFormat;
+        if(ext.toLowerCase().contains("turtle")) supportName = FileUtilities.renameExtension(filePath,"ttl",true);
+        else supportName = filePath.getAbsolutePath();
         //version 2.8.X
-        return Rio.getParserFormatForFileName(filePath.getName(), RDFFormat.RDFXML);
+        rdfFormat = Rio.getParserFormatForFileName(supportName, RDFFormat.RDFXML);
         //version 4.0.X
         /*Rio.createParser(RDFFormat.RDFXML);
         return Rio.getParserFormatForFileName(filePath);*/
+        return rdfFormat;
     }
 
     /**
@@ -3185,8 +3236,13 @@ public class Sesame2Utilities {
                 RDFFormat sesameFormat;
                 try {
                     if (inputFormat == null) {
-                        logger.warn("Could not import - format not supported: 'NULL', use the RDF/XML");
-                        sesameFormat = RDFFormat.RDFXML;
+                        String path = String.valueOf(objectToImport).replace("\\","\\\\");
+                        if(FileUtilities.isFileExists(path)){
+                            sesameFormat = toRDFFormat(FileUtilities.getExtension(path));
+                        }else {
+                            logger.warn("Could not import - format not supported: 'NULL', use the RDF/XML");
+                            sesameFormat = RDFFormat.RDFXML;
+                        }
                     } else {
                         sesameFormat = toRDFFormat(inputFormat);
                     }
@@ -3194,7 +3250,15 @@ public class Sesame2Utilities {
                     logger.warn("Could not import - format not supported: " + inputFormat + " use the RDF/XML");
                     sesameFormat = RDFFormat.RDFXML;
                 }
-                repositoryConnection.begin();
+                try {
+                    repositoryConnection.begin();
+                }catch(RepositoryException e){
+                    if(e.getMessage().contains("Connection already has an active transaction")){
+                        logger.warn("Connection already has an active transaction");
+                    }else{
+                        logger.error(e.getMessage(),e);
+                    }
+                }
                 if (!StringUtilities.isNullOrEmpty(baseURI)) {
                     if (objectToImport instanceof InputStream) {
                         if (contexts != null && contexts.length > 0)
@@ -3268,7 +3332,15 @@ public class Sesame2Utilities {
             File file, String baseURI, RepositoryConnection repositoryConnection, Resource... contexts)
             throws RepositoryException, RDFParseException, IOException {
         try {
-            repositoryConnection.begin();
+            try {
+                repositoryConnection.begin();
+            }catch(RepositoryException e){
+                if(e.getMessage().contains("Connection already has an active transaction")){
+                    logger.warn("Connection already has an active transaction");
+                }else{
+                    logger.error(e.getMessage(),e);
+                }
+            }
             if (baseURI != null && contexts != null) {
                 repositoryConnection.add(file, baseURI, toRDFFormat(file), contexts);
             } else if (baseURI != null) {
@@ -3554,10 +3626,11 @@ public class Sesame2Utilities {
      * @return the {@link Model} with setted namespaces.
      */
     public Model setNamespacePrefixesToModel(Map<String, String> namespacePrefixes, Model model) {
-        //for (Map.Entry<String, String> entry : namespacePrefixes.entrySet()) {
-        namespacePrefixes.entrySet().stream().forEach((entry) -> {
+        for (Map.Entry<String, String> entry : namespacePrefixes.entrySet()) {
+            //namespacePrefixes.entrySet().stream().forEach((entry) -> {
             model.setNamespace(entry.getKey(), entry.getValue());
-        });
+            //});
+        }
         return model;
     }
 

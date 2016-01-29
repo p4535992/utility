@@ -1,6 +1,8 @@
 package com.github.p4535992.util.file.archive;
 
 import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.file.archive.sevenzipjbinding.ExtractionException;
+import com.github.p4535992.util.file.archive.sevenzipjbinding.SevenZipUtilities;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -12,6 +14,7 @@ import java.util.zip.*;
 
 /**
  * Created by 4535992 on 30/11/2015.
+ * href: http://fahdshariff.blogspot.it/2011/08/java-7-working-with-zip-files.html
  * @author 4535992.
  */
 public class ArchiveUtilities {
@@ -57,12 +60,13 @@ public class ArchiveUtilities {
         return instance;
     }
 
-    private static List<File> extractFilesFromZipFile(File zipFile,String nameOfFile){
+    private static List<File> extractFilesFromZip(File zipFile, String nameOfFile){
         filesListInZip = new ArrayList<>();
         try (ZipInputStream inStream = new ZipInputStream(
                 new BufferedInputStream(new FileInputStream(zipFile)))) {
             String destinationName = zipFile.getAbsoluteFile().getParentFile().getAbsolutePath();
             ZipEntry entry ;
+            //String directoryPath = FileUtilities.getDirectoryFullPath(zipFile);
             //if ((entry = inStream.getNextEntry()) != null) {
             while((entry = inStream.getNextEntry()) != null) {
                 String entryName = entry.getName();
@@ -84,13 +88,13 @@ public class ArchiveUtilities {
             String entryName,String destinationName,ZipInputStream inStream) throws IOException {
         int read;
         byte[] buffer = new byte[1024];
-        File newFile = new File(entryName);
+        File newFile = new File(destinationName + File.separator + entryName);
         String directory = newFile.getParent();
         if (directory == null) {
             if (newFile.isDirectory())
                 return false;
         }
-        try (OutputStream outStream = new FileOutputStream(destinationName + File.separator + entryName)) {
+        try (OutputStream outStream = new FileOutputStream(newFile)) {
             while ((read = inStream.read(buffer)) > 0) {
                 outStream.write(buffer, 0, read);
             }
@@ -99,17 +103,64 @@ public class ArchiveUtilities {
         return true;
     }
 
-    public static List<File> extractAllFilesFromZipFile(File zipFile){
-        return extractFilesFromZipFile(zipFile,null);
+    public static List<File> extractFilesFromZipFile(File zipFile){
+        return extractFilesFromZip(zipFile,null);
     }
 
     public static File extractFileFromZipFile(File zipFile,String nameOfFile){
-        if(extractFilesFromZipFile(zipFile,nameOfFile).size() > 0){
-            return extractFilesFromZipFile(zipFile,nameOfFile).get(0);
+        if(extractFilesFromZip(zipFile,nameOfFile).size() > 0){
+            return extractFilesFromZip(zipFile,nameOfFile).get(0);
         }else{
             return null;
         }
     }
+
+    /**
+     * DON'T WORK
+     * href: http://stackoverflow.com/questions/15667125/read-content-from-files-which-are-inside-zip-file.
+     * @param zipFilePath the {@link File} of the Zip.
+     * @return the {@link List} of {@link File} into to the Zip. 
+     */
+    public static List<File> extractFilesFromZipFile2(File zipFilePath){
+        List<File> files = new ArrayList<>();
+        try {
+            ZipFile zipFile = new ZipFile(zipFilePath);
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                try {
+                    StringBuilder sb;
+                    try ( //InputStream stream = zipFile.getInputStream(entry);
+                            BufferedReader stream = new BufferedReader(
+                                    new InputStreamReader(zipFile.getInputStream(entry)))) {
+                        sb = new StringBuilder();
+                        String line;
+                        while ((line = stream.readLine()) != null) {
+                            sb.append(line);
+                        }
+                    }
+                    files.add(FileUtilities.toFile(sb.toString(),
+                            FileUtilities.getDirectoryFullPath(zipFilePath)+File.separator+entry.getName()
+                    ));
+                /*InputSupplier<InputStream> supplier = new InputSupplier<InputStream>() {
+                    InputStream getInput() {
+                        return zipStream;
+                    }
+                };*/
+                    //Files.copy(supplier, unzippedEntryFile);
+                } catch (IOException e) {
+                   logger.error(e.getMessage(),e);
+                }
+            }
+        }catch(IOException e){
+            logger.error(e.getMessage(),e);
+        }
+        return files;
+    }
+
+
+
+
 
     public static List<File> unzip(File zipFilePath, String destDirectory){
         return unzip(zipFilePath.getAbsolutePath(), destDirectory);
@@ -118,6 +169,7 @@ public class ArchiveUtilities {
     /**
      * Extracts a zip file specified by the zipFilePath to a directory specified by
      * destDirectory (will be created if does not exists)
+     * href: http://www.codejava.net/java-se/file-io/programmatically-extract-a-zip-file-using-java
      * @param zipFilePath the String path to the Zip File to Read.
      * @param destDirectory the String path to the destination directory.
      * @return the List of the File we created on the testDirectory
@@ -278,7 +330,7 @@ public class ArchiveUtilities {
 
     }
 
-    public static String identifyType(final byte[] data) {
+    private static String identifyType(final byte[] data) {
         ByteBuffer buffer = ByteBuffer.wrap(data);
         String extension = "";
         if (buffer.remaining() < 7) return "";
@@ -354,7 +406,6 @@ public class ArchiveUtilities {
 
     public static boolean isSupported(final Path path, final boolean suppressLogging) {
         return path != null && SUPPORTED_TYPES.contains(identifyType(path, suppressLogging));
-
     }
 
     public static boolean isSupported(final Path path) {
@@ -486,7 +537,41 @@ public class ArchiveUtilities {
 
     }
 
-    public boolean extractToFolder(final Path folder) {
+    static void addDir(File dirObj, ZipOutputStream out) throws IOException {
+        File[] files = dirObj.listFiles();
+        byte[] tmpBuf = new byte[1024];
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                addDir(file, out);
+                continue;
+            }
+            try (FileInputStream in = new FileInputStream(file.getAbsolutePath())) {
+                System.out.println(" Adding: " + file.getAbsolutePath());
+                out.putNextEntry(new ZipEntry(file.getAbsolutePath()));
+                int len;
+                while ((len = in.read(tmpBuf)) > 0) {
+                    out.write(tmpBuf, 0, len);
+                }
+                out.closeEntry();
+            }
+        }
+    }
+
+   /* public Boolean extractFilesFromZipWith7Zip(File archive,File outputDirectory) {
+        try {
+            SevenZipUtilities seven = new SevenZipUtilities(
+                    archive.getAbsolutePath(), outputDirectory.getAbsolutePath(), true);
+            if(seven.extractArchive()){
+                seven.get
+            }
+        }catch(ExtractionException e){
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }*/
+
+    /*public boolean extractFilesToFolder(final Path folder) {
         try {
             List<File> files = FileUtilities.getFilesFromDirectory(folder);
             for (File file : files) {
@@ -502,7 +587,7 @@ public class ArchiveUtilities {
             return false;
         }
 
-    }
+    }*/
 
     /*public boolean extractFileToFolder(Path file,Path folder) {
         Path newPath = folder.resolve(file);

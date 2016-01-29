@@ -1,5 +1,6 @@
 package com.github.p4535992.util.http;
 
+import com.github.p4535992.util.html.JSoupUtilities;
 import com.github.p4535992.util.regex.pattern.Patterns;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
@@ -25,6 +26,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -805,6 +807,10 @@ public class HttpUtilities {
         // connection
         URL u = new URL(url);
         httpConn = (HttpURLConnection)u.openConnection();
+        //http://stackoverflow.com/questions/13670692/403-forbidden-with-java-but-not-web-browser
+        httpConn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+        //String cookie = httpConn.getHeaderField( "Set-Cookie").split(";")[0];
+
         httpConn.setConnectTimeout(40000);
         httpConn.setReadTimeout(40000);
         // method
@@ -823,6 +829,7 @@ public class HttpUtilities {
                 os.flush();
             }
         }
+        httpConn.connect();
         // response
         String response;
         try (InputStream is = httpConn.getInputStream()) {
@@ -843,15 +850,20 @@ public class HttpUtilities {
      * @throws IOException resource not found.
      */
     public static String streamToString(InputStream in) throws IOException {
+        BufferedReader r = new BufferedReader(new InputStreamReader(in, Charset.forName("UTF-8")));
         StringBuilder out = new StringBuilder();
-        byte[] b = new byte[4096];
+        /*byte[] b = new byte[4096];
         for (int n; (n = in.read(b)) != -1;) {
             out.append(new String(b, 0, n));
+        }*/
+        String line;
+        while ((line = r.readLine()) != null) {
+            out.append(line);
         }
         return out.toString();
     }
 
-    public static void waiter() throws InterruptedException{
+    public static void waiter() {
         Random generator = new Random();
         long stopRndm = (long) (generator.nextFloat() * 1000);
         //stopExecution(stopRndm);
@@ -859,7 +871,9 @@ public class HttpUtilities {
         t0 = System.currentTimeMillis();
         do{t1=System.currentTimeMillis();}
         while (t1-t0<stopRndm);
-        Thread.sleep((generator.nextInt(5)*1000 + generator.nextInt(6)*1000));
+        try {
+            Thread.sleep((generator.nextInt(5)*1000 + generator.nextInt(6)*1000));
+        } catch (InterruptedException ignored) { }
         //Thread.sleep((generator.nextInt(6)+5)*1000);
     }
 
@@ -1177,19 +1191,31 @@ public class HttpUtilities {
 
     private static int tentativi = 0;
     public static boolean isWebPageExists(String url){
-        Document doc;
         try {
-            try {
-                if (tentativi < 3) {
+            if (tentativi < 3) {
+                Document doc;
+                try {
                     //doc = Jsoup.connect(url).get();
                     //doc = Jsoup.parse(Jsoup.connect(url).ignoreContentType(true).execute().contentType());
-                    doc = Jsoup.connect(url).timeout(10 * 1000).get();
-                    tentativi = 0;
+                    //doc = Jsoup.connect(url).timeout(10 * 1000).get();
+                    doc = JSoupUtilities.toJsoupDocument(url);
+                    logger.info("HTTP HAS SUCCEDED!");
                     return doc != null;
-                } else {
-                    tentativi = 0;
+                }catch(Exception e){
+                    try {
+                        String html = executeHTTPGetRequest(url);
+                        doc = Jsoup.parse(html);
+                        logger.info("HTTP HAS SUCCEDED!");
+                        return doc != null;
+                    }catch(Exception ignored){}
                 }
-            } catch (Exception e) {
+                tentativi++;
+                waiter();
+                isWebPageExists(url);
+            } else {
+                tentativi = 0;
+            }
+            /*} catch (Exception e) {
                 tentativi++;
                 try {
                     waiter();
@@ -1197,20 +1223,21 @@ public class HttpUtilities {
                     if (tentativi < 3) isWebPageExists(url);
                 }
                 if (tentativi < 3) isWebPageExists(url);
-            }
-            try {
-                String html = executeHTTPGetRequest(url);
-                doc = Jsoup.parse(html);
-                logger.info("HTTP HAS SUCCEDED!");
-                tentativi = 0;
-                return doc != null;
-            } catch (Exception en) {
-                tentativi = 0;
-                return false;
-            }
+            }*/
+//            try {
+//                String html = executeHTTPGetRequest(url);
+//                doc = Jsoup.parse(html);
+//                logger.info("HTTP HAS SUCCEDED!");
+//                tentativi = 0;
+//                return doc != null;
+//            } catch (Exception en) {
+//                tentativi = 0;
+//                return false;
+//            }
         }finally{
             tentativi = 0;
         }
+        return false;
 
     }
 
@@ -1256,6 +1283,36 @@ public class HttpUtilities {
         return uploadedFile;
     }
     */
+
+    public static Long readResponseWithCookie(HttpURLConnection httpConn,String response){
+        String cookie = httpConn.getHeaderField( "Set-Cookie").split(";")[0];
+        Pattern pattern = Pattern.compile("content=\\\"0;url=(.*?)\\\"");
+        Matcher m = pattern.matcher(response);
+        if( m.find() ) {
+            try {
+                String url = m.group(1);
+                httpConn = (HttpURLConnection) new URL(url).openConnection();
+                httpConn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+                httpConn.setRequestProperty("Cookie", cookie);
+                httpConn.connect();
+                try (InputStream is = httpConn.getInputStream()) {
+                    response = streamToString(is);
+                }
+                pattern = Pattern.compile("<div id=\"resultStats\">About ([0-9,]+) results</div>");
+                m = pattern.matcher(response);
+                if (m.find()) {
+                    return Long.parseLong(m.group(1).replaceAll(",", ""));
+                }else{
+                    return null;
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage(),e);
+                return null;
+            }
+        }else{
+            return null;
+        }
+    }
 
     public static String readURL(URL url){
         try {
