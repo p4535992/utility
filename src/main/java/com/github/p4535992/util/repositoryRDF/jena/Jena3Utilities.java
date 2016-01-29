@@ -2,7 +2,6 @@ package com.github.p4535992.util.repositoryRDF.jena;
 
 import com.github.p4535992.util.string.StringUtilities;
 
-import jena.schemagen;
 import org.apache.jena.atlas.lib.*;
 import org.apache.jena.atlas.lib.Timer;
 import org.apache.jena.datatypes.RDFDatatype;
@@ -3528,7 +3527,7 @@ public class Jena3Utilities {
      * @param outputJenaVocabulary the {@link File} output Vocabulary class ojava of API Jena.
      * @param alternativeConfig the {@link File} with an alternative configuration.
      */
-    public static void invokeSchemaGen(
+    /*public static void invokeSchemaGen(
             File inputOntology,String baseUri,File outputJenaVocabulary,File alternativeConfig){
         //schemagen.SchemagenUtils.urlCheck("");
         String[] arrayParams = new String[]{
@@ -3539,7 +3538,7 @@ public class Jena3Utilities {
                 "-e",StringUtilities.UTF_8.toString()
         };
         schemagen.main(arrayParams);
-    }
+    }*/
 
     /*public static Collection<String[]> evalutateQueries(String manifestURI,File rqFile, String... excludes)
             throws URISyntaxException, IOException {
