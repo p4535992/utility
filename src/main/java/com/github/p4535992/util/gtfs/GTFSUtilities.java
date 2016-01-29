@@ -95,165 +95,66 @@ public class GTFSUtilities {
      */
     public Boolean importGTFSZipToDatabase(File zipFile,Connection conn,String database,boolean createDatabase,boolean createTables){
         try {
+            SQLUtilities.setConnection(conn);
             if(createDatabase){
                 //-- CREATE DATABASE IF NOT EXISTS gtfs;
                 SQLUtilities.executeSQL(
-                        "DROP DATABASE IF EXISTS "+database+"; \n" +
-                        "CREATE DATABASE "+database+" \n" +
-                        "DEFAULT CHARACTER SET utf8 \n" +
-                        "DEFAULT COLLATE utf8_general_ci;",
-                        conn
+                        "DROP DATABASE IF EXISTS "+database+";");
+                SQLUtilities.executeSQL("CREATE DATABASE "+database+" " +
+                        "DEFAULT CHARACTER SET utf8 " +
+                        "DEFAULT COLLATE utf8_general_ci;"
                 );
             }
             //Map<String,String[]> map = SQLUtilities.getTableAndColumn(conn,database);
             Map<String,File> files2 = getGTFSFilesFromZipFile(zipFile);
             if (createTables) {
-                SQLUtilities.executeSQL(
-                        "USE gtfs;\n" +
-                        "DROP TABLE IF EXISTS agency;\n" +
-                        //"-- agency_id,agency_name,agency_url,agency_timezone,agency_phone,agency_lang\n" +
-                        "CREATE TABLE `agency` (\n" +
-                                GTFSModel.prepareColumn(files2.get("agency"),"agency")+
-
-                        "\n" +
-                        "DROP TABLE IF EXISTS shapes;\n" +
-                        //"-- shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence\n" +
-                        "CREATE TABLE `shapes` (\n" +
-                        "shape_id VARCHAR(255) NOT NULL PRIMARY KEY,\n" +
-                        "shape_pt_lat DECIMAL(8,6),\n" +
-                        "shape_pt_lon DECIMAL(8,6),\n" +
-                        "shape_pt_sequence VARCHAR(255)\n" +
-                        ");\n" +
-                        "\n" +
-                        "DROP TABLE IF EXISTS calendar;\n" +
-                        //"-- service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n" +
-                        "CREATE TABLE `calendar` (\n" +
-                        "    service_id VARCHAR(255) NOT NULL PRIMARY KEY,\n" +
-                        "monday TINYINT(1),\n" +
-                        "tuesday TINYINT(1),\n" +
-                        "wednesday TINYINT(1),\n" +
-                        "thursday TINYINT(1),\n" +
-                        "friday TINYINT(1),\n" +
-                        "saturday TINYINT(1),\n" +
-                        "sunday TINYINT(1),\n" +
-                        "start_date VARCHAR(8),\n" +
-                        "end_date VARCHAR(8)\n" +
-                        ");\n" +
-                        "\n" +
-                        "DROP TABLE IF EXISTS calendar_dates;\n" +
-                        //"-- service_id,date,exception_type\n" +
-                        "CREATE TABLE `calendar_dates` (\n" +
-                        "    service_id VARCHAR(255),\n" +
-                        "    `date` VARCHAR(8),\n" +
-                        "    exception_type INT(2),\n" +
-                        "    FOREIGN KEY (service_id) REFERENCES calendar(service_id),\n" +
-                        "    KEY `exception_type` (exception_type)    \n" +
-                        ");\n" +
-                        "\n" +
-                        "DROP TABLE IF EXISTS routes;\n" +
-                        //"-- route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color\n" +
-                        "CREATE TABLE `routes` (\n" +
-                        "    route_id VARCHAR(255) NOT NULL PRIMARY KEY,\n" +
-                        "agency_id VARCHAR(255),\n" +
-                        "route_short_name VARCHAR(50),\n" +
-                        "route_long_name VARCHAR(255),\n" +
-                        "route_desc VARCHAR(255),\n" +
-                        "route_type INT(2),\n" +
-                        "route_url VARCHAR(255),\n" +
-                        "route_color VARCHAR(20),\n" +
-                        "route_text_color VARCHAR(20),\n" +
-                        "FOREIGN KEY (agency_id) REFERENCES agency(agency_id),\n" +
-                        "KEY `agency_id` (agency_id),\n" +
-                        "KEY `route_type` (route_type)\n" +
-                        ");\n" +
-                        "\n" +
-                        "\n" +
-                        "\n" +
-                        "DROP TABLE IF EXISTS trips;\n" +
-                        //"-- trip_id,service_id,route_id,trip_headsign,direction_id,shape_id\n" +
-                        "CREATE TABLE `trips` (\n" +
-                        "trip_id VARCHAR(255) NOT NULL PRIMARY KEY,\n" +
-                        "service_id VARCHAR(255),\n" +
-                        "route_id VARCHAR(255),\n" +
-                        "trip_headsign VARCHAR(255),\n" +
-                        "direction_id TINYINT(1),\n" +
-                        "shape_id VARCHAR(255),\n" +
-                        "FOREIGN KEY (service_id) REFERENCES calendar(service_id),\n" +
-                        "FOREIGN KEY (shape_id) REFERENCES shapes(shape_id),\n" +
-                        "KEY `route_id` (route_id),\n" +
-                        "KEY `service_id` (service_id),\n" +
-                        "KEY `direction_id` (direction_id)\n" +
-                        ");\n" +
-                        "\n" +
-                        "\n" +
-                        "DROP TABLE IF EXISTS stops;\n" +
-                        //"-- stop_id,stop_code,stop_name,stop_lat,stop_lon,location_type,parent_station,wheelchair_boarding\n" +
-                        "CREATE TABLE `stops` (\n" +
-                        "    stop_id VARCHAR(255) NOT NULL PRIMARY KEY,\n" +
-                        "stop_code VARCHAR(255),\n" +
-                        "stop_name VARCHAR(255),\n" +
-                        "stop_lat DECIMAL(8,6),\n" +
-                        "stop_lon DECIMAL(8,6),\n" +
-                        "location_type INT(2),\n" +
-                        "parent_station VARCHAR(255),\n" +
-                        "wheelchair_boarding INT(2),\n" +
-                        "stop_desc VARCHAR(255),\n" +
-                        "zone_id VARCHAR(255)\n" +
-                        ");\n" +
-                        "\n" +
-                        "\n" +
-                        "DROP TABLE IF EXISTS stop_times;\n" +
-                        //"-- trip_id,stop_id,stop_sequence,arrival_time,departure_time,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled\n" +
-                        "CREATE TABLE `stop_times` (\n" +
-                        "    trip_id VARCHAR(255),\n" +
-                        "stop_id VARCHAR(255),\n" +
-                        "stop_sequence VARCHAR(255),\n" +
-                        "arrival_time VARCHAR(8),\n" +
-                        "departure_time VARCHAR(8),\n" +
-                        "stop_headsign VARCHAR(8),\n" +
-                        "pickup_type INT(2),\n" +
-                        "drop_off_type INT(2),\n" +
-                        "shape_dist_traveled VARCHAR(8),\n" +
-                        "FOREIGN KEY (trip_id) REFERENCES trips(trip_id),\n" +
-                        "FOREIGN KEY (stop_id) REFERENCES stops(stop_id),\n" +
-                        "KEY `trip_id` (trip_id),\n" +
-                        "KEY `stop_id` (stop_id),\n" +
-                        "KEY `stop_sequence` (stop_sequence),\n" +
-                        "KEY `pickup_type` (pickup_type),\n" +
-                        "KEY `drop_off_type` (drop_off_type)\n" +
-                        ");\n" +
-                        "\n" +
-                        "\n" +
-                        "DROP TABLE IF EXISTS frequencies;\n" +
-                        "\n" +
-                        //"-- trip_id,start_time,end_time,headway_secs\n" +
-                        "CREATE TABLE `frequencies` (\n" +
-                        "trip_id VARCHAR(255),\n" +
-                        "start_time VARCHAR(50),\n" +
-                        "end_time VARCHAR(50),\n" +
-                        "headway_secs VARCHAR(50),\n" +
-                        "FOREIGN KEY (trip_id) REFERENCES trips(trip_id)\n" +
-                        ");", conn
-                );
+                SQLUtilities.executeSQL("USE gtfs;");
+                //"-- agency_id,agency_name,agency_url,agency_timezone,agency_phone,agency_lang\n" +
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS agency;");
+                SQLUtilities.executeSQL("CREATE TABLE `agency` ("
+                        +GTFSModel.prepareColumn(files2.get("agency"),GTFSFileType.agency)+");");
+                //"-- shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence\n" +
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS shapes;");
+                SQLUtilities.executeSQL("CREATE TABLE `shapes` ("
+                        +GTFSModel.prepareColumn(files2.get("shapes"),GTFSFileType.shapes)+");");
+                //"-- service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n" +
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS calendar;");
+                SQLUtilities.executeSQL("CREATE TABLE `calendar` ("
+                        +GTFSModel.prepareColumn(files2.get("calendar"),GTFSFileType.calendar)+");");
+                //"-- service_id,date,exception_type\n" +
+                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS calendar_dates;");
+                SQLUtilities.executeSQL("CREATE TABLE `calendar_dates` ("
+                        +GTFSModel.prepareColumn(files2.get("calendar_dates"),GTFSFileType.calendar_dates)+ ");");
+                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
+                //"-- route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color\n" +
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS routes;");
+                SQLUtilities.executeSQL("CREATE TABLE `routes` ("
+                        +GTFSModel.prepareColumn(files2.get("routes"),GTFSFileType.routes)+");");
+                //"-- trip_id,service_id,route_id,trip_headsign,direction_id,shape_id\n" +
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS trips;");
+                SQLUtilities.executeSQL("CREATE TABLE `trips` ("
+                        +GTFSModel.prepareColumn(files2.get("trips"),GTFSFileType.trips)+");");
+                //"-- stop_id,stop_code,stop_name,stop_lat,stop_lon,location_type,parent_station,wheelchair_boarding\n" +
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS stops;");
+                SQLUtilities.executeSQL("CREATE TABLE `stops` ("
+                        +GTFSModel.prepareColumn(files2.get("stops"),GTFSFileType.stops)+");");
+                //"-- trip_id,stop_id,stop_sequence,arrival_time,departure_time,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled\n" +
+                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS stop_times;");
+                SQLUtilities.executeSQL("CREATE TABLE `stop_times` ("
+                        +GTFSModel.prepareColumn(files2.get("stop_times"),GTFSFileType.stop_times)+");");
+                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
+                //"-- trip_id,start_time,end_time,headway_secs\n" +
+                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
+                SQLUtilities.executeSQL("DROP TABLE IF EXISTS frequencies;");
+                SQLUtilities.executeSQL("CREATE TABLE `frequencies` ("
+                        +GTFSModel.prepareColumn(files2.get("frequencies"),GTFSFileType.frequencies)+");");
+                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
             }
             //load data
-            /*List<File> files = ArchiveUtilities.extractFilesFromZipFile(zipFile);
-            for(File file :files){
-                if(FileUtilities.isFileExists(file)) {
-                    //String nameTable = database+"."+FileUtilities.getFilenameWithoutExt(file);
-                    String nameTable = FileUtilities.getFilenameWithoutExt(file);
-                    String path = file.getAbsolutePath();
-                    path = path.replace("\\","\\\\");
-                    file = new File(path);
-                  *//*  SQLUtilities.executeSQL(
-                            "LOAD DATA LOCAL INFILE '" + path +
-                                    "' INTO TABLE " + nameTable +
-                                    " FIELDS TERMINATED BY ',' IGNORE 1 LINES;", conn);*//*
-                    SQLUtilities.importData(conn,file,database,nameTable);
-                }
-            }*/
             for(Map.Entry<String,File> entry : files2.entrySet()){
-                SQLUtilities.importData(conn,entry.getValue(),database,entry.getKey());
+                SQLUtilities.importData(entry.getValue(),',',database,entry.getKey());
             }
             return  true;
         } catch (SQLException e) {
@@ -281,14 +182,14 @@ public class GTFSUtilities {
         return map;
     }
 
-    public enum GTFSFile{agency,shapes,calendar,calendar_dates,routes,stops,trips,frequencies,stop_times}
+    public enum GTFSFileType{agency,shapes,calendar,calendar_dates,routes,stops,trips,frequencies,stop_times}
 
     public static void main(String[] args) throws IOException, SQLException {
         LogBackUtil.console();
 
         File zip = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.zip");
 
-        Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","gtfs","siimobility","siimobility");
+        Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","geodb","siimobility","siimobility");
 
         GTFSUtilities.getInstance().importGTFSZipToDatabase(zip,conn,"gtfs",true,true);
 

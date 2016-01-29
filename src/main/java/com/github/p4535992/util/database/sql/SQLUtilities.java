@@ -11,6 +11,7 @@ import com.github.p4535992.util.database.sql.performance.ConnectionWrapper;
 import com.github.p4535992.util.database.sql.performance.JDBCLogger;
 import com.github.p4535992.util.database.sql.runScript.ScriptRunner;
 import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.file.csv.opencsv.OpenCsvUtilities;
 import com.github.p4535992.util.log.logback.LogBackUtil;
 import com.github.p4535992.util.string.*;
 
@@ -767,8 +768,9 @@ public class SQLUtilities {
             // execute the query, and get a java resultset
             try {
                 //Executes the given SQL statement, which returns a single ResultSet object.
+                ResultSet rs = stmt.executeQuery(sql);
                 logger.info("Execute the Query SQL:"+sql);
-                return stmt.executeQuery(sql);
+                return rs;
             } catch (SQLException e) {
                 try {
                     //Executes the given SQL statement, which may be an INSERT, UPDATE,
@@ -1256,24 +1258,40 @@ public class SQLUtilities {
         }
     }
 
-    public static Boolean importData(Connection conn,File file,String databaseName,String tableName){
+    public static Boolean importData(File file,char delimiter,String databaseName,String tableName){
+        return importData(conn,file,delimiter,databaseName,tableName);
+    }
+
+    public static Boolean importData(Connection conn,File file,char delimiter,String databaseName,String tableName){
         Statement stmt;
-        String query;
+        String query = "";
         try {
-            Map<String,String[]> map = getTableAndColumn(conn,databaseName);
-            String[] columns = map.get(tableName);
+            if(!FileUtilities.isFileExists(file)) return false;
+            //Map<String,String[]> map = getTableAndColumn(conn,databaseName);
+            //String[] columns = map.get(tableName);
+            String[] columns = OpenCsvUtilities.getHeadersWithUnivocity(file,true);
             stmt = conn.createStatement(
                     ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
-            query = "LOAD DATA INFILE '"+file+"' INTO TABLE "+tableName+" "+
+            String filePath = file.getAbsolutePath().replace("\\","\\\\");
+            //NOT WORK
+           /* query = "LOAD DATA INFILE '"+file+"' INTO TABLE "+tableName+" "+
                     "FIELDS TERMINATED BY ',' " +
                     "LINES TERMINATED BY '\\r' " +
                     "IGNORE 1 LINES " +
-                    "("+ ArrayUtilities.toString(columns,',')+");";
+                    "("+ ArrayUtilities.toString(columns,',')+");";*/
+            stmt.executeUpdate("SET FOREIGN_KEY_CHECKS=0;");
+            query = "LOAD DATA INFILE '"+filePath+"' INTO TABLE "+databaseName+"."+tableName+" "+
+                    "FIELDS TERMINATED BY ',' " +
+                    "LINES TERMINATED BY '\r\n'"+
+                    "IGNORE 1 LINES " +
+                    "("+ ArrayUtilities.toString(columns,delimiter)+");";
             stmt.executeUpdate(query);
+            stmt.executeUpdate("SET FOREIGN_KEY_CHECKS=1;");
+            logger.info("Execute the Query SQL:"+query);
             return true;
-        }catch(Exception e) {
-            logger.error(e.getMessage(),e);
+        }catch(SQLException e) {
+            logger.error("Can't execute query:"+query,e);
             return false;
         }
     }

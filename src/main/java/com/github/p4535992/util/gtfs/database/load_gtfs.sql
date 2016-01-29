@@ -86,6 +86,7 @@ CREATE TABLE `trips` (
 	route_id VARCHAR(255),
 	trip_headsign VARCHAR(255),
 	direction_id TINYINT(1),
+	block_id VARCHAR(255),
 	shape_id VARCHAR(255),
 	FOREIGN KEY (service_id) REFERENCES calendar(service_id),
 	FOREIGN KEY (shape_id) REFERENCES shapes(shape_id),
