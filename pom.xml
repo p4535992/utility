@@ -1115,7 +1115,7 @@
                 </configuration>-->
             </plugin>
             <!-- Plugin Jena Schemagen -->
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.jena</groupId>
                 <artifactId>jena-maven-tools</artifactId>
                 <version>${org.apache.jena.apache-jena-libs.3.version}</version>
@@ -1129,7 +1129,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
         </plugins>
     </build>
 
