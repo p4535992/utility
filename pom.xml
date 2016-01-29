@@ -689,13 +689,13 @@
         <!-- OWL2VOWL        -->
         <!-- =============== -->
 
-       <!-- <dependency>
+        <dependency>
             <groupId>com.github.VisualDataWeb</groupId>
             <artifactId>OWL2VOWL</artifactId>
             <version>4f7675a503</version>
             <optional>true</optional>
-        </dependency>-->
-        <dependency>
+        </dependency>
+       <!-- <dependency>
             <groupId>org.visualdataweb.vowl.owl2vowl</groupId>
             <artifactId>OWL2VOWL</artifactId>
             <version>0.2.1</version>
@@ -706,7 +706,7 @@
                 </exclusion>
             </exclusions>
             <optional>true</optional>
-        </dependency>
+        </dependency>-->
         <!-- Support dependency -->
         <!--<dependency>
             <groupId>edu.stanford.protege</groupId>
