@@ -3,6 +3,8 @@ package com.github.p4535992.util.repositoryRDF.jenaAndSesame;
 import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
 import com.github.p4535992.util.repositoryRDF.sesame.Sesame2Utilities;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.shared.JenaException;
+import org.apache.jena.util.iterator.NiceIterator;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -15,6 +17,7 @@ import org.openrdf.repository.RepositoryResult;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -603,8 +606,7 @@ public class Jena3SesameUtilities {
             List<org.apache.jena.graph.Triple> list = new ArrayList<>();
             RepositoryResult<Statement> iter1 =
                     repositoryConnection.getStatements(subj, pred, obj, true, contexts);
-            org.apache.jena.util.iterator.ExtendedIterator<org.apache.jena.graph.Triple> ext =
-                    new com.github.p4535992.util.repositoryRDF.jenaAndSesame.RepositoryResultIterator(iter1);
+            Iterator<org.apache.jena.graph.Triple> ext = new RepositoryResultIterator(iter1);
             int i = 0;
             while (ext.hasNext()) {
                 list.add(i, ext.next());
@@ -614,6 +616,55 @@ public class Jena3SesameUtilities {
         } catch (RepositoryException ex) {
             logger.error("Can't execute the research on the repository:" + ex.getMessage(), ex);
             return null;
+        }
+    }
+
+    /**
+     * Note NiceIterator not work anymore
+     */
+    private static class RepositoryResultIterator implements Iterator<Triple> {
+        org.openrdf.repository.RepositoryResult<org.openrdf.model.Statement> iter;
+
+        public RepositoryResultIterator(
+                org.openrdf.repository.RepositoryResult<org.openrdf.model.Statement> iter1) {
+            iter = iter1;
+        }
+
+        //@Override
+        public void close() {
+            try {
+                iter.close();
+            } catch (org.openrdf.repository.RepositoryException ex) {
+                throw new JenaException(ex);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            try {
+                return iter.hasNext();
+            } catch (org.openrdf.repository.RepositoryException ex) {
+                throw new JenaException(ex);
+            }
+        }
+
+        @Override
+        public Triple next() {
+            try {
+                org.openrdf.model.Statement stmt = iter.next();
+                return Jena3SesameUtilities.asJenaTriple(stmt);
+            } catch (org.openrdf.repository.RepositoryException ex) {
+                throw new JenaException(ex);
+            }
+        }
+
+        @Override
+        public void remove() {
+            try {
+                iter.remove();
+            } catch (org.openrdf.repository.RepositoryException ex) {
+                throw new JenaException(ex);
+            }
         }
     }
 
