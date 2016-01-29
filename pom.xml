@@ -688,11 +688,16 @@
         <!-- =============== -->
         <!-- OWL2VOWL        -->
         <!-- =============== -->
-
         <dependency>
             <groupId>com.github.VisualDataWeb</groupId>
             <artifactId>OWL2VOWL</artifactId>
-            <version>4f7675a503</version>
+            <version>0.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+            </exclusions>
             <optional>true</optional>
         </dependency>
        <!-- <dependency>
