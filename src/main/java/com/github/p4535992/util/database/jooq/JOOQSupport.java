@@ -1,10 +1,10 @@
 package com.github.p4535992.util.database.jooq;
 
 import com.github.p4535992.util.collection.ArrayUtilities;
-import com.github.p4535992.util.database.jooq.spring.config.PersistenceContext;
-import com.github.p4535992.util.regex.pattern.Patterns;
 import com.github.p4535992.util.string.StringUtilities;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import java.util.regex.Pattern;
 
 
 /**
@@ -21,11 +21,11 @@ public class JOOQSupport {
      * @return the String of the Query SpringFramework JDBC.
      */
     public static String getQueryInsertValuesParam(String queryString, String[] columns){
-        String preQuery = StringUtilities.findWithRegex(queryString, Patterns.MANAGE_SQL_PREQUERY_INSERT);
+        String preQuery = StringUtilities.findWithRegex(queryString, MANAGE_SQL_PREQUERY_INSERT);
         if(preQuery != null) {
             String postQuery = queryString.replace(preQuery, "");
-            if (StringUtilities.isMatch(postQuery, Patterns.MANAGE_SQL_QUERY_INSERT_CHECK_WHERE)) {
-                String[] val = postQuery.split(Patterns.MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3.pattern());
+            if (StringUtilities.isMatch(postQuery, MANAGE_SQL_QUERY_INSERT_CHECK_WHERE)) {
+                String[] val = postQuery.split(MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3.pattern());
                 if (val.length > 2) {
                     String postQuery0 = val[0].replace("(", "").replace(")", "");
                     String postQuery1 = val[1].replace("(", "").replace(")", "");
@@ -34,7 +34,7 @@ public class JOOQSupport {
                 //queryString = queryString.replace(preQuery, "");
                 postQuery = "";
             }
-            preQuery = StringUtilities.findWithRegex(preQuery, Patterns.MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
+            preQuery = StringUtilities.findWithRegex(preQuery, MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
             //values = values.substring(0, values.length() - 1);
             //String[] param = values.split(",");
             //for(String s: param)values = values.replace(s.trim(),"?");
@@ -54,7 +54,7 @@ public class JOOQSupport {
      * @return the String of the Query SpringFramework JDBC.
      */
     public static String getQueryInsertWhereParam(String queryString){
-        String values = StringUtilities.findWithRegex(queryString,Patterns.MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1);
+        String values = StringUtilities.findWithRegex(queryString,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1);
         String supportQuery = queryString.replace(values, "");
         if (supportQuery.toLowerCase().contains(" order by ")){
             String[] val = queryString.split(values);
@@ -64,7 +64,7 @@ public class JOOQSupport {
             queryString = queryString.replace(values, "");
             supportQuery = "";
         }
-        values = values.replace(StringUtilities.findWithRegex(values,Patterns.MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2),"");
+        values = values.replace(StringUtilities.findWithRegex(values,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2),"");
         values = values.substring(0,values.length()-1);
         String[] paramCond = values.split("(and|or)");
         for(String s: paramCond){
@@ -74,16 +74,25 @@ public class JOOQSupport {
         return queryString + " where (" + values +")" + supportQuery;
     }
 
-
-    //TODO: MAKE THE FULL CODE FOR INTEGRATION WITH SPRING
-    @SuppressWarnings("unchecked")
-    public static <T> void startSpring(Class<?> classObject) {
-        try (AnnotationConfigApplicationContext applicationContext = 
-                new AnnotationConfigApplicationContext(PersistenceContext.class)) {
-            T userDetailTest = (T) applicationContext.getBean(classObject);
-            //userDetailTest.start();
-        }
-    }
+    //-------------------------------------------------------------------------------
+    //Utility for JOOQSupport
+    //-------------------------------------------------------------------------------
+    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_1
+            = Pattern.compile("(values)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_PREQUERY_INSERT
+            = Pattern.compile("(insert into)(\\s*(.*?)\\s*)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
+    /*public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2
+            = Pattern.compile("(values)\\s*\\(",Pattern.CASE_INSENSITIVE);*/
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2
+            = Pattern.compile("(insert into)\\s*(.*?)\\(\\s*",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1
+            = Pattern.compile("(where)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2
+            = Pattern.compile("(where)\\s*\\(",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_CHECK_WHERE
+            = Pattern.compile("(values)(\\s*[(])((.*?)|\\s*)(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
+    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3 =
+            Pattern.compile("(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
 
 
 }

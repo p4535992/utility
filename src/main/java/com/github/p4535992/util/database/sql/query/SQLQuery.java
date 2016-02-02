@@ -2,6 +2,7 @@ package com.github.p4535992.util.database.sql.query;
 
 import com.github.p4535992.util.collection.ArrayUtilities;
 import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.database.sql.SQLConverter;
 import com.github.p4535992.util.database.sql.SQLUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 
@@ -40,7 +41,7 @@ public class SQLQuery {
      * @return string query.
      */
     public static String alterAddColumn(String yourTable,String nameNewColumn,int SQLTypes,Integer size){
-        return "ALTER TABLE " + yourTable + " ADD nameNewColumn "+ SQLUtilities.convertSQLTypes2String(SQLTypes)+"("+size+");";
+        return "ALTER TABLE " + yourTable + " ADD nameNewColumn "+ SQLConverter.convertSQLTypes2String(SQLTypes)+"("+size+");";
     }
 
     /**
@@ -171,15 +172,15 @@ public class SQLQuery {
     public static String deleteDuplicateRecord(String yourTable,String nameKeyColumn,String[] cols){
         return
         "WHILE EXISTS (SELECT COUNT(*) FROM "+yourTable+" GROUP BY "+
-                ArrayUtilities.toString(cols)+" HAVING COUNT(*) > 1)\n" +
-        "BEGIN\n" +
-        "    DELETE FROM "+yourTable+" WHERE "+nameKeyColumn+" IN \n" +
-        "    (\n" +
-        "        SELECT MIN("+nameKeyColumn+") as [DeleteID]\n" +
-        "        FROM "+yourTable+"\n" +
-        "        GROUP BY "+ArrayUtilities.toString(cols)+"\n" +
-        "        HAVING COUNT(*) > 1\n" +
-        "    )\n" +
+                ArrayUtilities.toString(cols,',')+" HAVING COUNT(*) > 1) " +
+        "BEGIN " +
+        "    DELETE FROM "+yourTable+" WHERE "+nameKeyColumn+" IN  " +
+        "    ( " +
+        "        SELECT MIN("+nameKeyColumn+") as [DeleteID] " +
+        "        FROM "+yourTable+" " +
+        "        GROUP BY "+ArrayUtilities.toString(cols,',')+" " +
+        "        HAVING COUNT(*) > 1 " +
+        "    ) " +
         "END";
     }
 
@@ -191,11 +192,27 @@ public class SQLQuery {
      */
     public String deleteDuplicateRecord(String yourTable,String[] cols){
         return "WITH "+yourTable+" AS ( " +
-                "SELECT ROW_NUMBER() OVER(PARTITION BY "+ArrayUtilities.toString(cols)+
-                " ORDER BY "+ArrayUtilities.toString(cols)+") AS ROW " +
-                "FROM "+yourTable+") " +
-                "DELETE FROM "+yourTable+" " +
-                "WHERE ROW > 1;";
+                "SELECT ROW_NUMBER() OVER(PARTITION BY "+ArrayUtilities.toString(cols,',')+
+                " ORDER BY "+ArrayUtilities.toString(cols,',')+") AS ROW " +
+                " FROM "+yourTable+") " +
+                " DELETE FROM "+yourTable+" " +
+                " WHERE ROW > 1;";
+    }
+
+    /**
+     * Method to create a SQL String to delete all duplicate record for a specific key.
+     * href: http://stackoverflow.com/questions/18390574/how-to-delete-duplicate-rows-in-sql-server
+     * @param yourTable the {@link String} name of the table
+     * @param columns the {@link String[]} array of columns.
+     * @param nameKeyColumn the {@link String nameKey}
+     * @return the {@link String} query for Delete all duplicates from a Table String SQL.
+     */
+    public String deleteDuplicateRecord2(String yourTable,String nameKeyColumn,String[] columns){
+        return  "WITH CTE AS( SELECT "+ArrayUtilities.toString(columns,',')+
+                " RN = ROW_NUMBER()OVER(PARTITION BY "+nameKeyColumn+" " +
+                " ORDER BY "+nameKeyColumn+")" +
+                " FROM "+yourTable+");" +
+                "DELETE FROM CTE WHERE RN > 1;";
     }
 
     public static String prepareSelectQuery(String mySelectTable,
@@ -494,8 +511,8 @@ public class SQLQuery {
         bQuery.append("CREATE TABLE ").append(nameTable).append(" (").append("\n");
         for(int i=0; i < columns.length; i++){
             bQuery.append(columns[i]).append(" ") .append(
-                    SQLUtilities.convertSQLTypes2String(
-                            SQLUtilities.convertStringToSQLTypes(columns[i]))).append("(255)");
+                    SQLConverter.convertSQLTypes2String(
+                            SQLConverter.convertStringToSQLTypes(columns[i]))).append("(255)");
             if(i < columns.length) bQuery.append(", ");
 
         }
@@ -530,12 +547,12 @@ public class SQLQuery {
                     .append("' INTO TABLE ").append(nameTable).append(" FIELDS TERMINATED BY '")
                     .append(fieldSeparator).append("'").append(" LINES TERMINATED BY '")
                     .append(linesSeparator).append(" ( ")
-                    .append(ArrayUtilities.toString(columns)).append(") ");
+                    .append(ArrayUtilities.toString(columns,',')).append(") ");
             logger.info(loadQuery.toString());
             //SQLHelper.executeSQL(loadQuery,connection);
         }
         catch (Exception e){
-            logger.error("Cannot import the CSV file to the Databse:"+e.getMessage(),e);
+            logger.error("Cannot import the CSV file to the Database:"+e.getMessage(),e);
         }
         return loadQuery.toString();
     }

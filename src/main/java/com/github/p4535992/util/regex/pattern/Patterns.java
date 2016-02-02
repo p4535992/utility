@@ -236,28 +236,6 @@ public class Patterns {
         return buffer.toString();
     }
 
-    //-------------------------------------------------------------------------------
-    //Utility for JOOQSupport
-    //-------------------------------------------------------------------------------
-    public static final Pattern MANAGE_SQL_QUERY_GET_VALUES_PARAM_1
-            = Pattern.compile("(values)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_PREQUERY_INSERT
-            = Pattern.compile("(insert into)(\\s*(.*?)\\s*)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
-    /*public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2
-            = Pattern.compile("(values)\\s*\\(",Pattern.CASE_INSENSITIVE);*/
-    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2
-            = Pattern.compile("(insert into)\\s*(.*?)\\(\\s*",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1
-            = Pattern.compile("(where)\\s*(\\(|\\{)\\s*(.*?)\\s*(\\)|\\})+",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2
-            = Pattern.compile("(where)\\s*\\(",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_INSERT_CHECK_WHERE
-            = Pattern.compile("(values)(\\s*[(])((.*?)|\\s*)(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
-    public static final Pattern MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3 =
-            Pattern.compile("(\\s*[)])(\\s*)(where)",Pattern.CASE_INSENSITIVE);
-
-
-
     //---------------------------------------
     // Utility for StringUtil
     //---------------------------------------

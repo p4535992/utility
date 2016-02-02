@@ -2,13 +2,7 @@ package com.github.p4535992.util.database.sql;
 
 import com.github.p4535992.util.collection.ArrayUtilities;
 import com.github.p4535992.util.collection.ListUtilities;
-import com.github.p4535992.util.collection.MapUtilities;
 import com.github.p4535992.util.database.jooq.JOOQUtilities;
-import com.github.p4535992.util.database.sql.datasource.DatabaseContextFactory;
-import com.github.p4535992.util.database.sql.datasource.LocalContext;
-import com.github.p4535992.util.database.sql.datasource.LocalContextFactory;
-import com.github.p4535992.util.database.sql.performance.ConnectionWrapper;
-import com.github.p4535992.util.database.sql.performance.JDBCLogger;
 import com.github.p4535992.util.database.sql.runScript.ScriptRunner;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.file.csv.opencsv.OpenCsvUtilities;
@@ -16,11 +10,7 @@ import com.github.p4535992.util.log.logback.LogBackUtil;
 import com.github.p4535992.util.string.*;
 
 import com.opencsv.CSVReader;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.naming.spi.NamingManager;
 import javax.sql.DataSource;
 import java.io.*;
 import java.lang.reflect.Field;
@@ -98,225 +88,7 @@ public class SQLUtilities {
         return result;
     }
 
-    /**
-     * Method for get a mapt with all SQL java types.
-     * href: http://www.java2s.com/Code/Java/Database-SQL-JDBC/convertingajavasqlTypesintegervalueintoaprintablename.htm.
-     * @param jdbcType code int of the type sql.
-     * @return map of SQL Types with name
-     */
-    public static Map<Integer,String> convertIntToJdbcTypeName(int jdbcType) {
-        Map<Integer,String> map = new HashMap<>();
-        // Get all field in java.sql.Types
-        Field[] fields = java.sql.Types.class.getFields();
-        for (Field field : fields) {
-            try {
-                String name = field.getName();
-                Integer value = (Integer) field.get(null);
-                map.put(value, name);
-            } catch (IllegalAccessException e) {
-                logger.warn(e.getMessage(),e);
-            }
-        }
-        return map;
-    }
 
-    /**
-     * method to convert a String to a SQL Type.
-     * @param value the String value to convert.
-     * @return the SQL Type of the value.
-     */
-    public static int convertStringToSQLTypes(String value){
-        if(value == null) return Types.NULL;
-        if(StringUtilities.isFloat(value)) return Types.FLOAT;
-        if(StringUtilities.isDouble(value)) return Types.DOUBLE;
-        if(StringUtilities.isDecimal(value)) return Types.DECIMAL;
-        if(StringUtilities.isInt(value)) return Types.INTEGER;
-        if(StringUtilities.isURL(value)) return Types.VARCHAR;
-        if(StringUtilities.isNumeric(value)) return Types.NUMERIC;
-        else  return Types.VARCHAR;
-    }
-
-    /**
-     * Method for convert a SQLTypes to a java class.
-     * @param type identificator for the SQL java types.
-     * @return the corespondetn java class.
-     */
-    public static Class<?> convertSQLTypes2JavaClass(int type) {
-        switch (type) {
-            case Types.CHAR:
-            case Types.VARCHAR:
-            case Types.LONGVARCHAR:
-                return  String.class;
-            case Types.NUMERIC:
-            case Types.DECIMAL:
-                return  java.math.BigDecimal.class;
-            case Types.BIT:
-                return  Boolean.class;
-            case Types.TINYINT:
-                return  Byte.class;
-            case Types.SMALLINT:
-                return  Short.class;
-            case Types.INTEGER:
-                return  Integer.class;
-            case Types.BIGINT:
-                return  Long.class;
-            case Types.REAL:
-            case Types.FLOAT:
-                return  Float.class;
-            case Types.DOUBLE:
-                return  Double.class;
-            case Types.BINARY:
-            case Types.VARBINARY:
-            case Types.LONGVARBINARY:
-                return  Byte[].class;
-            case Types.DATE:
-                return  java.sql.Date.class;
-            case Types.TIME:
-                return  java.sql.Time.class;
-            case Types.TIMESTAMP:
-                return  java.sql.Timestamp.class;
-            case Types.NULL:
-                return  Object.class.getSuperclass();
-            default:
-                return Object.class;
-        }
-    }
-
-    /**
-     * Method for convert a java class to a SQLTypes.
-     * @param aClass the correspondent java class.
-     * @return the identificator for the SQL java types.
-     */
-    public static int convertClass2SQLTypes(Class<?> aClass) {
-        if(aClass.getName().equals(String.class.getName()))return  Types.VARCHAR;
-        else if(aClass.getName().equals(java.math.BigDecimal.class.getName()))return  Types.NUMERIC;
-        else if(aClass.getName().equals(Boolean.class.getName()))return  Types.BIT;
-        else if(aClass.getName().equals(int.class.getName()))return  Types.INTEGER;
-        else if(aClass.getName().equals(Byte.class.getName()))return  Types.TINYINT;
-        else if(aClass.getName().equals(Short.class.getName()))return  Types.SMALLINT;
-        else if(aClass.getName().equals(Integer.class.getName()))return  Types.INTEGER;
-        else if(aClass.getName().equals(Long.class.getName())) return  Types.BIGINT;
-        else if(aClass.getName().equals(Float.class.getName()))return  Types.REAL;
-        else if(aClass.getName().equals(Double.class.getName()))return  Types.DOUBLE;
-        else if(aClass.getName().equals(Byte[].class.getName()))return  Types.VARBINARY;
-        else if(aClass.getName().equals(java.sql.Date.class.getName())) return  Types.DATE;
-        else if(aClass.getName().equals(java.sql.Time.class.getName()))return  Types.TIME;
-        else if(aClass.getName().equals(java.sql.Timestamp.class.getName()))return  Types.TIMESTAMP;
-        else if(aClass.getName().equals(java.net.URL.class.getName()))return  Types.VARCHAR;
-        return Types.NULL;
-    }
-
-    /**
-     * Method for convert a SQLTypes to a Stirng name of the types.
-     * @param type SQL types.
-     * @return the string name of the SQL types.
-     */
-    public static String convertSQLTypes2String(int type) {
-        switch (type) {
-            case Types.BIT: return "BIT";
-            case Types.TINYINT: return "TINYINT";
-            case Types.SMALLINT: return "SMALLINT";
-            case Types.INTEGER: return "INTEGER";
-            case Types.BIGINT: return "BIGINT";
-            case Types.FLOAT: return "FLOAT";
-            case Types.REAL:return "REAL";
-            case Types.DOUBLE:return "DOUBLE";
-            case Types.NUMERIC:return "NUMERIC";
-            case Types.DECIMAL:return "DECIMAL";
-            case Types.CHAR:return "CHAR";
-            case Types.VARCHAR:return "VARCHAR";
-            case Types.LONGVARCHAR:return "LONGVARCHAR";
-            case Types.DATE:return "DATE";
-            case Types.TIME: return "TIME";
-            case Types.TIMESTAMP:return "TIMESTAMP";
-            case Types.BINARY:return "BINARY";
-            case Types.VARBINARY:return "VARBINARY";
-            case Types.LONGVARBINARY:return "LONGVARBINARY";
-            case Types.NULL:return "NULL";
-            case Types.OTHER:return "OTHER";
-            case Types.JAVA_OBJECT:return "JAVA_OBJECT";
-            case Types.DISTINCT:return "DISTINCT";
-            case Types.STRUCT:return "STRUCT";
-            case Types.ARRAY:return "ARRAY";
-            case Types.BLOB:return "BLOB";
-            case Types.CLOB:return "CLOB";
-            case Types.REF:return "REF";
-            case Types.DATALINK:return "DATALINK";
-            case Types.BOOLEAN:return "BOOLEAN";
-            case Types.ROWID:return "ROWID";
-            case Types.NCHAR:return "NCHAR";
-            case Types.NVARCHAR:return "NVARCHAR";
-            case Types.LONGNVARCHAR:return "LONGNVARCHAR";
-            case Types.NCLOB:return "NCLOB";
-            case Types.SQLXML:return "SQLXML";
-            default: return "NULL";
-        }
-    }
-
-    /**
-     * Method to convert a DialectDatabase of JOOQ to a String name for a correct cast.
-     * @param dialectDb the String to cast to a correct format.
-     * @return the String with correct format.
-     */
-    public static String convertDialectDatabaseToTypeNameId(String dialectDb){
-        if(dialectDb.toLowerCase().contains("mysql"))return "mysql";
-        if(dialectDb.toLowerCase().contains("cubrid"))return "cubrid";
-        if(dialectDb.toLowerCase().contains("derby"))return "derby";
-        if(dialectDb.toLowerCase().contains("firebird"))return "firebird";
-        if(dialectDb.toLowerCase().contains("h2"))return "h2";
-        if(dialectDb.toLowerCase().contains("hsqldb"))return "hsqldb";
-        if(dialectDb.toLowerCase().contains("hsql"))return "hsqldb";
-        if(dialectDb.toLowerCase().contains("mariadb"))return "mariadb";
-        if(dialectDb.toLowerCase().contains("postgres"))return "postgres";
-        if(dialectDb.toLowerCase().contains("postgresql"))return "postgres";
-        if(dialectDb.toLowerCase().contains("postgres93"))return "postgres93";
-        if(dialectDb.toLowerCase().contains("postgres94"))return "postgres94";
-        if(dialectDb.toLowerCase().contains("sqlite"))return "sqlite";
-        logger.warn("There is not database type for the specific database dialect used:"+dialectDb);
-        return "?";
-    }
-
-    public static XSDDatatype convertSQLTypesToXDDTypes(int type){
-        switch (type) {
-            case Types.BIT: return XSDDatatype.XSDbyte;
-            case Types.TINYINT: return XSDDatatype.XSDint;
-            case Types.SMALLINT: return XSDDatatype.XSDint;
-            case Types.INTEGER: return XSDDatatype.XSDinteger;
-            case Types.BIGINT: return XSDDatatype.XSDint;
-            case Types.FLOAT: return XSDDatatype.XSDfloat;
-            //case Types.REAL:return ;
-            case Types.DOUBLE:return XSDDatatype.XSDdouble;
-            case Types.NUMERIC:return XSDDatatype.XSDinteger;
-            case Types.DECIMAL:return XSDDatatype.XSDdecimal;
-            case Types.CHAR:return XSDDatatype.XSDstring;
-            case Types.VARCHAR:return  XSDDatatype.XSDstring;
-            case Types.LONGVARCHAR:return  XSDDatatype.XSDstring;
-            case Types.DATE:return  XSDDatatype.XSDdate;
-            case Types.TIME: return  XSDDatatype.XSDtime;
-            case Types.TIMESTAMP:return  XSDDatatype.XSDdateTime;
-            case Types.BINARY:return  XSDDatatype.XSDbase64Binary;
-            case Types.VARBINARY:return XSDDatatype.XSDbase64Binary;
-            case Types.LONGVARBINARY:return XSDDatatype.XSDbase64Binary;
-            case Types.NULL:return XSDDatatype.XSDstring;
-            //case Types.OTHER:return "";
-            //case Types.JAVA_OBJECT:return "JAVA_OBJECT";
-            //case Types.DISTINCT:return "DISTINCT";
-            //case Types.STRUCT:return "STRUCT";
-            //case Types.ARRAY:return "ARRAY";
-            //case Types.BLOB:return "BLOB";
-            //case Types.CLOB:return "CLOB";
-            //case Types.REF:return "REF";
-            //case Types.DATALINK:return "DATALINK";
-            case Types.BOOLEAN: return XSDDatatype.XSDboolean;
-            //case Types.ROWID:return "ROWID";
-            case Types.NCHAR:return XSDDatatype.XSDstring;
-            case Types.NVARCHAR:return XSDDatatype.XSDstring;
-            case Types.LONGNVARCHAR:return XSDDatatype.XSDstring;
-            //case Types.NCLOB:return "NCLOB";
-            //case Types.SQLXML:return "SQLXML";
-            default: return XSDDatatype.XSDstring;
-        }
-    }
 
     /**
      * Method to get a Connection from a List to possible choice.
@@ -338,7 +110,7 @@ public class SQLUtilities {
         if(StringUtilities.isNullOrEmpty(dialectDB)){
             logger.warn("No connection database type detected fro this type;"+dialectDB);
             return null;
-        }else dialectDB = convertDialectDatabaseToTypeNameId(dialectDB);
+        }else dialectDB = SQLConverter.convertDialectDatabaseToTypeNameId(dialectDB);
         switch (dialectDB) {
             case "cubrid": return null;
             case "derby": return null;
@@ -367,8 +139,8 @@ public class SQLUtilities {
     public static Connection getHSQLDBConnection(String host,String port,String database,String username,String password) {
         // The newInstance() call is a work around for some broken Java implementations
         try {
-            invokeClassDriverForDbType(DBType.HSQLDB);
-            String url = DBConnector.HSQLDB.getConnector() + host;
+            invokeClassDriverForDbType(SQLEnum.DBType.HSQLDB);
+            String url = SQLEnum.DBConnector.HSQLDB.getConnector() + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port; //jdbc:hsqldb:data/database
             }
@@ -399,8 +171,8 @@ public class SQLUtilities {
                     String host,String port,String database,String username,String password) {
         // The newInstance() call is a work around for some broken Java implementations
         try {
-            invokeClassDriverForDbType(DBType.MYSQL);
-            String url = DBConnector.MYSQL.getConnector() + host;
+            invokeClassDriverForDbType(SQLEnum.DBType.MYSQL);
+            String url = SQLEnum.DBConnector.MYSQL.getConnector() + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
@@ -453,7 +225,7 @@ public class SQLUtilities {
     public static Connection getMySqlConnection(String fullUrl) {
         //e.g. "jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true&user=siimobility&password=siimobility"
         try {
-            invokeClassDriverForDbType(DBType.MYSQL);
+            invokeClassDriverForDbType(SQLEnum.DBType.MYSQL);
             try {
                 //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(fullUrl);
@@ -483,9 +255,9 @@ public class SQLUtilities {
      */
     public static Connection getOracleConnection(String host,String port,String database,String username,String password){
         try {
-            invokeClassDriverForDbType(DBType.ORACLE);
+            invokeClassDriverForDbType(SQLEnum.DBType.ORACLE);
             //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
-            String url = DBConnector.ORACLE.getConnector() + host;
+            String url = SQLEnum.DBConnector.ORACLE.getConnector() + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
@@ -534,14 +306,14 @@ public class SQLUtilities {
     public static Connection getH2RemoteConnection(
             String host,String port,String database,String username,String password) {
         try {
-            invokeClassDriverForDbType(DBType.H2);
+            invokeClassDriverForDbType(SQLEnum.DBType.H2);
             /*
             jdbc:h2:tcp://<server>[:<port>]/[<path>]<databaseName>
             jdbc:h2:tcp://localhost/~/test
             jdbc:h2:tcp://dbserv:8084/~/sample
             jdbc:h2:tcp://localhost/mem:test
             */
-            String url = DBConnector.H2.getConnector() + host;
+            String url = SQLEnum.DBConnector.H2.getConnector() + host;
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
@@ -581,7 +353,7 @@ public class SQLUtilities {
         while(result.next()){
             String columnName = result.getString(4);
             Integer columnType = result.getInt(5);
-            String type = convertSQLTypes2String(columnType);
+            String type = SQLConverter.convertSQLTypes2String(columnType);
             map.put(columnName,columnType);
         }
         return map;
@@ -911,10 +683,10 @@ public class SQLUtilities {
     public static Long getExecutionTime(String sql,Connection conn){
         //sql = sql.replaceAll("''","''''");
         //Connection dbConnection = getConnectionFromDriver(  );
-        ConnectionWrapper dbConnection = new ConnectionWrapper(conn);
+        //ConnectionWrapper dbConnection = new ConnectionWrapper(conn);
         Long calculate;
         try {
-            stmt = dbConnection.createStatement();
+            stmt = conn.createStatement();
             com.github.p4535992.util.string.Timer timer = new com.github.p4535992.util.string.Timer();
             timer.startTimer();
             ResultSet rs = stmt.executeQuery(sql);
@@ -924,8 +696,8 @@ public class SQLUtilities {
             logger.error("Can't get the execution time for the query:"+sql,e);
             return 0L;
         }
-        Long calculate2 = JDBCLogger.getTime()/1000;
-        if(calculate > calculate2) calculate = calculate2;
+        //Long calculate2 = JDBCLogger.getTime()/1000;
+        //if(calculate > calculate2) calculate = calculate2;
         logger.info("Query SQL result(s) in "+calculate+"ms.");
         return calculate;
     }
@@ -959,7 +731,7 @@ public class SQLUtilities {
                     int[] types = new int[values.length];
                     for(int i = 0; i < rowData.length; i++){
                         values[i] = rowData[i];
-                        types[i] = SQLUtilities.convertStringToSQLTypes(values[i]);
+                        types[i] = SQLConverter.convertStringToSQLTypes(values[i]);
                     }
                     insertQuery = JOOQUtilities.insert(nameTable, columns,values,types);
                     SQLUtilities.executeSQL(insertQuery,connection);
@@ -1093,7 +865,7 @@ public class SQLUtilities {
             return conn.getMetaData().getURL();
         } catch (SQLException e) {
             logger.error(e.getMessage(),e);
-            return null;
+            return "";
         }
     }
 
@@ -1127,33 +899,33 @@ public class SQLUtilities {
             return databaseMetadata.getURL();
         } catch (SQLException e) {
             logger.error(e.getMessage(),e);
-            return null;
+            return "";
         }
     }
 
-    public static void invokeClassDriverForDbType(DBType dbType)
+    public static void invokeClassDriverForDbType(SQLEnum.DBType dbType)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         String name = dbType.name();
         switch(name){
             case "MYSQL": {
                 try {
-                    invokeClassDriver(DBDriver.MYSQL.getDriver()); //load driver//"com.sql.jdbc.Driver"
+                    invokeClassDriver(SQLEnum.DBDriver.MYSQL.getDriver()); //load driver//"com.sql.jdbc.Driver"
                     break;
                 } catch (ClassNotFoundException e) {
-                    invokeClassDriver(DBDriver.MYSQL_GJT.getDriver());
+                    invokeClassDriver(SQLEnum.DBDriver.MYSQL_GJT.getDriver());
                     break;
                 }
             }
             case "ORACLE":{
-                invokeClassDriver(DBDriver.ORACLE.getDriver());//"oracle.jdbc.driver.OracleDriver"
+                invokeClassDriver(SQLEnum.DBDriver.ORACLE.getDriver());//"oracle.jdbc.driver.OracleDriver"
                 break;
             }
             case "H2":{
-                invokeClassDriver(DBDriver.H2.getDriver()); //"org.h2.Driver"
+                invokeClassDriver(SQLEnum.DBDriver.H2.getDriver()); //"org.h2.Driver"
                 break;
             }
             case "HSQL":{
-                invokeClassDriver(DBDriver.HSQLDB.getDriver());//"org.hsqldb.jdbcDriver"
+                invokeClassDriver(SQLEnum.DBDriver.HSQLDB.getDriver());//"org.hsqldb.jdbcDriver"
                 break;
             }
         }
@@ -1164,7 +936,7 @@ public class SQLUtilities {
         Class.forName(driverClassName).newInstance(); //load driver//"com.sql.jdbc.Driver"
     }
 
-    public static void invokeClassDriverForDbDriver(DBDriver driverClassName)
+    public static void invokeClassDriverForDbDriver(SQLEnum.DBDriver driverClassName)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         Class.forName(driverClassName.getDriver()).newInstance(); //load driver//"com.sql.jdbc.Driver"
     }
@@ -1172,7 +944,7 @@ public class SQLUtilities {
 
     //--------------------------------------------------------------------------------
 
-    public static DataSource getLocalPooledConnection(
+    /*public static DataSource getLocalPooledConnection(
             String dataSourceName,String jdbcUrl,String driverDbClassName,
             String username,String password) {
         return getPooledLocalConnectionBase(dataSourceName,jdbcUrl,driverDbClassName,username,password);
@@ -1190,7 +962,7 @@ public class SQLUtilities {
 
     public static DataSource getDataSource(String dataSourceName) {
         return getPooledLocalConnectionBase(dataSourceName,null,null,null,null);
-    }
+    }*/
 
 
     /**
@@ -1198,7 +970,7 @@ public class SQLUtilities {
      * http://penguindreams.org/blog/running-beans-that-use-application-server-datasources-locally/
      * http://www.java2s.com/Code/Java/Database-SQL-JDBC/MiniConnectionPoolManager.htm
      */
-    private static DataSource getPooledLocalConnectionBase(
+    /*private static DataSource getPooledLocalConnectionBase(
             String dataSourceName,String jdbcUrl,String driverDbClassName,
             String username,String password) {
         logger.info("Attempting to connect to the DataSource '" + dataSourceName+"'...");
@@ -1210,17 +982,17 @@ public class SQLUtilities {
                     NamingManager.setInitialContextFactoryBuilder(new DatabaseContextFactory());
                 }catch(java.lang.IllegalStateException e){
                     logger.warn("InitialContextFactoryBuilder already set");
-                   /* DatabaseContextFactory factory = new DatabaseContextFactory();
+                   *//* DatabaseContextFactory factory = new DatabaseContextFactory();
                     Properties env = new Properties();
                     env.put(Context.INITIAL_CONTEXT_FACTORY, driverDbClassName);
                     env.put(Context.PROVIDER_URL, url);
-                    factory.createInitialContextFactory(env);*/
+                    factory.createInitialContextFactory(env);*//*
                     return dataSource;
                 }
             }else {
                 //Use LocalContext (all context set outer)
-               /* LocalContext ctx = LocalContextFactory.createLocalContext("com.mysql.jdbc.Driver");
-                ctx.addDataSource("jdbc/js1","jdbc:mysql://dbserver1/dboneA", "username", "xxxpass");*/
+               *//* LocalContext ctx = LocalContextFactory.createLocalContext("com.mysql.jdbc.Driver");
+                ctx.addDataSource("jdbc/js1","jdbc:mysql://dbserver1/dboneA", "username", "xxxpass");*//*
                 LocalContext ctx = LocalContextFactory.createLocalContext(driverDbClassName);
                 ctx.addDataSource(dataSourceName, jdbcUrl, username, password);
                 //callDataSource(dataSourceName);
@@ -1239,7 +1011,7 @@ public class SQLUtilities {
             logger.error(e.getMessage(),e);
         }
         return dataSource;
-    }
+    }*/
 
     public static Boolean exportData(Connection conn,String filename,String tableName) {
         Statement stmt;
@@ -1313,10 +1085,10 @@ public class SQLUtilities {
                 "ds1","jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true",
                 "com.mysql.jdbc.Driver","siimobility","siimobility");*/
 
-        DataSource conn2 = getLocalPooledConnection(
+        /*DataSource conn2 = getLocalPooledConnection(
                 "ds1","jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true",
                 "com.mysql.jdbc.Driver","siimobility","siimobility");
-
+*/
         executeSQL(LogBackUtil.getMySQLScript(),conn);
         //WORK
         /*DataSource conn3 = getLocalConnection("ds1");*/
@@ -1329,57 +1101,45 @@ public class SQLUtilities {
 
     }
 
-    //UTILITY ENUMERATOR
-
-    public enum DBType {MYSQL,H2,ORACLE,HSQLDB,SQL,DB2,HSQL,MARIADB}
-
-    public enum DBDriver{MYSQL(0),MYSQL_GJT(1),H2(2),ORACLE(3),HSQLDB(4);
-
-        private final Integer value;
-        DBDriver(Integer value) {
-            this.value = value;
+    public static Map<String, String> loadQueriesFromPropertiesFile(File queriesProperties) {
+        Properties properties = new Properties();
+        Map<String, String> queries = new TreeMap<>();
+        try {
+            properties.load(new FileInputStream(queriesProperties));
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Error loading query properties from: " + queriesProperties, e);
         }
-
-        public String getDriver(){
-            return toString();
-        }
-
-        @Override
-        public String toString() {
-            String driver ="";
-            switch (this) {
-                case MYSQL: driver = "com.mysql.jdbc.Driver"; break;
-                case MYSQL_GJT: driver = "org.gjt.mm.mysql.Driver"; break;
-                case ORACLE: driver = "oracle.jdbc.driver.OracleDriver"; break;
-                case H2: driver = "org.h2.Driver"; break;
-                case HSQLDB: driver = "org.hsqldb.jdbcDriver"; break;
+        for (Object key : properties.keySet()) {
+            String property = String.valueOf(key).trim();
+            String queryName = null;
+            String query = null;
+            String propertyName;
+            int dotIndex = property.indexOf('.');
+            if (dotIndex != -1) {
+                propertyName = property.substring(0, dotIndex);
+            } else {
+                throw new IllegalArgumentException("Invalid property in " + queriesProperties + ": " + property);
             }
-            return driver;
+            if (property.endsWith(".name")) {
+                queryName = properties.getProperty(property);
+                query = properties.getProperty(propertyName + ".query");
+                if (query == null) {
+                    throw new IllegalArgumentException("No query defined for name " + queryName);
+                }
+            } else if (property.endsWith(".query")) {
+                query = properties.getProperty(property);
+                queryName = properties.getProperty(propertyName + ".name");
+                if (queryName == null) {
+                    throw new IllegalArgumentException("No name defined for query " + query);
+                }
+            }
+            if (queryName == null || query == null) {
+                throw new IllegalArgumentException("Invalid property in " + queriesProperties + ": " + property);
+            }
+            queries.put(queryName, query);
         }
+        return queries;
     }
 
-    public enum DBConnector{MYSQL(0),H2(1),ORACLE(2),HSQLDB(3);
-
-        private final Integer value;
-        DBConnector(Integer value) {
-            this.value = value;
-        }
-
-        public String getConnector(){
-            return toString();
-        }
-
-        @Override
-        public String toString() {
-            String driver ="";
-            switch (this) {
-                case MYSQL: driver = "jdbc:mysql://"; break;
-                case HSQLDB: driver = "jdbc:hsqldb:hsql://"; break;
-                case H2: driver = "jdbc:h2:tcp://"; break;
-                case ORACLE: driver = "jdbc:oracle:thin:@"; break;
-            }
-            return driver;
-        }
-    }
 
 }

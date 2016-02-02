@@ -1302,33 +1302,33 @@ public class FileUtilities {
      * Locate the specific file.
      * Return the (URL decoded) abolute pathname to the file or null.
      *
-     * @param findFile the String name of file to search.
+     * @param filenameToFind the String name of file to search.
      * @param basePath the String base of the path to the File.
      * @return the String path to the file.
      */
-    public static String locateFile(String findFile, String basePath) {
+    public static String locateFile(String filenameToFind, String basePath) {
         URL url;
         String fullPathName;
         StringBuffer decodedPathName;
         int pos, len, start;
         try {
-            if (findFile == null) throw new FileNotFoundException("locateFile: null file name");
-            if (findFile.startsWith(basePath)) return findFile.substring(basePath.length());
-            if ((fullPathName = locateByProperty(findFile)) != null) return fullPathName;
-            if ((url = locateByResource(findFile)) != null) {
-          /*
-           * The URL that we receive from getResource /might/ have ' '
-           * (space) characters converted to "%20" strings.  However,
-           * it doesn't have other URL encoding (e.g '+' characters are
-           * kept intact), so we'll just convert all "%20" strings to
-           * ' ' characters and hope for the best.
-           */
+            if (filenameToFind == null) throw new FileNotFoundException("...null file name");
+            logger.info("Try to locate the File:"+filenameToFind+"...");
+            if (filenameToFind.startsWith(basePath)) return filenameToFind.substring(basePath.length());
+            if ((fullPathName = locateByProperty(filenameToFind)) != null) return fullPathName;
+            if ((url = locateByResource(filenameToFind)) != null) {
+              /*
+               * The URL that we receive from getResource /might/ have ' '
+               * (space) characters converted to "%20" strings.  However,
+               * it doesn't have other URL encoding (e.g '+' characters are
+               * kept intact), so we'll just convert all "%20" strings to
+               * ' ' characters and hope for the best.
+               */
                 fullPathName = url.getFile();
                 //pos = 0;
                 len = fullPathName.length();
                 start = 0;
                 decodedPathName = new StringBuffer();
-
                 while ((pos = fullPathName.indexOf("%20", start)) != -1) { //pct = %20
                     decodedPathName.append(fullPathName.substring(start, pos));
                     decodedPathName.append(' ');
@@ -1339,7 +1339,7 @@ public class FileUtilities {
                 if (platformIsWindows()) fullPathName = fullPathName.substring(1, fullPathName.length());
                 return fullPathName;
             }
-            throw new FileNotFoundException("locateFile: file not found: " + findFile);
+            throw new FileNotFoundException("...file not found: " + filenameToFind);
         } catch (FileNotFoundException e) {
             logger.error(e.getMessage(), e);
             return null;
@@ -1350,30 +1350,31 @@ public class FileUtilities {
      * Locate the specific file.
      * Return the file name in URL form or null.
      *
-     * @param findFile the String name of file to search.
+     * @param filenameToFind the String name of file to search.
      * @param basePath the string prefix of the findFile e.g. "abs://"
      * @return the String path to the file.
      */
-    public static URL locateURL(String findFile, String basePath) {
+    public static URL locateURL(String filenameToFind, String basePath) {
         URL url;
         String fullPathName;
         try {
-            if (findFile == null) throw new FileNotFoundException("locateURL: null file name");
+            if (filenameToFind == null) throw new FileNotFoundException("locateURL: null file name");
+            logger.info("Try to locate the File:"+filenameToFind+"...");
             try {
-                if (findFile.startsWith(basePath)) {
-                    return (new URL("file:/" + findFile.substring(basePath.length())));
+                if (filenameToFind.startsWith(basePath)) {
+                    return (new URL("file:/" + filenameToFind.substring(basePath.length())));
                 }
-                if ((fullPathName = locateByProperty(findFile)) != null) {
+                if ((fullPathName = locateByProperty(filenameToFind)) != null) {
                     if (platformIsWindows()) url = new URL("file:/" + fullPathName);
                     else url = new URL("file:" + fullPathName);
                     return url;
                 }
             } catch (MalformedURLException e) {
-                logger.error("locateURL: URL creation problem:" + e.getMessage(), e);
-                throw new FileNotFoundException("locateURL: URL creation problem");
+                //logger.error("...URL creation problem:" + e.getMessage(), e);
+                throw new FileNotFoundException("...URL creation problem");
             }
-            if ((url = locateByResource(findFile)) != null) return url;
-            throw new FileNotFoundException("locateURL: file not found: " + findFile);
+            if ((url = locateByResource(filenameToFind)) != null) return url;
+            throw new FileNotFoundException("...file not found: " + filenameToFind);
         } catch (FileNotFoundException e) {
             logger.error(e.getMessage(), e);
             return null;
@@ -1396,14 +1397,14 @@ public class FileUtilities {
             return null;
         }
         try {
-            logger.warn("Searching in 'user.dir' for: " + findFile);
+            logger.warn("Searching in 'user.dir' for: " + findFile+"...");
             dir = System.getProperty("user.dir");
             if (dir != null) {
                 fullPathName = dir + File.separatorChar + findFile;
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()) {
-                logger.warn("Found in 'user.dir':" + fullPathName);
+                logger.warn("...found in 'user.dir':" + fullPathName);
                 return fullPathName;
             }
             dir = System.getProperty("user.home");
@@ -1412,7 +1413,7 @@ public class FileUtilities {
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()) {
-                logger.warn("Found in 'user.home':" + fullPathName);
+                logger.warn("...found in 'user.home':" + fullPathName);
                 return fullPathName;
             }
             dir = System.getProperty("java.home");
@@ -1421,7 +1422,7 @@ public class FileUtilities {
                 f = new File(fullPathName);
             }
             if (f != null && f.exists()) {
-                logger.warn("Found in 'java.home':" + fullPathName);
+                logger.warn("...found in 'java.home':" + fullPathName);
                 return fullPathName;
             }
         } catch (Exception e) {
@@ -1442,8 +1443,49 @@ public class FileUtilities {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         URL url = loader.getResource(findFile);
         if (url == null) url = FileUtilities.class.getResource("/" + findFile);
-        logger.warn("Search succeeded via getResource()");
+        logger.warn("...search succeeded via getResource()");
         return url;
+    }
+
+    /**
+     * Method to locate a File on the Resource folder.
+     * OLD_NAME : findFile
+     * @param relativePath the {@link String} relative path of the File on the Resources folder.
+     * @return the {@link File} if founded else NULL.
+     */
+    public static File locateFileByResourceRelativePath(String relativePath) {
+        return locateFileByResourceRelativePath(relativePath,null);
+    }
+
+    /**
+     * Method to locate a File on the Resource folder.
+     * OLD_NAME : findFile
+     * @param relativePath the {@link String} relative path of the File on the Resources folder.
+     * @param basePathResources the {@link String} base path of the resource folder.
+     * @return the {@link File} if founded else NULL.
+     */
+    public static File locateFileByResourceRelativePath(String relativePath,String basePathResources) {
+        org.springframework.core.io.Resource resource =
+                new org.springframework.core.io.ClassPathResource(relativePath);
+        if(basePathResources == null){
+            basePathResources = "src/main/resources/";
+        }
+        File file;
+        logger.info("Try to locate the File:"+basePathResources+relativePath+"...");
+        try {
+            file = resource.getFile();
+        } catch (IOException e) {
+            file = new File(relativePath);
+            if (!file.exists()) {
+                //we are not including the resources into the jars
+                //this is needed to find the resources when executing from the IDE & test cases.
+                file = new File(basePathResources+relativePath);
+            }
+        }
+        if (file == null || !file.exists()) {
+            throw new IllegalArgumentException("...unable to find file specified by path: " + relativePath);
+        }
+        return file;
     }
 
     /**

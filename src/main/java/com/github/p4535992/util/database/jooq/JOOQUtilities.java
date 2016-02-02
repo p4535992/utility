@@ -1,6 +1,7 @@
 package com.github.p4535992.util.database.jooq;
 
 import com.github.p4535992.util.collection.ArrayUtilities;
+import com.github.p4535992.util.database.sql.SQLConverter;
 import com.github.p4535992.util.database.sql.SQLUtilities;
 
 import com.github.p4535992.util.string.StringUtilities;
@@ -87,7 +88,7 @@ public class JOOQUtilities {
      * @return the SQLDialect of JOOQ.
      */
     public static SQLDialect convertStringToSQLDialectJOOQ(String sqlDialect) {
-        sqlDialect = SQLUtilities.convertDialectDatabaseToTypeNameId(sqlDialect);
+        sqlDialect = SQLConverter.convertDialectDatabaseToTypeNameId(sqlDialect);
         switch (sqlDialect.toLowerCase()) {
             case "cubrid":return SQLDialect.CUBRID;
             case "derby": return SQLDialect.DERBY;
@@ -464,27 +465,6 @@ public class JOOQUtilities {
     }
 
     /**
-     * Method to create a string JOOQ Field.
-     * @param value string to convert.
-     * @return a string JOOQ Field.
-     */
-    //public static Field<String> createFieldValue(String value){return DSL.field(value, String.class);}
-
-    /**
-     * Method to create a boolean JOOQ Field.
-     * @param condition a JOOQ condition.
-     * @return a boolean JOOQ Field.
-     */
-    //public static Field<Boolean> createField(Condition condition){return DSL.field(condition);}
-
-    /**
-     * Method to create a JOOQ Field.
-     * @param value object to convert.
-     * @return a JOOQ Field.
-     */
-    //public static Field<?> createFieldValue(Object value){return DSL.val(value);}
-
-    /**
      * Method to create a JOOQ Field.
      * @param value object to convert.
      * @param clazzType class type of the object.
@@ -500,48 +480,6 @@ public class JOOQUtilities {
      */
     @SuppressWarnings("rawtypes")
     public static Field createFieldValueCapture(Object value,Class<?> clazzType){return DSL.val(value, clazzType); }
-
-    /**
-     * Method to create a JOOQ Field.
-     * @param value object to convert.
-     * @param fieldType JOOQ Field Type of the object.
-     * @return a JOOQ Field.
-     */
-    //public static Field<?> createFieldValue(Object value,Field<?> fieldType){return DSL.val(value, fieldType);}
-
-    /**
-     * Method to create a JOOQ Field.
-     * @param value object to convert.
-     * @param dataType JOOQ DataType of the object.
-     * @return a JOOQ Field.
-     */
-    //public static Field<?> createFieldValue(Object value,DataType<?> dataType){return DSL.val(value, dataType);}
-
-    /**
-     * Method to create a JOOQ Field of a numeric value.
-     * @param value object to convert.
-     * @return a Integer JOOQ Field.
-     */
-    //public static Field<Integer> createFieldValueInt(Object value){return DSL.val(value,Integer.class);}
-
-    /**
-     * Method to create a JOOQ Field of a string value.
-     * @param value object to convert.
-     * @return a string JOOQ Field.
-     */
-    /*public static Field<String> createFieldString(Object value){
-        return DSL.val(StringKit.convertObjectToString(value),String.class);
-    }*/
-
-    /**
-     * Method to create a JOOQ Field of a string value.
-     * @param value object to convert.
-     * @return a string JOOQ Field.
-     */
-   /* public static Field<String> createFieldValueString(Object value){
-        return DSL.val(StringKit.convertObjectToString(value),String.class);
-    }*/
-
 
     /**
      * Method to create a JOOQ Field of a object.
@@ -597,8 +535,8 @@ public class JOOQUtilities {
     public static DataType createDataType(int sqlTypes){
         return new DefaultDataType(
                 sqlDialect,
-                SQLUtilities.convertSQLTypes2JavaClass(sqlTypes),
-                SQLUtilities.convertSQLTypes2String(sqlTypes)
+                SQLConverter.convertSQLTypes2JavaClass(sqlTypes),
+                SQLConverter.convertSQLTypes2String(sqlTypes)
         );
     }
 
@@ -635,8 +573,8 @@ public class JOOQUtilities {
     public static DataType createDataType(int sqlTypes,SQLDialect sqlDialect){
         return new DefaultDataType(
                 sqlDialect,
-                SQLUtilities.convertSQLTypes2JavaClass(sqlTypes),
-                SQLUtilities.convertSQLTypes2String(sqlTypes)
+                SQLConverter.convertSQLTypes2JavaClass(sqlTypes),
+                SQLConverter.convertSQLTypes2String(sqlTypes)
         );
     }
 

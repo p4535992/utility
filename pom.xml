@@ -11,7 +11,7 @@
 
     <groupId>com.github.p4535992</groupId>
     <artifactId>utility</artifactId>
-    <version>1.6.7</version>
+    <version>1.6.8-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -265,59 +265,8 @@
             <optional>true</optional>
         </dependency>
 
-
-        <!-- ============= -->
-        <!-- HIBERNATE     -->
-        <!-- ============= -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <!-- for JPA, use hibernate-entitymanager instead of hibernate-core -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <!-- optional hibernate dependency -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-osgi</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-envers</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-c3p0</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-proxool</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-infinispan</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-ehcache</artifactId>
-            <version>${org.hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>5.1.3.Final</version>
-        </dependency>
         <!-- ================= -->
-        <!-- SUPPORT HIBERNATE -->
+        <!-- SUPPORT JAVAX Persistence -->
         <!-- ================= -->
         <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
@@ -341,13 +290,6 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>${joda-time.version}</version>
-        </dependency>
-
-        <!-- To map JodaTime with database type -->
-        <dependency>
-            <groupId>org.jadira.usertype</groupId>
-            <artifactId>usertype.core</artifactId>
-            <version>${org.jadira.usertype.core.version}</version>
         </dependency>
 
         <!-- ================= -->
@@ -375,20 +317,6 @@
             <artifactId>jooq-codegen</artifactId>
             <version>${org.jooq.jooq.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>joor</artifactId>
-            <version>${org.jooq.joor.version}</version>
-        </dependency>
-
-        <!-- Pooling database -->
-        <dependency>
-            <groupId>com.jolbox</groupId>
-            <artifactId>bonecp</artifactId>
-            <version>${com.jolbox.bonecp.version}</version>
-            <optional>true</optional>
-        </dependency>
-
 
         <!-- ============= -->
         <!-- JSON PARSER   -->

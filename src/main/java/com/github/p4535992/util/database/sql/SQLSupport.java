@@ -87,7 +87,7 @@ public class SQLSupport<T>{
         this.COLUMNS = null;
         this.VALUES = null;
         this.TYPES = null;
-        SQLSupport support = SQLSupport.insertSupport(object);
+        SQLSupport support = SQLSupport.insertSupport(object,Column.class);
         this.COLUMNS= support.getCOLUMNS();
         this.VALUES = support.getVALUES();
         this.TYPES = support.getTYPES();
@@ -145,17 +145,18 @@ public class SQLSupport<T>{
      * ATTENTION: you need to be sure all the getter have reference to a field with a hibernate annotation and the attribute column.
      * ATTENTION: you need all field of the object class have a hibernate annotation and the attribute column, or at least
      * a personal annotation with the attribute column and a value who is the column of the column.
-     * @param object complex object ot inspect.
+     * @param object the {@link T} complex object ot inspect.
+     * @param clazzAnnotation the {@link Class} Annotation e.g. Column.class
      * @param <T>  generic variable.
      * @return obecjt SQLSupport.
      */
     
     @SuppressWarnings("rawtypes")
-    public static <T> SQLSupport insertSupport(T object){
+    public static <T> SQLSupport insertSupport(T object,Class<? extends Annotation> clazzAnnotation){
         SQLSupport support = new SQLSupport();
         String attributeAnnotationKey ="name";
         try {
-            Field[] fields = ReflectionUtilities.getFieldsByAnnotation(object.getClass(), Column.class);
+            Field[] fields = ReflectionUtilities.getFieldsByAnnotation(object.getClass(), clazzAnnotation);//Column.class
             Object[] values = new Object[fields.length];
             int[] types = new int[fields.length];
             String[] columns = new String[fields.length];
@@ -166,7 +167,7 @@ public class SQLSupport<T>{
                 if(method!=null){
                     values[i] = ReflectionUtilities.invokeGetter(object, method);
                     Class<?> clazz = fields[i].getType();
-                    types[i] = SQLUtilities.convertClass2SQLTypes(clazz);
+                    types[i] = SQLConverter.convertClass2SQLTypes(clazz);
                     i++;
                 }
             }
@@ -219,7 +220,7 @@ public class SQLSupport<T>{
         Class<?>[] classes =  ReflectionUtilities.getClassesByFieldsByAnnotation(clazz, aClass);
         //GET TYPES SQL
         for(Class<?> cl: classes){
-            types.add(SQLUtilities.convertClass2SQLTypes(cl));
+            types.add(SQLConverter.convertClass2SQLTypes(cl));
         }
         return CollectionUtilities.toArray(types);
     }
