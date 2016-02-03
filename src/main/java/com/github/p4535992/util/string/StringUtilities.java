@@ -1787,8 +1787,8 @@ public class StringUtilities {
 
     /**
      * Method to abbreviate the content of all the objects have a stringable rappresentation.
-     * @param values the {@link Object[]} to update.
-     * @return the {@link Object[]} update.
+     * @param values the {@link Object} array to update.
+     * @return the {@link Object} array to update.
      */
     public static Object[] abbreviateOnlyStringableObject(Object[] values) {
         for (int i =0; i < values.length; i++) {

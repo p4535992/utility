@@ -254,6 +254,7 @@ public class ReflectionUtilities {
      * @throws Exception If any reflection exception occurred.
      */
     private <T> T get(String name) throws Exception {
+        //noinspection ConstantConditions
         return field(name).get();
     }
 
@@ -346,9 +347,12 @@ public class ReflectionUtilities {
         Class<?> type = toClass(methodName);
         // first priority: find a public method with a "similar" signature in class hierarchy
         // similar interpreted in when primitive argument types are converted to their wrappers
+
+        assert type != null;
         for (Method method : type.getMethods()) {
-            if (isSimilarSignature(method, methodName, types))return method;
+            if (isSimilarSignature(method, methodName, types)) return method;
         }
+
         // second priority: find a non-public method with a "similar" signature on declaring class
         do {
             for (Method method : type.getDeclaredMethods()) {
@@ -493,6 +497,7 @@ public class ReflectionUtilities {
                 String name = method.getName();
                 // Actual method name matches always come first
                 try {
+                    //noinspection ConstantConditions
                     return on(object).call(name, args).get();
                 }catch (Exception e) {
                     if (isMap) {
@@ -943,6 +948,7 @@ public class ReflectionUtilities {
      */
     public static void setField(String fieldName, Object target, Object value) {
         try {
+            //noinspection ConstantConditions
             Field field = toClass(fieldName).getDeclaredField(fieldName);
             if(field!=null)setField(field,target, value);
             else  logger.error("The field you try to set is NULL, checlk if the Field name is correct");
@@ -1270,7 +1276,7 @@ public class ReflectionUtilities {
      * following the pattern "CGLIB$methodName$0".
      * @param renamedMethod the method to check
      * @return if true the Method is a CgLib.
-     * @see org.springframework.cglib.proxy.Enhancer#rename
+     * org.springframework.cglib.proxy.Enhancer#rename
      */
     public static boolean isCglibRenamedMethod(Method renamedMethod) {
         String name = renamedMethod.getName();

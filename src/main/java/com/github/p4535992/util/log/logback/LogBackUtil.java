@@ -182,23 +182,29 @@ public class LogBackUtil {
         }
       /*  String basePath = "utility\\src\\main\\java\\com\\github\\" +
                 "p4535992\\util\\log\\logback\\resources\\logback_base_console.xml";*/
-        String basePath ="";
-        URL url = LogBackUtil.class.getResource("resources/");
+        String basePath;
+        File dir = null;
+        URL url =  ClassLoader.class.getResource("resources/");
         if (url == null) {
-            logger.error("missing resources  folder");
-            return instance;
-        } else {
-            File dir = null;
+            InputStream inputStreamDobs =
+                    ClassLoader.class.getResourceAsStream("logback_base_console.xml");
+            dir = FileUtilities.toFile(inputStreamDobs,"resources/logback_base_console.xml");
+        }else{
             try {
                 dir = new File(url.toURI());
             } catch (URISyntaxException ignored) {}
-            if(dir != null) {
-                for (File nextFile : dir.listFiles()) {
-                    if (nextFile.getName().equalsIgnoreCase("logback_base_console.xml")) {
-                        basePath = nextFile.getAbsolutePath();
-                        start(basePath,true);
-                        return instance;
-                    }
+        }
+
+        if(dir == null) {
+            System.err.println("missing resources folder");
+            return instance;
+        } else {
+            //noinspection ConstantConditions
+            for (File nextFile : dir.listFiles()) {
+                if (nextFile.getName().equalsIgnoreCase("logback_base_console.xml")) {
+                    basePath = nextFile.getAbsolutePath();
+                    start(basePath,true);
+                    return instance;
                 }
             }
             logger.error("Can't find the file \"logback_base_console.xml\" on resource directory");

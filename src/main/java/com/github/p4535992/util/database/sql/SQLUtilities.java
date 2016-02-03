@@ -965,7 +965,7 @@ public class SQLUtilities {
     }*/
 
 
-    /**
+    /*
      * https://www.safaribooksonline.com/library/view/java-enterprise-best/0596003846/ch04.html
      * http://penguindreams.org/blog/running-beans-that-use-application-server-datasources-locally/
      * http://www.java2s.com/Code/Java/Database-SQL-JDBC/MiniConnectionPoolManager.htm

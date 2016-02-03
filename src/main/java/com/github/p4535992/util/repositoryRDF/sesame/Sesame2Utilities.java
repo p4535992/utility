@@ -1567,7 +1567,7 @@ public class Sesame2Utilities {
      * Method to support the evalutation o the Tuple query
      *
      * @param queryString the {@link String} of the query sparql SELECT or ASK.
-     * @param bindingName the {@link String[]} of Field of the Tuple Query.
+     * @param bindingName the {@link String} array of Field of the Tuple Query.
      * @param repository  the {@link Repository} sesame.
      * @return the {@link List}of OpenRDF Statement.
      */
@@ -2012,7 +2012,7 @@ public class Sesame2Utilities {
      */
     public RDFFormat toRDFFormat(File filePath) {
         String ext = FileUtilities.getExtension(filePath);
-        String supportName ="";
+        String supportName;
         RDFFormat rdfFormat;
         if(ext.toLowerCase().contains("turtle")) supportName = FileUtilities.renameExtension(filePath,"ttl",true);
         else supportName = filePath.getAbsolutePath();

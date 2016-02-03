@@ -1,6 +1,6 @@
 package com.github.p4535992.util.gtfs;
 
-import com.github.p4535992.util.database.sql.SQLUtilities;
+import com.github.p4535992.database.datasource.sql.SQLUtilities;
 import com.github.p4535992.util.file.archive.ArchiveUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.gtfs.database.support.GTFSModel;

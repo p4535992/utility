@@ -89,7 +89,7 @@
         <downloadJavadocs>true</downloadJavadocs>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-        <java.language.level.version>1.7</java.language.level.version>
+        <java.language.level.version>1.8</java.language.level.version>
         <encoding>UTF-8</encoding>
         <!-- Version of the Maven properties -->
         <maven-eclipse-plugin.version>2.9</maven-eclipse-plugin.version>
@@ -205,6 +205,11 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>com.github.p4535992</groupId>
+            <artifactId>database-basic</artifactId>
+            <version>1.6.8</version>
+        </dependency>
         <!-- ==================== -->
         <!-- SPRING FRAMEWORK     -->
         <!-- ==================== -->
@@ -719,13 +724,11 @@
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
             <version>${org.apache.tika.version}</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parsers</artifactId>
             <version>${org.apache.tika.version}</version>
-            <optional>true</optional>
         </dependency>
         <!-- Excel support -->
         <dependency>

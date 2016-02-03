@@ -20,13 +20,9 @@ public class JacksonKit {
      * Java program to convert JSON String into Java object using Jackson library.
      * Jackson is very easy to use and require just two lines of code to create a Java object
      * from JSON String format.
-     *   @author http://javarevisited.blogspot.com
-    Read more:
-    http://javarevisited.blogspot.com/2013/
-    02/how-to-convert-json-string-to-java-object-jackson-example-tutorial.html#ixzz3tvraaTP7
-
-    maven: dependency: org.codehaus.jackson.jackson-xc, org.codehaus.jackson.jackson-mapper-asl,
-    org.codehaus.jackson.jackson-core-asl
+     * href: http://javarevisited.blogspot.com/2013/02/how-to-convert-json-string-to-java-object-jackson-example-tutorial.html#ixzz3tvraaTP7
+     * maven: dependency: org.codehaus.jackson.jackson-xc, org.codehaus.jackson.jackson-mapper-asl,
+     * org.codehaus.jackson.jackson-core-asl
      * @param <T> the generic variable.
      * @param json the JSON object to parse.
      * @param classToMap the Class of the Object to map.
