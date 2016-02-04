@@ -1656,10 +1656,15 @@ public class StringUtilities {
         //return Integer.parseInt(String.valueOf(object));
     }
 
-    //-------------------------------------------------
-    // Method need commons lang 3
-    //-------------------------------------------------
-    public static String generateMD5Token(int lengthToken){
+
+
+
+    /**
+     * Method need commons lang 3
+     * @param length the {@link Integer} length of the String.
+     * @return the {@link String} generate.
+     */
+    public static String generateMD5Token(int length){
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("MD5");
@@ -1668,12 +1673,41 @@ public class StringUtilities {
         }
         StringBuilder hexString = new StringBuilder();
         byte[] data = md.digest(
-                org.apache.commons.lang3.RandomStringUtils.randomAlphabetic(lengthToken).getBytes());
+                org.apache.commons.lang3.RandomStringUtils.randomAlphabetic(length).getBytes());
         for (byte aData : data) {
             hexString.append(Integer.toHexString((aData >> 4) & 0x0F));
             hexString.append(Integer.toHexString(aData & 0x0F));
         }
         return hexString.toString();
+    }
+
+    /**
+     * Method Next – let’s look at creating a more constrained random String;
+     * we’re going to generate a random String using lowercase alphabetic letters and a set length.
+     * @param length the {@link Integer} length of the String.
+     * @return the {@link String} generate.
+     */
+    public static String generateRandomString(int length){
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        StringBuilder buffer = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int randomLimitedInt = leftLimit + (int)
+                    (new Random().nextFloat() * (rightLimit - leftLimit));
+            buffer.append((char) randomLimitedInt);
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Method simple to generate a alphanumerical String.
+     * @param length the {@link Integer} length of the String.
+     * @return the {@link String} generate.
+     */
+    public static String generateRandomStringSimple(int length){
+        byte[] array = new byte[length]; // length is bounded by 7
+        new Random().nextBytes(array);
+        return new String(array, Charset.forName("UTF-8"));
     }
 
 
