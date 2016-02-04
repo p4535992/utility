@@ -1,7 +1,6 @@
 package com.github.p4535992.util.gtfs;
 
-import com.github.p4535992.database.datasource.sql.SQLUtilities;
-import com.github.p4535992.util.file.archive.ArchiveUtilities;
+import com.github.p4535992.util.database.sql.SQLUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.file.archive.ZtZipUtilities;
 import com.github.p4535992.util.gtfs.database.support.GTFSModel;
@@ -15,7 +14,7 @@ import org.apache.jena.rdf.model.Statement;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
