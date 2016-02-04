@@ -375,6 +375,10 @@ public class OpenCsvUtilities extends FileUtilities{
         return UnivocityUtilities.getHeaders(fileCSV,hasFirstLine);
     }
 
+    public static char getDelimiterFieldWithUnivocity(File fileInputCsv){
+        return UnivocityUtilities.getDelimiterField(fileInputCsv);
+    }
+
     //------------------------------------------------------------------------------
 
     /**

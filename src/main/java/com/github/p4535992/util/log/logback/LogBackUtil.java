@@ -19,9 +19,11 @@ import com.github.p4535992.util.string.StringUtilities;
 
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -82,47 +84,91 @@ public class LogBackUtil {
 
     private static LogBackUtil instance = null;
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(){
         return LogBackUtil.initBase(null,null,null,null);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(LOGPATTERN logpattern) {
         return LogBackUtil.initBase(null,null,null,logpattern);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(String pathFileOutputLog) {
         return LogBackUtil.initBase(pathFileOutputLog,null,null,null);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(File fileOutputLog) {
         return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null,null,null);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(File fileOutputLog,File xmlConfigLogBack){
         return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null, xmlConfigLogBack,null);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(File fileOutputLog,File xmlConfigLogBack,LOGPATTERN logpattern){
         return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null, xmlConfigLogBack,logpattern);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(File fileOutputLog,LOGPATTERN logpattern){
         return LogBackUtil.initBase(fileOutputLog.getAbsolutePath(),null, null,logpattern);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(String pathFileOutputLog,LOGPATTERN logpattern){
         return LogBackUtil.initBase(pathFileOutputLog,null, null,logpattern);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(String pathFileOutputLog,String xmlConfigLogBack,LOGPATTERN logpattern){
         return LogBackUtil.initBase(pathFileOutputLog,null, new File(xmlConfigLogBack),logpattern);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(String pathFileOutputLog, String suffixPathFileOutputLog,
                                    File xmlConfigLogBack){
         return LogBackUtil.initBase(pathFileOutputLog,suffixPathFileOutputLog, xmlConfigLogBack,null);
     }
 
+    /**
+     * @deprecated use {@link #ConsoleAndFile()} instead.
+     */
+    @Deprecated
     public static LogBackUtil init(String pathFileOutputLog, String suffixPathFileOutputLog,
                                    File xmlConfigLogBack,LOGPATTERN logpattern){
         return LogBackUtil.initBase(pathFileOutputLog,suffixPathFileOutputLog, xmlConfigLogBack,null);
@@ -182,33 +228,41 @@ public class LogBackUtil {
         }
       /*  String basePath = "utility\\src\\main\\java\\com\\github\\" +
                 "p4535992\\util\\log\\logback\\resources\\logback_base_console.xml";*/
-        String basePath;
-        File dir = null;
-        URL url =  ClassLoader.class.getResource("resources/");
-        if (url == null) {
+
+        File consoleFile = null;
+        String sFile = null;
+        try {
+            //String sFile =  ClassLoader.class.getResource("logback/logback_base_console.xml").getFile(); //not work
+            sFile =  LogBackUtil.class.getClassLoader().getResource("logback/logback_base_console.xml").getFile();
+            //url = FileUtilities.toURL(sFile);
+            consoleFile = new File(sFile);
+        } catch (java.lang.NullPointerException e) {
+            System.err.println(e.getMessage()+","+e.getCause());
+        }
+        if (sFile == null || consoleFile == null) {
             InputStream inputStreamDobs =
-                    ClassLoader.class.getResourceAsStream("logback_base_console.xml");
-            dir = FileUtilities.toFile(inputStreamDobs,"resources/logback_base_console.xml");
-        }else{
-            try {
-                dir = new File(url.toURI());
-            } catch (URISyntaxException ignored) {}
+                    ClassLoader.class.getResourceAsStream("logback/logback_base_console.xml");
+            consoleFile = FileUtilities.toFile(inputStreamDobs,"./logback_base_console.xml");
         }
 
-        if(dir == null) {
+        if(consoleFile == null) {
             System.err.println("missing resources folder");
             return instance;
         } else {
-            //noinspection ConstantConditions
-            for (File nextFile : dir.listFiles()) {
-                if (nextFile.getName().equalsIgnoreCase("logback_base_console.xml")) {
-                    basePath = nextFile.getAbsolutePath();
-                    start(basePath,true);
-                    return instance;
+            if(FileUtilities.isDirectoryExists(consoleFile)) {
+                //noinspection ConstantConditions
+                for (File nextFile : consoleFile.listFiles()) {
+                    if (nextFile.getName().equalsIgnoreCase("logback_base_console.xml")) {
+                        start(nextFile.getAbsolutePath(), true);
+                        return instance;
+                    }
                 }
+                logger.error("Can't find the file \"logback_base_console.xml\" on resource directory");
+                return instance;
+            }else{
+                start(consoleFile.getAbsolutePath(), true);
+                return instance;
             }
-            logger.error("Can't find the file \"logback_base_console.xml\" on resource directory");
-            return instance;
         }
     }
 
@@ -220,6 +274,9 @@ public class LogBackUtil {
         return instance;
     }
 
+    public static LogBackUtil console(String xmlConfig){
+        return console(Paths.get(xmlConfig));
+    }
 
     private static LogBackUtil initBase(String pathFileOutputLog, String suffixPathFileOutputLog,
                                    File xmlConfigLogBack,LOGPATTERN logpattern){
@@ -241,13 +298,13 @@ public class LogBackUtil {
                         + "file on the root path of the \"resources\" folder");
                 ClassLoader classLoader = myCLass.getClassLoader();
                 try {
-                    xmlConfigLogBack = new File(classLoader.getResource("logback.xml").getFile());
+                    xmlConfigLogBack = new File(classLoader.getResource("logback/logback.xml").getFile());
                 }catch(Exception e){
                     System.err.println("Sorry the XML configuration file you try to load from the resource " +
                             "folder not exists, by default we use a logback.xml "
                             + "file on the root path of the \"resources\" folder");
                     classLoader = LogBackUtil.class.getClassLoader();
-                    xmlConfigLogBack = new File(classLoader.getResource("logback.xml").getFile());
+                    xmlConfigLogBack = new File(classLoader.getResource("logback/logback.xml").getFile());
                 }
             }
             start(xmlConfigLogBack,logpattern);

@@ -1,8 +1,6 @@
 package com.github.p4535992.util.file.archive;
 
 import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.file.archive.sevenzipjbinding.ExtractionException;
-import com.github.p4535992.util.file.archive.sevenzipjbinding.SevenZipUtilities;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -25,11 +23,9 @@ public class ArchiveUtilities {
     private static List<File> filesListInZip = new ArrayList<>();
     private static final List<String> filesListInDir = new ArrayList<>();
 
-
-
     /*
-  * File signatures found at: http://www.garykessler.net/library/file_sigs.html
-  */
+     * File signatures found at: http://www.garykessler.net/library/file_sigs.html
+    */
     private static final char[] SIG_SEVENZIP = new char[] { 0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C };
     private static final char[] SIG_RAR = new char[] { 0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x00 };
     private static final char[] SIG_ZIP = new char[] { 0x50, 0x4B, 0x03, 0x04 };
@@ -103,11 +99,11 @@ public class ArchiveUtilities {
         return true;
     }
 
-    public static List<File> extractFilesFromZipFile(File zipFile){
+    public static List<File> extractFilesFromZip(File zipFile){
         return extractFilesFromZip(zipFile,null);
     }
 
-    public static File extractFileFromZipFile(File zipFile,String nameOfFile){
+    public static File extractFileFromZip(File zipFile, String nameOfFile){
         if(extractFilesFromZip(zipFile,nameOfFile).size() > 0){
             return extractFilesFromZip(zipFile,nameOfFile).get(0);
         }else{
@@ -162,8 +158,8 @@ public class ArchiveUtilities {
 
 
 
-    public static List<File> unzip(File zipFilePath, String destDirectory){
-        return unzip(zipFilePath.getAbsolutePath(), destDirectory);
+    public static List<File> extractAllFromZip(File zipFilePath, String destDirectory){
+        return extractAllFromZip(zipFilePath.getAbsolutePath(), destDirectory);
     }
 
     /**
@@ -174,7 +170,7 @@ public class ArchiveUtilities {
      * @param destDirectory the String path to the destination directory.
      * @return the List of the File we created on the testDirectory
      */
-    public static List<File> unzip(String zipFilePath, String destDirectory){
+    public static List<File> extractAllFromZip(String zipFilePath, String destDirectory){
         try{
             List<File> files = new ArrayList<>();
             File destDir = new File(destDirectory);
@@ -190,7 +186,7 @@ public class ArchiveUtilities {
                     String filePath = destDirectory + File.separator + entry.getName();
                     if (!entry.isDirectory()) {
                         // if the entry is a file, extracts it
-                        extractFileFromZip(zipIn, filePath);
+                        extractFromZip(zipIn, filePath);
                         files.add(new File(destDirectory + File.separator + entry.getName()));
                     } else {
                         // if the entry is a directory, make the directory
@@ -214,7 +210,7 @@ public class ArchiveUtilities {
      * @param filePath the String path to the destination of the file extracted File.
      * @return if true all operation are done.
      */
-    private static boolean extractFileFromZip(ZipInputStream zipIn, String filePath){
+    private static boolean extractFromZip(ZipInputStream zipIn, String filePath){
         try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath))) {
             byte[] bytesIn = new byte[4096];
             int read;
@@ -278,36 +274,6 @@ public class ArchiveUtilities {
         }
     }
 
-
-    /**
-     * This method compresses the single file to zip format
-     * @param file the File to Zip.
-     * @param zipFileName the String path destination of the Zip File.
-     */
-    private static void zipSingleFile(File file, String zipFileName) {
-        try {
-            try ( //create ZipOutputStream to write to the zip file
-                    FileOutputStream fos = new FileOutputStream(zipFileName); 
-                    ZipOutputStream zos = new ZipOutputStream(fos)) {
-                //add a new Zip Entry to the ZipOutputStream
-                ZipEntry ze = new ZipEntry(file.getName());
-                zos.putNextEntry(ze);
-                //read the file and write to ZipOutputStream
-                FileInputStream fis = new FileInputStream(file);
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = fis.read(buffer)) > 0) {
-                    zos.write(buffer, 0, len);
-                }
-                //Close the zip entry to write to zip file
-                zos.closeEntry();
-            }
-            logger.info(file.getCanonicalPath()+" is zipped to "+zipFileName);
-        } catch (IOException e) {
-            logger.error(e.getMessage(),e);
-        }
-
-    }
 
     public static long getChecksum(final Path pathToTheArchive) throws IOException {
         CheckedInputStream checkedStream;
@@ -412,12 +378,43 @@ public class ArchiveUtilities {
         return isSupported(path, false);
     }
 
-    public static boolean zip(File filePathDirectoryToCompress,String filePathOutputZip) {
-        return zip(filePathDirectoryToCompress.toPath(),filePathOutputZip);
+    public static boolean compressToZip(File fileOrDirectoryToCompress,String filePathOutputZip) {
+        if(FileUtilities.isDirectoryExists(fileOrDirectoryToCompress)){
+            return compressToZip(fileOrDirectoryToCompress.toPath(), filePathOutputZip);
+        }else if(FileUtilities.isFileExists(fileOrDirectoryToCompress)){
+            try {
+                File zipFileName = new File(filePathOutputZip);
+                try ( //create ZipOutputStream to write to the zip file
+                      FileOutputStream fos = new FileOutputStream(zipFileName);
+                      ZipOutputStream zos = new ZipOutputStream(fos)) {
+                    //add a new Zip Entry to the ZipOutputStream
+                    ZipEntry ze = new ZipEntry(fileOrDirectoryToCompress.getName());
+                    zos.putNextEntry(ze);
+                    //read the file and write to ZipOutputStream
+                    FileInputStream fis = new FileInputStream(fileOrDirectoryToCompress);
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, len);
+                    }
+                    //Close the zip entry to write to zip file
+                    zos.closeEntry();
+                }
+                logger.info(fileOrDirectoryToCompress.getCanonicalPath()+
+                        " is zipped to "+zipFileName.getCanonicalPath());
+                return true;
+            } catch (IOException e) {
+                logger.error(e.getMessage(),e);
+                return false;
+            }
+        }else{
+            logger.error("The file:"+fileOrDirectoryToCompress+" to compress not exists or is not a valid file.");
+            return false;
+        }
     }
 
-    public static boolean zip(String filePathDirectoryToCompress,String filePathOutputZip) {
-        return zip(Paths.get(filePathDirectoryToCompress),filePathOutputZip);
+    public static boolean compressToZip(String filePathDirectoryToCompress,String filePathOutputZip) {
+        return compressToZip(Paths.get(filePathDirectoryToCompress),filePathOutputZip);
     }
 
     /**
@@ -430,7 +427,7 @@ public class ArchiveUtilities {
      * @param filePathOutputZip the String path to the folder where create the Archive file.
      * @return if true all the operation are succesfull.
      */
-    public static boolean zip(Path filePathDirectoryToCompress,String filePathOutputZip) {
+    public static boolean compressToZip(Path filePathDirectoryToCompress,String filePathOutputZip) {
         // the directory to be zipped
         //Path directory = Paths.get(filePathDirectoryToCompress);
         // the zip file name that we will create
@@ -444,7 +441,7 @@ public class ArchiveUtilities {
             DirectoryStream<Path> dirStream = Files.newDirectoryStream(filePathDirectoryToCompress);
             //dirStream.forEach(path -> addToZipFile(path, zipStream));
             for(Path path : dirStream){
-                addToZipFile(path,zipStream);
+                addFileTo(path,zipStream);
             }
             logger.info("Zip file created in " + filePathDirectoryToCompress.toFile().getPath());
             return true;
@@ -455,16 +452,24 @@ public class ArchiveUtilities {
         }
     }
 
+    public static Boolean addFileTo(File dirObj, File out){
+        try {
+            return addFileTo(dirObj.toPath(),new ZipOutputStream(new FileOutputStream(out)));
+        } catch (FileNotFoundException e) {
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }
+
     /**
      * Adds an extra file to the zip archive, copying in the created
      * date and a comment.
      * @param file file to be archived
      * @param zipStream archive to contain the file.
      */
-    private static void addToZipFile(Path file, ZipOutputStream zipStream) {
+    public static Boolean addFileTo(Path file, ZipOutputStream zipStream) {
         String inputFileName = file.toFile().getPath();
         try (FileInputStream inputStream = new FileInputStream(inputFileName)) {
-
             // create a new ZipEntry, which is basically another file
             // within the archive. We omit the path from the filename
             ZipEntry entry = new ZipEntry(file.toFile().getName());
@@ -472,9 +477,7 @@ public class ArchiveUtilities {
             entry.setTime(fileTime);
             entry.setComment("Created by TheCodersCorner");
             zipStream.putNextEntry(entry);
-
             logger.info("Generated new entry for: " + inputFileName);
-
             // Now we copy the existing file into the zip archive. To do
             // this we write into the zip stream, the call to putNextEntry
             // above prepared the stream, we now write the bytes for this
@@ -483,18 +486,16 @@ public class ArchiveUtilities {
             byte[] readBuffer = new byte[2048];
             int amountRead;
             int written = 0;
-
             while ((amountRead = inputStream.read(readBuffer)) > 0) {
                 zipStream.write(readBuffer, 0, amountRead);
                 written += amountRead;
             }
-
             logger.info("Stored " + written + " bytes to " + inputFileName);
-
-
+            return true;
         }
         catch(IOException e) {
-            throw new ZipParsingException("Unable to process " + inputFileName, e);
+            logger.error("Unable to process " + inputFileName,new ZipParsingException("Unable to process " + inputFileName, e));
+            return false;
         }
     }
 
@@ -513,7 +514,7 @@ public class ArchiveUtilities {
         }
     }
 
-    public boolean writeToFile(final File file) {
+    /*public boolean writeToFile(final File file) {
         try {
             long time = System.currentTimeMillis();
             try (FileOutputStream fileOutput = new FileOutputStream(file); 
@@ -535,27 +536,80 @@ public class ArchiveUtilities {
             return false;
         }
 
+    }*/
+
+    public static Boolean addDirectoryTo(File dirObj, File out){
+        try {
+            return addDirectoryTo(dirObj,new ZipOutputStream(new FileOutputStream(out)));
+        } catch (FileNotFoundException e) {
+            logger.error(e.getMessage(),e);
+            return false;
+        }
     }
 
-    static void addDir(File dirObj, ZipOutputStream out) throws IOException {
+    public static Boolean addDirectoryTo(File dirObj, ZipOutputStream out) {
         File[] files = dirObj.listFiles();
         byte[] tmpBuf = new byte[1024];
-
-        for (File file : files) {
-            if (file.isDirectory()) {
-                addDir(file, out);
-                continue;
-            }
-            try (FileInputStream in = new FileInputStream(file.getAbsolutePath())) {
-                System.out.println(" Adding: " + file.getAbsolutePath());
-                out.putNextEntry(new ZipEntry(file.getAbsolutePath()));
-                int len;
-                while ((len = in.read(tmpBuf)) > 0) {
-                    out.write(tmpBuf, 0, len);
+        try {
+            assert files != null;
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    addDirectoryTo(file, out);
+                    continue;
                 }
-                out.closeEntry();
+                try (FileInputStream in = new FileInputStream(file.getAbsolutePath())) {
+                    System.out.println(" Adding: " + file.getAbsolutePath());
+                    out.putNextEntry(new ZipEntry(file.getAbsolutePath()));
+                    int len;
+                    while ((len = in.read(tmpBuf)) > 0) {
+                        out.write(tmpBuf, 0, len);
+                    }
+                    out.closeEntry();
+                }
             }
+            return true;
+        }catch(IOException e){
+            logger.error(e.getMessage(),e);
+            return false;
         }
+    }
+
+    public File extractDirectoryFromZip(String zipFile, String destFolder) throws IOException {
+        BufferedOutputStream dest;
+        ZipInputStream zis = new ZipInputStream(
+                new BufferedInputStream(
+                        new FileInputStream(zipFile)));
+        ZipEntry entry;
+        while (( entry = zis.getNextEntry() ) != null) {
+            System.out.println( "Extracting: " + entry.getName() );
+            int count;
+            byte data[] = new byte[1024];
+
+            if (entry.isDirectory()) {
+                boolean mkdirs = new File(destFolder + "/" + entry.getName()).mkdirs();
+                if(mkdirs)continue;
+                else logger.warn("can't create the directory on the path:"+
+                        new File(destFolder + "/" + entry.getName()).getAbsolutePath());
+            } else {
+                int di = entry.getName().lastIndexOf( '/' );
+                if (di != -1) {
+                    boolean mkdirs = new File(destFolder + "/" + entry.getName()
+                            .substring(0, di)).mkdirs();
+                    if(!mkdirs){
+                        logger.warn("can't create the directory on the path:"+
+                            new File(destFolder + "/" + entry.getName()).getAbsolutePath());
+                    }
+                }
+            }
+            FileOutputStream fos = new FileOutputStream( destFolder + "/"
+                    + entry.getName() );
+            dest = new BufferedOutputStream( fos );
+            while (( count = zis.read( data ) ) != -1)
+                dest.write( data, 0, count );
+            dest.flush();
+            dest.close();
+        }
+        return new File(destFolder);
     }
 
    /* public Boolean extractFilesFromZipWith7Zip(File archive,File outputDirectory) {

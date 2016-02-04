@@ -365,12 +365,12 @@
             <optional>true</optional>
         </dependency>
         <!-- Support XML function on SpringFramework and Hibernate -->
-      <!--  <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>${xml-apis.xml-apis.version}</version>
-            <optional>true</optional>
-        </dependency>-->
+        <!--  <dependency>
+              <groupId>xml-apis</groupId>
+              <artifactId>xml-apis</artifactId>
+              <version>${xml-apis.xml-apis.version}</version>
+              <optional>true</optional>
+          </dependency>-->
 
         <!-- =============== -->
         <!-- HTML - JSOUP    -->
@@ -384,35 +384,6 @@
         <!-- =============== -->
         <!-- JENA FRAMEWORK  -->
         <!-- =============== -->
-        <!--<dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>jena-core</artifactId>
-            <version>3.0.1</version>
-        </dependency>-->
-        <!--<dependency>
-            <groupId>org.apache.jena</groupId>
-            <artifactId>apache-jena-libs</artifactId>
-            <type>pom</type>
-            <version>${org.apache.jena.apache-jena-libs.2.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>-->
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>apache-jena-libs</artifactId>
@@ -633,31 +604,6 @@
             </exclusions>
             <optional>true</optional>
         </dependency>
-       <!-- <dependency>
-            <groupId>org.visualdataweb.vowl.owl2vowl</groupId>
-            <artifactId>OWL2VOWL</artifactId>
-            <version>0.2.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-core</artifactId>
-                </exclusion>
-            </exclusions>
-            <optional>true</optional>
-        </dependency>-->
-        <!-- Support dependency -->
-        <!--<dependency>
-            <groupId>edu.stanford.protege</groupId>
-            <artifactId>org.semanticweb.owl.owlapi</artifactId>
-            <version>3.4.4</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.13</version>
-            <optional>true</optional>
-        </dependency>-->
 
         <!-- =============== -->
         <!-- JDBC4SPARQL     -->
@@ -704,22 +650,7 @@
             <artifactId>httpclient</artifactId>
             <version>${org.apache.httpcomponents.httpclient.version}</version>
         </dependency>
-        <!-- Apache Commons DBCP dependency (for database connection pooling): -->
-       <!-- <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-dbcp2</artifactId>
-            <version>${org.apache.commons.commons-dbcp2.version}</version>
-        </dependency>-->
-       <!-- <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${org.apache.commons.commons-lang3.version}</version>
-        </dependency>-->
-       <!-- <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>${org.apache.commons.commons-codec.version}</version>
-        </dependency>-->
+
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
@@ -753,6 +684,12 @@
             <groupId>net.sf.sevenzipjbinding</groupId>
             <artifactId>sevenzipjbinding-all-platforms</artifactId>
             <version>${net.sf.sevenzipjbinding.sevenzipjbinding}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.zeroturnaround</groupId>
+            <artifactId>zt-zip</artifactId>
+            <version>1.9</version>
+            <type>jar</type>
         </dependency>
 
         <!-- ====================== -->

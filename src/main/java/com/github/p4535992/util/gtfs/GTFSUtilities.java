@@ -3,6 +3,7 @@ package com.github.p4535992.util.gtfs;
 import com.github.p4535992.database.datasource.sql.SQLUtilities;
 import com.github.p4535992.util.file.archive.ArchiveUtilities;
 import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.file.archive.ZtZipUtilities;
 import com.github.p4535992.util.gtfs.database.support.GTFSModel;
 import com.github.p4535992.util.gtfs.tordf.helper.TransformerPicker;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
@@ -14,6 +15,7 @@ import org.apache.jena.rdf.model.Statement;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -59,7 +61,8 @@ public class GTFSUtilities {
     }
 
     private List<List<Statement>> mapper(File zipFile, String baseUri) throws IOException {
-        List<File> files = ArchiveUtilities.unzip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
+        //List<File> files = ArchiveUtilities.extractAllFromZip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
+        List<File> files = ZtZipUtilities.extractAllFromZip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
         List<List<Statement>> listStmt = new ArrayList<>();
         for(File file : files){
             String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
@@ -169,7 +172,8 @@ public class GTFSUtilities {
 
     public static Map<String,File> getGTFSFilesFromZipFile(File zipFile){
         Map<String,File> map = new HashMap<>();
-        List<File> files = ArchiveUtilities.extractFilesFromZipFile(zipFile);
+        //List<File> files = ArchiveUtilities.extractFilesFromZip(zipFile);
+        List<File> files = ZtZipUtilities.extractFilesFromZip(zipFile);
         for (File file : files) {
             if (FileUtilities.isFileExists(file)) {
                 //String nameTable = database+"."+FileUtilities.getFilenameWithoutExt(file);
@@ -189,6 +193,11 @@ public class GTFSUtilities {
 
         File zip = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.zip");
 
+
+         List<File> ss = ZtZipUtilities.extractFilesByPattern(zip,"agency");
+         String srr = ss.get(0).getAbsolutePath();
+         srr = FileUtilities.toString(ss.get(0));
+
         Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","geodb","siimobility","siimobility");
 
         GTFSUtilities.getInstance().importGTFSZipToDatabase(zip,conn,"gtfs",true,true);
@@ -201,9 +210,9 @@ public class GTFSUtilities {
 
 
 
-        File output = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.n3");
+        File output2 = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.n3");
 
-        GTFSUtilities.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output,"n-triples");
+        GTFSUtilities.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output2,"n-triples");
     }
 
 

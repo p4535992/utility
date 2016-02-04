@@ -124,33 +124,32 @@ public class UnivocityUtilities {
         parserSettings.setHeaderExtractionEnabled(true);
         parserSettings.setDelimiterDetectionEnabled(true);
         CsvParser parser = new CsvParser(parserSettings);
-        // the 'parse' method will parse the file and delegate each parsed row to the RowProcessor you defined
         parser.parse(fileInputCsv);
-        CsvFormat format =  parserSettings.getFormat();
-        return format.getDelimiter();
+        return parser.getDetectedFormat().getDelimiter();
     }
 
     private void printRows(List<String[]> rows) {
-        logger.info("\nPrinting " + rows.size() + " rows");
+        logger.info("Printing " + rows.size() + " rows:\n");
         int rowCount = 0;
         for (String[] row : rows) {
             logger.info("Row " + ++rowCount + " (length " + row.length + "): " + Arrays.toString(row));
             int valueCount = 0;
             for (String value : row) {
-                logger.info("\tvalue " + ++valueCount + ": " + value);
+                logger.info("\tvalue " + ++valueCount + ": " + value+"\n");
             }
         }
     }
 
     public static void main(String[] args) {
         LogBackUtil.console();
+
+        char c = getDelimiterField(new File("C:\\Users\\tenti\\Documents\\GitHub\\repositoryForTest\\testWitSources\\fileForTest\\data.csv"));
+
         List<String[]> cotnent =
                 OpenCsvUtilities.parseCSVFileAsListWithUnivocity(
                         new File("C:\\Users\\tenti\\Documents\\GitHub\\repositoryForTest\\testWitSources\\fileForTest\\data.csv")
                         ,true
                 );
-
-        char c = getDelimiterField(new File("C:\\Users\\tenti\\Documents\\GitHub\\repositoryForTest\\testWitSources\\fileForTest\\data.csv"));
 
         List<String[]> cotnent2 =
                 OpenCsvUtilities.parseCSVFileAsList(

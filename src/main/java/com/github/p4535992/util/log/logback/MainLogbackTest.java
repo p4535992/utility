@@ -11,7 +11,7 @@ public class MainLogbackTest {
 
     public static void main(String[] args) throws IOException {
         LogBackUtil.setLogpatternConsole(LogBackUtil.LOGPATTERN.PATTERN_COLORED1_NOTIME);
-        LogBackUtil.init(LogBackUtil.LOGPATTERN.PATTERN_CLASSIC_NOTIME);
+        LogBackUtil.ConsoleAndFile(LogBackUtil.LOGPATTERN.PATTERN_CLASSIC_NOTIME);
 
         System.out.println("Test 45");
         System.err.println("Test 42");

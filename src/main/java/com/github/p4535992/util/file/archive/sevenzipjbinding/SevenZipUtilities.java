@@ -74,10 +74,10 @@ public class SevenZipUtilities extends ArchiveUtilities{
 
     protected SevenZipUtilities() {}
 
-    void extract() throws ExtractionException {
+    void extractAll() throws ExtractionException {
         checkArchiveFile();
         prepareOutputDirectory();
-        extractArchive();
+        extractAllFromArchive();
     }
 
     private void prepareOutputDirectory() throws ExtractionException {
@@ -128,15 +128,15 @@ public class SevenZipUtilities extends ArchiveUtilities{
         return files;
     }
 
-    public Boolean extractArchive() throws ExtractionException {
-        return extractArchive(archive);
+    public Boolean extractAllFromArchive() throws ExtractionException {
+        return extractAllFromArchive(archive);
     }
 
-    public Boolean extractArchive(String fileArchivePath) throws ExtractionException {
-        return extractArchive(new File(fileArchivePath));
+    public Boolean extractAllFromArchive(String fileArchivePath) throws ExtractionException {
+        return extractAllFromArchive(new File(fileArchivePath));
     }
 
-    public Boolean extractArchive(File archive) throws ExtractionException {
+    public Boolean extractAllFromArchive(File archive) throws ExtractionException {
         if(!FileUtilities.isFileExists(archive.getAbsolutePath())) return false;
         long time = System.currentTimeMillis();
         logger.info("Extracting the archive file "+ archive.getAbsolutePath()+"...");
@@ -289,7 +289,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
      * @return if true all the operations are succesfull.
      * @throws com.github.p4535992.util.file.archive.sevenzipjbinding.ExtractionException if any error is occurred.
      */
-    public boolean extracArchive(Path path) throws ExtractionException {
+    public boolean extractAllFromArchive(Path path) throws ExtractionException {
         logger.info("Extracting the archive file "+ path.toString()+"...");
         try {
             long time = System.currentTimeMillis();
