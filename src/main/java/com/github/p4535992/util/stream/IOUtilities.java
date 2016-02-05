@@ -126,6 +126,7 @@ public class IOUtilities {
         return ch2 == -1;
     }
 
+
     static {
         DIR_SEPARATOR = File.separatorChar;
         StringWriter buf = new StringWriter(4);

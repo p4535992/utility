@@ -205,11 +205,19 @@
     </dependencyManagement>
 
     <dependencies>
-       <!-- <dependency>
+
+        <dependency>
             <groupId>com.github.p4535992</groupId>
             <artifactId>database-basic</artifactId>
             <version>1.6.8</version>
-        </dependency>-->
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql.version}</version>
+        </dependency>
+
         <!-- ==================== -->
         <!-- SPRING FRAMEWORK     -->
         <!-- ==================== -->
@@ -300,12 +308,7 @@
         <!-- ================= -->
         <!-- DATABASE DRIVER   -->
         <!-- ================= -->
-        <!-- MySQL -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>${mysql.version}</version>
-        </dependency>
+
         <!-- JOOQ -->
         <dependency>
             <groupId>org.jooq</groupId>

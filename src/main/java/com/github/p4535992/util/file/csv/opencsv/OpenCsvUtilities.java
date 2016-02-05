@@ -510,7 +510,7 @@ public class OpenCsvUtilities extends FileUtilities{
             while ((nextLine = csvReader.readNext()) != null) {
                 int index = 1;
                 for (String string : nextLine) {
-                    date = DateUtilities.convertToDate(string);
+                    date = DateUtilities.toDate(string);
                     if (null != date) {
                         ps.setDate(index++, new java.sql.Date(date
                                 .getTime()));

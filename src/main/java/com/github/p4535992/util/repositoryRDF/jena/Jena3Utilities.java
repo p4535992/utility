@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Types;
 import java.util.*;
 
 /**
@@ -3288,6 +3289,48 @@ public class Jena3Utilities {
         else if (lang.equalsIgnoreCase("TTL")) ext = ".ttl";
         else if (lang.equalsIgnoreCase("N3")) ext = ".n3";
         return ext;
+    }
+
+    public static XSDDatatype toXDDTypes(int sqlTypes){
+        switch (sqlTypes) {
+            case Types.BIT: return XSDDatatype.XSDbyte;
+            case Types.TINYINT: return XSDDatatype.XSDint;
+            case Types.SMALLINT: return XSDDatatype.XSDint;
+            case Types.INTEGER: return XSDDatatype.XSDinteger;
+            case Types.BIGINT: return XSDDatatype.XSDint;
+            case Types.FLOAT: return XSDDatatype.XSDfloat;
+            //case Types.REAL:return ;
+            case Types.DOUBLE:return XSDDatatype.XSDdouble;
+            case Types.NUMERIC:return XSDDatatype.XSDinteger;
+            case Types.DECIMAL:return XSDDatatype.XSDdecimal;
+            case Types.CHAR:return XSDDatatype.XSDstring;
+            case Types.VARCHAR:return  XSDDatatype.XSDstring;
+            case Types.LONGVARCHAR:return  XSDDatatype.XSDstring;
+            case Types.DATE:return  XSDDatatype.XSDdate;
+            case Types.TIME: return  XSDDatatype.XSDtime;
+            case Types.TIMESTAMP:return  XSDDatatype.XSDdateTime;
+            case Types.BINARY:return  XSDDatatype.XSDbase64Binary;
+            case Types.VARBINARY:return XSDDatatype.XSDbase64Binary;
+            case Types.LONGVARBINARY:return XSDDatatype.XSDbase64Binary;
+            case Types.NULL:return XSDDatatype.XSDstring;
+            //case Types.OTHER:return "";
+            //case Types.JAVA_OBJECT:return "JAVA_OBJECT";
+            //case Types.DISTINCT:return "DISTINCT";
+            //case Types.STRUCT:return "STRUCT";
+            //case Types.ARRAY:return "ARRAY";
+            //case Types.BLOB:return "BLOB";
+            //case Types.CLOB:return "CLOB";
+            //case Types.REF:return "REF";
+            //case Types.DATALINK:return "DATALINK";
+            case Types.BOOLEAN: return XSDDatatype.XSDboolean;
+            //case Types.ROWID:return "ROWID";
+            case Types.NCHAR:return XSDDatatype.XSDstring;
+            case Types.NVARCHAR:return XSDDatatype.XSDstring;
+            case Types.LONGNVARCHAR:return XSDDatatype.XSDstring;
+            //case Types.NCLOB:return "NCLOB";
+            //case Types.SQLXML:return "SQLXML";
+            default: return XSDDatatype.XSDstring;
+        }
     }
 
     //--------------------------------

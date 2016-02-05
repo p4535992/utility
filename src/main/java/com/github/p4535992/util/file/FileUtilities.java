@@ -3,7 +3,6 @@ package com.github.p4535992.util.file;
 import com.github.p4535992.util.file.csv.opencsv.OpenCsvUtilities;
 import com.github.p4535992.util.file.resources.ClassLoaderUtil;
 import com.github.p4535992.util.stream.IOUtilities;
-import com.github.p4535992.util.string.StringUtilities;
 
 import java.io.*;
 import java.net.*;
@@ -33,6 +32,10 @@ public class FileUtilities {
     
      private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(FileUtilities.class);
+
+    public static final long ONE_KB = 1024L;
+    public static final long ONE_MB = 1048576L;
+    public static final long ONE_GB = 1073741824L;
 
     public static final String pathSeparatorReference = "/";
 
@@ -291,6 +294,16 @@ public class FileUtilities {
             logger.error(e.getMessage(), e);
             return null;
         }
+    }
+
+    /**
+     * Method to create a new File Object in a specific path.
+     *
+     * @param file File output location of the new File .
+     * @return the new File object.
+     */
+    public static File createFile(File file) {
+        return toFile(file);
     }
 
     /**
@@ -835,7 +848,7 @@ public class FileUtilities {
                         file_name = dir_it.next();
                         if (root) {
                             // if the file is not accepted, don't process it further
-                            if (!StringUtilities.isMatch(file_name, included, excluded)) {
+                            if (!isMatch(file_name, included, excluded)) {
                                 continue;
                             }
                         } else {
@@ -857,7 +870,7 @@ public class FileUtilities {
         } else if (file.isFile()) {
             String file_name = file.getName();
             if (root) {
-                if (StringUtilities.isMatch(file_name, included, excluded)) {
+                if (isMatch(file_name, included, excluded)) {
                     filelist.add(file_name);
                 }
             } else filelist.add(file_name);
@@ -1417,7 +1430,7 @@ public class FileUtilities {
         File temp = null;
         try {
             temp = File.createTempFile(
-                    StringUtilities.generateMD5Token(6), //test
+                    generateRandomStringSimple(6), //test
                     null, //.tmp
                     null //c://
             );
@@ -1444,7 +1457,7 @@ public class FileUtilities {
         File tempFile = null;
         try {
             //file with no extenstion and no directory is saved on C:\\temp\\file.tmp
-            tempFile = File.createTempFile(StringUtilities.generateMD5Token(6), null, null);
+            tempFile = File.createTempFile(generateRandomStringSimple(6), null, null);
             // Delete temp file when program exits.
             tempFile.deleteOnExit();
             FileOutputStream fos = new FileOutputStream(tempFile);
@@ -1624,7 +1637,7 @@ public class FileUtilities {
      * @return the full name package+class
      */
     private static String resolveName(String name) {
-        if (StringUtilities.isNullOrEmpty(name)) return name;
+        if (isNullOrEmpty(name)) return name;
         if (!name.startsWith("/")) {
             Class<?> clazz = FileUtilities.class;
             while (clazz.isArray()) {
@@ -1682,7 +1695,7 @@ public class FileUtilities {
                 digest.update(bytesBuffer, 0, bytesRead);
             }
             byte[] hashedBytes = digest.digest();
-            return StringUtilities.toHexString(hashedBytes);
+            return toHexString(hashedBytes);
         } catch (NoSuchAlgorithmException | IOException e) {
             logger.error(e.getMessage(), e);
             return null;
@@ -2445,7 +2458,7 @@ public class FileUtilities {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(UTF8), "UTF-8"))) {
                 String line = r.readLine();
                 while (line != null) {
-                    logger.info(StringUtilities.unicodeEscape(line));
+                    logger.info(unicodeEscape(line));
                     line = r.readLine();
                     list.add(line);
                 }
@@ -2475,9 +2488,9 @@ public class FileUtilities {
             try (BufferedReader r = new BufferedReader(new FileReader(ASCII))) {
                 String line = r.readLine();
                 while (line != null) {
-                    line = StringUtilities.convertUnicodeEscapeToASCII(line);
+                    line = convertUnicodeEscapeToASCII(line);
                     byte[] bytes = line.getBytes("UTF-8");
-                    list.add(StringUtilities.toString(bytes));
+                    list.add(toString(bytes));
                 }
             }
             return list;
@@ -2497,7 +2510,7 @@ public class FileUtilities {
         List<String> list = toUTF8(fileASCII);
         File fileUTF8 = new File(fileASCII.getAbsolutePath());
         //fileASCII = new File(filePathASCII);
-        write(list, fileUTF8, StringUtilities.US_ASCII, StringUtilities.UTF_8);
+        write(list, fileUTF8, StandardCharsets.US_ASCII, StandardCharsets.UTF_8);
         boolean delete = fileASCII.delete();
         return fileUTF8;
     }
@@ -2511,7 +2524,7 @@ public class FileUtilities {
     public static File writeToASCII(File fileUTF8) {
         List<String> list = toAscii(fileUTF8);
         File fileAscii = new File(fileUTF8.getAbsolutePath());
-        write(list, fileAscii, null, StringUtilities.US_ASCII);
+        write(list, fileAscii, null, StandardCharsets.US_ASCII);
         boolean b = fileUTF8.delete();
         if(!b) return null;
         return fileAscii;
@@ -2549,7 +2562,7 @@ public class FileUtilities {
      */
     public static File writeToANSI(File fileUTF8) {
         File fileANSI = new File(fileUTF8.getAbsolutePath());
-        write(fileUTF8, fileANSI, StringUtilities.UTF_8, StringUtilities.CP1252);
+        write(fileUTF8, fileANSI, StandardCharsets.UTF_8,  Charset.forName("Cp1252"));//CP1252
         boolean delete = fileUTF8.delete();
         return fileANSI;
     }
@@ -2619,12 +2632,12 @@ public class FileUtilities {
      * @param fileOutput string name of the file.
      */
     private static File writeToFile(String str, File fileOutput) {
-        write(Collections.singletonList(str), fileOutput, StringUtilities.DEFAULT_ENCODING, StringUtilities.UTF_8);
+        write(Collections.singletonList(str), fileOutput, Charset.defaultCharset(), StandardCharsets.UTF_8);
         return fileOutput;
     }
 
     public static File write(String str, File fileOutput) {
-        write(Collections.singletonList(str), fileOutput, StringUtilities.DEFAULT_ENCODING, StringUtilities.UTF_8);
+        write(Collections.singletonList(str), fileOutput, Charset.defaultCharset(), StandardCharsets.UTF_8);
         return fileOutput;
     }
 
@@ -2641,11 +2654,11 @@ public class FileUtilities {
         if (encodingInput != null) {
             Collection<String> newCol = new ArrayList<>();
             for (String s : collectionContent) {
-                if (encodingInput.name().equals(StringUtilities.US_ASCII.name())) s = StringUtilities.toASCII(s);
-                if (encodingInput.name().equals(StringUtilities.UTF_8.name())) s = StringUtilities.toUTF8(s);
+                if (encodingInput.name().equals(StandardCharsets.US_ASCII.name())) s = toASCII(s);
+                if (encodingInput.name().equals(StandardCharsets.UTF_8.name())) s = toUTF8(s);
                 newCol.add(s);
             }
-            if (encodingInput.name().equals(StringUtilities.UTF_8.name())) replace = true;
+            if (encodingInput.name().equals(StandardCharsets.UTF_8.name())) replace = true;
             collectionContent = new ArrayList<>();
             collectionContent.addAll(newCol);
             newCol.clear();
@@ -2857,10 +2870,6 @@ public class FileUtilities {
      * @return if true all the operation are done.
      */
     public static boolean write(File fileOutput, byte[] bbuf) {
-        /* try{OPut.write(bbuf, 0, bbuf.length);OPut.flush();
-        }catch(Exception ex){SystemLog.exception(ex,StringUtilities.class);}
-        finally{ OPut.close();}
-         */
         try (BufferedInputStream in = new BufferedInputStream(new ByteArrayInputStream(bbuf))) {
             try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileOutput))) {
                 byte[] ioBuf = new byte[4096];
@@ -3082,6 +3091,208 @@ public class FileUtilities {
         if(extPos == -1)return fileName;
         else return fileName.substring(0, extPos);
     }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // LOCAL StringUtilities Methods for avoid the dependency
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Checks if the name filters through a series of including and excluding
+     * regular expressions.
+     * @param name The String that will be filtered.
+     * @param included An array of regular expressions that need to succeed
+     * @param excluded An array of regular expressions that need to fail
+     * @return true if the name filtered through correctly; or false otherwise.
+     */
+    private static boolean isMatch(String name, Pattern[] included, Pattern[] excluded) {
+        if (null == name)return false;
+        boolean accepted = false;
+        // retain only the includes
+        if (null == included) accepted = true;
+        else {
+            Pattern pattern;
+            for (Pattern anIncluded : included) {
+                pattern = anIncluded;
+                if (pattern != null && pattern.matcher(name).matches()) {
+                    accepted = true;
+                    break;
+                }
+            }
+        }
+        // remove the excludes
+        if (accepted && excluded != null){
+            Pattern pattern;
+            for(Pattern anExcluded : excluded) {
+                pattern = anExcluded;
+                if (pattern != null && pattern.matcher(name).matches()) {
+                    accepted = false;
+                    break;
+                }
+            }
+        }
+        return accepted;
+    }
+
+    /**
+     * Method simple to generate a alphanumerical String.
+     * @param length the {@link Integer} length of the String.
+     * @return the {@link String} generate.
+     */
+    private static String generateRandomStringSimple(int length){
+        byte[] array = new byte[length]; // length is bounded by 7
+        new Random().nextBytes(array);
+        return new String(array, Charset.forName("UTF-8"));
+    }
+
+    /**
+     * Method for convert a string UTF-8 to HEX
+     * @param s string of text you want to convert to HEX
+     * @return the text in HEX encoding
+     */
+    private static String unicodeEscape(String s) {
+        char[] hexChar ={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if ((c >> 7) > 0) {
+                sb.append("\\u");
+                sb.append(hexChar[(c >> 12) & 0xF]); // append the hex character for the left-most 4-bits
+                sb.append(hexChar[(c >> 8) & 0xF]); // hex for the second group of 4-bits from the left
+                sb.append(hexChar[(c >> 4) & 0xF]); // hex for the third group
+                sb.append(hexChar[c & 0xF]); // hex for the last group, e.home., the right most 4-bits
+            }else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
+     * escaped sequence for characters outside of ASCII.
+     * It is equivalent to: native2ascii -encoding utf-8
+     * @param stringUTF8 string encoding utf8
+     * @return ASCII string encoding ascii.
+     */
+    private static String toASCII(String stringUTF8) {
+        if (stringUTF8==null) return null;
+        Reader reader = new StringReader(toHexString(stringUTF8.getBytes(StandardCharsets.UTF_8)));
+        return unicodeEscape(reader.toString());
+
+    }
+
+    /**
+     * Method to convert a array of bytes to a string.
+     * @param arrayBytes array Collection of bytes.
+     * @return the string of the hash.
+     */
+    private static String toHexString(byte[] arrayBytes) {
+        StringBuilder stringBuffer = new StringBuilder();
+        for (byte arrayByte : arrayBytes) {
+            stringBuffer.append(Integer.toString((arrayByte & 0xff) + 0x100, 16)
+                    .substring(1));
+        }
+        return stringBuffer.toString();
+    }
+
+    /**
+     * Reads file with unicode escaped characters and write them out to
+     * stdout in UTF-8
+     * This utility is equivalent to: native2ascii -reverse -encoding utf-8
+     * @param stringASCII string encoding ascii.
+     * @return UTF8 string encoding utf8.
+     */
+    private static String toUTF8(String stringASCII) {
+        if (stringASCII == null) return null;
+        Reader reader = new StringReader(toHexString(stringASCII.getBytes(StandardCharsets.US_ASCII)));
+        String line = convertUnicodeEscapeToASCII(reader.toString());
+        byte[] bytes = line.getBytes(StandardCharsets.UTF_8);
+        return toHexString(bytes);
+    }
+
+    private enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
+    /**
+     *  convert unicode escapes back to char.
+     * @param s string to convert to ascii.
+     * @return string ascii.
+     */
+    private static String convertUnicodeEscapeToASCII(String s) {
+        char[] out = new char[s.length()];
+        ParseState state = ParseState.NORMAL;
+        int j = 0, k = 0, unicode = 0;
+        char c = ' ';
+        for (int i = 0; i < s.length(); i++) {
+            c = s.charAt(i);
+            if (state == ParseState.ESCAPE) {
+                if (c == 'u') {
+                    state = ParseState.UNICODE_ESCAPE;
+                    unicode = 0;
+                }
+                else { // we don't care about other escapes
+                    out[j++] = '\\';
+                    out[j++] = c;
+                    state = ParseState.NORMAL;
+                }
+            }
+            else if (state == ParseState.UNICODE_ESCAPE) {
+                if ((c >= '0') && (c <= '9')) {
+                    unicode = (unicode << 4) + c - '0';
+                }
+                else if ((c >= 'a') && (c <= 'f')) {
+                    unicode = (unicode << 4) + 10 + c - 'a';
+                }
+                else if ((c >= 'A') && (c <= 'F')) {
+                    unicode = (unicode << 4) + 10 + c - 'A';
+                }
+                else {
+                    throw new IllegalArgumentException("Malformed unicode escape");
+                }
+                k++;
+                if (k == 4) {
+                    out[j++] = (char) unicode;
+                    k = 0;
+                    state = ParseState.NORMAL;
+                }
+            }
+            else if (c == '\\') {
+                state = ParseState.ESCAPE;
+            }
+            else {
+                out[j++] = c;
+            }
+        }//for
+        if (state == ParseState.ESCAPE) {
+            out[j++] = c;
+        }
+        return new String(out, 0, j);
+    }
+
+    private static String toString(byte[] arrayBytes){
+        /*
+         * Converts a byte array to a String, taking the
+         * eight bits of each byte as the lower eight bits of the chars
+         * in the String.
+         * @param bytes the byte array to convert to char array.
+         * @return the new String converted from a byte array.
+         */
+        //return new String(toChars(bytes));
+        StringBuilder sb = new StringBuilder(2*arrayBytes.length);
+        for (byte b : arrayBytes) {
+            sb.append(String.format("%02x", b & 0xff));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Method to Returns true if the parameter is null or empty. false otherwise.
+     * @param text string text.
+     * @return true if the parameter is null or empty.
+     */
+    private static boolean isNullOrEmpty(String text) {
+        return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty() ;
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
     /**
      * Utility for a depth first traversal of a file-system starting from a

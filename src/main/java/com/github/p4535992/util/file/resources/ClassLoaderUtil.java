@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2002-2003 by OpenSymphony
- * All rights reserved.
- */
 package com.github.p4535992.util.file.resources;
 
 import java.io.*;
@@ -238,9 +234,7 @@ public class ClassLoaderUtil {
      * @return the {@link String} new name.
      */
     private static String resolveName(String name) {
-        if (name == null) {
-            return null;
-        }
+        if (name == null)return null;
         if (!name.startsWith("/")) {
             Class<?> c = ClassLoaderUtil.class;
             while (c.isArray()) {

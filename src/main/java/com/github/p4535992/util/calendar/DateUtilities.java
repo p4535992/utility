@@ -46,7 +46,7 @@ public class DateUtilities {
      * @return java.util.Date object if input string is parsed
      *          successfully else returns null
      */
-    public static Date convertToDate(String input) {
+    public static Date toDate(String input) {
         Date date = null;
         if(null == input) {
             return null;

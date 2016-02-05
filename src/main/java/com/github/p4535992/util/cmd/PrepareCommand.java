@@ -18,7 +18,7 @@ public class PrepareCommand {
     
     public PrepareCommand(){}
     
-    public StreamWrapper getStreamWrapper(InputStream is, String type){
+    private StreamWrapper getStreamWrapper(InputStream is, String type){
             return new StreamWrapper(is, type);
     }
      
@@ -101,7 +101,7 @@ public class PrepareCommand {
         return exitVal;
     }
 
-    private int RunCommandsWithCommonsExec(String workingDirectory,String mainClass,Map<String,String> params) throws IOException{
+    public int RunCommandsWithCommonsExec(String workingDirectory,String mainClass,Map<String,String> params) throws IOException{
         long startTime = System.currentTimeMillis();
         long printJobTimeout = 1000;
         int exitValue ; // = 0;

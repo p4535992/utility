@@ -2,6 +2,9 @@ package com.github.p4535992.util.string;
 
 /**
  * Created by 4535992 on 31/12/2015.
+ * @author 4535992.
+ * WARNING: This is just a local copy of the Timer of the
+ *          JENA Project i don't own any right on this.
  */
 @SuppressWarnings("unused")
 public class Timer

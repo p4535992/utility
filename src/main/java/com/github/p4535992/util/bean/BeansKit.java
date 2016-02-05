@@ -11,8 +11,6 @@ import org.springframework.core.io.ResourceLoader;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.util.Collection;
-import org.apache.commons.beanutils.BeanToPropertyValueTransformer;
-import org.apache.commons.collections.CollectionUtils;
 
 /**
  * Created by 4535992 on 21/04/2015.
@@ -234,9 +232,10 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
     }
     
     //-----------------------------------------------------------------------------------------
-    
+
     public static Collection<?> collect(Collection<?> collection, String propertyName) {
-        return CollectionUtils.collect(collection, new BeanToPropertyValueTransformer(propertyName));
+        return org.apache.commons.collections.CollectionUtils.collect(collection, new
+                org.apache.commons.beanutils.BeanToPropertyValueTransformer(propertyName));
     }
 
 //  public static org.springframework.context.ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
