@@ -80,6 +80,12 @@
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
+        <!-- Local reposiotry -->
+        <repository>
+            <id>data-local</id>
+            <name>data</name>
+            <url>file://${project.basedir}/LIB</url>
+        </repository>
     </repositories>
 
 
