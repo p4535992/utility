@@ -15,9 +15,10 @@
     <orderEntry type="library" name="Maven: com.github.p4535992:database-basic:1.6.8" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.codehaus.groovy:groovy-all:2.3.11" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.p4535992:utility:1.6.8-SNAPSHOT" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: virtuoso.sesame2:driver:2.7.3-build1.12" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.jolbox:bonecp:0.8.0.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.uniVocity:univocity-parsers:-v1.5.6-g2a37dd7-162" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.uniVocity:univocity-parsers:-v1.5.6-gda091c1-163" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-core:5.0.7.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging:3.3.0.Final" level="project" />
     <orderEntry type="library" name="Maven: org.javassist:javassist:3.18.1-GA" level="project" />
@@ -140,9 +141,24 @@
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-sail-api:2.8.8" level="project" />
     <orderEntry type="library" name="Maven: org.openrdf.sesame:sesame-query:2.8.8" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.openrdf.sesame:sesame-queryparser-sparql:2.8.8" level="project" />
-    <orderEntry type="library" name="Maven: com.openlink.virtuoso:virtjena2:develop7-2015-06-25" level="project" />
-    <orderEntry type="library" name="Maven: com.openlink.virtuoso:virtjdbc4-1:7.1.0" level="project" />
-    <orderEntry type="library" name="Maven: virtuoso.sesame2:driver:2.7.3-build1.12" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: com.openlink.virtuoso:virt_jena3:7.1.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/LIB/lib_openlink/virt_jena3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="Maven: com.openlink.virtuoso:virtjdbc4:7.1.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/LIB/lib_openlink/virtjdbc4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="library" name="Maven: com.github.VisualDataWeb:OWL2VOWL:0.2.0" level="project" />
     <orderEntry type="library" name="Maven: net.sourceforge.owlapi:owlapi-distribution:3.5.0" level="project" />
     <orderEntry type="library" name="Maven: net.sourceforge.owlapi:owlapi-apibinding:3.5.0" level="project" />

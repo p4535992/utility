@@ -566,31 +566,48 @@
         <!-- =============== -->
         <!-- VIRTUOSO-JENA   -->
         <!-- =============== -->
-        <dependency>
+        <!--<dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjena2</artifactId>
             <version>develop7-2015-06-25</version>
             <optional>true</optional>
-        </dependency>
+        </dependency>-->
        <!-- <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virt_jena2</artifactId>
             <version>7.1.0</version>
             <optional>true</optional>
         </dependency>-->
-        <!-- The Jena Provider for Jena 2.10 requires the Virtuoso JDBC 4 Driver. -->
         <dependency>
+            <groupId>com.openlink.virtuoso</groupId>
+            <artifactId>virt_jena3</artifactId>
+            <version>7.1.0</version>
+            <optional>true</optional>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/LIB/lib_openlink/virt_jena3.jar</systemPath>
+        </dependency>
+
+        <!-- The Jena Provider for Jena 2.10 requires the Virtuoso JDBC 4 Driver. -->
+       <!-- <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjdbc4-1</artifactId>
             <version>7.1.0</version>
             <optional>true</optional>
+        </dependency>-->
+        <dependency>
+            <groupId>com.openlink.virtuoso</groupId>
+            <artifactId>virtjdbc4</artifactId>
+            <version>7.1.0</version>
+            <optional>true</optional>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/LIB/lib_openlink/virtjdbc4.jar</systemPath>
         </dependency>
         <!-- The Jena Provider for Sesame 2.X.X -->
-        <dependency>
+        <!--<dependency>
             <groupId>virtuoso.sesame2</groupId>
             <artifactId>driver</artifactId>
             <version>2.7.3-build1.12</version>
-        </dependency>
+        </dependency>-->
 
         <!-- =============== -->
         <!-- OWL2VOWL        -->

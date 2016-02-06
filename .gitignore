@@ -45,8 +45,6 @@ Temporary Items
 /target/*
 /target
 target
-/LIB/
-/LIB/*
-LIB
+
 
 /.idea/libraries/*
