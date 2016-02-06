@@ -603,11 +603,19 @@
             <systemPath>${project.basedir}/LIB/lib_openlink/virtjdbc4.jar</systemPath>
         </dependency>
         <!-- The Jena Provider for Sesame 2.X.X -->
-        <!--<dependency>
+       <!-- <dependency>
             <groupId>virtuoso.sesame2</groupId>
             <artifactId>driver</artifactId>
             <version>2.7.3-build1.12</version>
         </dependency>-->
+       <dependency>
+           <groupId>virtuoso.sesame2</groupId>
+           <artifactId>driver</artifactId>
+           <version>2.7.3-build1.12</version>
+           <optional>true</optional>
+           <scope>system</scope>
+           <systemPath>${project.basedir}/LIB/lib_openlink/driver-2.7.3-build1.12.jar</systemPath>
+       </dependency>
 
         <!-- =============== -->
         <!-- OWL2VOWL        -->

@@ -1,6 +1,5 @@
 package com.github.p4535992.util.repositoryRDF.virtuoso;
 
-import org.apache.jena.query.ResultSet;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;

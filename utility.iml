@@ -15,7 +15,6 @@
     <orderEntry type="library" name="Maven: com.github.p4535992:database-basic:1.6.8" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.codehaus.groovy:groovy-all:2.3.11" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.p4535992:utility:1.6.8-SNAPSHOT" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Maven: virtuoso.sesame2:driver:2.7.3-build1.12" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.jolbox:bonecp:0.8.0.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.github.uniVocity:univocity-parsers:-v1.5.6-gda091c1-163" level="project" />
@@ -154,6 +153,15 @@
       <library name="Maven: com.openlink.virtuoso:virtjdbc4:7.1.0">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/LIB/lib_openlink/virtjdbc4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="Maven: virtuoso.sesame2:driver:2.7.3-build1.12">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/LIB/lib_openlink/driver-2.7.3-build1.12.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
