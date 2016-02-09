@@ -1,6 +1,8 @@
 package com.github.p4535992.util.bean;
 
 import com.github.p4535992.util.file.FileUtilities;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -9,7 +11,9 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.*;
-import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.Collection;
 
 /**
@@ -17,7 +21,7 @@ import java.util.Collection;
  * @version 2015-06-25
  */
 @SuppressWarnings("unused")
-public class BeansKit implements  org.springframework.context.ResourceLoaderAware{
+public class BeansKit implements  org.springframework.context.ResourceLoaderAware,BeanPostProcessor {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger( BeansKit.class);
@@ -104,20 +108,6 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         return context;
     }
 
-
-    public static InputStream getResourceAsStream( String name,Class<?> thisClass ) {
-        return thisClass.getClassLoader().getResourceAsStream(name);
-    }
-
-    public static File getResourceAsFile(String name,Class<?> thisClass) {
-        try {
-            return new File(thisClass.getClassLoader().getResource(name).getFile());
-        }catch(java.lang.NullPointerException e){
-            logger.error(e.getMessage(), e);
-            return null;
-        }
-    }
-
     public static String getResourceAsString(String fileName,Class<?> thisClass) {
         String result;
         try {
@@ -129,35 +119,98 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         }
     }
 
-    public static File getResourceSpringAsFile(String fileName) {
+    public static File getResourceAsFile(String name,Class<?> thisClass) {
         try {
-            final org.springframework.core.io.Resource yourfile = new org.springframework.core.io.ClassPathResource(fileName);
-            return yourfile.getFile();
+            return new File(thisClass.getClassLoader().getResource(name).getFile());
+        }catch(java.lang.NullPointerException e){
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public static File getResourceSpringAsFile(String pathRelativeToFileOnResourceFolder) {
+        try {
+            return getResourceSpringAsResource(pathRelativeToFileOnResourceFolder,null,null).getFile();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public static File getResourceSpringAsFile(String pathRelativeToFileOnResourceFolder,Class<?> clazz) {
+        try {
+            return getResourceSpringAsResource(pathRelativeToFileOnResourceFolder,clazz,null).getFile();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public static File getResourceSpringAsFile(String pathRelativeToFileOnResourceFolder,ClassLoader classLoader) {
+        try {
+            return getResourceSpringAsResource(pathRelativeToFileOnResourceFolder,null,classLoader).getFile();
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private static org.springframework.core.io.Resource getResourceSpringAsResource(
+            Object fileNameOrUri,Class<?> clazz,ClassLoader classLoader) {
+        try {
+            org.springframework.core.io.Resource yourfile;
+            //if File
+            if(fileNameOrUri instanceof File && ((File) fileNameOrUri).exists()){
+                yourfile = new org.springframework.core.io.FileSystemResource(((File) fileNameOrUri));
+            }
+            //if URL
+            else if(org.springframework.util.ResourceUtils.isUrl(String.valueOf(fileNameOrUri))  || fileNameOrUri instanceof URL) {
+                if (fileNameOrUri instanceof URL) {
+                    yourfile = new org.springframework.core.io.UrlResource((URL) fileNameOrUri);
+                } else {
+                    yourfile = new org.springframework.core.io.UrlResource(String.valueOf(fileNameOrUri));
+                }
+            //if Path or URI
+            }else if(fileNameOrUri instanceof Path || fileNameOrUri instanceof URI) {
+                if (fileNameOrUri instanceof Path) {
+                    yourfile = new org.springframework.core.io.PathResource((Path) fileNameOrUri);
+                } else {
+                    yourfile = new org.springframework.core.io.PathResource((URI) fileNameOrUri);
+                }
+          /*  }else if(fileNameOrUri instanceof Class){
+                org.springframework.core.io.ClassRelativeResourceLoader relativeResourceLoader =
+                        new org.springframework.core.io.ClassRelativeResourceLoader((Class<?>) fileNameOrUri);
+                yourfile = relativeResourceLoader.getResource("")
+                */
+            //if InputStream
+            }else if(fileNameOrUri instanceof InputStream){
+                    yourfile = new org.springframework.core.io.InputStreamResource((InputStream) fileNameOrUri);
+            }else if(fileNameOrUri instanceof byte[]){
+                yourfile = new org.springframework.core.io.ByteArrayResource((byte[]) fileNameOrUri);
+            //if String path toa file or String of a URI
+            }else if(fileNameOrUri instanceof String){
+                if (classLoader != null) {
+                    yourfile = new org.springframework.core.io.ClassPathResource(String.valueOf(fileNameOrUri), classLoader);
+                } else if (clazz != null) {
+                    yourfile = new org.springframework.core.io.ClassPathResource(String.valueOf(fileNameOrUri), clazz);
+                } else {
+                    yourfile = new org.springframework.core.io.ClassPathResource(String.valueOf(fileNameOrUri));
+                }
+            }else{
+                logger.error("Can't load the resource for the Object with Class:"+fileNameOrUri.getClass().getName());
+                return null;
+            }
+            return yourfile;
         }catch(IOException e){
             logger.error(e.getMessage(), e);
             return null;
         }
     }
 
-    public static org.springframework.core.io.Resource getResourceSpringAsResource(String uri) throws MalformedURLException {
-        org.springframework.core.io.Resource resource;
-        File file=new File(uri);
-        if (file.exists()) {
-            resource=new org.springframework.core.io.FileSystemResource(uri);
-        }
-        else   if (org.springframework.util.ResourceUtils.isUrl(uri)) {
-            resource = new org.springframework.core.io.UrlResource(uri);
-        }
-        else {
-            resource=new org.springframework.core.io.ClassPathResource(uri);
-        }
-        return resource;
-    }
-
-    public static String readResourceSpring(String fileLocationInClasspath){
+    public static String readResourceSpring(org.springframework.core.io.Resource resource){
         try {
-            org.springframework.core.io.Resource resource =
-                    new org.springframework.core.io.ClassPathResource(fileLocationInClasspath);
+           /* org.springframework.core.io.Resource resource =
+                    new org.springframework.core.io.ClassPathResource(fileLocationInClasspath);*/
             BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()),1024);
             StringBuilder stringBuilder = new StringBuilder();
             String line;
@@ -172,35 +225,10 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         }
     }
 
-    public static String readResource(String name,Class<?> thisClass ){
-        try {
-            InputStream inputStream = getResourceAsStream(name, thisClass);
-            if (inputStream == null) {
-                return null;
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            char[] buffer = new char[1024];
-            try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-                int read;
-                while ((read = reader.read(buffer)) != -1) {
-                    stringBuilder.append(buffer, 0, read);
-                }
-            } finally {
-                inputStream.close();
-            }
-            return stringBuilder.toString();
-        }catch (IOException e){
-            logger.error(e.getMessage(),e);
-            return null;
-        }
-    }
-
     public static void printResourceSpringToConsole(org.springframework.core.io.Resource resource) {
         try{
             InputStream is = resource.getInputStream();
             BufferedReader br = new BufferedReader(new InputStreamReader(is));
-
             String line;
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
@@ -217,7 +245,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         this.resourceLoader = resourceLoader;
     }
 
-    public void showResourceData(String absolutePathToFile) throws IOException {
+    public void showResourceDataOnResourceLoader(String absolutePathToFile,ResourceLoader resourceLoader) throws IOException {
         //This line will be changed for all versions of other examples : "file:c:/temp/filesystemdata.txt"
         org.springframework.core.io.Resource banner = resourceLoader.getResource("file:"+absolutePathToFile);
         InputStream in = banner.getInputStream();
@@ -238,6 +266,8 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
                 org.apache.commons.beanutils.BeanToPropertyValueTransformer(propertyName));
     }
 
+
+
 //  public static org.springframework.context.ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
 //    org.springframework.core.io.Resource resource = getSpringResourceFromString(uri);
 //    //LOG.debug("Using " + resource + " from " + uri);
@@ -250,4 +280,18 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
 //      };
 //    }
 //  }
+
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("BeforeInitialization : " + beanName);
+        return bean;
+        // you can return any other object as well
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("AfterInitialization : " + beanName);
+        return bean;
+        // you can return any other object as well
+    }
 }

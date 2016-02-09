@@ -61,7 +61,11 @@ public class GTFSUtilities {
 
     private List<List<Statement>> mapper(File zipFile, String baseUri) throws IOException {
         //List<File> files = ArchiveUtilities.extractAllFromZip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
-        List<File> files = ZtZipUtilities.extractAllFromZip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
+        List<File> files =
+                FileUtilities.getFilesFromDirectory(
+                        ZtZipUtilities.extractDirectoryFromZip(zipFile, new File(FileUtilities.getDirectoryFullPath(zipFile))
+                        )
+                );
         List<List<Statement>> listStmt = new ArrayList<>();
         for(File file : files){
             String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());

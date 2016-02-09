@@ -641,16 +641,11 @@ public class Sesame2Utilities {
             logger.info("Start the import of the Data on the repository...");
             final AtomicLong statementsLoaded = new AtomicLong();
             // Load all the files from the pre-load folder
-            //String preload = preloadFolder;
-            //SystemLog.message("No pre-load directory/filename provided.");
-
             FileUtilities.FileWalker.Handler handler = new FileUtilities.FileWalker.Handler() {
-
                 @Override
                 public void file(File file) throws Exception {
                     statementsLoaded.addAndGet(importIntoRepositoryFileChunked(file));
                 }
-
                 @Override
                 public void directory(File directory) throws Exception {
                     logger.info("Loading files from: " + directory.getAbsolutePath());
@@ -2422,19 +2417,14 @@ public class Sesame2Utilities {
      */
     public RepositoryManager connectToLocation(URL urlOrDirectory) {
         //logger.info("Calling with URL: " + urlOrDirectory);
-        try {
-            if (StringUtilities.isURL(urlOrDirectory.toString())) {
-                connectToRemoteLocation(urlOrDirectory.toString());
-                return mRepositoryManager;
-            } else if (FileUtilities.toFile(urlOrDirectory).exists()) {
-                connectToLocalLocation(urlOrDirectory);
-                return mRepositoryManager;
-            } else {
-                logger.warn("Not exists the url or the File with path:" + urlOrDirectory);
-                return null;
-            }
-        } catch (URISyntaxException | MalformedURLException e) {
-            logger.error(e.getMessage(), e);
+        if (StringUtilities.isURL(urlOrDirectory.toString())) {
+            connectToRemoteLocation(urlOrDirectory.toString());
+            return mRepositoryManager;
+        } else if (FileUtilities.toFile(urlOrDirectory).exists()) {
+            connectToLocalLocation(urlOrDirectory);
+            return mRepositoryManager;
+        } else {
+            logger.warn("Not exists the url or the File with path:" + urlOrDirectory);
             return null;
         }
     }
@@ -2507,12 +2497,7 @@ public class Sesame2Utilities {
      * @return the {@link RepositoryManager}.
      */
     private RepositoryManager connectToLocalLocation(File directory) {
-        try {
-            return connectToLocalLocation(FileUtilities.toURL(directory));
-        } catch (MalformedURLException e) {
-            logger.error("The URL directory not exists or is wrong:" + directory.getAbsolutePath(), e);
-            return null;
-        }
+        return connectToLocalLocation(FileUtilities.toURL(directory));
     }
 
     /**

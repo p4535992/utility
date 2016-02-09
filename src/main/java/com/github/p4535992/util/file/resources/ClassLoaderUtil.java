@@ -84,7 +84,6 @@ public class ClassLoaderUtil {
     */
     public static URL getResourceAsURL(String resourceName, Class<?> callingClass) {
         URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
-
         if (url == null) {
             url = ClassLoaderUtil.class.getClassLoader().getResource(resourceName);
         }
@@ -112,7 +111,7 @@ public class ClassLoaderUtil {
     * @param callingClass The Class object of the calling object
     * @return  the InputStream of the specific resource on the 'resources' folder.
     */
-    public static InputStream getResourceAsStream(String resourceName, Class<?> callingClass) {
+    public static InputStream getResourceAsStreamByURL(String resourceName, Class<?> callingClass) {
         URL url = getResourceAsURL(resourceName, callingClass);
         try {
             return (url != null) ? url.openStream() : null;
@@ -264,6 +263,94 @@ public class ClassLoaderUtil {
             }
         }
 
+    }
+
+    public static InputStream getResourceAsStream( String name,Class<?> thisClass ) {
+        return thisClass.getClassLoader().getResourceAsStream(name);
+    }
+
+    public static File getResourceAsFile(String name,Class<?> thisClass) {
+        try {
+            return new File(thisClass.getClassLoader().getResource(name).getFile());
+        }catch(java.lang.NullPointerException e){
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public static String readResource(String name,Class<?> thisClass ){
+        try {
+            InputStream inputStream = getResourceAsStream(name, thisClass);
+            if (inputStream == null) {
+                return null;
+            }
+            StringBuilder stringBuilder = new StringBuilder();
+            char[] buffer = new char[1024];
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+                int read;
+                while ((read = reader.read(buffer)) != -1) {
+                    stringBuilder.append(buffer, 0, read);
+                }
+            } finally {
+                inputStream.close();
+            }
+            return stringBuilder.toString();
+        }catch (IOException e){
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    /**
+     * Method to convert a resource file to a Stream.
+     *
+     * @param fileName String name of the Resource File to read(reference path).
+     * @param clazz    the Class who call this method.
+     * @return the Stream of the File..
+     */
+    public static String toString(String fileName, Class<?> clazz) {
+        try {
+            StringBuilder result = new StringBuilder("");
+            //Get file from resources folder
+            //noinspection ConstantConditions
+            File file = new File(clazz.getClassLoader().getResource(fileName).getFile());
+            try (Scanner scanner = new Scanner(file)) {
+                while (scanner.hasNextLine()) {
+                    String line = scanner.nextLine();
+                    result.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+                return null;
+            }
+            return result.toString();
+        } catch (NullPointerException e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
+     * Method to convert a resource file to a Stream.
+     *
+     * @param name  String name of the class
+     * @param clazz the Class who call this method.
+     * @return the Stream of the File.
+     */
+    public static InputStream toStream(String name, Class<?> clazz) {
+        name = resolveName(name);
+        try {
+            // A system class.
+            return ClassLoader.getSystemResourceAsStream(name);
+        } catch (NullPointerException e) {
+            try {
+                return clazz.getClassLoader().getResourceAsStream(name);
+            } catch (NullPointerException ex) {
+                logger.error(ex.getMessage(), ex);
+                return null;
+            }
+        }
     }
 
 

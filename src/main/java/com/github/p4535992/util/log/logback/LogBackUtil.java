@@ -12,22 +12,14 @@ import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.StatusPrinter;
-import com.github.p4535992.util.file.FileUtilities;
-import com.github.p4535992.util.string.StringUtilities;
-
-
-
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Created by 4535992 on 09/12/2015.
@@ -69,7 +61,7 @@ public class LogBackUtil {
         }
 
         public String getValue() {
-            return new String(value.getBytes(), StringUtilities.DEFAULT_ENCODING);
+            return new String(value.getBytes(), Charset.defaultCharset());
         }
 
         @Override
@@ -85,6 +77,7 @@ public class LogBackUtil {
     private static LogBackUtil instance = null;
 
     /**
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -93,6 +86,8 @@ public class LogBackUtil {
     }
 
     /**
+     * @param logpattern the {@link LOGPATTERN}
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -101,6 +96,8 @@ public class LogBackUtil {
     }
 
     /**
+     * @param pathFileOutputLog the {@link String} path to the outputlog file.
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -109,6 +106,8 @@ public class LogBackUtil {
     }
 
     /**
+     * @param fileOutputLog the {@link File} path to the outputlog file.
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -117,6 +116,9 @@ public class LogBackUtil {
     }
 
     /**
+     * @param fileOutputLog the {@link File} path to the outputlog file.
+     * @param xmlConfigLogBack the {@link File} xml configuration.
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -125,6 +127,10 @@ public class LogBackUtil {
     }
 
     /**
+     * @param fileOutputLog the {@link File} path to the outputlog file.
+     * @param logpattern the {@link LOGPATTERN}
+     * @param xmlConfigLogBack the {@link File} xml configuration.
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -133,6 +139,9 @@ public class LogBackUtil {
     }
 
     /**
+     * @param fileOutputLog the {@link File} path to the outputlog file.
+     * @param logpattern the {@link LOGPATTERN}
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -141,6 +150,9 @@ public class LogBackUtil {
     }
 
     /**
+     * @param pathFileOutputLog the {@link String} path to the outputlog file.
+     * @param logpattern the {@link LOGPATTERN}
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -149,6 +161,10 @@ public class LogBackUtil {
     }
 
     /**
+     * @param pathFileOutputLog the {@link String} path to the outputlog file.
+     * @param xmlConfigLogBack the {@link String} path to the XML configuration file.
+     * @param logpattern the {@link LOGPATTERN}
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -157,6 +173,10 @@ public class LogBackUtil {
     }
 
     /**
+    * @param pathFileOutputLog the {@link String} path to the outputlog file.
+     * @param suffixPathFileOutputLog the {@link String} suffix of the log file.
+     * @param xmlConfigLogBack the {@link File} path to the XML configuration file.
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -166,6 +186,11 @@ public class LogBackUtil {
     }
 
     /**
+     * @param pathFileOutputLog the {@link String} path to the outputlog file.
+     * @param suffixPathFileOutputLog the {@link String} suffix of the log file.
+     * @param xmlConfigLogBack the {@link File} path to the XML configuration file.
+     * @param logpattern the {@link LOGPATTERN}
+     * @return the {@link LogBackUtil}
      * @deprecated use {@link #ConsoleAndFile()} instead.
      */
     @Deprecated
@@ -240,16 +265,21 @@ public class LogBackUtil {
             System.err.println(e.getMessage()+","+e.getCause());
         }
         if (sFile == null || consoleFile == null) {
-            InputStream inputStreamDobs =
-                    ClassLoader.class.getResourceAsStream("logback/logback_base_console.xml");
-            consoleFile = FileUtilities.toFile(inputStreamDobs,"./logback_base_console.xml");
+            try {
+                InputStream inputStreamDobs =
+                        LogBackUtil.class.getResourceAsStream("logback/logback_base_console.xml");
+                Files.copy(inputStreamDobs,consoleFile.toPath());
+                //consoleFile = FileUtilities.toFile(inputStreamDobs,"./logback_base_console.xml");
+            } catch (IOException ex) {
+                System.err.println(ex.getMessage());
+            }
         }
 
         if(consoleFile == null) {
             System.err.println("missing resources folder");
             return instance;
         } else {
-            if(FileUtilities.isDirectoryExists(consoleFile)) {
+            if(consoleFile.isDirectory() && consoleFile.exists()) {
                 //noinspection ConstantConditions
                 for (File nextFile : consoleFile.listFiles()) {
                     if (nextFile.getName().equalsIgnoreCase("logback_base_console.xml")) {
@@ -316,25 +346,29 @@ public class LogBackUtil {
     //METHOD
 
     private static void prepareLogFile(String LOGNAME, String SUFFIX){
-        String logTimestampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        if (StringUtilities.isNullOrEmpty(LOGNAME)) LOGNAME = "createdAutomaticLog";
+        String logTimeStampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        if (LOGNAME == null || LOGNAME.isEmpty()) LOGNAME = "createdAutomaticLog";
         if(!(LOGNAME.contains("/")||LOGNAME.contains("\\"))) {
-            LOGNAME = StringUtilities.PROJECT_DIR + File.separator + LOGNAME;
+            try {
+                LOGNAME = new File(".").getCanonicalPath() + File.separator + LOGNAME;
+            } catch (IOException ignored) {}
         }
-        if (StringUtilities.isNullOrEmpty(SUFFIX)) SUFFIX = "log";
-        logfile = new File(LOGNAME + "_" + logTimestampFile + "." + SUFFIX);
+        if (SUFFIX == null || SUFFIX.isEmpty()) SUFFIX = "log";
+        logfile = new File(LOGNAME + "_" + logTimeStampFile + "." + SUFFIX);
     }
 
     private static void prepareLogFile(File LOGNAME){
-        String logTimestampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        String logTimeStampFile = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
         if(LOGNAME == null){
-            String file = StringUtilities.PROJECT_DIR + File.separator + "createdAutomaticLog";
-            logfile = new File(file + "_" + logTimestampFile + ".log");
+            try {
+            String file = new File(".").getCanonicalPath() + File.separator + "createdAutomaticLog";    
+            logfile = new File(file + "_" + logTimeStampFile + ".log");
+             } catch (IOException ignored) {}
         }else {
-            String SUFFIX = FileUtilities.getExtension(LOGNAME);
+            String SUFFIX = ".txt";
             //Set default value
-            if (StringUtilities.isNullOrEmpty(SUFFIX)) SUFFIX = "log";
-            logfile = new File(LOGNAME + "_" + logTimestampFile + "." + SUFFIX);
+            if (SUFFIX.isEmpty()) SUFFIX = "log";
+            logfile = new File(LOGNAME + "_" + logTimeStampFile + "." + SUFFIX);
         }
     }
 
@@ -373,7 +407,7 @@ public class LogBackUtil {
         Logger myLogger = createLogger(nameLogger);
         PatternLayoutEncoder ple = createPatternLayoutEncoder();
 
-        FileAppender<ILoggingEvent> fileAppender = new FileAppender<ILoggingEvent>();
+        FileAppender<ILoggingEvent> fileAppender = new FileAppender<>();
         fileAppender.setContext(loggerContext);
         fileAppender.setName(nameLogger);
         fileAppender.setAppend(false);
@@ -391,7 +425,7 @@ public class LogBackUtil {
         Logger myLogger = createLogger(nameLogger);
         PatternLayoutEncoder ple = createPatternLayoutEncoder();
 
-        RollingFileAppender<ILoggingEvent> rfAppender = new RollingFileAppender<ILoggingEvent>();
+        RollingFileAppender<ILoggingEvent> rfAppender = new RollingFileAppender<>();
         rfAppender.setContext(loggerContext);
         rfAppender.setFile(fileName);
 
@@ -402,7 +436,7 @@ public class LogBackUtil {
         rollingPolicy.setFileNamePattern(fileName + ".%i.log");
         rollingPolicy.start();
 
-        SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new SizeBasedTriggeringPolicy<ILoggingEvent>();
+        SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new SizeBasedTriggeringPolicy<>();
         triggeringPolicy.setMaxFileSize("5MB");
         triggeringPolicy.start();
 
@@ -496,9 +530,10 @@ public class LogBackUtil {
             } catch(NullPointerException ne){
                 //The context XML File is not on the Resource Folder
                 try {
-                    pathToLogBackXML = new File(FileUtilities.getDirectoryUser()+pathToLogBackXML).getAbsolutePath();
+                    pathToLogBackXML = new File(new File(".").getCanonicalPath() +
+                            File.separator+pathToLogBackXML).getAbsolutePath();
                     configurator.doConfigure(pathToLogBackXML);
-                }catch(Exception e){
+                }catch(IOException | JoranException e){
                     e.printStackTrace();
                 }
             }
@@ -536,14 +571,15 @@ public class LogBackUtil {
 
 
     public static File getMySQLScript(){
-        String basePath = "utility\\src\\main\\java\\com\\github\\p4535992" +
-                "\\util\\log\\logback\\script\\mysql.sql";
-        return new File(FileUtilities.getDirectoryUser()+basePath);
+        try {
+            String basePath = "utility\\src\\main\\java\\com\\github\\p4535992" +
+                    "\\util\\log\\logback\\script\\mysql.sql";
+            return new File(new File(".").getCanonicalPath() + File.separator+basePath);
+        } catch (IOException ex) {
+            System.err.println(ex.getMessage());
+            return null;
+        }
     }
 
-    public static File getMySQLScript(String pathResourceFileName,Class<?> thisClass,File outputFile){
-        return FileUtilities.getFromResourceAsFile(pathResourceFileName,thisClass,outputFile);
-    }
-
-
+  
 }

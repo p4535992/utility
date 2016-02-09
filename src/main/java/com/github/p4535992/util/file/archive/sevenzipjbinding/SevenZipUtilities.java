@@ -74,7 +74,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
 
     protected SevenZipUtilities() {}
 
-    void extractAll() throws ExtractionException {
+    private void extractAll() throws ExtractionException {
         checkArchiveFile();
         prepareOutputDirectory();
         extractAllFromArchive();
@@ -287,7 +287,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
      * href: http://www.programcreek.com/java-api-examples/index.php?source_dir=Starbound-Mod-Manager-master/src/main/java/net/krazyweb/helpers/Archive.java
      * @param path the Path object of the Archive file to extract on the specific folder.
      * @return if true all the operations are succesfull.
-     * @throws com.github.p4535992.util.file.archive.sevenzipjbinding.ExtractionException if any error is occurred.
+     * @throws com.github.p4535992.util.file.archive.sevenzipjbinding.SevenZipUtilities.ExtractionException if any error is occurred.
      */
     public boolean extractAllFromArchive(Path path) throws ExtractionException {
         logger.info("Extracting the archive file "+ path.toString()+"...");
@@ -345,6 +345,21 @@ public class SevenZipUtilities extends ArchiveUtilities{
             return false;
         }
 
+    }
+
+    /**
+     * Created by 4535992 on 27/12/2015.
+     */
+    static class ExtractionException extends Exception {
+        private static final long serialVersionUID = -5108931481040742838L;
+
+        public ExtractionException(String msg) {
+            super(msg);
+        }
+
+        public ExtractionException(String msg, Exception e) {
+            super(msg, e);
+        }
     }
 
 }

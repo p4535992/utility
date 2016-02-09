@@ -4,17 +4,9 @@ package com.github.p4535992.util.stream;
  * Created by 4535992 on 04/02/2016.
  * @author 4535992.
  */
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 public class IOUtilities {
     public static final char DIR_SEPARATOR_UNIX = '/';
@@ -126,6 +118,43 @@ public class IOUtilities {
         return ch2 == -1;
     }
 
+    /**
+     * Method to copy a file.
+     *
+     * @param input    the InputStream to copy.
+     * @param output   the OutputStream where put the copy.
+     * @param encoding the Charset encoding of the Stream.
+     * @return if true all the operation are done.
+     */
+    public static boolean copy(InputStream input, OutputStream output, Charset encoding) {
+        InputStreamReader in = new InputStreamReader(input, encoding);
+        OutputStreamWriter out = new OutputStreamWriter(output, encoding);
+        long count = copyLargeSimple(in, out);
+        return !(count == -1 || count > Integer.MAX_VALUE);
+    }
+
+    /**
+     * Method to copy a file.
+     *
+     * @param input  the Reader input.
+     * @param output the Writer Output
+     * @return the count of the characters in the Stream.
+     */
+    private static long copyLargeSimple(Reader input, Writer output) {
+        //copyLarge(input, output, new char[DEFAULT_BUFFER_SIZE])
+        char[] buffer = new char[1024 * 4];
+        long count = 0;
+        int n; // n = 0;
+        try {
+            while (-1 != (n = input.read(buffer))) {
+                output.write(buffer, 0, n);
+                count += n;
+            }
+            return count;
+        } catch (IOException e) {
+            return -1;
+        }
+    }
 
     static {
         DIR_SEPARATOR = File.separatorChar;

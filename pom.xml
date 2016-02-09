@@ -70,11 +70,12 @@
             <url>http://mvn.linkeddata.org/content/groups/linkeddata.org/</url>
         </repository>
         <!-- Alternative repository for import dependency not present on the maven central -->
-        <repository>
+        <!--<repository>
             <id>fortytwo</id>
             <name>fortytwo.net Maven repository</name>
             <url>http://fortytwo.net/maven2</url>
         </repository>
+        -->
         <!-- Alternative reposiotry for import dependency not present on the maven central -->
         <repository>
             <id>ossrh</id>
@@ -578,12 +579,12 @@
             <version>develop7-2015-06-25</version>
             <optional>true</optional>
         </dependency>-->
-       <!-- <dependency>
+       <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virt_jena2</artifactId>
             <version>7.1.0</version>
             <optional>true</optional>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virt_jena3</artifactId>
@@ -594,12 +595,12 @@
         </dependency>
 
         <!-- The Jena Provider for Jena 2.10 requires the Virtuoso JDBC 4 Driver. -->
-       <!-- <dependency>
+        <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjdbc4-1</artifactId>
             <version>7.1.0</version>
             <optional>true</optional>
-        </dependency>-->
+        </dependency>
         <dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjdbc4</artifactId>

@@ -16,7 +16,7 @@ import java.util.zip.*;
  * @author 4535992.
  */
 public class ArchiveUtilities {
-    
+
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(ArchiveUtilities.class);
 
@@ -115,7 +115,7 @@ public class ArchiveUtilities {
      * DON'T WORK
      * href: http://stackoverflow.com/questions/15667125/read-content-from-files-which-are-inside-zip-file.
      * @param zipFilePath the {@link File} of the Zip.
-     * @return the {@link List} of {@link File} into to the Zip. 
+     * @return the {@link List} of {@link File} into to the Zip.
      */
     public static List<File> extractFilesFromZipFile2(File zipFilePath){
         List<File> files = new ArrayList<>();
@@ -466,6 +466,7 @@ public class ArchiveUtilities {
      * date and a comment.
      * @param file file to be archived
      * @param zipStream archive to contain the file.
+     * @return if true all the operation are done.
      */
     public static Boolean addFileTo(Path file, ZipOutputStream zipStream) {
         String inputFileName = file.toFile().getPath();
@@ -506,9 +507,9 @@ public class ArchiveUtilities {
      * effect of lambda's being based off of interfaces.
      */
     private static class ZipParsingException extends RuntimeException {
-        
+
         private static final long serialVersionUID = 123758348L;
-        
+
         public ZipParsingException(String reason, Exception inner) {
             super(reason, inner);
         }
@@ -517,7 +518,7 @@ public class ArchiveUtilities {
     /*public boolean writeToFile(final File file) {
         try {
             long time = System.currentTimeMillis();
-            try (FileOutputStream fileOutput = new FileOutputStream(file); 
+            try (FileOutputStream fileOutput = new FileOutputStream(file);
                     ZipOutputStream zipOutput = new ZipOutputStream(fileOutput)) {
                 List<File> files = FileUtilities.getFilesFromDirectory(file);
                 for (File archiveFile : files) {
@@ -610,6 +611,24 @@ public class ArchiveUtilities {
             dest.close();
         }
         return new File(destFolder);
+    }
+
+
+    public static Enumeration<? extends ZipEntry> getZipEntries(ZipFile zipFile){
+       return zipFile.entries();
+    }
+
+    public static void writeContentOfZipEntry(ZipFile zipFile,List<ZipEntry> fileEntries,File destDirectory) throws IOException {
+        Iterator<ZipEntry> allFiles = fileEntries.iterator();
+        while (allFiles.hasNext()) {
+            ZipEntry fileEntry = (ZipEntry) allFiles.next();
+            File destFile = new File(destDirectory, fileEntry.getName());
+            destFile.setLastModified(fileEntry.getTime());
+            destFile.getParentFile().mkdirs();
+            //FileOutputStream outs = new FileOutputStream(destFile);
+            InputStream ins = zipFile.getInputStream(fileEntry);
+            Files.copy(ins,destFile.toPath());
+        }
     }
 
    /* public Boolean extractFilesFromZipWith7Zip(File archive,File outputDirectory) {
