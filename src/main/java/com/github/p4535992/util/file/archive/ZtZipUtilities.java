@@ -671,7 +671,7 @@ public class ZtZipUtilities{
         return getFilesFromDirectory(extractDirectoryFromZip(fileZip));
     }
 
-    //Enumrator (to complete)
+    //Enumerator (to complete)
 
     public enum TransformStringType {UPERCASE,LOWERCASE}
 

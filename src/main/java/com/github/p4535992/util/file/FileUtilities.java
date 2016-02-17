@@ -537,7 +537,7 @@ public class FileUtilities {
                 if (destDir.toAbsolutePath().startsWith(srcDir.toAbsolutePath())) {
                     Path[] srcPaths = filter == null ? listFiles(srcDir) : listFiles(srcDir, filter);
                     //File[] srcFiles = filter == null?srcDir.listFiles():srcDir.listFiles(filter);
-                    if (srcPaths != null && srcPaths.length > 0) {
+                    if (srcPaths.length > 0) {
                         exclusionList = new ArrayList<>(srcPaths.length);
                         for (Path srcFile : srcPaths) {
                             Path copiedFile = Paths.get(destDir.toString(), srcFile.getFileName().toString());
@@ -622,7 +622,7 @@ public class FileUtilities {
         if(!canWrite(destDir)) throw new IOException("Destination \'" + destDir + "\' cannot be written to");
         else {
             Path[] paths = filter == null?listFiles(srcDir):listFiles(srcDir,filter);
-            if(paths == null) throw new IOException("Failed to list contents of " + srcDir);
+            if(paths.length == 0) throw new IOException("Failed to list contents of " + srcDir);
             else {
                 for (Path path : paths) {
                     Path copiedFile = Paths.get(destDir.toString(), path.getFileName().toString());
@@ -786,7 +786,7 @@ public class FileUtilities {
                 throw new IllegalArgumentException(var7);
             } else {
                 Path[] files = listFiles(directory);
-                if (files == null) {
+                if (files.length > 0) {
                     throw new IOException("Failed to list contents of " + directory);
                 } else {
                     IOException exception = null;
@@ -898,7 +898,7 @@ public class FileUtilities {
             throw new IllegalArgumentException(var7);
         } else {
             Path[] paths = listFiles(directory);
-            if(paths == null) {
+            if(paths.length > 0) {
                 throw new IOException("Failed to list contents of " + directory);
             } else {
                 IOException exception = null;
@@ -1022,24 +1022,23 @@ public class FileUtilities {
     /**
      * Recursively traverse a directory hierachy and obtain a list of all
      * absolute file names.
-     * <p>Regular expression patterns can be provided to explicitly include
+     * Regular expression patterns can be provided to explicitly include
      * and exclude certain file names.
      *
-     * @param file     the directory whose file hierarchy will be traversed
-     * @param included an array of regular expression patterns that will be
+     * @param   file the {@link File} directory whose file hierarchy will be traversed
+     * @param included the {@link Pattern} an array of regular expression patterns that will be
      *                 used to determine which files should be included; or
      *                 <p><code>null</code> if all files should be included
-     * @param excluded an array of regular expression patterns that will be
+     * @param excluded the {@link Pattern} an array of regular expression patterns that will be
      *                 used to determine which files should be excluded; or
      *                 <p><code>null</code> if no files should be excluded
-     * @return the list of absolute file names
-     * @since 1.0
+     * @return the {@link List} of {@link String} of absolute file names
      */
-    public static List<String> getFileList(File file, Pattern[] included, Pattern[] excluded) {
-        return getFileList(file, included, excluded, true);
+    public static List<String> getFilesList(File file, Pattern[] included, Pattern[] excluded) {
+        return getFilesList(file, included, excluded, true);
     }
 
-    private static List<String> getFileList(File file, Pattern[] included, Pattern[] excluded, boolean root) {
+    private static List<String> getFilesList(File file, Pattern[] included, Pattern[] excluded, boolean root) {
         if (null == file) return new ArrayList<>();
         ArrayList<String> filelist = new ArrayList<>();
         if (file.isDirectory()) {
@@ -1049,7 +1048,7 @@ public class FileUtilities {
                 for (String aList : list) {
                     list_entry = aList;
                     File next_file = new File(file.getAbsolutePath() + File.separator + list_entry);
-                    List<String> dir = getFileList(next_file, included, excluded, false);
+                    List<String> dir = getFilesList(next_file, included, excluded, false);
                     Iterator<String> dir_it = dir.iterator();
                     String file_name;
                     while (dir_it.hasNext()) {
@@ -1084,6 +1083,33 @@ public class FileUtilities {
             } else filelist.add(file_name);
         }
         return filelist;
+    }
+
+    /**
+     * Recursively traverse a directory hierachy and obtain a list of all
+     * absolute file names.
+     * Regular expression patterns can be provided to explicitly include
+     * and exclude certain file names.
+     *
+     * @param  directory  the {@link Path} directory whose file hierarchy will be traversed
+     * @param included the {@link Pattern} an array of regular expression patterns that will be
+     *                 used to determine which files should be included; or
+     *                 <p><code>null</code> if all files should be included
+     * @param excluded the {@link Pattern} an array of regular expression patterns that will be
+     *                 used to determine which files should be excluded; or
+     *                 <p><code>null</code> if no files should be excluded
+     * @return the {@link List} of {@link String} of absolute file names
+     */
+    public static List<File> getFilesFromDirectory(Path directory,Pattern[] included, Pattern[] excluded) {
+        List<File> files = getFilesFromDirectory(directory);
+        List<String> filesName = getFilesList(directory.toFile(),included,excluded);
+        List<File> filterFiles = new ArrayList<>();
+        for(File file: files){
+            if(filesName.contains(file.getName())){
+                filterFiles.add(file);
+            }
+        }
+        return filterFiles;
     }
 
     /**
@@ -1262,6 +1288,27 @@ public class FileUtilities {
 
     public static String[] getFromResourceAsListing(String path, Class<?> callingClass) throws URISyntaxException, IOException {
         return ClassLoaderUtil.getResourceListing(callingClass, path);
+    }
+
+    public InputStream getFromResourceAsStream(String name) {
+        return ClassLoaderUtil.getResourceAsStream(name);
+    }
+
+    /**
+     * Returns a human-readable version of the file size (original is in
+     * bytes).
+     *
+     * @param size The number of bytes.
+     * @return A human-readable display value (includes units).
+     */
+    public static String byteCountToDisplaySize( int size ) {
+        String displaySize;
+        //int ONE_KB = 1024,ONE_MB = ONE_KB * ONE_KB,ONE_GB = ONE_MB * ONE_KB;
+        if ( size / ONE_GB > 0 ) displaySize = String.valueOf( size / ONE_GB ) + " GB";
+        else if ( size / ONE_MB > 0 ) displaySize = String.valueOf( size / ONE_MB ) + " MB";
+        else if ( size / ONE_KB > 0 )displaySize = String.valueOf( size / ONE_KB ) + " KB";
+        else displaySize = String.valueOf( size ) + " bytes";
+        return displaySize;
     }
 
     /**
@@ -1498,14 +1545,14 @@ public class FileUtilities {
         return URI.create(toStringUriWithPrefix(file.getAbsolutePath()));
     }
 
-    /**
+    /*
      * Method for convert a reference path to a resource in the classpath to a file with path in the system.
      *
      * @param referenceResourcePath string of the reference path to the resource.
      * @param thisClass             thi class.
      * @return file correspondent to the reference file of the resources.
      */
-    public static File toFile(String referenceResourcePath, Class<?> thisClass) {
+    /*public static File toResourceFile(String referenceResourcePath, Class<?> thisClass) {
         try {
             //noinspection ConstantConditions
             return new File(thisClass.getClassLoader().getResource(referenceResourcePath).getFile());
@@ -1513,7 +1560,7 @@ public class FileUtilities {
             logger.error(e.getMessage(), e);
             return null;
         }
-    }
+    }*/
 
 
 
@@ -1812,12 +1859,12 @@ public class FileUtilities {
             Files.copy(inStream,path);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            return null;
+            return path;
         }
         if (Files.exists(path)) return path;
         else {
             logger.warn("The file:" + filePathOutput + " not exists.");
-            return null;
+            return path;
         }
     }
 
@@ -1947,7 +1994,7 @@ public class FileUtilities {
             return toHexString(hashedBytes);
         } catch (NoSuchAlgorithmException | IOException e) {
             logger.error(e.getMessage(), e);
-            return null;
+            return toString(file);
         }
     }
 
@@ -1965,7 +2012,6 @@ public class FileUtilities {
             Files.write(file,hashFile(file, "MD5").getBytes(),StandardOpenOption.WRITE);
         } catch (IOException e) {
             logger.error(e.getMessage(),e);
-            return null;
         }
         return file;
     }
@@ -1985,7 +2031,6 @@ public class FileUtilities {
             Files.write(file,hashFile(file, "SHA-1").getBytes(),StandardOpenOption.WRITE);
         } catch (IOException e) {
             logger.error(e.getMessage(),e);
-            return null;
         }
         return file;
     }
@@ -2005,7 +2050,6 @@ public class FileUtilities {
             Files.write(file,hashFile(file, "SHA-256").getBytes(),StandardOpenOption.WRITE);
         } catch (IOException e) {
             logger.error(e.getMessage(),e);
-            return null;
         }
         return file;
     }
@@ -2697,25 +2741,7 @@ public class FileUtilities {
      * @return ASCII encoding of output.
      */
     public static List<String> toAscii(File UTF8) {
-        try {
-            List<String> list = new ArrayList<>();
-            if (UTF8 == null) {
-                logger.info("=== Usage: java UTF8ToAscii <filename> ===");
-                return null;
-            }
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(UTF8), "UTF-8"))) {
-                String line = r.readLine();
-                while (line != null) {
-                    logger.info(unicodeEscape(line));
-                    line = r.readLine();
-                    list.add(line);
-                }
-            }
-            return list;
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            return null;
-        }
+        return read(UTF8,StandardCharsets.US_ASCII);
     }
 
     /**
@@ -2727,7 +2753,6 @@ public class FileUtilities {
      * @return UTF8 file of input in UTF8 encoding.
      */
     public static List<String> toUTF8(Path ASCII) {
-        List<String> list = new ArrayList<>();
         return read(ASCII,StandardCharsets.UTF_8);
     }
 
@@ -2889,12 +2914,12 @@ public class FileUtilities {
      * @param fileOutput string name of the file.
      */
     private static File writeToFile(String str, File fileOutput) {
-        write(Collections.singletonList(str), fileOutput.toPath(), Charset.defaultCharset(), StandardCharsets.UTF_8);
+        write(Collections.singletonList(str), fileOutput.toPath(), StandardCharsets.UTF_8, StandardCharsets.UTF_8);
         return fileOutput;
     }
 
     public static File write(String str, File fileOutput) {
-        write(Collections.singletonList(str), fileOutput.toPath(), Charset.defaultCharset(), StandardCharsets.UTF_8);
+        write(Collections.singletonList(str), fileOutput.toPath(), StandardCharsets.UTF_8, StandardCharsets.UTF_8);
         return fileOutput;
     }
 
@@ -3033,16 +3058,45 @@ public class FileUtilities {
         }
     }
 
+    public static String readAll(File fileInput, Charset encodingInput) {
+        return readAll(fileInput.toPath(),encodingInput);
+    }
+
+    public static String readAll(Path fileInput, Charset encodingInput) {
+        List<String> list = read(fileInput,encodingInput);
+        StringBuilder sb = new StringBuilder();
+        for(String s: list){
+            sb.append(s).append(System.getProperty("line.separator"));
+        }
+        return sb.toString();
+    }
+
+    public static List<String> read(File fileInput) {
+        return read(fileInput.toPath(),StandardCharsets.UTF_8);
+    }
+
+    public static List<String> read(Path fileInput) {
+        return read(fileInput,StandardCharsets.UTF_8);
+    }
+
+    public static String readAll(File fileInput) {
+        return readAll(fileInput.toPath(),StandardCharsets.UTF_8);
+    }
+
+    public static String readAll(Path fileInput) {
+        return readAll(fileInput,StandardCharsets.UTF_8);
+    }
+
     /**
      * Method to read a {@link File}
      * @param file the {@link File}.
      * @return the {@link InputStreamReader}.
      */
-    public static InputStreamReader read(File file) {
-        return read(file.toPath());
+    public static InputStreamReader readInputStream(File file) {
+        return readInputStream(file.toPath());
     }
 
-    public static InputStreamReader read(Path file){
+    public static InputStreamReader readInputStream(Path file){
         try {
             return new InputStreamReader(Files.newInputStream(file), "UTF-8");
         } catch (IOException e) {
@@ -3065,7 +3119,7 @@ public class FileUtilities {
     }
 
     public static String toString(File file) {
-        return toString(file.toPath(),Charset.defaultCharset());
+        return toString(file.toPath(),StandardCharsets.UTF_8);
     }
     /**
      * Method to get the String content of the File.
@@ -3081,8 +3135,20 @@ public class FileUtilities {
             return new String(Files.readAllBytes(path), encoding);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            return null;
+            return "N/A";
         }
+    }
+
+    /**
+     * Method to get the String content of the File.
+     * href: http://www.adam-bien.com/roller/abien/entry/java_8_reading_a_file
+     * href: http://stackoverflow.com/questions/16919501/create-a-path-from-string-in-java7
+     *
+     * @param path     the Path top the File to copy.
+     * @return the String of the content of the File.
+     */
+    public static String toString(Path path) {
+        return toString(path,StandardCharsets.UTF_8);
     }
 
     /**
@@ -3215,27 +3281,6 @@ public class FileUtilities {
         }
     }
 
-    public InputStream getFromResourceAsStream(String name) {
-        return ClassLoaderUtil.getResourceAsStream(name);
-    }
-
-    /**
-     * Returns a human-readable version of the file size (original is in
-     * bytes).
-     *
-     * @param size The number of bytes.
-     * @return A human-readable display value (includes units).
-     */
-    public static String byteCountToDisplaySize( int size ) {
-        String displaySize;
-        //int ONE_KB = 1024,ONE_MB = ONE_KB * ONE_KB,ONE_GB = ONE_MB * ONE_KB;
-        if ( size / ONE_GB > 0 ) displaySize = String.valueOf( size / ONE_GB ) + " GB";
-        else if ( size / ONE_MB > 0 ) displaySize = String.valueOf( size / ONE_MB ) + " MB";
-        else if ( size / ONE_KB > 0 )displaySize = String.valueOf( size / ONE_KB ) + " KB";
-        else displaySize = String.valueOf( size ) + " bytes";
-        return displaySize;
-    }
-
     /**
      * Method to check is a file exists and is valid.
      * I would recommend using isFile() instead of exists().
@@ -3294,6 +3339,97 @@ public class FileUtilities {
      */
     public static Boolean isDirectoryExists(Path path) {
         return path != null && Files.exists(path) && Files.isDirectory(path);
+    }
+
+    /**
+     * Method to check the file is pointed to a absolute reference.
+     * @param pathToFile the {@link String} path to the file.
+     * @return the {@link Boolean} is true if the file is referenced from absolute reference.
+     */
+    public static Boolean isAbsolute(String pathToFile){
+        return isAbsolute(new File(pathToFile));
+    }
+
+    /**
+     * Method to check the file is pointed to a absolute reference.
+     * @param file the {@link File} to analyze..
+     * @return the {@link Boolean} is true if the file is referenced from absolute reference.
+     */
+    public static Boolean isAbsolute(File file){
+         return file.isAbsolute() || isAbsolute(file.toPath());
+    }
+
+    /**
+     * Method to check the file is pointed to a absolute reference.
+     * @param path the {@link Path} to the file.
+     * @return the {@link Boolean} is true if the file is referenced from absolute reference.
+     */
+    public static Boolean isAbsolute(Path path){
+        return path.isAbsolute();
+    }
+
+    /**
+     * Method to check the file is pointed to a relative reference.
+     * @param pathToFile the {@link String} path to the file.
+     * @return the {@link Boolean} is true if the file is referenced from relative reference.
+     */
+    public static Boolean isRelative(String pathToFile){
+        return !isAbsolute(pathToFile);
+    }
+
+    /**
+     * Method to check the file is pointed to a relative reference.
+     * @param file the {@link File} path to the file.
+     * @return the {@link Boolean} is true if the file is referenced from relative reference.
+     */
+    public static Boolean isRelative(File file){
+        return !isAbsolute(file);
+    }
+
+    /**
+     * Method to check the file is pointed to a relative reference.
+     * @param path the {@link Path} path to the file.
+     * @return the {@link Boolean} is true if the file is referenced from relative reference.
+     */
+    public static Boolean isRelative(Path path){
+        return !isAbsolute(path);
+    }
+
+    /**
+     * Method to check if  a file is direct son of the parent directory.
+     * @param directory the {@link File} directory.
+     * @param child the {@link String} path of the son.
+     * @return the {@link Boolean} is true if the file is founded and exists.
+     */
+    public static Boolean isFileOnDirectory(File directory,String child){
+        if(child.startsWith(File.separator)) child = child.substring(1,child.length());
+        if(child.endsWith(File.separator)) child = child.substring(0,child.length()-1);
+        return new File(directory,child).exists();
+    }
+
+    /**
+     * Method to check if  a file is direct son of the parent directory.
+     * @param directory the {@link String} directory.
+     * @param child the {@link String} path of the son.
+     * @return the {@link Boolean} is true if the file is founded and exists.
+     */
+    public static Boolean isFileOnDirectory(String directory,String child){
+        if(child.startsWith(File.separator)) child = child.substring(1,child.length());
+        if(child.endsWith(File.separator)) child = child.substring(0,child.length()-1);
+        if(directory.endsWith(File.separator)) directory = directory.substring(0,directory.length()-1);
+        return new File(directory,child).exists();
+    }
+
+    /**
+     * Method to check if  a file is direct son of the parent directory.
+     * @param directory the {@link Path} directory.
+     * @param child the {@link String} path of the son.
+     * @return the {@link Boolean} is true if the file is founded and exists.
+     */
+    public static Boolean isFileOnDirectory(Path directory,String child){
+        if(child.startsWith(File.separator)) child = child.substring(1,child.length());
+        if(child.endsWith(File.separator)) child = child.substring(0,child.length()-1);
+        return Files.exists(Paths.get(getPath(directory),child));
     }
 
     /**
@@ -3620,7 +3756,11 @@ public class FileUtilities {
         try {
             return new URI(path.toUri().toString()).normalize().getPath();
         } catch (URISyntaxException e) {
-            return null;
+            try {
+                return path.toFile().getCanonicalPath();
+            } catch (IOException e1) {
+                return path.toUri().toString();
+            }
         }
     }
 
@@ -3690,7 +3830,7 @@ public class FileUtilities {
             Pattern pattern;
             for (Pattern anIncluded : included) {
                 pattern = anIncluded;
-                if (pattern != null && pattern.matcher(name).matches()) {
+                if (pattern != null && (pattern.matcher(name).matches() || pattern.matcher(name).find())) {
                     accepted = true;
                     break;
                 }
@@ -3701,7 +3841,7 @@ public class FileUtilities {
             Pattern pattern;
             for(Pattern anExcluded : excluded) {
                 pattern = anExcluded;
-                if (pattern != null && pattern.matcher(name).matches()) {
+                if (pattern != null && (pattern.matcher(name).matches() || pattern.matcher(name).find())) {
                     accepted = false;
                     break;
                 }
@@ -3722,29 +3862,6 @@ public class FileUtilities {
     }
 
     /**
-     * Method for convert a string UTF-8 to HEX
-     * @param s string of text you want to convert to HEX
-     * @return the text in HEX encoding
-     */
-    private static String unicodeEscape(String s) {
-        char[] hexChar ={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if ((c >> 7) > 0) {
-                sb.append("\\u");
-                sb.append(hexChar[(c >> 12) & 0xF]); // append the hex character for the left-most 4-bits
-                sb.append(hexChar[(c >> 8) & 0xF]); // hex for the second group of 4-bits from the left
-                sb.append(hexChar[(c >> 4) & 0xF]); // hex for the third group
-                sb.append(hexChar[c & 0xF]); // hex for the last group, e.home., the right most 4-bits
-            }else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
      * Reads file in UTF-8 encoding and output to STDOUT in ASCII with unicode
      * escaped sequence for characters outside of ASCII.
      * It is equivalent to: native2ascii -encoding utf-8
@@ -3753,15 +3870,15 @@ public class FileUtilities {
      */
     private static String toASCII(String stringUTF8) {
         if (stringUTF8==null) return null;
-        Reader reader = new StringReader(toHexString(stringUTF8.getBytes(StandardCharsets.UTF_8)));
-        return unicodeEscape(reader.toString());
-
+        StringReader reader = new StringReader(toHexString(stringUTF8.getBytes(StandardCharsets.UTF_8)));
+        //return unicodeEscape(reader.toString());
+        return new String(reader.toString().getBytes(),StandardCharsets.US_ASCII);
     }
 
     /**
      * Method to convert a array of bytes to a string.
-     * @param arrayBytes array Collection of bytes.
-     * @return the string of the hash.
+     * @param arrayBytes the {@link Byte} array Collection of bytes.
+     * @return the {@link String} of the hash.
      */
     private static String toHexString(byte[] arrayBytes) {
         StringBuilder stringBuffer = new StringBuilder();
@@ -3781,77 +3898,22 @@ public class FileUtilities {
      */
     private static String toUTF8(String stringASCII) {
         if (stringASCII == null) return null;
-        Reader reader = new StringReader(toHexString(stringASCII.getBytes(StandardCharsets.US_ASCII)));
-        String line = convertUnicodeEscapeToASCII(reader.toString());
+        StringReader reader = new StringReader(toHexString(stringASCII.getBytes(StandardCharsets.US_ASCII)));
+       /* String line = convertUnicodeEscapeToASCII(reader.toString());
         byte[] bytes = line.getBytes(StandardCharsets.UTF_8);
-        return toHexString(bytes);
+        return toHexString(bytes);*/
+        String utf8 = new String(reader.toString().getBytes(),StandardCharsets.UTF_8);
+        return toHexString(utf8.getBytes());
     }
 
-    private enum ParseState {NORMAL,ESCAPE,UNICODE_ESCAPE}
     /**
-     *  convert unicode escapes back to char.
-     * @param s string to convert to ascii.
-     * @return string ascii.
+     * Converts a byte array to a String, taking the
+     * eight bits of each byte as the lower eight bits of the chars
+     * in the String.
+     * @param arrayBytes the {@link Byte} array to convert to char array.
+     * @return the {@link String} converted from a byte array.
      */
-    private static String convertUnicodeEscapeToASCII(String s) {
-        char[] out = new char[s.length()];
-        ParseState state = ParseState.NORMAL;
-        int j = 0, k = 0, unicode = 0;
-        char c = ' ';
-        for (int i = 0; i < s.length(); i++) {
-            c = s.charAt(i);
-            if (state == ParseState.ESCAPE) {
-                if (c == 'u') {
-                    state = ParseState.UNICODE_ESCAPE;
-                    unicode = 0;
-                }
-                else { // we don't care about other escapes
-                    out[j++] = '\\';
-                    out[j++] = c;
-                    state = ParseState.NORMAL;
-                }
-            }
-            else if (state == ParseState.UNICODE_ESCAPE) {
-                if ((c >= '0') && (c <= '9')) {
-                    unicode = (unicode << 4) + c - '0';
-                }
-                else if ((c >= 'a') && (c <= 'f')) {
-                    unicode = (unicode << 4) + 10 + c - 'a';
-                }
-                else if ((c >= 'A') && (c <= 'F')) {
-                    unicode = (unicode << 4) + 10 + c - 'A';
-                }
-                else {
-                    throw new IllegalArgumentException("Malformed unicode escape");
-                }
-                k++;
-                if (k == 4) {
-                    out[j++] = (char) unicode;
-                    k = 0;
-                    state = ParseState.NORMAL;
-                }
-            }
-            else if (c == '\\') {
-                state = ParseState.ESCAPE;
-            }
-            else {
-                out[j++] = c;
-            }
-        }//for
-        if (state == ParseState.ESCAPE) {
-            out[j++] = c;
-        }
-        return new String(out, 0, j);
-    }
-
     private static String toString(byte[] arrayBytes){
-        /*
-         * Converts a byte array to a String, taking the
-         * eight bits of each byte as the lower eight bits of the chars
-         * in the String.
-         * @param bytes the byte array to convert to char array.
-         * @return the new String converted from a byte array.
-         */
         //return new String(toChars(bytes));
         StringBuilder sb = new StringBuilder(2*arrayBytes.length);
         for (byte b : arrayBytes) {
@@ -3872,20 +3934,22 @@ public class FileUtilities {
     /**
      * Recursive function to descend into the directory tree and find all the files.
      *
-     * @param list the {@link List} of the {@link Path} found on the file directory.
      * @param dir the {@link File} object defining the top directory 
      * @param pattern the {@link Pattern} for use regular expression on filter the file in the directory file.
      * @return the {@link List} of the {@link Path} found on the file directory.
      */
-    public static List<Path> fileWalker(List<Path> list,Path dir,Pattern pattern) {
+    public static List<Path> getPathsFromDirectory(Path dir,Pattern pattern) {
         Path[] listFile = listFiles(dir);
+        List<Path> list = new ArrayList<>();
         for (Path aListFile : listFile) {
             if (Files.isDirectory(aListFile)) {
-                fileWalker(list,aListFile, pattern);
+                list.addAll(getPathsFromDirectory(aListFile, pattern));
             } else {
                 if(pattern == null){
                     list.add(aListFile);
                 }else if(pattern.matcher(aListFile.getFileName().toString()).matches()) {
+                    list.add(aListFile);
+                }else if(pattern.matcher(aListFile.getFileName().toString()).find()){
                     list.add(aListFile);
                 }
             }
@@ -3900,7 +3964,7 @@ public class FileUtilities {
      * @param pattern the {@link Pattern} for use regular expression on filter the file in the directory file.
      * @return the {@link List} of the {@link Path} found on the file directory.
      */
-    public static List<Path> fileWalkerTree(Path dir,Pattern pattern) {
+    public static List<Path> getPathsFromDirectoryWithWalkFileTree(Path dir,Pattern pattern) {
         List<Path> list = new ArrayList<>();
         try {
             Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {

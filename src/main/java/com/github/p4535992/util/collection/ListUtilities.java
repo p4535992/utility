@@ -110,6 +110,11 @@ public class ListUtilities {
         return array;
     }
 
+   /* public static <T> T[] toArray2(List<T> list){
+        //list.toArray(new Path[list.size()]);
+        return list.toArray(new T[list.size()]);
+    }*/
+
     /**
      * Take a list of number objects and return an int[] array
      * @param list any list of {@link Number}

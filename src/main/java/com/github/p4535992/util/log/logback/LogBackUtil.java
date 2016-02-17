@@ -12,6 +12,7 @@ import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.StatusPrinter;
+import uk.org.lidalia.sysoutslf4j.context.LogLevel;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -35,7 +36,7 @@ public class LogBackUtil {
     protected static File logfile;
 
 
-    protected static LoggerContext loggerContext;
+    protected static ch.qos.logback.classic.LoggerContext loggerContext;
 
     protected static LOGPATTERN logpattern = LOGPATTERN.PATTERN_CLASSIC;
     protected static LOGPATTERN logpatternConsole ;
@@ -465,90 +466,168 @@ public class LogBackUtil {
     }
 
     protected static void start(String pathToLogBackXML,boolean justConsole){
+        JoranConfigurator configurator = new JoranConfigurator();
         try {
             //String pathToLogBackXML = "C:\\Users\\tenti\\Desktop\\EAT\\utility\\src\\main\\resources\\logback.xml";
-
-            //Redirect all System.out and System.err to SLF4J.
-            uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J.sendSystemOutAndErrToSLF4J();
-
+            System.out.println("222222222222222222222222222222222");
+            boolean noError = true;
+            try {
+                uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J.registerLoggingSystem("com.github.p4535992");
+                //Redirect all System.out and System.err to SLF4J.
+                uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J.sendSystemOutAndErrToSLF4J(LogLevel.INFO, LogLevel.ERROR);
+            } catch (java.lang.NoSuchMethodError e) {
+                if (e.getMessage().contains("" +
+                        "org.slf4j.spi.LocationAwareLogger.log(Lorg/slf4j/Marker;Ljava/lang/String;ILjava/lang" +
+                        "/String;[Ljava/lang/Object;Ljava/lang/Throwable;)")) {
+                    System.err.println("[1] Probably you use a wrong version of SLF4j for work with sysoutslf4j:" + e.getMessage());
+                    noError = false;
+                } else {
+                    System.err.println("[2] Some error not expected:" + e.getMessage());
+                    noError = false;
+                }
+            } catch (Exception e) {
+                System.err.println("[3] Some error not expected:" + e.getMessage());
+                noError = false;
+            }
             //org.apache.log4j.Logger logger = LogManager.getLogger(LogBackUtil.class.getName());
-
 
             //Redirect all java util logging to SLF4J
             java.util.logging.LogManager.getLogManager().reset();
+
             // Optionally remove existing handlers attached to j.u.l root logger (since SLF4J 1.6.5)
-            org.slf4j.bridge.SLF4JBridgeHandler.removeHandlersForRootLogger();
-            // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
-            // the initialization phase of your application
-            org.slf4j.bridge.SLF4JBridgeHandler.install();
-            java.util.logging.Logger.getLogger("global").setLevel(java.util.logging.Level.FINEST);
+            try {
+                org.slf4j.bridge.SLF4JBridgeHandler.removeHandlersForRootLogger();
+                // add SLF4JBridgeHandler to j.u.l's root logger, should be done once during
+                // the initialization phase of your application
+                org.slf4j.bridge.SLF4JBridgeHandler.install();
+                java.util.logging.Logger.getLogger("global").setLevel(java.util.logging.Level.FINEST);
+            } catch (java.lang.NoSuchMethodError e) {
+                if (e.getMessage().contains("" +
+                        "org.slf4j.spi.LocationAwareLogger.log(Lorg/slf4j/Marker;Ljava/lang/String;ILjava/lang" +
+                        "/String;[Ljava/lang/Object;Ljava/lang/Throwable;)")) {
+                    System.err.println("[4] Probably you use a wrong version of SLF4j for work with JUL:" + e.getMessage());
+                    noError = false;
+                } else {
+                    System.err.println("[5] Some error not expected:" + e.getMessage());
+                    noError = false;
+                }
+            } catch (Exception e) {
+                System.err.println("[5.5] Some error not expected:" + e.getMessage());
+                noError = false;
+            }
 
-            // assume SLF4J is bound to logback in the current environment
-            loggerContext = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
-            // print logback's internal status
-            //StatusPrinter.print(loggerContext);
-
-            JoranConfigurator configurator = new JoranConfigurator();
-            configurator.setContext(loggerContext);
-            // Call context.reset() to clear any previous configuration, e.g. default
-            // configuration. For multi-step configuration, omit calling context.reset().
-            loggerContext.reset();
-            if(!justConsole) {
-                // inject the name of the current application as "application-name"
-                // property of the LoggerContext
-                loggerContext.putProperty("DEV_HOME", System.getProperty("user.dir"));
-                //context.putProperty("application-name", "NAME_OF_CURRENT_APPLICATION");
-                loggerContext.putProperty("logFileName",
-                        logfile.getName());
-                loggerContext.putProperty("logPatternConsole",
-                        logpatternConsole == null ? logpattern.getValue() : logpatternConsole.getValue());
-                loggerContext.putProperty("logPatternFile",
-                        logpatternFile == null ? logpattern.getValue() : logpatternFile.getValue());
-                loggerContext.putProperty("logPatternFileError",
-                        logpatternFileError == null ? logpattern.getValue() : logpatternFileError.getValue());
+            try {
+                // assume SLF4J is bound to logback in the current environment (not work)
+                try {
+                    //loggerContext = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
+                    loggerContext = new LoggerContext();
+                }catch(Exception e) {
+                    System.err.println("5.5.2"+e.getMessage());
+                    //loggerContext = new LoggerContext();
+                }
+                // print logback's internal status
+                //StatusPrinter.print(loggerContext);
+                //JoranConfigurator configurator = new JoranConfigurator();
+                configurator.setContext(loggerContext);
+                // Call context.reset() to clear any previous configuration, e.g. default
+                // configuration. For multi-step configuration, omit calling context.reset().
+                loggerContext.reset();
+            } catch (Exception e) {
+                System.err.println("[5.6] Some error not expected:" + e.getMessage());
+                noError = false;
+            }
+            if (noError) {
+                if (!justConsole) {
+                    // inject the name of the current application as "application-name"
+                    // property of the LoggerContext
+                    loggerContext.putProperty("DEV_HOME", System.getProperty("user.dir"));
+                    //context.putProperty("application-name", "NAME_OF_CURRENT_APPLICATION");
+                    loggerContext.putProperty("logFileName",
+                            logfile.getName());
+                    loggerContext.putProperty("logPatternConsole",
+                            logpatternConsole == null ? logpattern.getValue() : logpatternConsole.getValue());
+                    loggerContext.putProperty("logPatternFile",
+                            logpatternFile == null ? logpattern.getValue() : logpatternFile.getValue());
+                    loggerContext.putProperty("logPatternFileError",
+                            logpatternFileError == null ? logpattern.getValue() : logpatternFileError.getValue());
                 /*Logger rootLogger = loggerContext.getLogger("com.github.p4535992.util");
                 rootLogger.setLevel(Level.INFO);*/
 
                 /*Logger LOG = (Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
                 LOG.setLevel(Level.WARN);*/
-            }else{
-                // go to the console logback.xml
+                } else {
+                    // go to the console logback.xml
+                    System.out.println("[5.7] USE JUST THE CONSOLE FOR THE LOGGING");
+                }
+            } else {
+                //continue without custmoization;
+                System.err.println("[5.8] USE JUST THE BASIC STANDARD CONFIGURATION OF JORA");
             }
             try {
-                if(pathToLogBackXML.contains("resources")) {
-                    configurator.doConfigure(ClassLoader.getSystemClassLoader().getResource(pathToLogBackXML).getFile());
-                }else{
+                if (pathToLogBackXML.contains("resources")) {
+                    //noinspection ConstantConditions,AccessStaticViaInstance
+                    configurator.doConfigure(ClassLoader.
+                            getSystemClassLoader().getResource(pathToLogBackXML).getFile());
+                } else {
                     try {
                         configurator.doConfigure(pathToLogBackXML);
-                    }catch(Exception e){
-                        System.err.println(e.getMessage());
+                    } catch (Exception e) {
+                        System.err.println("[6] " + e.getMessage());
                     }
                 }
 
             } catch (JoranException je) {
-                StatusPrinter.print(loggerContext);
-            } catch(NullPointerException ne){
+                System.err.print("[7] " + je.getMessage());
+                //StatusPrinter.print(loggerContext);
+            } catch (NullPointerException ne) {
                 //The context XML File is not on the Resource Folder
                 try {
                     pathToLogBackXML = new File(new File(".").getCanonicalPath() +
-                            File.separator+pathToLogBackXML).getAbsolutePath();
+                            File.separator + pathToLogBackXML).getAbsolutePath();
                     configurator.doConfigure(pathToLogBackXML);
-                }catch(IOException | JoranException e){
-                    e.printStackTrace();
+                } catch (IOException | JoranException e) {
+                    System.err.println("[8] CAN'T SET THE XML:" + e.getMessage());
+                } catch(Exception e){
+                    System.err.println("[8.2] CAN'T SET THE XML:" + e.getMessage());
                 }
             }
-               // configurator.doConfigure(pathToLogBackXML);
+            // configurator.doConfigure(pathToLogBackXML);
             //optional
             //StatusPrinter.printInCaseOfErrorsOrWarnings(loggerContext);
             //StatusPrinter.print(loggerContext);
+        }catch(java.lang.NoSuchMethodError e){
+                if(e.getMessage().contains("" +
+                        "org.slf4j.spi.LocationAwareLogger.log(Lorg/slf4j/Marker;Ljava/lang/String;ILjava/lang" +
+                        "/String;[Ljava/lang/Object;Ljava/lang/Throwable;)")){
+                    System.err.println("[8.5] Probably you use a wrong version of SLF4j for work with JUL:"+e.getMessage());
+
+                }else {
+                    System.err.println("[8.7] Some error not expected:" + e.getMessage());
+                }
         } catch (Exception e) {
-           e.printStackTrace();
+            System.err.println("[9] CAN'T SET THE XML:"+e.getMessage());
+            //e.printStackTrace();
+            try {
+                configurator.doConfigure("logback/logback.xml");
+            } catch (JoranException e1) {
+                System.err.println("[10] CAN'T SET THE XML:"+e.getMessage());
+                e1.printStackTrace();
+            }
         }
     }
 
     //-----------------------------------------------------------------------------------------------------------------
     // CUSTOMIZE LOGGING
     //-----------------------------------------------------------------------------------------------------------------
+
+   /* public static <T> T withSystemOutAndErrSentToSLF4J(Callable<T> work) throws Exception {
+        try {
+            sendSystemOutAndErrToSLF4J();
+            return work.call();
+        } finally {
+            restoreOriginalSystemOutputs();
+        }
+    }*/
 
     public static void logException(org.slf4j.Logger logger, Exception e) {
         StringWriter sw = new StringWriter();

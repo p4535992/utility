@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Remove all initial info-->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+    <!-- Path Location for the log files -->
+  <!--  <property name="DEV_HOME" value="c:/logback.log" />-->
+    <!--<property name="DEV_HOME" value="${user.dir}" />
+    <property name="logFileName22" value="${logFileName}" />-->
+    <!-- Send logs to a separate log file, the log file name is defined at runtime, via MDC.
+         http://www.mkyong.com/logging/logback-xml-example/
+    -->
+
+    <appender name="FILE-THREAD" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator>
+            <key>logFileName</key>
+            <defaultValue>head0</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="FILE-${logFileName}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${DEV_HOME}/${logFileName}.log</file>
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <charset>UTF-8</charset>
+                    <Pattern>%d{yyyy-MM-dd_HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{52}) - %msg%n  </Pattern>
+                </encoder>
+                <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                    <FileNamePattern>${DEV_HOME}/${logFileName}.%i.log.zip
+                    </FileNamePattern>
+                    <MinIndex>1</MinIndex>
+                    <MaxIndex>10</MaxIndex>
+                </rollingPolicy>
+
+                <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                    <MaxFileSize>10MB</MaxFileSize>
+                </triggeringPolicy>
+            </appender>
+        </sift>
+    </appender>
+
+    <!-- All logging will be redirected to console. -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <withJansi>true</withJansi>
+        <!-- custom coloring conversion -->
+        <conversionRule conversionWord="highlightex"
+                        converterClass="com.github.p4535992.util.log.logback.HighlightingCompositeConverterEx" />
+        <!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>${logPatternConsole}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <filter class="com.github.p4535992.util.log.logback.ThresholdLoggerFilter">
+            <logger>org.springframework</logger>
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!-- Send debug messages to a file at "c:/jcg.log" -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${DEV_HOME}/${logFileName}.debug.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>${logPatternFile}</Pattern>
+            <outputPatternAsHeader>true</outputPatternAsHeader>
+        </encoder>
+        <!-- rollover daily -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <FileNamePattern>${DEV_HOME}/${logFileName}.%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+            <MinIndex>1</MinIndex>
+            <MaxIndex>10</MaxIndex>
+          <!--  <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>-->
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>2MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <!-- Alternative log file where put only the error message -->
+    <appender name="FILE-ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${DEV_HOME}/${logFileName}.error.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>${logPatternFileError}</Pattern>
+            <outputPatternAsHeader>true</outputPatternAsHeader>
+        </encoder>
+        <!-- deny all events with a level below ERROR, that is INFO,TRACE and DEBUG -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${DEV_HOME}/${logFileName}.error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+          <!--  <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>-->
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>2MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+
+    <appender name="DB" class="ch.qos.logback.classic.db.DBAppender">
+        <connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">
+            <driverClass>org.postgresql.Driver</driverClass>
+            <url>jdbc:postgresql://localhost:5432/simple</url>
+            <user>postgres</user>
+            <password>root</password> <!-- no password -->
+        </connectionSource>
+    </appender>
+
+
+    <!-- additivity=false ensures com.github.p4535992.extractor data only goes to the com.github.p4535992.extractor log -->
+    <!-- Send logs to both console and file audit -->
+    <logger name="com.github.p4535992.extractor" level="debug" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+        <!--<appender-ref ref="DB" />-->
+    </logger>
+
+    <logger name="com.github.p4535992.util" level="debug" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+        <appender-ref ref="FILE-ERROR" />
+    </logger>
+
+   <!-- <logger name="com.github.p4535992.util" level="error" additivity="false">
+        <appender-ref ref="FILE-ERROR" />
+    </logger>
+-->
+    <logger name="org.springframework" level="WARN" />
+    <logger name="org.apache.commons.httpclient" level="WARN" />
+    <logger name="org.apache.http.client" leve ="WARN"/>
+    <logger name="org.apache.http.headers" level="WARN"/>
+    <logger name="org.apache.http.wire" level="WARN"/>
+    <logger name="org.apache.http" level="WARN"/>
+    <!-- Gitorious spews out a few invalid cookies -->
+    <logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
+    <logger name="io.trygvis.esper.testing.util.HttpClient" level="WARN"/>
+    <logger name="org.apache.shiro" level="WARN"/>
+    <!--<logger name = "e.i.karma.metadata.KarmaUserMetadata" leve="WARN"></logger>-->
+
+    <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
+        <Name>CONFIDENTIAL_FILTER</Name>
+        <Marker>CONFIDENTIAL</Marker>
+        <OnMatch>DENY</OnMatch>
+    </turboFilter>
+
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+
+    <root level="ERROR">
+        <appender-ref ref="FILE-ERROR" />
+    </root>
+
+</configuration>

@@ -82,11 +82,11 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
         <!-- Local reposiotry -->
-        <repository>
+        <!--<repository>
             <id>data-local</id>
             <name>data</name>
             <url>file://${project.basedir}/LIB</url>
-        </repository>
+        </repository>-->
     </repositories>
 
 
@@ -145,7 +145,7 @@
         <org.springframework.version>4.1.6.RELEASE</org.springframework.version>
         <!-- <commons-fileupload.commons-fileupload.version>1.3.1</commons-fileupload.commons-fileupload.version>-->
         <!-- Logging -->
-        <org.slf4j.version>1.7.12</org.slf4j.version>
+        <org.slf4j.version>1.7.13</org.slf4j.version>
         <!-- Logback + log4j + jul -->
         <spring-boot-starter-logging.version>1.3.0.RELEASE</spring-boot-starter-logging.version>
         <!-- <org.apache.logging.log4j.core.version>2.3</org.apache.logging.log4j.core.version>-->
@@ -208,6 +208,132 @@
                 <version>${xml-apis.xml-apis.version}</version>
                 <scope>runtime</scope>
             </dependency>
+            <!-- LOGGING -->
+            <!-- jul-to-slf4j + jcl-over-slf4j + log4j-over-slf4j + logback-classic -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-logging</artifactId>
+                <version>${spring-boot-starter-logging.version}</version>
+                <!-- <exclusions>
+                     <exclusion>
+                         <groupId>org.slf4j</groupId>
+                         <artifactId>slf4j-api</artifactId>
+                     </exclusion>
+                 </exclusions>-->
+            </dependency>
+            <!-- The SLF4J - take out because already present in logback classic -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${org.slf4j.version}</version>
+                <optional>true</optional>
+            </dependency>
+            <!-- Using slf4j with Log4j logger -->
+            <!-- <dependency>
+                 <groupId>org.slf4j</groupId>
+                 <artifactId>slf4j-log4j12</artifactId>
+                 <version>1.7.5</version>
+                 <exclusions>
+                     <exclusion>
+                         <groupId>org.slf4j</groupId>
+                         <artifactId>slf4j-api</artifactId>
+                     </exclusion>
+                 </exclusions>
+             </dependency>-->
+            <!-- Using slf4j with JDK logger -->
+            <!--<dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-jdk14</artifactId>
+                <version>1.7.5</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>-->
+            <!-- Redirect System.out and System.err to SLF4J -->
+            <dependency>
+                <groupId>uk.org.lidalia</groupId>
+                <artifactId>sysout-over-slf4j</artifactId>
+                <version>1.0.2</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- log4j 2 to slf4j bridge
+            http://www.ffbit.com/blog/2014/05/12/a-brand-new-log4j-2-and-its-slf4j-binding/-->
+            <!--<dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>2.5</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>log4j</groupId>
+                        <artifactId>log4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>ch.qos.logback</groupId>
+                        <artifactId>logback-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-ext</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>-->
+
+            <!-- Add implementation of log4j -->
+            <!-- <dependency>
+                 <groupId>org.apache.logging.log4j</groupId>
+                 <artifactId>log4j-core</artifactId>
+                 <version>2.5</version>
+                 &lt;!&ndash;<exclusions>
+                     <exclusion>
+                         <groupId>log4j</groupId>
+                         <artifactId>log4j</artifactId>
+                     </exclusion>
+                     <exclusion>
+                         <groupId>org.slf4j</groupId>
+                         <artifactId>slf4j-log4j12</artifactId>
+                     </exclusion>
+                 </exclusions>&ndash;&gt;
+             </dependency>-->
+            <!-- <dependency>
+                 <groupId>org.apache.logging.log4j</groupId>
+                 <artifactId>log4j-api</artifactId>
+                 <version>2.4.1</version>
+             </dependency>-->
+            <!-- Since slf4j is a bridge, you need an implementation of it that would
+            redirect all calls to slf4j or JCL. Following is to perform logging using
+            the basic implementation, choose your preferred implementation
+            (it seems you were using logback). -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -585,14 +711,14 @@
             <version>7.1.0</version>
             <optional>true</optional>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virt_jena3</artifactId>
             <version>7.1.0</version>
             <optional>true</optional>
             <scope>system</scope>
             <systemPath>${project.basedir}/LIB/lib_openlink/virt_jena3.jar</systemPath>
-        </dependency>
+        </dependency>-->
 
         <!-- The Jena Provider for Jena 2.10 requires the Virtuoso JDBC 4 Driver. -->
         <dependency>
@@ -601,28 +727,28 @@
             <version>7.1.0</version>
             <optional>true</optional>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.openlink.virtuoso</groupId>
             <artifactId>virtjdbc4</artifactId>
             <version>7.1.0</version>
             <optional>true</optional>
             <scope>system</scope>
             <systemPath>${project.basedir}/LIB/lib_openlink/virtjdbc4.jar</systemPath>
-        </dependency>
+        </dependency>-->
         <!-- The Jena Provider for Sesame 2.X.X -->
-       <!-- <dependency>
+        <dependency>
             <groupId>virtuoso.sesame2</groupId>
             <artifactId>driver</artifactId>
             <version>2.7.3-build1.12</version>
-        </dependency>-->
-       <dependency>
+        </dependency>
+     <!--  <dependency>
            <groupId>virtuoso.sesame2</groupId>
            <artifactId>driver</artifactId>
            <version>2.7.3-build1.12</version>
            <optional>true</optional>
            <scope>system</scope>
            <systemPath>${project.basedir}/LIB/lib_openlink/driver-2.7.3-build1.12.jar</systemPath>
-       </dependency>
+       </dependency>-->
 
         <!-- =============== -->
         <!-- OWL2VOWL        -->
@@ -750,13 +876,6 @@
          <dependency>
              <groupId>org.springframework.boot</groupId>
              <artifactId>spring-boot-starter-logging</artifactId>
-             <version>${spring-boot-starter-logging.version}</version>
-            <!-- <exclusions>
-                 <exclusion>
-                     <groupId>org.slf4j</groupId>
-                     <artifactId>slf4j-api</artifactId>
-                 </exclusion>
-             </exclusions>-->
          </dependency>
         <!-- Jansi dependency to be added in pom.xml -->
         <dependency>
@@ -768,7 +887,7 @@
          <dependency>
              <groupId>org.slf4j</groupId>
              <artifactId>slf4j-api</artifactId>
-             <version>${org.slf4j.version}</version>
+             <optional>true</optional>
          </dependency>
         <!-- Using slf4j with Log4j logger -->
        <!-- <dependency>
@@ -798,13 +917,6 @@
         <dependency>
             <groupId>uk.org.lidalia</groupId>
             <artifactId>sysout-over-slf4j</artifactId>
-            <version>1.0.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!-- log4j 2 to slf4j bridge
         http://www.ffbit.com/blog/2014/05/12/a-brand-new-log4j-2-and-its-slf4j-binding/-->
@@ -845,11 +957,11 @@
         </dependency>-->
 
         <!-- Add implementation of log4j -->
-        <dependency>
+       <!-- <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.5</version>
-            <!--<exclusions>
+            &lt;!&ndash;<exclusions>
                 <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
@@ -858,8 +970,8 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
-            </exclusions>-->
-        </dependency>
+            </exclusions>&ndash;&gt;
+        </dependency>-->
        <!-- <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -931,7 +1043,7 @@
 
     <build>
         <plugins>
-            <plugin>
+           <!-- <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${maven-exec-plugin.version}</version>
@@ -942,13 +1054,13 @@
                         </goals>
                     </execution>
                 </executions>
-                <!--
+                &lt;!&ndash;
                 <configuration>
                     <mainClass>C:\apache-camel-2.11.0\examples\camel-example-smooks-  
                   integration\src\main\java\example\Main< /mainClass>
                 </configuration>
-                -->
-            </plugin>
+                &ndash;&gt;
+            </plugin>-->
 
             <plugin>
                 <artifactId>maven-eclipse-plugin</artifactId>

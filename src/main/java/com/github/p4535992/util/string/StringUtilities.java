@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -84,7 +85,7 @@ public class StringUtilities {
     public static final char NBSP_CHAR = '\u00A0';
     public static final char NULL_CHAR1 = '\u0000';
     public static final char NULL_CHAR2 = '\0';
-    public static final String LINE_FEED = "\r\n";
+    //public static final String LINE_FEED = "\r\n";
     public static final String LINE_SEP = System.getProperty("line.separator");
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
     //public static final String PROJECT_DIR = System.getProperty("user.dir");
@@ -858,8 +859,8 @@ public class StringUtilities {
     //--------------------------------------------------------------------
     /**
      * Method to clean a html text to a string text.
-     * @param stringHtml html string of text.
-     * @return string text.
+     * @param stringHtml the {@link String} html string of text.
+     * @return the {@link String}  text cleaned.
      */
     public static String cleanHTML(String stringHtml){
         return stringHtml.replaceAll("\\r\\n|\\r|\\n", " ").trim();
@@ -991,10 +992,12 @@ public class StringUtilities {
      */
     public static String toUTF8(String stringASCII) {
         if (stringASCII == null) return null;
-        Reader reader = new StringReader(toHexString(stringASCII.getBytes(US_ASCII)));
-        String line = convertUnicodeEscapeToASCII(reader.toString());
-        byte[] bytes = line.getBytes(UTF_8);
-        return toHexString(bytes);
+        StringReader reader = new StringReader(toHexString(stringASCII.getBytes(StandardCharsets.US_ASCII)));
+        /* String line = convertUnicodeEscapeToASCII(reader.toString());
+        byte[] bytes = line.getBytes(StandardCharsets.UTF_8);
+        return toHexString(bytes);*/
+        String utf8 = new String(reader.toString().getBytes(),StandardCharsets.UTF_8);
+        return toHexString(utf8.getBytes());
     }
 
     public static String encodeTo(String text,Charset charset){
@@ -1363,8 +1366,7 @@ public class StringUtilities {
             if (filename.length() > 5
                     && filename.substring(0, 5).equalsIgnoreCase("file:"))
                 return filename;
-
-            /**
+            /*
              * Convert a File, note java.net.URI appears to do the right thing.
              * viz:
              *   Convert to absolute path.
@@ -1459,17 +1461,10 @@ public class StringUtilities {
 
     /**
      * Method to convert a array of bytes to a string.
-     * @param arrayBytes array Collection of bytes.
-     * @return the string of the hash.
+     * @param arrayBytes the {@link Byte} array Collection of bytes.
+     * @return the {@link String} of the hash.
      */
     public static String toString(byte[] arrayBytes){
-        /*
-         * Converts a byte array to a String, taking the
-         * eight bits of each byte as the lower eight bits of the chars
-         * in the String.
-         * @param bytes the byte array to convert to char array.
-         * @return the new String converted from a byte array.
-         */
          //return new String(toChars(bytes));
         StringBuilder sb = new StringBuilder(2*arrayBytes.length);
         for (byte b : arrayBytes) {
@@ -1546,7 +1541,6 @@ public class StringUtilities {
      * @param object the int primitive.
      * @return the the integer object of the int primitive .
      */
-    @SuppressWarnings("UnnecessaryBoxing")
     public static Integer toInteger(Object object){
         if(object != null){
             try {
@@ -1567,6 +1561,15 @@ public class StringUtilities {
             return 0;
         }
         //return Integer.valueOf(numInt);
+    }
+
+    /**
+     * Method to cnvert a OBject to a Integer.
+     * @param object the Object to convert.
+     * @return the Int of the object.
+     */
+    public static int toInt(Object object){
+       return toInteger(object);
     }
 
     /**
@@ -1628,36 +1631,6 @@ public class StringUtilities {
     public static String toId(String uriResource){
         return URI.create(uriResource.replaceAll("\\r\\n|\\r|\\n", " ").replaceAll("\\s+", "_").trim()).toString();
     }
-
-    /**
-     * Method to cnvert a OBject to a Integer.
-     * @param object the Object to convert.
-     * @return the Int of the object.
-     */
-    public static int toInt(Object object){
-        if(object != null){
-            try {
-                if (object instanceof Integer) return (int) object;
-                else if (object instanceof String && isNumeric(object)) {
-                    return Integer.parseInt(String.valueOf(object));
-                }
-                logger.warn("The string text " + String.valueOf(object) + " with class :"
-                        + object.getClass().getName() + " is not a number!!!");
-                return 0;
-            }catch(NumberFormatException e) {
-                logger.warn("The string text " + String.valueOf(object) + " with class :"
-                        + object.getClass().getName() + " is not a number!!!");
-                return 0;
-            }
-        }else{
-            logger.warn("The string text NULL is not a number!!!");
-            return 0;
-        }
-        //return Integer.parseInt(String.valueOf(object));
-    }
-
-
-
 
     /**
      * Method need commons lang 3
@@ -1780,7 +1753,7 @@ public class StringUtilities {
                     new org.apache.tika.detect.AutoDetectReader(new ByteArrayInputStream(text.getBytes()));
             return adr.getCharset();
         } catch (IOException|TikaException e) {
-            //wihtout any external lirary....
+            //without any external library....
             String[] charsetsToBeTested = {"UTF-8", "windows-1253", "ISO-8859-7"};
             return detectCharset(new ByteArrayInputStream(text.getBytes()), charsetsToBeTested);
         }
@@ -1830,6 +1803,8 @@ public class StringUtilities {
             if (s instanceof String || s instanceof URL || s instanceof URI) {
                 String newValue = org.apache.commons.lang3.StringUtils.abbreviate(String.valueOf(s),200);
                 values[i] = newValue;
+            }else{
+                logger.warn("Can't abbreviate the object with class "+s.getClass().getName());
             }
         }
         return values;

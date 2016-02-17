@@ -1,6 +1,5 @@
 package com.github.p4535992.util.bean;
 
-import com.github.p4535992.util.file.FileUtilities;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
@@ -8,13 +7,13 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Collection;
 
 /**
  * Created by 4535992 on 21/04/2015.
@@ -41,7 +40,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
 
     public static ApplicationContext tryGetContextSpring(String filePathXml,Class<?> thisClass) throws IOException {
         ApplicationContext context = new GenericApplicationContext();
-        String path = FileUtilities.toStringUriWithPrefix(getResourceAsFile(filePathXml, thisClass));
+        String path = toStringUriWithPrefix(getResourceAsFile(filePathXml, thisClass));
         try {
             //This container loads the definitions of the beans from an XML file.
             // Here you do not need to provide the full path of the XML file but
@@ -57,7 +56,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
                     //This container loads the definitions of the beans from an XML file.
                     // Here you need to provide the full path of the XML bean configuration file to the constructor.
                     //You can force with file: property to the class file.
-                    File file = FileUtilities.toFile(filePathXml, thisClass);
+                    File file = getResourceAsFile(filePathXml, thisClass);
                     if (file!= null && file.exists()) {
                         context = new FileSystemXmlApplicationContext(file.getPath());
                     }else{
@@ -83,7 +82,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         int i = 0;
         for(String spath : filesPathsXml){
             if(new File(spath).exists()) {
-                String path = FileUtilities.toStringUriWithPrefix(getResourceAsFile(spath, thisClass));
+                String path = toStringUriWithPrefix(getResourceAsFile(spath, thisClass));
                 paths[i] = path;
                 i++;
             }
@@ -121,6 +120,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
 
     public static File getResourceAsFile(String name,Class<?> thisClass) {
         try {
+            //noinspection ConstantConditions
             return new File(thisClass.getClassLoader().getResource(name).getFile());
         }catch(java.lang.NullPointerException e){
             logger.error(e.getMessage(), e);
@@ -130,6 +130,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
 
     public static File getResourceSpringAsFile(String pathRelativeToFileOnResourceFolder) {
         try {
+            //noinspection ConstantConditions
             return getResourceSpringAsResource(pathRelativeToFileOnResourceFolder,null,null).getFile();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -139,6 +140,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
 
     public static File getResourceSpringAsFile(String pathRelativeToFileOnResourceFolder,Class<?> clazz) {
         try {
+            //noinspection ConstantConditions
             return getResourceSpringAsResource(pathRelativeToFileOnResourceFolder,clazz,null).getFile();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -148,6 +150,7 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
 
     public static File getResourceSpringAsFile(String pathRelativeToFileOnResourceFolder,ClassLoader classLoader) {
         try {
+            //noinspection ConstantConditions
             return getResourceSpringAsResource(pathRelativeToFileOnResourceFolder,null,classLoader).getFile();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -245,6 +248,15 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         this.resourceLoader = resourceLoader;
     }
 
+    /**
+     * Method to get a resource from relative path with spring.
+     * @param location the {@link String} location of the file on the resource folders e.g. "location.txt".
+     * @return the {@link Resource} of Spring core io.
+     */
+    public Resource getResource(String location){
+        return resourceLoader.getResource(location);
+    }
+
     public void showResourceDataOnResourceLoader(String absolutePathToFile,ResourceLoader resourceLoader) throws IOException {
         //This line will be changed for all versions of other examples : "file:c:/temp/filesystemdata.txt"
         org.springframework.core.io.Resource banner = resourceLoader.getResource("file:"+absolutePathToFile);
@@ -258,13 +270,44 @@ public class BeansKit implements  org.springframework.context.ResourceLoaderAwar
         }
         reader.close();
     }
+
+    /**
+     * Convert filename string to a URI.
+     * Map '\' characters to '/' (this might break if '\' is used in
+     * a Unix filename, but this is assumed to be a very rare occurrence
+     * as '\' is often used with special meaning on Unix.)
+     * For unix-like systems, the absolute filename begins with a '/' and is preceded by "file://".
+     * For other systems an extra '/' must be supplied.
+     *
+     * @param filePath string of the path to the file
+     * @return path to the in uri formato with prefix file:///
+     */
+    private static String toStringUriWithPrefix(String filePath) {
+        StringBuilder mapFileName = new StringBuilder(filePath);
+        for (int i = 0; i < mapFileName.length(); i++) {
+            if (mapFileName.charAt(i) == '\\')
+                mapFileName.setCharAt(i, '/');
+        }
+        if (filePath.charAt(0) == '/') return "file://" + mapFileName.toString();
+        else return "file:///" + mapFileName.toString();
+    }
+
+    /**
+     * Method to convert a File to a URI with the prefix file://.
+     *
+     * @param file the File to convert.
+     * @return the String URI with prefix.
+     */
+    public static String toStringUriWithPrefix(File file) {
+        return toStringUriWithPrefix(file.getAbsolutePath());
+    }
     
     //-----------------------------------------------------------------------------------------
 
-    public static Collection<?> collect(Collection<?> collection, String propertyName) {
+    /*public static Collection<?> collect(Collection<?> collection, String propertyName) {
         return org.apache.commons.collections.CollectionUtils.collect(collection, new
                 org.apache.commons.beanutils.BeanToPropertyValueTransformer(propertyName));
-    }
+    }*/
 
 
 

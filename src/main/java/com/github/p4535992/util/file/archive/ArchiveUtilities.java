@@ -621,7 +621,7 @@ public class ArchiveUtilities {
     public static void writeContentOfZipEntry(ZipFile zipFile,List<ZipEntry> fileEntries,File destDirectory) throws IOException {
         Iterator<ZipEntry> allFiles = fileEntries.iterator();
         while (allFiles.hasNext()) {
-            ZipEntry fileEntry = (ZipEntry) allFiles.next();
+            ZipEntry fileEntry = allFiles.next();
             File destFile = new File(destDirectory, fileEntry.getName());
             destFile.setLastModified(fileEntry.getTime());
             destFile.getParentFile().mkdirs();

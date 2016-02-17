@@ -4,7 +4,7 @@
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<layout class="ch.qos.logback.classic.PatternLayout">
 			<Pattern>
-				%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n
+				%d{yyyy-MM-dd_HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{52}) - %msg%n
 			</Pattern>
 		</layout>
 	</appender>
@@ -13,9 +13,9 @@
 		<appender-ref ref="STDOUT" />
 	</logger>
 	
-	<!--<logger name="com.github.p4535992.database" level="debug" additivity="false">
+	<logger name="com.github.p4535992" level="debug" additivity="false">
 		<appender-ref ref="STDOUT" />
-	</logger>-->
+	</logger>
 	 
 	<root level="error">
 		<appender-ref ref="STDOUT" />
