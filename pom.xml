@@ -11,7 +11,7 @@
 
     <groupId>com.github.p4535992</groupId>
     <artifactId>utility</artifactId>
-    <version>1.6.8</version>
+    <version>1.6.9</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -174,8 +174,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-framework-bom</artifactId>
                 <version>${org.springframework.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
                 <exclusions>
                     <exclusion>
                         <groupId>org.springframework.security</groupId>
@@ -186,6 +184,8 @@
                         <artifactId>commons-logging</artifactId>
                     </exclusion>
                 </exclusions>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <!-- Open RDF: ***** -->
             <dependency>
@@ -323,6 +323,7 @@
                  <artifactId>log4j-api</artifactId>
                  <version>2.4.1</version>
              </dependency>-->
+
             <!-- Since slf4j is a bridge, you need an implementation of it that would
             redirect all calls to slf4j or JCL. Following is to perform logging using
             the basic implementation, choose your preferred implementation
@@ -333,6 +334,11 @@
                 <version>${slf4j.version}</version>
                 <scope>runtime</scope>
             </dependency>
+            <dependency>
+                <groupId>com.github.p4535992</groupId>
+                <artifactId>database-basic</artifactId>
+                <version>1.6.8</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -341,8 +347,7 @@
 
         <dependency>
             <groupId>com.github.p4535992</groupId>
-            <artifactId>database-basic</artifactId>
-            <version>1.6.8</version>
+            <artifactId>database-basic</artifactId>   
         </dependency>
 
         <dependency>
@@ -404,12 +409,14 @@
         </dependency>
 
         <!-- SUPPORT LIBRARY FOR SPRING -->
+        <!--
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
             <version>${cglib.cglib.version}</version>
             <optional>true</optional>
         </dependency>
+        -->
 
         <!-- ================= -->
         <!-- SUPPORT JAVAX Persistence -->
@@ -432,11 +439,11 @@
         </dependency>
 
         <!-- Joda-Time -->
-        <dependency>
+        <!--<dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>${joda-time.version}</version>
-        </dependency>
+        </dependency>-->
 
         <!-- ================= -->
         <!-- DATABASE DRIVER   -->
