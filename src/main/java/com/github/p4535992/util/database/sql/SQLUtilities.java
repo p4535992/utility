@@ -1068,6 +1068,37 @@ public class SQLUtilities {
         }
     }
 
+    public static Boolean cleanSQLScriptForOldVersion(File sqlScript){
+        try {
+            List<String> lines = FileUtilities.read(sqlScript);
+            List<String> newLines = new ArrayList<>();
+            for (String line : lines) {
+                if (line == null || line.isEmpty()) continue;
+                //Regex r = new Regex(symbol+"(.+?)"+symbol, RegexOptions.Compiled);
+                StringBuilder sb = new StringBuilder();
+                String newLine = line;
+                boolean endWith = newLine.endsWith(");") || newLine.contains("ENGINE=InnoDB");
+                for (char c : newLine.toCharArray()) {
+                    if (c == ';') sb.append("");
+                    else if (c == '\\') sb.append("");
+                    else sb.append(c);
+                }
+                newLine = sb.toString();
+                //v = v.Replace("'", "");
+                newLine = newLine.replace(";", "");
+                newLine = newLine.replace("\\", "");
+                newLine = newLine.replaceAll("\\s+", " "); //collapse whitespace
+                newLine = newLine.trim();
+                if (endWith) newLine = newLine + ";";
+                newLines.add(newLine);
+            }
+            FileUtilities.write(newLines, new File(FileUtilities.addSuffixTimeStampToFileName(sqlScript.getAbsolutePath())));
+        }catch(Exception e){
+            return false;
+        }
+        return true;
+    }
+
     public static void main(String[] args) throws IOException, SQLException, URISyntaxException {
         String userDir = new File(".").getCanonicalPath();
         String userDir2 = StringUtilities.PROJECT_DIR;  String userDir3 = LogBackUtil.class.getProtectionDomain().getCodeSource().getLocation().getPath();

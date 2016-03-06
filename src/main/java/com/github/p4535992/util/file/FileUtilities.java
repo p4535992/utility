@@ -15,6 +15,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -3987,6 +3988,14 @@ public class FileUtilities {
         return list;
     }
 
+    public static String addSuffixTimeStampToFileName(String fileName){
+        String time = new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date());
+        String extension = getExtension(fileName);
+        String fileName2 = fileName.replace(extension,"").replace(".","");
+        fileName2 = fileName2+"_"+time+"."+extension;
+        return fileName2;
+    }
+
 
     /**
      * Utility for a depth first traversal of a file-system starting from a
@@ -4048,6 +4057,7 @@ public class FileUtilities {
             return null;
         }
     }
+
 
         /**
          * Set the notification handler.
