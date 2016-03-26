@@ -469,7 +469,7 @@ public class LogBackUtil {
         JoranConfigurator configurator = new JoranConfigurator();
         try {
             //String pathToLogBackXML = "C:\\Users\\tenti\\Desktop\\EAT\\utility\\src\\main\\resources\\logback.xml";
-            System.out.println("222222222222222222222222222222222");
+            System.out.println("-- Test Console");
             boolean noError = true;
             try {
                 uk.org.lidalia.sysoutslf4j.context.SysOutOverSLF4J.registerLoggingSystem("com.github.p4535992");

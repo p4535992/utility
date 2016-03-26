@@ -39,9 +39,9 @@ public class ListUtilities {
 
     /**
      * Method that assigns through a mechanism of " mapping" to each value
-     * Separate the parameter in question a number ( the frequency ) the prendeno
-     * Value with the highest frequency we obtained the value most popular
-     * For this parameter.
+     * Separate the parameter in question a number ( the frequency ) and get the
+     * value with the highest frequency so we obtained the value most popular
+     * for this parameter.
      * @param al List to analyze.
      * @param <T> generic type.
      * @return  the most common element on the List.
