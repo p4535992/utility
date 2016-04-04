@@ -1,6 +1,7 @@
 package com.github.p4535992.util.file.csv.opencsv;
 
 import com.github.p4535992.util.calendar.DateUtilities;
+import com.github.p4535992.util.collection.ArrayUtilities;
 import com.github.p4535992.util.collection.ListUtilities;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.file.csv.univocity.UnivocityUtilities;
@@ -404,15 +405,15 @@ public class OpenCsvUtilities extends FileUtilities{
 
     public static String getFieldLatitude(String[] headers){
         Pattern pattern = Pattern.compile("(L|l)(at)(itude)?",Pattern.CASE_INSENSITIVE);
-        return getField(headers,pattern);
+        return getFieldHeader(headers,pattern);
     }
 
     public static String getFieldLongitude(String[] headers){
         Pattern pattern = Pattern.compile("(L|l)(on|ng)(gitude)?",Pattern.CASE_INSENSITIVE);
-        return getField(headers,pattern);
+        return getFieldHeader(headers,pattern);
     }
 
-    public static String getField(String[] headers,Pattern pattern){
+    public static String getFieldHeader(String[] headers,Pattern pattern){
         //String[] headers = CSVGetHeaders(headers,true);
         for(String s : headers){
             if(pattern.matcher(String.valueOf(s)).matches()){
@@ -420,6 +421,41 @@ public class OpenCsvUtilities extends FileUtilities{
             }
         }
         return "NULL";
+    }
+
+    public static String getFieldValue(String[] row,String[] headers,String header){
+        return row[getIndexField(headers,header)];
+    }
+
+    public static String getFieldValue(String[] row,String[] headers,Pattern pattern){
+        return row[getIndexField(headers,getFieldHeader(headers,pattern))];
+    }
+
+    public static Boolean isContainField(String[] headers,String header){
+        return ArrayUtilities.contains(headers,header);
+    }
+
+    public static Boolean isContainField(String[] headers,Pattern pattern){
+        for(String s : headers){
+            if(pattern.matcher(String.valueOf(s)).matches()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static Boolean isContainFieldLatitude(String[] headers){
+        Pattern pattern = Pattern.compile("(L|l)(at)(itude)?",Pattern.CASE_INSENSITIVE);
+        return isContainField(headers,pattern);
+    }
+
+    public static Boolean isContainFieldLongitude(String[] headers){
+        Pattern pattern = Pattern.compile("(L|l)(on|ng)(gitude)?",Pattern.CASE_INSENSITIVE);
+        return isContainField(headers,pattern);
+    }
+
+    private static <T> Integer getIndexField(T[] array, T field){
+        return Arrays.asList(array).indexOf(field);
     }
 
     /**
@@ -449,7 +485,6 @@ public class OpenCsvUtilities extends FileUtilities{
             throw new SQLException("Not a valid connection.");
         }
         try {
-
 			/* Modified by rammar.
 			 *
 			 * I was having issues with the CSVReader using the "\" to escape characters.

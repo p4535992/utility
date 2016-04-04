@@ -257,15 +257,38 @@ public class FileUtilities {
     /**
      * Method to create a new File Object in a specific path.
      *
-     * @param file File output location of the new File .
-     * @return the new File object.
+     * @param file the {@link File} output location of the new File .
+     * @return the {@link File} object.
      */
     public static File toFile(File file) {
+        return toFile(file,false);
+    }
+
+    /**
+     * Method to create a new File Object in a specific path.
+     *
+     * @param file the {@link File} output location of the new File .
+     * @param replaceIfExists  {@link Boolean} if true replace the already existent file.
+     * @return the {@link File} object.
+     */
+    public static File toFile(File file,boolean replaceIfExists) {
         try {
-            if (file.createNewFile()) return file;
-            else {
-                logger.warn("Can't create the file" + file.getName());
-                return null;
+            if(!isFileExists(file)) { //if file already exists.
+                if (isFileValid(file.getAbsolutePath())) {
+                    boolean b = file.createNewFile();
+                    if (b) return file;
+                    else {
+                        logger.warn("Can't create the file" + file.getName());
+                        return null;
+                    }
+                } else {
+                    logger.error("The Path :" + file.getAbsolutePath() + " is not valid!");
+                    return null;
+                }
+            }else{
+                if(replaceIfExists) delete(file);
+                logger.warn("The file :"+file.getAbsolutePath()+" already exists, is not created");
+                return file;
             }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
@@ -677,22 +700,6 @@ public class FileUtilities {
             }
         }catch(IOException e){
             logger.error(e.getMessage(),e);
-            return false;
-        }
-    }
-
-    /**
-     * Method to create a directory.
-     *
-     * @param fullPathDir string path to the location of the directory.
-     * @return if true you have created the directory.
-     */
-    public static boolean createDirectory(String fullPathDir) {
-        //return new File(fullPathDir).mkdirs();
-        try {
-            Files.createDirectory(Paths.get(fullPathDir));
-            return true;
-        } catch (IOException e) {
             return false;
         }
     }
@@ -2345,6 +2352,7 @@ public class FileUtilities {
         /*convFile.createNewFile();
         FileOutputStream fos = new FileOutputStream(convFile); fos.write(multiPartFile.getBytes());fos.close();*/
         try {
+            // Handle file content - multipartFile.getInputStream()
             multiPartFile.transferTo(convFile);
             return convFile;
         } catch (IOException e) {
@@ -3678,6 +3686,12 @@ public class FileUtilities {
         }
     }
 
+    /**
+     * Method to create a directories.
+     *
+     * @param path the {@link Path}  location of the directory.
+     * @return if true you have created the directory.
+     */
     public static Boolean mkdirs(Path path) {
         try {
             Files.createDirectories(path.getParent());
@@ -3687,6 +3701,12 @@ public class FileUtilities {
         }
     }
 
+    /**
+     * Method to create a directory.
+     *
+     * @param path the {@link Path}  location of the directory.
+     * @return if true you have created the directory.
+     */
     public static Boolean mkdir(Path path){
         try {
             Files.createDirectory(path.getParent());
@@ -3696,12 +3716,50 @@ public class FileUtilities {
         }
     }
 
+    /**
+     * Method to create a directory.
+     *
+     * @param file the {@link File}  location of the directory.
+     * @return if true you have created the directory.
+     * @deprecated use {@link #mkdir(Path)} instead.
+     */
+    @Deprecated
+    public static Boolean mkdir(File file){
+        boolean b =file.mkdir();
+        if(!b)logger.error("Can't create the directory "+file.getAbsolutePath());
+        return b;
+    }
+
+    /**
+     * Method to create a directory.
+     *
+     * @param fullPathDir string path to the location of the directory.
+     * @return if true you have created the directory.
+     * @deprecated use {@link #mkdir(Path)} instead.
+     */
+    @Deprecated
+    public static Boolean createDirectory(String fullPathDir) {
+        return mkdir(fullPathDir);
+    }
+
+    /**
+     * Method to create a directory.
+     *
+     * @param fullPathDir string path to the location of the directory.
+     * @return if true you have created the directory.
+     */
+    public static Boolean mkdir(String fullPathDir){
+        //return new File(fullPathDir).mkdirs();
+        return mkdir(Paths.get(fullPathDir));
+    }
+
     public static Boolean createNewFile(Path path){
         try {
             Files.createFile(path);
             return true;
         } catch (IOException e) {
-           return false;
+            logger.error(e.getMessage());
+            return false;
         }
     }
 
@@ -3710,7 +3768,8 @@ public class FileUtilities {
             Files.createTempFile(path,generateRandomStringSimple(6),null);
             return true;
         } catch (IOException e) {
-           return false;
+            logger.error(e.getMessage());
+            return false;
         }
     }
 
@@ -3718,8 +3777,30 @@ public class FileUtilities {
         try {
             return Files.deleteIfExists(path);
         } catch (IOException e) {
+            logger.error(e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Method for delete a file.
+     * @param file the {@link File} to delete.
+     * @return the {@link Boolean} if true the file is delete with success.
+     * @deprecated use {@link #delete(Path)} instead.
+     */
+    @Deprecated
+    public static Boolean delete(File file) {
+        return file.delete();
+    }
+
+    /**
+     * Method for delete a file.
+     * @param file the {@link File} to delete.
+     * @deprecated use {@link #delete(Path)} instead.
+     */
+    @Deprecated
+    public static void deleteOnExit(File file) {
+        file.deleteOnExit();
     }
 
     public static Boolean setLastModified(Path path,FileTime fileTime){
