@@ -271,7 +271,7 @@ public class ClassLoaderUtil {
 
     public static File getResourceAsFile(String name,Class<?> thisClass) {
         try {
-            return new File(thisClass.getClassLoader().getResource(name).getFile());
+            return new File(thisClass.getClassLoader().getResource(name).getFile().replace("%20"," "));
         }catch(java.lang.NullPointerException e){
             logger.error(e.getMessage(), e);
             return null;

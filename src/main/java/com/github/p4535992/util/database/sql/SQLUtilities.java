@@ -4,6 +4,7 @@ import com.github.p4535992.util.collection.ArrayUtilities;
 import com.github.p4535992.util.collection.ListUtilities;
 import com.github.p4535992.util.database.jooq.JOOQUtilities;
 import com.github.p4535992.util.database.sql.runScript.ScriptRunner;
+import com.github.p4535992.util.exception.ExceptionKit;
 import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.file.csv.opencsv.OpenCsvUtilities;
 import com.github.p4535992.util.log.logback.LogBackUtil;
@@ -160,15 +161,34 @@ public class SQLUtilities {
 
     /**
      * Method to get a MySQL connection.
-     * @param host host where the server is.
-     * @param port number of the port of the server.
-     * @param database string name of the database.
-     * @param username string username.
-     * @param password string password.
-     * @return the connection.
+     * @param host the {@link String} host where the server is.
+     * @param port the {@link String} {}number of the port of the server.
+     * @param database the {@link String} name of the database.
+     * @param username the {@link String} username.
+     * @param password the {@link String} password.
+     * @return the {@link Connection}.
      */
     public static Connection getMySqlConnection(
-                    String host,String port,String database,String username,String password) {
+            String host,String port,String database,String username,String password) {
+        return getMySqlConnection(
+                host,port,database,username,password,false,false,false);
+    }
+
+    /**
+     * Method to get a MySQL connection.
+     * @param host the {@link String} host where the server is.
+     * @param port the {@link String} {}number of the port of the server.
+     * @param database the {@link String} name of the database.
+     * @param username the {@link String} username.
+     * @param password the {@link String} password.
+     * @param verifyServerCertificate  the {@link boolean} if true refuse to connect if the host certificate cannot be verified
+     * @param useSSL  the {@link boolean} if true connect using SSL
+     * @param requireSSL  the {@link boolean} if true refuse to connect if the MySQL server does not support SSL
+     * @return the {@link Connection}.
+     */
+    public static Connection getMySqlConnection(
+                    String host,String port,String database,String username,String password,
+                    boolean verifyServerCertificate,boolean useSSL,boolean requireSSL) {
         // The newInstance() call is a work around for some broken Java implementations
         try {
             invokeClassDriverForDbType(SQLEnum.DBType.MYSQL);
@@ -176,7 +196,10 @@ public class SQLUtilities {
             if (port != null && StringUtilities.isNumeric(port)) {
                 url += ":" + port;
             }
-            url += "/"  + database + "?noDatetimeStringSync=true"; //"jdbc:sql://localhost:3306/jdbctest"
+            url += "/"  + database + "?noDatetimeStringSync=true" +
+                    "&verifyServerCertificate="+String.valueOf(verifyServerCertificate)+
+                    "&useSSL="+String.valueOf(useSSL)+
+                    "&requireSSL="+String.valueOf(requireSSL)+""; //"jdbc:sql://localhost:3306/jdbctest"
             try {
                 //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
                 conn = DriverManager.getConnection(url, username, password);
@@ -393,6 +416,8 @@ public class SQLUtilities {
         String SCHEMA_NAME="${"+schemaName+"}";
         //ResultSet rs = md.getTables(null, null, "%", null);
         ResultSet rs = md.getTables(null, null, "%", new String[]{"TABLE_TYPES"});
+        if(getRowCount(rs)==0)rs = md.getTables(null, null, "%", null);
+        if(getRowCount(rs)==0) throw new SQLException("Can't get the Tables from the current connection!!!");
         while (rs.next()) {
             //tableNames.add(rs.getString(3)); //column 3 is TABLE_NAME
             /*String tableName = resultSet.getString(3);
@@ -517,6 +542,10 @@ public class SQLUtilities {
                     logger.warn("You execute a SELECT query:"+singleQuery+" with the 'executeBatch' ," +
                             " in this case we can't return a resultSet");
                 }
+                if(singleQuery.toLowerCase().startsWith("show")){
+                    logger.warn("You execute a SHOW query:"+singleQuery+" with the 'executeBatch' ," +
+                            " in this case we can't return a resultSet");
+                }
                 stmt.addBatch(singleQuery+";");
             }
             try {
@@ -554,12 +583,21 @@ public class SQLUtilities {
                 } catch (SQLException e1) {
                     //if a mix separated from ";"
                     try {
-                        stmt.execute(sql);
-                        logger.info("Execute the Query SQL:" + sql);
+                        try {
+                            stmt.execute(sql);
+                            logger.info("Execute the Query SQL:" + sql);
+                        }catch(SQLException e2){
+                            try {
+                                stmt.executeQuery(sql);
+                                logger.info("Execute the Query SQL:" + sql);
+                            }catch(Exception e3){
+                                throw new SQLException(e3);
+                            }
+                        }
                         return null;
                     }catch(Exception e42){
-                        logger.error(e42.getMessage(),e42);
-                        return null;
+                        //logger.error(e42.getMessage(),e42);
+                        throw new SQLException(e42);
                     }
                 }
             }
@@ -869,6 +907,18 @@ public class SQLUtilities {
         }
     }
 
+    public static int getRowCount(ResultSet resultSet) {
+        try {
+            resultSet.last();
+            int rows = resultSet.getRow();
+            resultSet.beforeFirst();
+            return rows;
+        }catch (SQLException e) {
+            logger.error(e.getMessage());
+            return 0;
+        }
+    }
+
     /*public enum DATABASE_URL{ HOST,PATH,USERNAME,PASSWORD,DRIVER,PORT}
 
     public static String getInfoFromUrl(String url,DATABASE_URL database_url){
@@ -1013,21 +1063,61 @@ public class SQLUtilities {
         return dataSource;
     }*/
 
-    public static Boolean exportData(Connection conn,String filename,String tableName) {
+    public static Boolean exportData(Connection conn,String fileOutput,String tableName) {
         Statement stmt;
         String query;
         try {
+            //ResultSet.CONCUR_READ_ONLY
             stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             //For comma separated file
-            query = "SELECT * INTO OUTFILE '"+filename+"' FIELDS TERMINATED BY ',' FROM "+tableName+";";
-            //stmt.executeQuery(query);
-            // stmt.executeUpdate("SELECT * INTO OUTFILE \"" + filename + "\" FROM " + tablename);
-            executeSQL(query,conn,stmt);
+            fileOutput = fileOutput.replace("\\","\\\\");
+            query = "SELECT * FROM "+tableName+" INTO OUTFILE \""+fileOutput+"\" FIELDS TERMINATED BY ',' "+
+                    "ENCLOSED BY '\"'  LINES TERMINATED BY '"+ System.getProperty("line.separator")+"';";
+            try {
+                executeSQL(query,conn,stmt);
+            }catch(SQLException e){
+                if(e.getMessage().contains("is running with the --secure-file-priv option")){
+                    stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY);
+                    query = "SHOW VARIABLES LIKE 'secure_file_priv'";
+                    //SELECT @@secure_file_priv;
+                    ResultSet rs2 = executeSQL(query);
+                    if(getRowCount(rs2) == 0)throw new SQLException(e);
+                    /*https://coderwall.com/p/609ppa/printing-the-result-of-resultset*/
+                    Map<String,String> map =  getInfoResultSet(rs2,true);
+                    String privFileDir = map.get("VARIABLE_VALUE");
+                    privFileDir =  privFileDir + FileUtilities.getFilename(fileOutput);
+                    privFileDir = privFileDir.replace("\\","\\\\");
+                    if(FileUtilities.isFileExists(privFileDir)) FileUtilities.delete(privFileDir);
+                    query = "SELECT * FROM "+tableName+" INTO OUTFILE \""+privFileDir+"\" FIELDS TERMINATED BY ',' "+
+                            "ENCLOSED BY '\"'  LINES TERMINATED BY '"+ System.getProperty("line.separator")+"';";
+                    executeSQL(query,conn,stmt);
+                    if(!FileUtilities.copy(privFileDir,fileOutput))throw new SQLException(e);
+                }else{
+                    throw new SQLException(e);
+                }
+            }
             return true;
         } catch(Exception e) {
             logger.error(e.getMessage(),e);
             return false;
         }
+    }
+
+    public static Map<String,String> getInfoResultSet(ResultSet rs,boolean showOnConsole) throws SQLException {
+        ResultSetMetaData rsmd = rs.getMetaData();
+        Map<String,String> map = new LinkedHashMap<>();
+        if(showOnConsole)System.out.println("SHOW ResultSet Information)");
+        int columnsNumber = rsmd.getColumnCount();
+        while (rs.next()) {
+            for (int i = 1; i <= columnsNumber; i++) {
+                if (i > 1) System.out.print(";");
+                String columnValue = rs.getString(i);
+                if(showOnConsole)System.out.print("["+i+"]Column:"+ rsmd.getColumnName(i) + " ,Value:" + columnValue );
+                map.put(rsmd.getColumnName(i),columnValue);
+            }
+            if(showOnConsole)System.out.println("");
+        }
+        return map;
     }
 
     public static Boolean importData(File file,char delimiter,String databaseName,String tableName){
@@ -1058,7 +1148,42 @@ public class SQLUtilities {
                     "LINES TERMINATED BY '\r\n'"+
                     "IGNORE 1 LINES " +
                     "("+ ArrayUtilities.toString(columns,delimiter)+");";
-            stmt.executeUpdate(query);
+            try {
+                stmt.executeUpdate(query);
+            }catch(SQLException e){
+                if(e.getMessage().contains("is running with the --secure-file-priv option")){
+                    query = "LOAD DATA LOCAL INFILE '"+filePath+"' INTO TABLE "+databaseName+"."+tableName+" "+
+                            "FIELDS TERMINATED BY ',' " +
+                            "LINES TERMINATED BY '\r\n'"+
+                            "IGNORE 1 LINES " +
+                            "("+ ArrayUtilities.toString(columns,delimiter)+");";
+                    stmt.executeUpdate(query);
+                }else{
+                    if(e.getMessage().contains("is running with the --secure-file-priv option")){
+                        stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY);
+                        query = "SHOW VARIABLES LIKE 'secure_file_priv'";
+                        //SELECT @@secure_file_priv;
+                        ResultSet rs2 = executeSQL(query);
+                        if(getRowCount(rs2) == 0)throw new SQLException(e);
+                    /*https://coderwall.com/p/609ppa/printing-the-result-of-resultset*/
+                        Map<String,String> map =  getInfoResultSet(rs2,true);
+                        String privFileDir = map.get("VARIABLE_VALUE");
+                        privFileDir =  privFileDir + FileUtilities.getFilename(file);
+                        if(!FileUtilities.copy(file.getAbsolutePath(),privFileDir))throw new SQLException(e);
+
+                        filePath = privFileDir.replace("\\","\\\\");
+                        if(FileUtilities.isFileExists(privFileDir)) FileUtilities.delete(privFileDir);
+                        query = "LOAD DATA INFILE '"+filePath+"' INTO TABLE "+databaseName+"."+tableName+" "+
+                                "FIELDS TERMINATED BY ',' " +
+                                "LINES TERMINATED BY '\r\n'"+
+                                "IGNORE 1 LINES " +
+                                "("+ ArrayUtilities.toString(columns,delimiter)+");";
+                        executeSQL(query,conn,stmt);
+                    }else{
+                        throw new SQLException(e);
+                    }
+                }
+            }
             stmt.executeUpdate("SET FOREIGN_KEY_CHECKS=1;");
             logger.info("Execute the Query SQL:"+query);
             return true;

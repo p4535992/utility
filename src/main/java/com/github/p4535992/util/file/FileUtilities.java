@@ -46,6 +46,7 @@ public class FileUtilities {
     //private static char extensionSeparator = '.';
     //private static String extensionSeparatorS = ".";
     //public final static String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();
+    //private static String tmpDir =  File.createTempFile("tmp","").getParentFile().getAbsolutePath();
     private static FileUtilities instance = new FileUtilities();
     //------------------------------------------------------------------------------------------------------
     private static Map<String, String> unicodeCodePoint = new HashMap<>();
@@ -146,6 +147,17 @@ public class FileUtilities {
         return f.getName();
     }
 
+
+    /**
+     * Method for get the name of the file (with extensions).
+     *
+     * @param path the {@link Path} of input
+     * @return the {@link String} name of the file
+     */
+    public static String getFilename(Path path) {
+        return path.getFileName().toString();
+    }
+
     /**
      * Method for get the name of the file (with extensions).
      *
@@ -217,8 +229,8 @@ public class FileUtilities {
     /**
      * Method for get the path of a file.
      *
-     * @param f file of input
-     * @return the path to the file
+     * @param f the {@link File} of input
+     * @return the {@link String} to the file
      */
     public static String getPath(File f) {
         return getPath(f.getAbsolutePath());
@@ -227,8 +239,8 @@ public class FileUtilities {
     /**
      * Method for get the path of a file.
      *
-     * @param f file of input
-     * @return the path to the file
+     * @param f the {@link Path} of input
+     * @return the {@link String} to the file
      */
     public static String getPath(Path f) {
         return getPath(f.toAbsolutePath().toString());
@@ -237,8 +249,8 @@ public class FileUtilities {
     /**
      * Method for get the path of a file.
      *
-     * @param fullPath string of the path to the file
-     * @return the path to the file
+     * @param fullPath the {@link String} of the path to the file
+     * @return the {@link String} to the file
      */
     public static String getPath(String fullPath) {
         return fullPath.substring(0, fullPath.lastIndexOf(File.separator));
@@ -336,22 +348,41 @@ public class FileUtilities {
     }*/
 
     /**
+     * Method to copy a file.
+     * @param source      the {@link String} path to the source of the File to copy.
+     * @param destination the {@link String} path to the destination for the copy of the file.
+     * @return the {@link Boolean} if true all the operation are done.
+     */
+    public static boolean copy(Path source,Path destination) {
+        return copy(source,destination,false);
+    }
+
+    /**
     * Method to copy a file.
-    *
-     * @param source      the String source of the File to copy.
-    * @param destination the String destination for the copy of the file.
-    * @return if true all the operation are done.
+    * @param source      the {@link String} path to the source of the File to copy.
+    * @param destination the {@link String} path to the destination for the copy of the file.
+    * @param replaceExistingDestination the {@link Boolean} is true if you want replace the existing file.
+    * @return the {@link Boolean} if true all the operation are done.
     */
-    public static boolean copy( Path source,Path destination) {
-        if (!Files.exists(destination)) createNewFile(destination);
+    public static boolean copy( Path source,Path destination,boolean replaceExistingDestination) {
+        //if (!Files.exists(destination)) createNewFile(destination);
       /*  try (OutputStream out = Files.newOutputStream(destination);
              InputStream in = Files.newInputStream(source)) {
             IOUtilities.copy(in, out, StandardCharsets.UTF_8);*/
         try{
-            Files.copy(source,destination,StandardCopyOption.ATOMIC_MOVE);
+            try {
+                if(replaceExistingDestination)Files.copy(source, destination, StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+                else Files.copy(source, destination, StandardCopyOption.ATOMIC_MOVE);
+            }catch(java.lang.UnsupportedOperationException e){
+                if(replaceExistingDestination)Files.copy(source, destination, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
+                else Files.copy(source, destination, StandardCopyOption.COPY_ATTRIBUTES);
+            }
             logger.info("Done copying contents of " + source.getFileName().toString()+
                     " to " + destination.getFileName().toString());
             return true;
+        } catch(java.nio.file.FileAlreadyExistsException ef){
+            logger.warn(ef.getMessage()+", by defauult the file:"+destination+" is been replaced!!!");
+            return copy(source,destination,true);
         } catch (IOException e) {
             logger.error("Copying file/folder: " + source + " to " + destination + ":"+e.getMessage(), e);
             return false;
@@ -1247,12 +1278,22 @@ public class FileUtilities {
         return paths;
     }
 
+    public static File getFromResourceAsFile(String fileNameResource, Class<?> thisClass) {
+        //Get file from resources folder
+        ClassLoader classLoader = thisClass.getClassLoader();
+        //noinspection ConstantConditions
+        String resourcePath = classLoader.getResource(fileNameResource).getFile();
+        resourcePath = resourcePath.replace("%20"," ");
+        return new File(resourcePath);
+    }
+
     public static File getFromResourceAsFile(String fileNameResource, Class<?> thisClass, File outputFile) {
         StringBuilder result = new StringBuilder("");
         //Get file from resources folder
         ClassLoader classLoader = thisClass.getClassLoader();
         //noinspection ConstantConditions
         String resourcePath = classLoader.getResource(fileNameResource).getFile();
+        resourcePath = resourcePath.replace("%20"," ");
         File file = new File(resourcePath);
         try (Scanner scanner = new Scanner(file)) {
             while (scanner.hasNextLine()) {
@@ -1599,7 +1640,7 @@ public class FileUtilities {
      *
      * @return string of the path to the user directory of the project
      */
-    public static String getDirectoryUser() {
+    public static String getCurrentDirectoryUser() {
         String dir;
         try {
             //1 Method
@@ -1665,6 +1706,21 @@ public class FileUtilities {
         }
     }
 
+    public static String getAndCreateDirectoryFullPath(File file) {
+        String tmpDir = getDirectoryFullPath(file)+File.separator+"tmp_"+getFilenameWithoutExt(file);
+        if(isDirectoryExists(tmpDir)) {
+            logger.warn("Can't create the file directory because already exists, we retrieve the path ot that");
+            return tmpDir;
+        }
+        if(mkdir(tmpDir)){
+            return tmpDir;
+        }else{
+            logger.error("Can't create the file directory:"+tmpDir);
+            return "NULL";
+        }
+
+    }
+
     public static String getDirectoryFullPath(String fullPathFile) {
         return getDirectoryFullPath(new File(fullPathFile));
     }
@@ -1675,10 +1731,47 @@ public class FileUtilities {
      * @return the letter of the disk.
      */
     public static String getCurrentDisk() {
-        String dir = getDirectoryUser();
+        String dir = getCurrentDirectoryUser();
         String[] split = dir.split(":");
         dir = split[0];
         return dir + ":".toLowerCase();
+    }
+
+    /**
+     * Method to get the path to the AppData\Temp path of the user.
+     * @return the {@link String} path to the temporary folder of the current user.
+     */
+    public static String getCurrentTempDirectory(){
+        try {
+            return File.createTempFile("tmp","").getParentFile().getAbsolutePath();
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return "N/A";
+        }
+    }
+
+    /**
+     * Method to convert a String content to a Temporary File.
+     *
+     * @param content  the String content.
+     * @param fullPath the String output path for the temporary File.
+     * @return the temporary File.
+     * @deprecated use {@link #createTempFile(String, String)}
+     */
+    @Deprecated
+    public static File toTempFile(String content, String fullPath) {
+        return createTempFile(content,fullPath);
+    }
+
+    public static File createTempFile(String filename){
+        try {
+            //file with no extenstion and no directory is saved on C:\\temp\\file.tmp
+            Path tempFile = Files.createTempFile(filename, null);
+            return  tempFile.toFile();
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
     }
 
     /**
@@ -1688,7 +1781,7 @@ public class FileUtilities {
      * @param fullPath the String output path for the temporary File.
      * @return the temporary File.
      */
-    public static File toTempFile(String content, String fullPath) {
+    public static File createTempFile(String content, String fullPath) {
         try {
             //create a temp file
             File temp = File.createTempFile(
@@ -1711,8 +1804,20 @@ public class FileUtilities {
             }
         }
     }
-
-    public static File toTempFile() {
+    /**
+     * Method to create a temporary file.
+     * @return the {@link File} object.
+     * @deprecated use {@link #createTempFile()} instead.
+     */
+    @Deprecated
+    public static File toTempFile(){
+        return createTempFile();
+    }
+    /**
+     * Method to create a temporary file.
+     * @return the {@link File} object.
+     */
+    public static File createTempFile() {
         File temp = null;
         try {
             temp = File.createTempFile(
@@ -1728,7 +1833,23 @@ public class FileUtilities {
         return temp;
     }
 
-    public static File toTempFile(File file) {
+    /**
+     * Method to create a temporary file from file object.
+     * @param file the {@link File}.
+     * @return the {@link File} object.
+     * @deprecated use {@link #createTempFile(File)} instead.
+     */
+    @Deprecated
+    public static File toTempFile(File file){
+        return createTempFile(file);
+    }
+
+    /**
+     * Method to create a temporary file from file object.
+     * @param file the {@link File}.
+     * @return the {@link File} object.
+     */
+    public static File createTempFile(File file) {
         File parent = file.getParentFile();
         String name = file.getName();
         int index = 0;
@@ -1736,19 +1857,47 @@ public class FileUtilities {
         do {
             result = new File(parent, name + "_" + index++);
         } while(result.exists());
+        if(result==null || !result.exists()){
+            logger.error("Can't create the temporary file "+file.getAbsolutePath());
+        }
         return result;
     }
 
+    /**
+     * Method to create a temporary file from a array of bytes.
+     * @param bytes the {@link Arrays} of {@link Byte}.
+     * @return the {@link File} object.
+     * @deprecated use {@link #createTempFile(byte[])} instead.
+     */
+    @Deprecated
     public static File toTempFile(byte[] bytes){
+        return createTempFile(bytes);
+    }
+
+    /**
+     * Method to create a temporary file from a array of bytes.
+     * @param bytes the {@link Arrays} of {@link Byte}.
+     * @return the {@link File} object.
+     */
+    public static File createTempFile(byte[] bytes){
         File tempFile = null;
         try {
-            //file with no extenstion and no directory is saved on C:\\temp\\file.tmp
-            tempFile = File.createTempFile(generateRandomStringSimple(6), null, null);
-            // Delete temp file when program exits.
-            tempFile.deleteOnExit();
-            FileOutputStream fos = new FileOutputStream(tempFile);
-            fos.write(bytes);
-            return  tempFile;
+            try {
+                //WITH FILE
+                //file with no extenstion and no directory is saved on C:\\temp\\file.tmp
+                tempFile = File.createTempFile(generateRandomStringSimple(6), null, null);
+                // Delete temp file when program exits.
+                tempFile.deleteOnExit();
+                FileOutputStream fos = new FileOutputStream(tempFile);
+                fos.write(bytes);
+                return tempFile;
+            }catch(Exception e) {
+                //WITH PATH
+                //file with no extenstion and no directory is saved on C:\\temp\\file.tmp
+                Path tempFile2 = Files.createTempFile(generateAlphaNumericString(6), null);
+                Files.write(tempFile2, bytes, StandardOpenOption.DELETE_ON_CLOSE);
+                return tempFile2.toFile();
+            }
         } catch (IOException e) {
             logger.error(e.getMessage(),e);
             return tempFile;
@@ -1797,6 +1946,80 @@ public class FileUtilities {
         return result;
     }
 
+    public static Boolean createTempFile(Path path){
+        try {
+            Files.createTempFile(path,generateRandomStringSimple(6),null);
+            return true;
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Method to create a temporary directory.
+     * @return the {@link File}.
+     */
+    public static File createTempDirectory(){
+        File dir=null;
+        try {
+           /* String test = File.createTempFile("tmp","").getAbsolutePath();
+            dir = Files.createTempDirectory(Paths.get("tmp"+ File.separator),generateAlphaNumericString(6)).toFile();*/
+            String tmpDir = File.createTempFile("tmp","").getParentFile().getAbsolutePath();
+            dir = Files.createTempDirectory(Paths.get(tmpDir+File.separator),generateAlphaNumericString(6)).toFile();
+            //dir.deleteOnExit();
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+        }
+        return dir;
+    }
+
+    /**
+     * Method to create a temporary directory.
+     * @param dir the {@link File}.
+     * @return the {@link File}.
+     */
+    public static File createTempDirectory(File dir){
+        try {
+            //dir = File.createTempFile(dir.getAbsolutePath(),"");
+            String sDir = dir.getAbsolutePath();
+            if(!sDir.endsWith(File.separator)) sDir = sDir +File.separator;
+            dir = Files.createTempDirectory(Paths.get(sDir),generateAlphaNumericString(6)).toFile();
+            return dir;
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+        }
+        return dir;
+    }
+
+    /**
+     * Method to create a temporary directory.
+     * @param dir the {@link Path}.
+     * @return the {@link Path}.
+     */
+    public static Path createTempDirectory(Path dir){
+        try {
+            return Files.createTempDirectory(dir,generateAlphaNumericString(6));
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
+
+    /**
+     * Method to create a temporary directory.
+     * @param dir the {@link String}.
+     * @return the {@link File}.
+     */
+    public static File createTempDirectory(String dir){
+        try {
+            Path path = Files.createTempDirectory(dir);
+            return path.toFile();
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+    }
 
     /**
      * Method to convert a resource file to a Stream.
@@ -3141,7 +3364,12 @@ public class FileUtilities {
      */
     public static String toString(Path path, Charset encoding) {
         try {
-            return new String(Files.readAllBytes(path), encoding);
+            if(isFileExists(path)) {
+                return new String(Files.readAllBytes(path), encoding);
+            }else{
+                logger.error("The file "+path.toAbsolutePath().toString());
+                return "N/A";
+            }
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
             return "N/A";
@@ -3709,9 +3937,10 @@ public class FileUtilities {
      */
     public static Boolean mkdir(Path path){
         try {
-            Files.createDirectory(path.getParent());
+            Files.createDirectory(path);
             return true;
         } catch (IOException e) {
+            logger.error(e.getMessage());
             return false;
         }
     }
@@ -3763,16 +3992,6 @@ public class FileUtilities {
         }
     }
 
-    public static Boolean createTempFile(Path path){
-        try {
-            Files.createTempFile(path,generateRandomStringSimple(6),null);
-            return true;
-        } catch (IOException e) {
-            logger.error(e.getMessage());
-            return false;
-        }
-    }
-
     public static Boolean delete(Path path) {
         try {
             return Files.deleteIfExists(path);
@@ -3780,6 +3999,10 @@ public class FileUtilities {
             logger.error(e.getMessage());
             return false;
         }
+    }
+
+    public static Boolean delete(String path) {
+        return delete(Paths.get(path));
     }
 
     /**
@@ -3858,8 +4081,28 @@ public class FileUtilities {
         return new File(getCanonicalPath(path));
     }
 
+    public static File getParentFile(File file){
+        return file.getParentFile();
+    }
+
     public static File getParentFile(Path path){
         return path.getParent().toFile();
+    }
+
+    public static Path getParentPath(String path){
+        return getParentPath(Paths.get(path));
+    }
+
+    public static Path getParentPath(Path path){
+        return path.getParent();
+    }
+
+    public static Path getParentPath(File file){
+        return Paths.get(file.getParent());
+    }
+
+    public static File getParentFile(String file){
+        return getParentFile(new File(file));
     }
 
     public static Boolean renameTo(Path source,Path target,String newName){
@@ -4011,6 +4254,23 @@ public class FileUtilities {
      */
     private static boolean isNullOrEmpty(String text) {
         return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty() ;
+    }
+
+    /**
+     * Method simple to generate a alphanumerical String.
+     * @param length the {@link Integer} length of the String.
+     * @return the {@link String} generate.
+     */
+    private static String generateAlphaNumericString(int length){
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        StringBuilder buffer = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int randomLimitedInt = leftLimit + (int)
+                    (new Random().nextFloat() * (rightLimit - leftLimit));
+            buffer.append((char) randomLimitedInt);
+        }
+        return buffer.toString();
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**

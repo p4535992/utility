@@ -202,7 +202,6 @@ public class SimpleParameters {
             String value = pair.substring(pos + 1).trim();
             if(value.contains("${user.dir}")){
                 value = value.replace("${user.dir}",System.getProperty("user.dir"));
-
             }
             if(value.contains("\\")){
                 value = value.replace("\\",System.getProperty("file.separator"));

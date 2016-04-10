@@ -89,7 +89,7 @@ public class StringUtilities {
     public static final String LINE_SEP = System.getProperty("line.separator");
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
     //public static final String PROJECT_DIR = System.getProperty("user.dir");
-    public static final String PROJECT_DIR = FileUtilities.getDirectoryUser();
+    public static final String PROJECT_DIR = FileUtilities.getCurrentDirectoryUser();
     public static final String EMPTY_STR = "";
     public static final String LT = "<";
     public static final String GT = ">";
@@ -152,7 +152,7 @@ public class StringUtilities {
         //return Patterns.isGlobalPhoneNumber(number);
     }
 
-    /**
+    /*
      * Uses androids android.util.Patterns.WEB_URL to check if an url is valid.
      * @param url Address to check
      * @return true if the <code>url</code> is a valid web address.
@@ -350,12 +350,40 @@ public class StringUtilities {
 
     /**
      * Method to Returns true if the parameter is null or empty. false otherwise.
-     * @param text string text.
-     * @return true if the parameter is null or empty.
+     * @param text the {@link String} text.
+     * @return the {@link Boolean} is true if the parameter is null or empty.
      */
     public static boolean isNullOrEmpty(String text) {
         return (text == null) || text.equals("") || text.isEmpty() || text.trim().isEmpty() ;
     }
+
+    /**
+     * Method to Returns true if all parameters of a collection are null or empty. false otherwise.
+     * @param collection {@link Collection} of {@link String} .
+     * @return the {@link Boolean} is true if the parameter is null or empty.
+     */
+    public static boolean isCollectionStringsNullOrEmpty(Collection<String> collection) {
+        for(String text: collection){
+            if(isNullOrEmpty(text)){
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Method to Returns true if all parameters of a collection are null or empty. false otherwise.
+     * @param collection {@link Arrays} of {@link String} .
+     * @return the {@link Boolean} is true if the parameter is null or empty.
+     */
+    public static boolean isCollectionStringsNullOrEmpty(String... collection) {
+        for(String text: collection){
+            if(isNullOrEmpty(text)){
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Method for check if a String rappresent a line separator.
@@ -1681,6 +1709,23 @@ public class StringUtilities {
         byte[] array = new byte[length]; // length is bounded by 7
         new Random().nextBytes(array);
         return new String(array, Charset.forName("UTF-8"));
+    }
+
+    /**
+     * Method simple to generate a alphanumerical String.
+     * @param length the {@link Integer} length of the String.
+     * @return the {@link String} generate.
+     */
+    public static String generateAlphaNumericString(int length){
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        StringBuilder buffer = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int randomLimitedInt = leftLimit + (int)
+                    (new Random().nextFloat() * (rightLimit - leftLimit));
+            buffer.append((char) randomLimitedInt);
+        }
+        return buffer.toString();
     }
 
 

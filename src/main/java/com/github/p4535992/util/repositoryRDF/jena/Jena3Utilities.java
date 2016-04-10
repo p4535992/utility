@@ -161,6 +161,54 @@ public class Jena3Utilities {
         return true;
     }
 
+    /**
+     * Method to read a file with jena.
+     * @param file the {@link File} fiel to read.
+     * @param inputFormat the {@link String} input format triple.
+     * @return the {@link List} of {@link Statement}
+     */
+    public static List<Statement> read(File file,String inputFormat){
+        Model model = createModel();
+        try {
+           /* Reader reader = new FileReader(file);
+            logger.info("Try to read file of triples from the path:" + file.getAbsolutePath() + "...");
+            model.read(reader, null, inputFormat) ;
+            logger.info("...file of triples from the path:" + file.getAbsolutePath() + " readed!!");
+            return model.listStatements().toList();*/
+            return loadFileTripleToModel(file,null,inputFormat).listStatements().toList();
+        } catch (Exception e) {
+            logger.error(e.getMessage(),e);
+            return null;
+        }
+
+    }
+
+    public static boolean write(File file, Model model, Lang outputFormat) {
+        try {
+            logger.info("Try to write the new file of triple from:" + file.getAbsolutePath() + "...");
+            FileOutputStream outputStream = new FileOutputStream(file);
+            model.write(outputStream, outputFormat.getName());
+            logger.info("... the file of triple to:" + file.getAbsolutePath() + " is been wrote!");
+            return true;
+        } catch (FileNotFoundException e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public static boolean write(File file, Model model, RDFFormat outputFormat) {
+        try {
+            logger.info("Try to write the new file of triple from:" + file.getAbsolutePath() + "...");
+            FileOutputStream outputStream = new FileOutputStream(file);
+            model.write(outputStream, outputFormat.getLang().getName());
+            logger.info("... the file of triple to:" + file.getAbsolutePath() + " is been wrote!");
+            return true;
+        } catch (FileNotFoundException e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+    }
+
     public static boolean write(File file, Model model, String outputFormat) {
         try {
             logger.info("Try to write the new file of triple from:" + file.getAbsolutePath() + "...");
@@ -546,17 +594,17 @@ public class Jena3Utilities {
                 try {
                     m.read(in, null, rdfSyntax);
                 } catch (Exception e1) {
-                   /* try {
+                    try {
                         RDFDataMgr.read(m, in, INLANGFORMAT);
                     } catch (Exception e2) {
                         try {
                             //If you are just opening the stream from a file (or URL) then Apache Jena
-                            RDFDataMgr.read(m, fileInput.toURI().toString());
+                            RDFDataMgr.read(m, file.toURI().toString());
                         } catch (Exception e3) {
                             logger.error("Failed read the file of triples from the path:" +
-                                    fileInput.getAbsolutePath() + ":" + e.getMessage(), e);
+                                    file.getAbsolutePath() + ":" + e.getMessage(), e);
                         }
-                    }*/
+                    }
                     logger.error("Can't read the InputStream for the file:"+file.getAbsolutePath());
                     return null;
                 }
@@ -610,7 +658,7 @@ public class Jena3Utilities {
             return m;
         }
         else if(filenameOrURI instanceof String){
-            return loadFileTripleToModel(new File(String.valueOf(filenameOrURI)),null,null);
+            return loadFileTripleToModel(new File(String.valueOf(filenameOrURI)),null,rdfSyntax);
         }else{
             logger.warn("Can't load the File of Triple to the Jena Model, make sure the input is a File or a String or a URI," +
                     " your current param is a :"+filenameOrURI.getClass().getName());
@@ -969,8 +1017,9 @@ public class Jena3Utilities {
      * @param model              jena model.
      * @param fullPathOutputFile string to the path of the output file.
      * @param outputFormat       stirng of the output format.
+     * @return the {@link Boolean} if true the conversion has been complete.
      */
-    private static void formatTheResultSetAndPrint(
+    private static Boolean formatTheResultSetAndPrint(
             String sparql, Model model, String fullPathOutputFile, String outputFormat) {
         try {
             //JSON,CSV,TSV,,RDF,SSE,XML
@@ -1016,8 +1065,10 @@ public class Jena3Utilities {
                 writeModelToFile(fullPathOutputFile, resultModel, OUTFORMAT);
                 logger.info("... the file of triple to:" + fullPathOutputFile + " is been wrote!");
             }
+            return true;
         } catch (Exception e) {
             logger.error("error during the writing of the file of triples:" + fullPathOutputFile + ":" + e.getMessage(), e);
+            return false;
         }
 
     }
@@ -1027,10 +1078,15 @@ public class Jena3Utilities {
      *
      * @param file         file to convert.
      * @param outputFormat string of the output format.
-     * @throws IOException throw if any I/O is occurred.
+     * @return the {@link Boolean} if true the conversion has been complete.
      */
-    public static void convertFileTripleToAnotherFormat(File file, String outputFormat) throws IOException {
-        convertTo(file, outputFormat);
+    public static Boolean convertFileTripleToAnotherFormat(File file, String outputFormat){
+        try {
+            return convertTo(file, outputFormat);
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return false;
+        }
     }
 
     /**
@@ -1038,9 +1094,26 @@ public class Jena3Utilities {
      *
      * @param file         file to convert.
      * @param outputFormat string of the output format.
-     * @throws IOException throw if any I/O is occurred.
+     * @return the {@link Boolean} if true the conversion has been complete.
      */
-    private static void convertTo(File file, String outputFormat) throws IOException {
+    public static Boolean convertFileTripleToAnotherFormat(File file, RDFFormat outputFormat){
+        try {
+            return convertTo(file, outputFormat.getLang().toString());
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }
+
+    /**
+     * Method to convert a RDF file of triples to a another specific format.
+     *
+     * @param file         file to convert.
+     * @param outputFormat string of the output format.
+     * @throws IOException throw if any I/O is occurred.
+     * @return the {@link Boolean} if true the conversion has been complete.
+     */
+    private static Boolean convertTo(File file, String outputFormat) throws IOException {
         Model m = loadFileTripleToModel(file,null,null);
         String newName =
                 file.getAbsolutePath().replace(FileUtils.getFilenameExt(file.getAbsolutePath()),outputFormat);
@@ -1057,7 +1130,7 @@ public class Jena3Utilities {
         } else {
             sparql = "CONSTRUCT {?s ?p ?o} WHERE{?s ?p ?o}";
         }
-        formatTheResultSetAndPrint(sparql, m, newPath + File.separator + newName, outputFormat.toLowerCase());
+        return formatTheResultSetAndPrint(sparql, m, newPath + File.separator + newName, outputFormat.toLowerCase());
     }
 
    /*
@@ -1083,10 +1156,10 @@ public class Jena3Utilities {
     /**
      * Method to find if exists some statement with a specific property.
      *
-     * @param model    jena model.
-     * @param subject  subject of the statement you want to check.
-     * @param property string of property of the statement you want to check.
-     * @return boolean result if exists or not.
+     * @param model    the {@link Model} jena model.
+     * @param subject  the {@link Resource }subject of the statement you want to check.
+     * @param property the {@link String} of property of the statement you want to check.
+     * @return the {@link Boolean} result if exists or not.
      */
     public static boolean findProperty(Model model, Resource subject, String property) {
         boolean foundLocal = false;
@@ -1121,9 +1194,9 @@ public class Jena3Utilities {
     /**
      * Method to copy a Model to another Model with different uri and specific resources.
      *
-     * @param model   jena model for the copy.
-     * @param subject the resoures you want to copy.
-     * @param uri     the uri for the new subject copied new model.
+     * @param model   the {@link Model} jena model for the copy.
+     * @param subject the {@link Resource} you want to copy.
+     * @param uri     the {@link String} uri for the new subject copied new model.
      * @return the copied model.
      */
     public static Model copyModel(Model model, Resource subject, String uri) {
@@ -1143,11 +1216,11 @@ public class Jena3Utilities {
     /**
      * Method to copy a Model to another Model.
      *
-     * @param srcModel  model for the copy.
-     * @param srcRsrc   resource of the model for the copy.
-     * @param destModel model copied.
-     * @param destRsrc  resource of the model copied.
-     * @return the copied model.
+     * @param srcModel  the {@link Model} jena for the copy.
+     * @param srcRsrc   the {@link Resource} of the model for the copy.
+     * @param destModel the {@link Model} jena copied.
+     * @param destRsrc  the {@link Resource}of the model copied.
+     * @return the {@link Model} copied .
      */
     public static Model copyToModel(Model srcModel, Resource srcRsrc, Model destModel, Resource destRsrc) {
         try {
@@ -1184,9 +1257,9 @@ public class Jena3Utilities {
     /**
      * Method to merge two Jena Model.
      *
-     * @param model    first jena model.
-     * @param newModel second jena model.
-     * @return merged jena model.
+     * @param model    the {@link Model} first jena model.
+     * @param newModel the {@link Model} second jena model.
+     * @return the {@link Model} merged jena model.
      */
     public static Model mergeModel(Model model, Model newModel) {
         try {
@@ -1215,12 +1288,13 @@ public class Jena3Utilities {
     /**
      * Method to delete literal on a Jena Model.
      *
-     * @param model    jena model.
-     * @param subject  subject of the statement.
-     * @param property property of the statement.
-     * @param value    value of the literal of the statement to remove from Jena model.
+     * @param model    the {@link Model} jena model.
+     * @param subject  the {@link Resource} subject of the statement.
+     * @param property the {@link String} property of the statement.
+     * @param value    the {@link String} value of the literal of the statement to remove from Jena model.
+     * @return the {@link Boolean} if true the literal is delete with success.
      */
-    public static void deleteLiteral(Model model, Resource subject, String property, String value) {
+    public static Boolean deleteLiteral(Model model, Resource subject, String property, String value) {
         int pos = property.indexOf(":");
         String prefix = property.substring(0, pos);
         property = property.substring(pos + 1);
@@ -1230,19 +1304,21 @@ public class Jena3Utilities {
             RDFNode v = model.createLiteral(value);
             Statement s = model.createStatement(subject, p, v);
             model.remove(s);
+            return true;
         } catch (Exception e) {
             // nop;
             logger.warn("Exception while try to delete a literal:" + e.getMessage(), e);
+            return false;
         }
     }
 
     /**
      * Method to query/read for a literal on a Jena Model.
      *
-     * @param model    jena model.
-     * @param subject  subject of the statement.
-     * @param property property of the statement.
-     * @return string of the literal.
+     * @param model    the {@link Model} jena model.
+     * @param subject  the {@link Resource} subject of the statement.
+     * @param property the {@link String} property of the statement.
+     * @return the {@link String} of the literal.
      */
     public static String queryLiteral(Model model, Resource subject, String property) {
         return findLiteral(model, subject, property);
@@ -1251,10 +1327,10 @@ public class Jena3Utilities {
     /**
      * Method to query/read for a literal on a Jena Model.
      *
-     * @param model    jena model.
-     * @param subject  subject of the statement.
-     * @param property property of the statement.
-     * @return string of the literal.
+     * @param model    the {@link Model} jena model.
+     * @param subject  the {@link Resource} subject of the statement.
+     * @param property the {@link String} property of the statement.
+     * @return the {@link String} of the literal.
      */
     public static String findLiteral(Model model, Resource subject, String property) {
         int pos = property.indexOf(":");
@@ -1286,11 +1362,11 @@ public class Jena3Utilities {
     /**
      * Method to update a literal on a Jena model.
      *
-     * @param model    jena model.
-     * @param subject  subject of the statement.
-     * @param property property of the statement.
-     * @param value    value of the literal of the statement to remove from Jena model.
-     * @return if true all the operation are done.
+     * @param model    the {@link Model} jena model.
+     * @param subject  the {@link Resource} subject of the statement.
+     * @param property the {@link String} property of the statement.
+     * @param value    the {@link String} value of the literal of the statement to remove from Jena model.
+     * @return the {@link Boolean} if true all the operation are done.
      */
     public static boolean updateLiteral(Model model, Resource subject, String property, String value) {
         try {
@@ -1321,8 +1397,8 @@ public class Jena3Utilities {
     /**
      * Method to get/find the namespaces on a model jena.
      *
-     * @param namespace string as uri of a namespace.
-     * @return the prefix for the namespace.
+     * @param namespace the {@link String} as uri of a namespace.
+     * @return the {@link String} prefix for the namespace.
      */
     public static String findNamespacePrefix(String namespace) {
         if (namespaces.containsValue(namespace)) {
@@ -1352,7 +1428,7 @@ public class Jena3Utilities {
      * Method convert a {@link XSDDatatype} or {@link Model} or {@link Node}
      * or {@link ResultSet} to a {@link String}.
      *
-     * @param jenaObject the @link XSDDatatype} or {@link Model} or {@link Node} or {@link ResultSet}.
+     * @param jenaObject the {@link XSDDatatype} or {@link Model} or {@link Node} or {@link ResultSet}.
      * @return the {@link String} rappresentation of the Object.
      */
     public static String toString(Object jenaObject){
@@ -1475,8 +1551,8 @@ public class Jena3Utilities {
 
     /**
      * Method to encode the xml text.
-     * @param rawtext string of the xml text.
-     * @return the encode string.
+     * @param rawtext the {@link String} of the xml text.
+     * @return the {@link String string.
      */
      @SuppressWarnings("Duplicates")
      private static String xmlEncode(String rawtext){
@@ -1507,10 +1583,10 @@ public class Jena3Utilities {
     /**
      * Method to delete a specific resource , property on model jena
      *
-     * @param model    jena model.
-     * @param subject  subject of the statement.
-     * @param property property of the statement.
-     * @return jena model.
+     * @param model    the {@link Model} jena model.
+     * @param subject  the {@link Resource} subject of the statement.
+     * @param property the {@link String} property of the statement.
+     * @return the {@link Model} jena model.
      */
     public static Model deleteProperty(Model model, Resource subject, String property) {
         String prefix;
@@ -1547,11 +1623,11 @@ public class Jena3Utilities {
     /**
      * Method to update a property on a model jena.
      *
-     * @param model    jena model.
-     * @param subject  subject of the statement.
-     * @param property property of the statement to set.
-     * @param value    value of the object of the statement.
-     * @return jena model.
+     * @param model    the {@link Model} jena model.
+     * @param subject  the {@link Resource} subject of the statement.
+     * @param property the {@link Property} property of the statement to set.
+     * @param value    the {@link Object} value of the object of the statement.
+     * @return the {@link Model} jena model.
      */
     public static Model updateProperty(Model model, Resource subject, Property property, Object value) {
         try {
@@ -1575,12 +1651,12 @@ public class Jena3Utilities {
     /**
      * Method for delete statement with specific proprety and literal on a Jena model.
      *
-     * @param model           jena model.
-     * @param subject         subject of the statement.
-     * @param property        property of the statement to set.
-     * @param languageLiteral language of the literal.
-     * @param valueLiteral    value of the literal.
-     * @return a jena model.
+     * @param model           the {@link Model} jena model.
+     * @param subject         the {@link Resource} subject of the statement.
+     * @param property        the {@link Property} property of the statement to set.
+     * @param languageLiteral the {@link String} language of the literal.
+     * @param valueLiteral    the {@link String} value of the literal.
+     * @return the {@link Model} a jena model.
      */
     public Model deletePropertyAndObject(Model model, Resource subject, Property property,
                                          String languageLiteral, String valueLiteral) {
@@ -1603,9 +1679,9 @@ public class Jena3Utilities {
      * Method to get/find first the value of the property
      * can use model.getProperty() directly now.
      *
-     * @param subject  subject of the statement.
-     * @param property property of the statement to set.
-     * @return value of the literal.
+     * @param subject  the {@link Resource} subject of the statement.
+     * @param property the {@link Property} property of the statement to set.
+     * @return the {@link RDFNode} value of the literal.
      */
     public static RDFNode findFirstPropertyValue(Resource subject, Property property) {
         Statement statement = subject.getProperty(property);
@@ -1619,8 +1695,8 @@ public class Jena3Utilities {
     /**
      * Method to get/find the rdf type from a Resource.
      *
-     * @param subject subject of the statement.
-     * @return the string of the RdfType.
+     * @param subject the {@link Resource} subject of the statement.
+     * @return the the {@link String} of the RdfType.
      */
     public static String findRdfType(Resource subject) {
         if (subject.isAnon()) {
@@ -1635,11 +1711,11 @@ public class Jena3Utilities {
     }
 
     /**
-     * Method to get the uri from a Reosurce on a model jena.
+     * Method to get the uri from a Resource on a model jena.
      *
-     * @param resource resource uri.
-     * @param uri      new uri for the resource.
-     * @return if true all the operation are done.
+     * @param resource the {@link Resource} resource uri.
+     * @param uri      the {@link String} new uri for the resource.
+     * @return the {@link Boolean} if true all the operation are done.
      */
     public static boolean updateUri(Resource resource, URI uri) {
         try {
@@ -1674,7 +1750,7 @@ public class Jena3Utilities {
     /**
      * Method to show a statement on a model jena to the console.
      *
-     * @param statement statement to print to the console.
+     * @param statement the {@link Statement} to print to the console.
      */
     public static void show(Statement statement) {
         show(statement.getSubject());
@@ -1689,7 +1765,7 @@ public class Jena3Utilities {
     /**
      * Method to show a resource on a model jena to the console.
      *
-     * @param resource resource to print to the console.
+     * @param resource the {@link Resource} to print to the console.
      */
     public static void show(Resource resource) {
         StmtIterator iterator = resource.listProperties();
@@ -1699,7 +1775,7 @@ public class Jena3Utilities {
     /**
      * Method to show a iterators on a model jena to the console.
      *
-     * @param iterator list of the statement to print on the console.
+     * @param iterator the {@link StmtIterator} list of the statement to print on the console.
      */
     public static void show(StmtIterator iterator) {
         StringBuilder buffer = new StringBuilder("\n--v--");
@@ -1712,8 +1788,8 @@ public class Jena3Utilities {
     /**
      * Method to show a model jena to the console.
      *
-     * @param model        jena model to print tot the console.
-     * @param outputFormat string of the output format.
+     * @param model        the {@link Model} jena model to print tot the console.
+     * @param outputFormat the {@link String}of the output format.
      */
     public static void show(Model model, String outputFormat) {
         logger.info(toString(model,outputFormat,null));
@@ -1722,9 +1798,9 @@ public class Jena3Utilities {
     /**
      * Method to set the prefix on a model jena.
      *
-     * @param model      jena model.
-     * @param namespaces map of namespace with prefix.
-     * @return the model jena with the prefix of namespace.
+     * @param model      the {@link Model} jena model.
+     * @param namespaces the {@link Map}map of namespace with prefix.
+     * @return the {@link Model} jena with the prefix of namespace.
      */
     public static Model setCommonPrefixes(Model model, Map<String, String> namespaces) {
         for (Map.Entry<String, String> entry : namespaces.entrySet()) {
@@ -1740,9 +1816,9 @@ public class Jena3Utilities {
     /**
      * Method to replace a resource on a model jena.
      *
-     * @param oldResource resource to replace.
-     * @param newResource the new resource.
-     * @return if true all the operation are done.
+     * @param oldResource the {@link Resource} to replace.
+     * @param newResource the {@link Resource} new resource.
+     * @return the {@link Boolean} if true all the operation are done.
      */
     public static boolean updateResource(Resource oldResource, Resource newResource) {
         try {
@@ -1776,9 +1852,9 @@ public class Jena3Utilities {
     /**
      * Method to replace/update a subject/resource on a model jena.
      *
-     * @param statement  statement with the resource to replace/update
-     * @param newSubject new resource to add tot he model.
-     * @return if true all the operation are done.
+     * @param statement  the {@link Statement} with the resource to replace/update
+     * @param newSubject the {@link Resource} new resource to add tot he model.
+     * @return the {@link Boolean} if true all the operation are done.
      */
     public static boolean updateSubjectResource(Statement statement, Resource newSubject) {
         Statement newStatement;
@@ -1798,9 +1874,9 @@ public class Jena3Utilities {
     /**
      * Method to replace/update a object resource.
      *
-     * @param statement statement with the object to replace/update
-     * @param newObject new value of the object
-     * @return if true all the operation are done.
+     * @param statement the {@link Statement} with the object to replace/update
+     * @param newObject the {@link Resource} new value of the object
+     * @return the {@link Boolean} if true all the operation are done.
      */
     public static boolean updateObjectResource(Statement statement, Resource newObject) {
         Statement newStatement;
@@ -1820,9 +1896,9 @@ public class Jena3Utilities {
     /**
      * Method copies all properties across to new resource, just replaces type.
      *
-     * @param resource the resource to update the type.
-     * @param newType  the new type for the resource.
-     * @return if true all the operation are done.
+     * @param resource the {@link Resource} to update the type.
+     * @param newType the {@link Resource} new type for the resource.
+     * @return the {@link Boolean} if true all the operation are done.
      */
     public static boolean updateTypeResource(Resource resource, Resource newType) {
         try {
@@ -1852,9 +1928,9 @@ public class Jena3Utilities {
     /**
      * Method approximate : returns first match.
      *
-     * @param model   jena model.
-     * @param rdfNode property to find.
-     * @return resource you found.
+     * @param model   the {@link Model} jena model.
+     * @param rdfNode the {@link RDFNode} parent property to find.
+     * @return the {@link Resource} you found.
      */
     public static Resource findParent(Model model, RDFNode rdfNode) {
         if (rdfNode instanceof Property) {
@@ -1866,9 +1942,9 @@ public class Jena3Utilities {
     /**
      * Method  returns predicate of first statement with matching object.
      *
-     * @param model   jena model.
-     * @param rdfNode property to find.
-     * @return poroperty you found.
+     * @param model   the {@link Model} jena model.
+     * @param rdfNode the {@link RDFNode} property to find.
+     * @return the {@link Property} you found.
      */
     public static Property findParentProperty(Model model, RDFNode rdfNode) {
         Statement statement = findParentStatement(model, rdfNode);
@@ -1882,9 +1958,9 @@ public class Jena3Utilities {
     /**
      * Method approximate : returns first statement with matching object.
      *
-     * @param model   jena model.
-     * @param rdfNode resource to find.
-     * @return the statement you found.
+     * @param model   the {@link Model} jena model.
+     * @param rdfNode the {@link RDFNode} resource to find.
+     * @return the {@link Statement} you found.
      */
     public static Statement findParentStatement(Model model, RDFNode rdfNode) {
         Statement statement;
@@ -1905,9 +1981,9 @@ public class Jena3Utilities {
     /**
      * Method approximate : returns object of first statement with matching predicate.
      *
-     * @param model    jena model.
-     * @param property property to find.
-     * @return resource you found.
+     * @param model    the {@link Model} jena model.
+     * @param property the {@link Property} property to find.
+     * @return the {@link Resource} you found.
      */
     public static Resource findParentResource(Model model, Property property) {
         Statement statement;
@@ -1926,10 +2002,10 @@ public class Jena3Utilities {
     /**
      * Method approximate : gets first match (predicate and object).
      *
-     * @param model    jena model.
-     * @param property property to find.
-     * @param object   object to find.
-     * @return the subject you found.
+     * @param model    the {@link Model} jena model.
+     * @param property the {@link Property} property to find.
+     * @param object   the {@link RDFNode} object to find.
+     * @return the {@link Resource} subject you found.
      */
     public static Resource findSubject(Model model, Property property, RDFNode object) {
         Statement statement = findStatement(model, property, object);
@@ -3562,7 +3638,7 @@ public class Jena3Utilities {
         }
     } // LocalTDBModelGetter
 
-    /**
+    /*
      * Method to convert a Ontolotgy file .rdf,.owl to a Vocabolary Jena.
      * e.g. -i input [-a namespaceURI] [-o output_file] [-c config_uri] [-e encoding]...
      * @param inputOntology the {@link File} input of the Ontology.

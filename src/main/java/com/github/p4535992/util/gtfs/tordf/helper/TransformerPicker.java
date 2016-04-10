@@ -44,6 +44,11 @@ public class TransformerPicker {
         return instance;
     }
 
+    public static TransformerPicker getNewInstance(){
+        instance = new TransformerPicker();
+        return instance;
+    }
+
     public static TransformerPicker getInstance(String fileName){
         if(instance == null) {
             instance = new TransformerPicker(fileName);
@@ -51,12 +56,10 @@ public class TransformerPicker {
         return instance;
     }
 
-   /* public static TransformerPicker getInstance(String fileName,String baseUri,String version){
-        if(instance == null) {
-            instance = new TransformerPicker(fileName,baseUri,version);
-        }
+    public static TransformerPicker getNewInstance(String fileName){
+        instance = new TransformerPicker(fileName);
         return instance;
-    }*/
+    }
 
     public Transformer getTransformer() {
         return transformer;
@@ -84,4 +87,5 @@ public class TransformerPicker {
         return map;
 
     }
+
 }

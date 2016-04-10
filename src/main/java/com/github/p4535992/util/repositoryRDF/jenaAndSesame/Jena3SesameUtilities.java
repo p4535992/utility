@@ -525,6 +525,15 @@ public class Jena3SesameUtilities {
         return asJenaModel(sesame.toModel(repository));
     }
 
+
+    public static List<org.openrdf.model.Statement> asSesameStatements(List<org.apache.jena.rdf.model.Statement> statementList){
+        List<org.openrdf.model.Statement> sesameList = new ArrayList<>();
+        for(org.apache.jena.rdf.model.Statement stmt : statementList){
+            sesameList.add(asSesameStatement(stmt));
+        }
+        return sesameList;
+    }
+
     /**
      * Method to add a jena triple from a Sesame Repository.
      *

@@ -70,7 +70,7 @@ public class StopTimesTransformer extends AbstractTransformer {
                     stmt.add(st(sub, "http://vocab.gtfs.org/terms#dropOffType", "http://vocab.gtfs.org/terms#MustCoordinateWithDriver"));
                 }
             }
-            if (shape_dist_traveled != 1 && !ne(row[shape_dist_traveled])){
+            if (shape_dist_traveled != -1 && !ne(row[shape_dist_traveled])){
                 stmt.add(st(sub, "http://vocab.gtfs.org/terms#distanceTraveled", row[shape_dist_traveled] + "^^http://www.w3.org/2001/XMLSchema#nonNegativeInteger"));
             }
         }

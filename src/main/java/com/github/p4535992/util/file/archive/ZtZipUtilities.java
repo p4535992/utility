@@ -1,6 +1,9 @@
 package com.github.p4535992.util.file.archive;
 
+import com.github.p4535992.util.collection.CollectionUtilities;
+import com.github.p4535992.util.file.FileUtilities;
 import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.collections.map.MultiValueMap;
 import org.zeroturnaround.zip.*;
 import org.zeroturnaround.zip.commons.IOUtils;
 import org.zeroturnaround.zip.transform.StringZipEntryTransformer;
@@ -11,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -209,6 +213,7 @@ public class ZtZipUtilities{
      */
     public static List<File> extractFilesByPattern(File fileZip,File directoryTempOutput, final Pattern patternNameFileToSearch){
         //final List<File> files = new ArrayList<>();
+
         ZipUtil.unpack(fileZip, directoryTempOutput, new NameMapper() {
             @Override
             public String map(String name) {
@@ -268,6 +273,18 @@ public class ZtZipUtilities{
         }else{
             return Collections.singletonList(directoryTempOutput);
         }
+    }
+
+    /**
+     * Method to compress a list of files into a ZIP archive
+     * @param outputZip the {@link File} zip to create e.g. /tmp/demo.zip
+     * @param listFileToCompress the {@link List} of the {@link File} directory of the file to compress e.g. /tmp/demo
+     * @return the {@link File} Zip created.
+     */
+    public static File compressToZip(File outputZip,List<File> listFileToCompress){
+        ZipEntrySource[] array = toZipEntrySource(new ArrayList<>(listFileToCompress));
+        ZipUtil.pack(array, outputZip);
+        return outputZip;
     }
 
     /**
@@ -607,9 +624,21 @@ public class ZtZipUtilities{
      */
     @SuppressWarnings("unchecked")
     public static ZipEntrySource[] toZipEntrySource(Object[] resourcesToAddToTheZip){
-        Map<String, Object> map = new MultiKeyMap();
+        return toZipEntrySource(resourcesToAddToTheZip,false);
+    }
+
+    /**
+     * Method to convert a array of objects to a array of ZipEntrySource.
+     * @param resourcesToAddToTheZip the array of {@link Object} to convert.
+     * @param randomValueKey the {@link Boolean} if true the key is generated random.
+     * @return the array of {@link ZipEntrySource}.
+     */
+    @SuppressWarnings("unchecked")
+    public static ZipEntrySource[] toZipEntrySource(Object[] resourcesToAddToTheZip,boolean randomValueKey){
+        Map<String, Object> map = new MultiValueMap();
         for(Object obj : resourcesToAddToTheZip){
-            map.put("",obj);
+            if(randomValueKey)map.put(generateAlphaNumericString(6),obj);
+            else map.put("",obj);
         }
         return toZipEntrySource(map);
     }
@@ -622,7 +651,7 @@ public class ZtZipUtilities{
     public static ZipEntrySource[] toZipEntrySource(Map<String, Object> resourcesToAddToTheZip){
         List<ZipEntrySource> entries = new ArrayList<>();
         for(Map.Entry<String,Object> entry : resourcesToAddToTheZip.entrySet()){
-            if(entry.getValue() instanceof File){
+            /*if(entry.getValue() instanceof File){
                 entries.add(new FileSource(entry.getKey(),(File) entry.getValue()));
             }else if(entry.getValue() instanceof Path){
                 entries.add(new FileSource(entry.getKey(),((Path)entry.getValue()).toFile()));
@@ -643,13 +672,80 @@ public class ZtZipUtilities{
             }else if(entry.getValue() instanceof byte[]){
                 entries.add(new ByteSource(entry.getKey(),(byte[]) entry.getValue()));
             }else if(entry.getValue() instanceof String){
-                entries.add(new ByteSource(entry.getKey(),((String) entry.getValue()).getBytes()));
+                entries.add(new ByteSource(entry.getKey(),((String) entry.getValue()).getBytes()));*/
+            if(entry.getValue() instanceof Collection<?>){
+                List<?> col = new ArrayList<>((Collection<?>) entry.getValue());
+                for(int i =0; i < col.size(); i++){
+                    entries.add(toEntryZipEntrySource(col.get(i)));
+                }
             }else{
-                //other input to set
-                logger.warn("The input type:"+entry.getValue().getClass().getName()+" is not supported");
+                if(entry.getKey().isEmpty())entries.add(toEntryZipEntrySource(entry.getKey(),entry.getValue()));
+                else entries.add(toEntryZipEntrySource(entry.getValue()));
             }
         }
         return entries.toArray(new ZipEntrySource[entries.size()]);
+    }
+
+    public static ZipEntrySource toEntryZipEntrySource(Object object){
+        if(object instanceof File){
+            return new FileSource(FileUtilities.getFilename((File) object),(File) object);
+        }else if(object instanceof Path){
+            return new FileSource(FileUtilities.getFilename((Path) object),((Path)object).toFile());
+        }else if(object instanceof URI){
+            return new FileSource(object.toString(),new File(((URI)object)));
+        }else if(object instanceof URL){
+            try {
+                return new FileSource(object.toString(),new File(((URL)object).toURI()));
+            } catch (URISyntaxException e) {
+                logger.warn("Some Problem we ignore this input:"+e.getMessage());
+                return null;
+            }
+        }else if(object instanceof InputStream){
+            try {
+                return new ByteSource(generateAlphaNumericString(6),IOUtils.toByteArray((InputStream)object));
+            } catch (IOException e) {
+                logger.warn("Some Problem we ignore this input:"+e.getMessage());
+                return null;
+            }
+        }else if(object instanceof byte[]){
+            return new ByteSource(generateAlphaNumericString(6),(byte[]) object);
+        }else if(object instanceof String){
+            return new ByteSource(generateAlphaNumericString(6),((String) object).getBytes());
+        }else{
+            logger.warn("The input type:"+object.getClass().getName()+" is not supported");
+            return null;
+        }
+    }
+
+    public static ZipEntrySource toEntryZipEntrySource(String fileNameOnTheZip,Object object){
+        if(object instanceof File){
+            return new FileSource(fileNameOnTheZip,(File) object);
+        }else if(object instanceof Path){
+            return new FileSource(fileNameOnTheZip,((Path)object).toFile());
+        }else if(object instanceof URI){
+            return new FileSource(fileNameOnTheZip,new File(((URI)object)));
+        }else if(object instanceof URL){
+            try {
+                return new FileSource(fileNameOnTheZip,new File(((URL)object).toURI()));
+            } catch (URISyntaxException e) {
+                logger.warn("Some Problem we ignore this input:"+e.getMessage());
+                return null;
+            }
+        }else if(object instanceof InputStream){
+            try {
+                return new ByteSource(fileNameOnTheZip,IOUtils.toByteArray((InputStream)object));
+            } catch (IOException e) {
+                logger.warn("Some Problem we ignore this input:"+e.getMessage());
+                return null;
+            }
+        }else if(object instanceof byte[]){
+            return new ByteSource(fileNameOnTheZip,(byte[]) object);
+        }else if(object instanceof String){
+            return new ByteSource(fileNameOnTheZip,((String) object).getBytes());
+        }else{
+            logger.warn("The input type:"+object.getClass().getName()+" is not supported");
+            return null;
+        }
     }
 
     /**
@@ -678,16 +774,23 @@ public class ZtZipUtilities{
     //Some private methods
 
     private static File createTempDirectory(){
-        File dir = new File("/tmp/"+ generateAlphaNumericString(6)+"/");
-        dir.mkdir();
-        dir.deleteOnExit();
+        File dir=null;
+        try {
+           /* String test = File.createTempFile("tmp","").getAbsolutePath();
+            dir = Files.createTempDirectory(Paths.get("tmp"+ File.separator),generateAlphaNumericString(6)).toFile();*/
+            String tmpDir = File.createTempFile("tmp","").getParentFile().getAbsolutePath();
+            dir = Files.createTempDirectory(Paths.get(tmpDir+File.separator),generateAlphaNumericString(6)).toFile();
+            dir.deleteOnExit();
+        } catch (IOException e) {
+            logger.error(e.getMessage(),e);
+        }
         return dir;
     }
 
-    private static File createTempFile(byte[] bytes){  
+    private static File createTempFile(byte[] bytes){
         try {
             //file with no extenstion and no directory is saved on C:\\temp\\file.tmp
-             Path tempFile = Files.createTempFile(generateAlphaNumericString(6), null);
+            Path tempFile = Files.createTempFile(Paths.get("tmp"+ File.separator),generateAlphaNumericString(6), null);
             Files.write(tempFile,bytes,StandardOpenOption.DELETE_ON_CLOSE);
             return  tempFile.toFile();
         } catch (IOException e) {
@@ -705,6 +808,14 @@ public class ZtZipUtilities{
             logger.error(e.getMessage(),e);
             return null;
         }
+    }
+
+    private static String getCurrentDisk() {
+        Path currentRelativePath = Paths.get("");
+        String dir = currentRelativePath.toAbsolutePath().toString()+File.separator;
+        String[] split = dir.split(":");
+        dir = split[0];
+        return dir + ":".toLowerCase();
     }
 
     /**

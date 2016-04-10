@@ -11,10 +11,13 @@ import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
 import com.github.p4535992.util.string.StringUtilities;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFFormat;
 
 import java.io.File;
 import java.io.IOException;
 
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -43,6 +46,11 @@ public class GTFSUtilities {
         return instance;
     }
 
+    public static GTFSUtilities getNewInstance(){
+        instance = new GTFSUtilities();
+        return instance;
+    }
+
     private Map<String,String> setPrefixes(){
         Map<String,String>  map = new HashMap<>();
         map.put("gtfs","http://vocab.gtfs.org/terms#");
@@ -63,16 +71,18 @@ public class GTFSUtilities {
         //List<File> files = ArchiveUtilities.extractAllFromZip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
         List<File> files =
                 FileUtilities.getFilesFromDirectory(
-                        ZtZipUtilities.extractDirectoryFromZip(zipFile, new File(FileUtilities.getDirectoryFullPath(zipFile))
+                        ZtZipUtilities.extractDirectoryFromZip(zipFile, new File(FileUtilities.getAndCreateDirectoryFullPath(zipFile))
                         )
                 );
         List<List<Statement>> listStmt = new ArrayList<>();
+        logger.info("Start conversion GTFS to RDF...");
         for(File file : files){
             String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
-            Transformer specificTransformer = TransformerPicker.getInstance(nameFile).getTransformer();
+            Transformer specificTransformer = TransformerPicker.getNewInstance(nameFile).getTransformer();
             List<Statement> stmts = specificTransformer._Transform(file, StringUtilities.UTF_8, baseUri);
             listStmt.add(stmts);
         }
+        logger.info("...end conversion GTFS to RDF");
         return listStmt;
     }
 
@@ -86,6 +96,16 @@ public class GTFSUtilities {
     }
 
     public void convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, String outputFormat) throws IOException {
+        Model model = prepareModel(zipFile,baseUri);
+        Jena3Utilities.write(fileOutput,model,outputFormat);
+    }
+
+    public void convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, RDFFormat outputFormat) throws IOException {
+        Model model = prepareModel(zipFile,baseUri);
+        Jena3Utilities.write(fileOutput,model,outputFormat);
+    }
+
+    public void convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, Lang outputFormat) throws IOException {
         Model model = prepareModel(zipFile,baseUri);
         Jena3Utilities.write(fileOutput,model,outputFormat);
     }
@@ -169,11 +189,36 @@ public class GTFSUtilities {
         }
     }
 
-    public Boolean exportGTFSZipFromDatabase(Connection conn,String database,String tableName,File file){
-        return SQLUtilities.exportData(conn,file.getAbsolutePath(),database+"."+tableName);
+    public Boolean exportGTFSFileFromTable(Connection conn,String database,String tableName,File fileOutput){
+        return SQLUtilities.exportData(conn,fileOutput.getAbsolutePath(),database+"."+tableName);
     }
 
-    public static Map<String,File> getGTFSFilesFromZipFile(File zipFile){
+    public Boolean exportGTFSZipFromDatabase(Connection conn,String database,File fileZipOutput){
+        List<File> files = new ArrayList<>();
+        try {
+            List<String> tables = SQLUtilities.getTablesFromConnection(conn, database);
+            File dir = FileUtilities.getParentFile(fileZipOutput);
+
+            for(String table : tables){
+                for (GTFSFileType ft : GTFSFileType.values()) {
+                    if(table.equals(ft.name())){
+                            File file = new File(dir+File.separator+ft.name()+".txt");
+                        if(exportGTFSFileFromTable(conn,database,table,file)){
+                            files.add(file);
+                            break;
+                        }
+                    }
+                }
+            }
+            ZtZipUtilities.compressToZip(fileZipOutput,files);
+            return true;
+        }catch (SQLException e){
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }
+
+    private static Map<String,File> getGTFSFilesFromZipFile(File zipFile){
         Map<String,File> map = new HashMap<>();
         //List<File> files = ArchiveUtilities.extractFilesFromZip(zipFile);
         List<File> files = ZtZipUtilities.extractFilesFromZip(zipFile);
@@ -193,29 +238,38 @@ public class GTFSUtilities {
 
     public static void main(String[] args) throws IOException, SQLException {
         LogBackUtil.console();
+        //WORK
+       /* File zip = new File(System.getProperty("user.dir")+File.separator+"" +
+                "utility\\src\\main\\resources\\fileForTest\\ac-transit_20150218_1708.zip");*/
+        File zip = new File("C:\\Users\\Utente\\Desktop\\ac-transit_20150218_1708.zip");
+        //File zip2 = new File("C:\\Users\\Utente\\Desktop\\ac-transit_20150218_170822.zip");
+        //NOT WORK
+        //File zip = FileUtilities.getFromResourceAsFile("fileForTest/ac-transit_20150218_1708.zip",GTFSUtilities.class);
 
-        File zip = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.zip");
-
-
-         List<File> ss = ZtZipUtilities.extractFilesByPattern(zip,"agency");
+        //IMPORT TO DATABASE - EXPORT FROM DATABASE
+        /* List<File> ss = ZtZipUtilities.extractFilesByPattern(zip,"agency");
          String srr = ss.get(0).getAbsolutePath();
          srr = FileUtilities.toString(ss.get(0));
+        Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","geodb","siimobility","siimobility",false,false,false);
+        GTFSUtilities.getNewInstance().importGTFSZipToDatabase(zip,conn,"gtfs",true,true);*/
 
-        Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","geodb","siimobility","siimobility");
+        //EXPORT SINGLE FILE FROM DATABASE
+        //Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","gtfs","siimobility","siimobility",false,false,false);
+        //GTFSUtilities.getNewInstance().exportGTFSFileFromTable(conn,"gtfs","agency",new File("C:\\Users\\Utente\\Desktop\\agency.txt"));
 
-        GTFSUtilities.getInstance().importGTFSZipToDatabase(zip,conn,"gtfs",true,true);
+        //List<String> list  = SQLUtilities.getTablesFromConnection(conn,"gtfs");
+        /*for(String table : list){
+            String directory = "C:\\Users\\Utente\\Desktop\\GTFS\\";
+            GTFSUtilities.getNewInstance().exportGTFSFileFromTable(conn,"gtfs",table,
+                    new File(directory+File.separator+table+".txt"));
+        }*/
+        //GTFSUtilities.getNewInstance().exportGTFSZipFromDatabase(conn,"gtfs",zip2);
 
-        List<String> list  = SQLUtilities.getTablesFromConnection(conn,"gtfs");
-        for(String s : list){
-             GTFSUtilities.getInstance().exportGTFSZipFromDatabase(conn,"gtfs",s,new File(s+".txt"));
-        }
 
 
-
-
-        File output2 = new File("C:\\Users\\tenti\\Desktop\\ac-transit_20150218_1708.n3");
-
-        GTFSUtilities.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output2,"n-triples");
+        //CONVERT TO RDF
+        File output2 = new File("C:\\Users\\Utente\\Desktop\\ac-transit_20150218_1708.n3");
+        GTFSUtilities.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output2,RDFFormat.TURTLE);
     }
 
 

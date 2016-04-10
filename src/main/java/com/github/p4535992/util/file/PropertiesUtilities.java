@@ -290,5 +290,34 @@ public class PropertiesUtilities extends PropertyPlaceholderConfigurer {
         return p;
     }
 
+    /**
+     * Method to "prepare" value on the properties file on my way.
+     * @param properties the {@link Properties} to modify.
+     * @return the {@link Properties} modified.
+     */
+    public static Properties prepareProperties(Properties properties){
+        /*http://sailendra-jena.blogspot.it/2013/04/how-to-iterate-properties-files-in-java.html*/
+        for(String key : properties.stringPropertyNames()) {
+            String value = properties.get(key).toString();
+            if (value.contains("${user.dir}")) {
+                value = value.replace("${user.dir}", System.getProperty("user.dir"));
+            }
+            if (value.contains("\\")) {
+                value = value.replace("\\", System.getProperty("file.separator"));
+            }
+            if (value.contains("/")) {
+                value = value.replace("/", System.getProperty("file.separator"));
+            }
+            if(value.contains("%")){
+                String s = value;
+                s = s.substring(s.indexOf("%") + 1);
+                s = s.substring(0, s.indexOf("%"));
+                value = value.replace("%"+s+"%",properties.getProperty(s));
+            }
+            properties.setProperty(key,value);
+        }
+        return properties;
+    }
+
 
 }

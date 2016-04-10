@@ -3,13 +3,20 @@ package com.github.p4535992.util.repositoryRDF.sesame;
 
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
+import com.github.p4535992.util.repositoryRDF.jenaAndSesame.Jena3SesameUtilities;
 import com.github.p4535992.util.repositoryRDF.sparql.SparqlUtilities;
 import com.github.p4535992.util.string.*;
 import com.github.p4535992.util.string.Timer;
+import org.apache.jena.rdf.model.*;
 import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
 import org.openrdf.http.client.SesameClientImpl;
 import org.openrdf.model.*;
+import org.openrdf.model.Literal;
+import org.openrdf.model.Model;
+import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
 import org.openrdf.model.impl.*;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.*;
@@ -30,6 +37,7 @@ import org.openrdf.repository.manager.RepositoryProvider;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.repository.util.RDFInserter;
 import org.openrdf.rio.*;
+import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.helpers.BasicParserSettings;
 import org.openrdf.sail.NotifyingSail;
 import org.openrdf.sail.Sail;
@@ -66,6 +74,15 @@ public class Sesame2Utilities {
     private static String nameClass;
 
     protected Sesame2Utilities() {
+        //nameClass = instance.getClass().getSimpleName()+"::";
+        //help with very large repository....
+        System.setProperty("entityExpansionLimit", "1000000");
+        VERIFY = true;
+        STOP_ON_ERROR = true;
+        PRESERVE_BNODES = true;
+        URL_REPOSITORIES = "http://localhost:8080/openrdf-sesame/repositories/";
+        URI_DEFAULT_SESAME_WORKBENCH ="http://localhost:8080/openrdf-workbench/repositories/NONE/repositories";
+        URI_DEFAULT_SESAME_WORKBENCH = "http://localhost:8080/openrdf-workbench/repositories/NONE/repositories";
     }
 
     private static Sesame2Utilities instance = null;
@@ -73,20 +90,19 @@ public class Sesame2Utilities {
     public static Sesame2Utilities getInstance() {
         if (instance == null) {
             instance = new Sesame2Utilities();
-            //nameClass = instance.getClass().getSimpleName()+"::";
-            //help with very large repository....
-            System.setProperty("entityExpansionLimit", "1000000");
-            VERIFY = true;
-            STOP_ON_ERROR = true;
-            PRESERVE_BNODES = true;
         }
+        return instance;
+    }
+
+    public static Sesame2Utilities getNewInstance() {
+        instance = new Sesame2Utilities();
         return instance;
     }
 
     private static boolean VERIFY, STOP_ON_ERROR, PRESERVE_BNODES;
     private boolean SHOWSTATS, UPDATES, PRINT_RESULT_QUERY;
     //output parameter
-    private String OUTPUTFILE, OUTPUTFORMAT, URL_SESAME, URL_REPOSITORIES, URL_REPOSITORY_ID;
+    private String OUTPUTFILE, OUTPUTFORMAT, URL_SESAME, URL_REPOSITORIES, URL_REPOSITORY_ID,URI_DEFAULT_SESAME_WORKBENCH ;
     boolean isManagedRepository = false;
 
     // A map of namespace-to-prefix
@@ -102,8 +118,8 @@ public class Sesame2Utilities {
     protected static RepositoryConnectionWrapper mRepositoryConnectionWrapper;
 
     private static final Pattern TOKEN_PATTERN = Pattern.compile("\\{%[\\p{Print}&&[^\\}]]+%\\}");
-    private static final String URI_DEFAULT_SESAME_WORKBENCH =
-            "http://localhost:8080/openrdf-workbench/repositories/NONE/repositories";
+
+
     private static String[] types = new String[]{"http", "inferencing", "native", "memory", "owlim"};
 
     public void setOutput(String outputPathfile, String outputformat, boolean printResultQuery) {
@@ -113,9 +129,9 @@ public class Sesame2Utilities {
         this.SHOWSTATS = !PRINT_RESULT_QUERY;
     }
 
-    public void setOutput(String outputPathfile, String outputformat, boolean printResultQuery, boolean showOnConsole) {
-        this.OUTPUTFILE = outputPathfile;
-        this.OUTPUTFORMAT = outputformat;
+    public void setOutput(String outputPathFile, String outputFormat, boolean printResultQuery, boolean showOnConsole) {
+        this.OUTPUTFILE = outputPathFile;
+        this.OUTPUTFORMAT = outputFormat;
         this.PRINT_RESULT_QUERY = printResultQuery;
         this.SHOWSTATS = showOnConsole;
     }
@@ -2565,11 +2581,22 @@ public class Sesame2Utilities {
      * @return the {@link Repository} OpenRDF http repository.
      */
     public Repository connectToHTTPRepository(String sesameServer, String repositoryID) {
-        if (!sesameServer.endsWith(File.separator)) sesameServer = sesameServer + File.separator;
-        if (repositoryID.startsWith(File.separator)) repositoryID = repositoryID.substring(1, repositoryID.length());
-        if (repositoryID.endsWith(File.separator)) repositoryID = repositoryID.substring(0, repositoryID.length() - 1);
+        if (!sesameServer.endsWith("/")) sesameServer = sesameServer + "/";
+        if (repositoryID.startsWith("/")) repositoryID = repositoryID.substring(1, repositoryID.length());
+        if (repositoryID.endsWith("/")) repositoryID = repositoryID.substring(0, repositoryID.length() - 1);
         return connectToHTTPRepository(sesameServer + repositoryID);
     }
+
+    /**
+     * method to connect to a remote Repository with the HTTP protocol.
+     *
+     * @param repositoryID the {@link String} name id of the repository.
+     * @return the {@link Repository} OpenRDF http repository.
+     */
+    public Repository connectToHTTPRepositoryWithDefaultServer(String repositoryID) {
+        return connectToHTTPRepository(URL_REPOSITORIES,repositoryID);
+    }
+
 
     /**
      * method to connect to a remote Repository with the HTTP protocol.
@@ -3331,8 +3358,29 @@ public class Sesame2Utilities {
             } else if (baseURI != null) {
                 repositoryConnection.add(file, baseURI, toRDFFormat(file));
             } else {
-                repositoryConnection.add(file, "file://" + file.getAbsolutePath(),
-                        toRDFFormat(file));
+                try {
+                    repositoryConnection.add(file, "file://" + file.getAbsolutePath(),
+                            toRDFFormat(file));
+                }catch(org.openrdf.rio.UnsupportedRDFormatException e){
+                    try{
+                        logger.warn(e.getMessage());
+                        List<org.apache.jena.rdf.model.Statement> jenaList = Jena3Utilities.read(file,"n-triples");
+                        List<Statement> sesameList = Jena3SesameUtilities.asSesameStatements(jenaList);
+                        for(Statement stmt : sesameList ){
+                            repositoryConnection.add(stmt);
+                        }
+                    }catch(Exception e2){
+                        logger.warn(e2.getMessage());
+                        logger.warn("Attention now you can easily get the java.lang.OutOfMemoryError exception");
+                        try {
+                            Jena3Utilities.convertFileTripleToAnotherFormat(file, RDFFormat.RDFXML.getName());
+                            repositoryConnection.add(file, "file://" + file.getAbsolutePath(),
+                                    toRDFFormat(file));
+                        }catch(Exception e3){
+                            logger.error(e.getMessage(),e);
+                        }
+                    }
+                }
             }
             repositoryConnection.commit();
         } finally {

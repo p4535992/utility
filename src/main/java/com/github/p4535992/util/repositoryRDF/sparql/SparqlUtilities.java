@@ -21,10 +21,6 @@ public class SparqlUtilities {
     private static final org.slf4j.Logger logger =  
             LoggerFactory.getLogger(SparqlUtilities.class);
 
-    private static String gm() {
-        return Thread.currentThread().getStackTrace()[1].getMethodName()+":: ";
-    }
-
 
     private static SparqlUtilities instance = null;
     protected SparqlUtilities(){}
@@ -251,7 +247,7 @@ public class SparqlUtilities {
             String domain = uri.getHost();
             return domain.startsWith("www.") ? domain.substring(4) : domain;
         }catch(URISyntaxException e){
-            logger.warn(gm() + e.getMessage(),e);
+            logger.warn(e.getMessage(),e);
             url = url.replace("http://","");
             return url;
         }
@@ -331,6 +327,10 @@ public class SparqlUtilities {
         return "SELECT (COUNT(*) as ?count) " +
                 "FROM <"+baseUri+"> " +
                 "WHERE { ?s ?p ?o .}";
+    }
+
+    public static String count(){
+        return "SELECT (COUNT(*) as ?count) FROM <http://www.ontotext.com/implicit> WHERE { ?s ?p ?o .}";
     }
 
     public static String countGraphes() {
