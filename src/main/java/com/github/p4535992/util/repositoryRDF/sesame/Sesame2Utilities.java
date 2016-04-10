@@ -3,12 +3,13 @@ package com.github.p4535992.util.repositoryRDF.sesame;
 
 import com.github.p4535992.util.collection.CollectionUtilities;
 import com.github.p4535992.util.file.FileUtilities;
+
 import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
 import com.github.p4535992.util.repositoryRDF.jenaAndSesame.Jena3SesameUtilities;
 import com.github.p4535992.util.repositoryRDF.sparql.SparqlUtilities;
 import com.github.p4535992.util.string.*;
 import com.github.p4535992.util.string.Timer;
-import org.apache.jena.rdf.model.*;
+
 import org.openrdf.OpenRDFException;
 import org.openrdf.http.client.SesameClient;
 import org.openrdf.http.client.SesameClientImpl;
@@ -2594,6 +2595,8 @@ public class Sesame2Utilities {
      * @return the {@link Repository} OpenRDF http repository.
      */
     public Repository connectToHTTPRepositoryWithDefaultServer(String repositoryID) {
+        if(URL_REPOSITORIES== null || URL_REPOSITORIES.isEmpty())
+            URL_REPOSITORIES= "http://localhost:8080/openrdf-sesame/repositories/";
         return connectToHTTPRepository(URL_REPOSITORIES,repositoryID);
     }
 
@@ -3359,7 +3362,7 @@ public class Sesame2Utilities {
                 repositoryConnection.add(file, baseURI, toRDFFormat(file));
             } else {
                 try {
-                    repositoryConnection.add(file, "file://" + file.getAbsolutePath(),
+                    repositoryConnection.add(file, file.toURI().toString(),
                             toRDFFormat(file));
                 }catch(org.openrdf.rio.UnsupportedRDFormatException e){
                     try{
@@ -3374,7 +3377,7 @@ public class Sesame2Utilities {
                         logger.warn("Attention now you can easily get the java.lang.OutOfMemoryError exception");
                         try {
                             Jena3Utilities.convertFileTripleToAnotherFormat(file, RDFFormat.RDFXML.getName());
-                            repositoryConnection.add(file, "file://" + file.getAbsolutePath(),
+                            repositoryConnection.add(file, file.toURI().toString(),
                                     toRDFFormat(file));
                         }catch(Exception e3){
                             logger.error(e.getMessage(),e);

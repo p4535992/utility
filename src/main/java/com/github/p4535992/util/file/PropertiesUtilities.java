@@ -305,7 +305,7 @@ public class PropertiesUtilities extends PropertyPlaceholderConfigurer {
             if (value.contains("\\")) {
                 value = value.replace("\\", System.getProperty("file.separator"));
             }
-            if (value.contains("/")) {
+            if (value.contains("/") && !value.startsWith("http://")) {
                 value = value.replace("/", System.getProperty("file.separator"));
             }
             if(value.contains("%")){

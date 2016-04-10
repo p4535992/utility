@@ -538,6 +538,12 @@ public class HttpUtilities {
         return url.getProtocol();
     }
 
+    public static String getLastBitFromUrl(final String url){
+        /*http://stackoverflow.com/questions/4050087/how-to-obtain-the-last-path-segment-of-an-uri*/
+        // return url.replaceFirst("[^?]*/(.*?)(?:\\?.*)","$1);" <-- incorrect
+        return url.replaceFirst(".*/([^/?]+).*", "$1");
+    }
+
     public static String toASCII(String url) {
         try {
             URL u = new URL(url);
