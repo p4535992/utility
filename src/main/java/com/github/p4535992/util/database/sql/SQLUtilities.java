@@ -384,6 +384,33 @@ public class SQLUtilities {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static List<String> getColumnsName(Connection conn,String tablename) throws SQLException {
+        conn.setAutoCommit(false);
+        List<String> columnsName = new ArrayList<>();
+        //stmt.setFetchSize(DATABASE_TABLE_FETCH_SIZE);
+        try (Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,ResultSet.CONCUR_READ_ONLY)) {
+            //stmt.setFetchSize(DATABASE_TABLE_FETCH_SIZE);
+            try (ResultSet r = statement.executeQuery("Select * FROM " + tablename)) {
+                ResultSetMetaData meta = r.getMetaData();
+                // Get the column names
+                for (int i = 1; i <= meta.getColumnCount(); i++) {
+                    columnsName.add(meta.getColumnName(i));
+                }
+            }
+        }
+        return columnsName;
+    }
+
+    public static String getColumnsNameLikeString(Connection conn,String tablename) throws SQLException {
+        List<String> headers = getColumnsName(conn,tablename);
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < headers.size(); i++){
+            sb.append("'").append(headers.get(i)).append("'");
+            if(i < headers.size()-1) sb.append(",");
+        }
+        return sb.toString();
+    }
+
     public static Map<String,Integer> getColumns(Connection conn,String tablename) throws SQLException {
         conn.setAutoCommit(false);
         Map<String,Integer> map;
@@ -675,6 +702,19 @@ public class SQLUtilities {
         } catch (SQLException e) {
             logger.error(e.getMessage(),e);
             return null;
+        }
+    }
+
+    public static String getDatabaseName(Connection conn){
+        try {
+            return conn.getCatalog();
+        } catch (SQLException e) {
+            try {
+                return conn.getSchema();
+            } catch (SQLException e1) {
+                logger.error(e.getMessage(),e);
+                return "N/A";
+            }
         }
     }
 
@@ -1062,8 +1102,11 @@ public class SQLUtilities {
         }
         return dataSource;
     }*/
-
     public static Boolean exportData(Connection conn,String fileOutput,String tableName) {
+        return exportData(conn,fileOutput,tableName,true);
+    }
+
+    public static Boolean exportData(Connection conn,String fileOutput,String tableName,boolean witHeader) {
         Statement stmt;
         String query;
         try {
@@ -1071,8 +1114,18 @@ public class SQLUtilities {
             stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_UPDATABLE);
             //For comma separated file
             fileOutput = fileOutput.replace("\\","\\\\");
-            query = "SELECT * FROM "+tableName+" INTO OUTFILE \""+fileOutput+"\" FIELDS TERMINATED BY ',' "+
-                    "ENCLOSED BY '\"'  LINES TERMINATED BY '"+ System.getProperty("line.separator")+"';";
+            if(witHeader) {
+                /*http://stackoverflow.com/questions/5941809/include-headers-when-using-select-into-outfile*/
+                String headers = getColumnsNameLikeString(conn,tableName);
+                String headers2 = headers.replace("'","");
+                query = "SELECT " + headers + "\n" +
+                        "UNION ALL " +
+                        "SELECT " + headers2 + " FROM " + tableName + " INTO OUTFILE \"" + fileOutput + "\" FIELDS TERMINATED BY ',' " +
+                        "ENCLOSED BY '\"'  LINES TERMINATED BY '" + System.getProperty("line.separator") + "';";
+            }else{
+                query = "SELECT * FROM " + tableName + " INTO OUTFILE \"" + fileOutput + "\" FIELDS TERMINATED BY ',' " +
+                        "ENCLOSED BY '\"'  LINES TERMINATED BY '" + System.getProperty("line.separator") + "';";
+            }
             try {
                 executeSQL(query,conn,stmt);
             }catch(SQLException e){
@@ -1088,10 +1141,21 @@ public class SQLUtilities {
                     privFileDir =  privFileDir + FileUtilities.getFilename(fileOutput);
                     privFileDir = privFileDir.replace("\\","\\\\");
                     if(FileUtilities.isFileExists(privFileDir)) FileUtilities.delete(privFileDir);
-                    query = "SELECT * FROM "+tableName+" INTO OUTFILE \""+privFileDir+"\" FIELDS TERMINATED BY ',' "+
-                            "ENCLOSED BY '\"'  LINES TERMINATED BY '"+ System.getProperty("line.separator")+"';";
+                    if(witHeader) {
+                        /*http://stackoverflow.com/questions/5941809/include-headers-when-using-select-into-outfile*/
+                        String headers = getColumnsNameLikeString(conn,tableName);
+                        String headers2 = headers.replace("'","");
+                        query = "SELECT " + headers + "\n" +
+                                "UNION ALL " +
+                                "SELECT " + headers2 + " FROM " + tableName + " INTO OUTFILE \"" + privFileDir + "\" FIELDS TERMINATED BY ',' " +
+                                "ENCLOSED BY '\"'  LINES TERMINATED BY '" + System.getProperty("line.separator") + "';";
+                    }else {
+                        query = "SELECT * FROM " + tableName + " INTO OUTFILE \"" + privFileDir + "\" FIELDS TERMINATED BY ',' " +
+                                "ENCLOSED BY '\"'  LINES TERMINATED BY '" + System.getProperty("line.separator") + "';";
+                    }
                     executeSQL(query,conn,stmt);
                     if(!FileUtilities.copy(privFileDir,fileOutput))throw new SQLException(e);
+                    FileUtilities.delete(privFileDir);
                 }else{
                     throw new SQLException(e);
                 }

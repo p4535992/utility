@@ -95,19 +95,49 @@ public class GTFSUtilities {
         return jModel;
     }
 
-    public void convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, String outputFormat) throws IOException {
-        Model model = prepareModel(zipFile,baseUri);
-        Jena3Utilities.write(fileOutput,model,outputFormat);
+    public File convertGTFSFileToRDF(File file,String baseUri,File fileRDFOutput, Lang outputFormat){
+        return convertGTFSFileToRDF(file,baseUri,fileRDFOutput,outputFormat.getName());
     }
 
-    public void convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, RDFFormat outputFormat) throws IOException {
-        Model model = prepareModel(zipFile,baseUri);
-        Jena3Utilities.write(fileOutput,model,outputFormat);
+    public File convertGTFSFileToRDF(File file,String baseUri,File fileRDFOutput, RDFFormat outputFormat){
+        return convertGTFSFileToRDF(file,baseUri,fileRDFOutput,outputFormat.getLang().getName());
     }
 
-    public void convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, Lang outputFormat) throws IOException {
+    public File convertGTFSFileToRDF(File file,String baseUri,File fileRDFOutput, String outputFormat){
+        Model jModel = Jena3Utilities.createModel();
+        jModel.setNsPrefixes(setPrefixes());
+        String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
+        Transformer specificTransformer = TransformerPicker.getNewInstance(nameFile).getTransformer();
+        List<Statement> stmts = specificTransformer._Transform(file, StringUtilities.UTF_8, baseUri);
+        jModel.add(stmts);
+        Jena3Utilities.write(fileRDFOutput,jModel,outputFormat);
+        return fileRDFOutput;
+    }
+
+    public List<Statement> getRDFFromGTFSFile(File file,String baseUri){
+        Model jModel = Jena3Utilities.createModel();
+        jModel.setNsPrefixes(setPrefixes());
+        String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
+        Transformer specificTransformer = TransformerPicker.getNewInstance(nameFile).getTransformer();
+        return specificTransformer._Transform(file, StringUtilities.UTF_8, baseUri);
+    }
+
+    public File convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, String outputFormat) throws IOException {
         Model model = prepareModel(zipFile,baseUri);
         Jena3Utilities.write(fileOutput,model,outputFormat);
+        return fileOutput;
+    }
+
+    public File convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, RDFFormat outputFormat) throws IOException {
+        Model model = prepareModel(zipFile,baseUri);
+        Jena3Utilities.write(fileOutput,model,outputFormat);
+        return fileOutput;
+    }
+
+    public File convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, Lang outputFormat) throws IOException {
+        Model model = prepareModel(zipFile,baseUri);
+        Jena3Utilities.write(fileOutput,model,outputFormat);
+        return fileOutput;
     }
 
     /**
@@ -218,6 +248,47 @@ public class GTFSUtilities {
         }
     }
 
+    public Boolean exportGTFSDatabaseToRDF(Connection conn,File fileRDFOutput){
+        return exportGTFSDatabaseToRDF(conn,fileRDFOutput,"http://gtfstest/",Lang.TURTLE);
+    }
+
+    public Boolean exportGTFSDatabaseToRDF(Connection conn,File fileRDFOutput,Lang lang){
+        return exportGTFSDatabaseToRDF(conn,fileRDFOutput,"http://gtfstest/",Lang.TURTLE);
+    }
+
+    public Boolean exportGTFSDatabaseToRDF(Connection conn,File fileRDFOutput,String baseUri,Lang lang){
+        List<Statement> stmt = new ArrayList<>();
+        try {
+            String database = SQLUtilities.getDatabaseName(conn);
+            List<String> tables = SQLUtilities.getTablesFromConnection(conn, database);
+            File dir = FileUtilities.getParentFile(fileRDFOutput);
+            for(String table : tables){
+                for (GTFSFileType ft : GTFSFileType.values()) {
+                    //We use only the table match the name standard of the GTFS file....
+                    if(table.equals(ft.name())){
+                        File file = new File(dir+File.separator+ft.name()+".txt");
+                        //We save the content of the tsble on a temporary csv file...
+                        if(exportGTFSFileFromTable(conn,database,table,file)){
+                            stmt.addAll(getRDFFromGTFSFile(file,baseUri));
+                            FileUtilities.delete(file.toPath());
+                            break;
+                        }
+                    }
+                }
+            }
+            Model jModel = Jena3Utilities.createModel();
+            jModel.setNsPrefixes(setPrefixes());
+            jModel.add(stmt);
+            Jena3Utilities.write(fileRDFOutput,jModel,lang);
+            logger.info("Converted the database GTFS:"+conn.getMetaData().getURL()+ " to "+ stmt.size()+" Statement RDF" +
+                    " on directory "+dir);
+            return true;
+        }catch (SQLException e){
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }
+
     private static Map<String,File> getGTFSFilesFromZipFile(File zipFile){
         Map<String,File> map = new HashMap<>();
         //List<File> files = ArchiveUtilities.extractFilesFromZip(zipFile);
@@ -265,11 +336,15 @@ public class GTFSUtilities {
         }*/
         //GTFSUtilities.getNewInstance().exportGTFSZipFromDatabase(conn,"gtfs",zip2);
 
-
-
         //CONVERT TO RDF
-        File output2 = new File("C:\\Users\\Utente\\Desktop\\ac-transit_20150218_1708.n3");
-        GTFSUtilities.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output2,RDFFormat.TURTLE);
+        //File output2 = new File("C:\\Users\\Utente\\Desktop\\ac-transit_20150218_1708.n3");
+        //GTFSUtilities.getInstance().convertGTFSZipToRDF(zip,"http://baseuri#",output2,RDFFormat.TURTLE);
+
+        //Convert database to RDF files
+        File output2 = new File("C:\\Users\\Utente\\Desktop\\gtfsTest.ttl");
+        Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","gtfs","siimobility","siimobility",false,false,false);
+        GTFSUtilities.getInstance().exportGTFSDatabaseToRDF(conn,output2);
+
     }
 
 

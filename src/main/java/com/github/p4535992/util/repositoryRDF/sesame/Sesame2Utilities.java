@@ -515,6 +515,18 @@ public class Sesame2Utilities {
         setPrefixes(SparqlUtilities.getDefaultNamespacePrefixes(), mRepositoryConnection);
     }
 
+    public void setPrefixes(RepositoryConnection repositoryConnection) {
+        setPrefixes(SparqlUtilities.getDefaultNamespacePrefixes(), repositoryConnection);
+    }
+
+    public void setPrefixes(Repository repository) {
+        try {
+            setPrefixes(SparqlUtilities.getDefaultNamespacePrefixes(), repository.getConnection());
+        } catch (RepositoryException e) {
+            logger.error(e.getMessage(),e);
+        }
+    }
+
     /**
      * Method for Close the currently opened repository. This works for managed and unmanaged repositories.
      */
@@ -2102,13 +2114,47 @@ public class Sesame2Utilities {
      * @return the {@link Long} result of the import.
      */
     public long importIntoRepositoryFileChunked(File file) {
+        try {
+            return importIntoRepositoryFileChunked(file,mRepositoryConnection);
+        } catch (Exception e) {
+            logger.error(e.getMessage(),e);
+            return 0L;
+        }
+    }
+
+    /**
+     * Method for import to the repository a very large file of triple
+     * pre-chunked for the import.
+     *
+     * @param file the {@link File} to import ot the sesame repository.
+     * @param repository  the {@link Repository}.
+     * @return the {@link Long} result of the import.
+     */
+    public long importIntoRepositoryFileChunked(File file,Repository repository) {
+        try {
+            return importIntoRepositoryFileChunked(file,repository.getConnection());
+        } catch (RepositoryException e) {
+            logger.error(e.getMessage(),e);
+            return 0L;
+        }
+    }
+
+    /**
+     * Method for import to the repository a very large file of triple
+     * pre-chunked for the import.
+     *
+     * @param file the {@link File} to import ot the sesame repository.
+     * @param mRepositoryConnection  the {@link RepositoryConnection}.
+     * @return the {@link Long} result of the import.
+     */
+    public long importIntoRepositoryFileChunked(File file,RepositoryConnection mRepositoryConnection) {
         String CHUNK_SIZE = "500000";
         String CONTEXT = "context";
         try {
             logger.info("Loading " + file.getName() + " ");
             //Creating the right parser for the right format
             //RDFFormat format = RDFFormat.forFileName(file.getName());
-            RDFFormat format = toRDFFormat(file.getName());
+            RDFFormat format = toRDFFormat(FileUtilities.getExtension(file));
             if (format == null) {
                 logger.warn("Unknown RDF format for file: " + file);
                 return 0;
@@ -2118,7 +2164,11 @@ public class Sesame2Utilities {
 
             URI context = null;
             if (!format.equals(RDFFormat.NQUADS) && !format.equals(RDFFormat.TRIG) && !format.equals(RDFFormat.TRIX)) {
-                context = new URIImpl(CONTEXT);
+                if(StringUtilities.isURL(CONTEXT)) {
+                    context = new URIImpl(CONTEXT);
+                }else{
+                    logger.warn("Attention can't be converted to a URI the context:"+CONTEXT);
+                }
             }
             InputStream reader = null;
             try {
@@ -2160,7 +2210,9 @@ public class Sesame2Utilities {
                     mRepositoryConnection.add(up, up, up);
                 }*/
                 parser.parse(reader, context == null ? dumyBaseUrl.toString() : context.toString());
+                logger.info("Start the import of the Data on the repository...");
                 mRepositoryConnection.commit();
+                logger.info("...end the import of the Data on the repository");
                 long statementsLoaded = handler.getStatementCount();
                 long time = System.currentTimeMillis() - start;
                 logger.info("Loaded " + statementsLoaded + " statements in " + time + " ms; avg speed = "
@@ -2175,9 +2227,9 @@ public class Sesame2Utilities {
                 mRepositoryConnection.close();
             }
         } catch (RepositoryException | IOException e) {
-            logger.error(e.getMessage(), e);
+            logger.error("Could not import: " + e.getMessage(), e);
+            return 0;
         }
-        return 0;
     }
 
 

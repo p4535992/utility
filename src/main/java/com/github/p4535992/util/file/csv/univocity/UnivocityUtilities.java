@@ -40,7 +40,11 @@ public class UnivocityUtilities {
             parserSettings.setDelimiterDetectionEnabled(true);
             CsvParser parser = new CsvParser(parserSettings);
             parser.parse(fileInputCsv);
-            columns = rowProcessor.getRows().get(0); // assuming first read
+            try {
+                columns = rowProcessor.getRows().get(0); // assuming first read
+            }catch(java.lang.IndexOutOfBoundsException e){
+                return rowProcessor.getHeaders();
+            }
             if (!hasFirstLine) {
                 int columnCount = 0;
                 if (columns != null) columnCount = columns.length;
