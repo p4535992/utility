@@ -1,12 +1,12 @@
 package com.github.p4535992.util.file.archive.sevenzipjbinding;
 
-import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.file.archive.ArchiveUtilities;
 import net.sf.sevenzipjbinding.*;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
+import org.apache.commons.io.FileUtils;
 import org.apache.jena.ext.com.google.common.io.Files;
 
 import java.io.*;
@@ -17,8 +17,11 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Created by 4535992 on 27/12/2015.
+ * Created by 4535992 on 27/12/2015.+
+ * https://gist.github.com/borisbrodski/6120309
+ * http://sourceforge.net/p/sevenzipjbind/discussion/757964/thread/b64a36fb/
  * 7-Zip-JBinding examples: Snippet to extract all files from an archive into a specified folder on the disk.
+ * 
  * Usage:
  * java -classpath ... example.ExtractExample [-t] archive-to-extract output-folder [mask] -t - test files mask -
  * match files to extract, for example, *.txt
@@ -112,7 +115,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
             try (SevenZFile sevenZFile = new SevenZFile(zipFile)) {
                 SevenZArchiveEntry entry = sevenZFile.getNextEntry();
                 while (entry != null) {
-                    File file = new File(FileUtilities.getDirectoryFile(zipFile)+File.separator+entry.getName());
+                    File file = new File(zipFile.getAbsolutePath()+File.separator+entry.getName());
                     try (FileOutputStream out = new FileOutputStream(file)) {
                         byte[] content = new byte[(int) entry.getSize()];
                         sevenZFile.read(content, 0, content.length);
@@ -137,7 +140,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
     }
 
     public Boolean extractAllFromArchive(File archive) throws ExtractionException {
-        if(!FileUtilities.isFileExists(archive.getAbsolutePath())) return false;
+        if(!archive.exists()) return false;
         long time = System.currentTimeMillis();
         logger.info("Extracting the archive file "+ archive.getAbsolutePath()+"...");
         RandomAccessFile randomAccessFile;
@@ -324,7 +327,7 @@ public class SevenZipUtilities extends ArchiveUtilities{
                                 return data.length;
                             }
                         });
-                        pathArchiveFile = FileUtilities.toPath(outputData, pathArchiveFile);
+                        FileUtils.writeByteArrayToFile(pathArchiveFile.toFile(),outputData);
                         if (result != ExtractOperationResult.OK) return false;
                         if (pathArchiveFile == null) return false;
                         filesListInZip.add(pathArchiveFile.toFile());
@@ -361,5 +364,163 @@ public class SevenZipUtilities extends ArchiveUtilities{
             super(msg, e);
         }
     }
+    
+    /**
+     * Created by 4535992 on 27/12/2015.
+     */
+    private static class ExtractCallback implements IArchiveExtractCallback {
+
+        private static final org.slf4j.Logger logger =
+                org.slf4j.LoggerFactory.getLogger(ExtractCallback.class);
+
+        //private net.sf.sevenzipjbinding.ISevenZipInArchive inArchive;
+        private IInArchive inArchive;
+        private File outputDirectoryFile;
+        private int index;
+        private OutputStream outputStream;
+        private File file;
+        private ExtractAskMode extractAskMode;
+        private boolean isFolder;
+
+        public ExtractCallback(IInArchive inArchive,File outputDirectoryFile) {
+            this.inArchive = inArchive;
+            this.outputDirectoryFile = outputDirectoryFile;
+        }
+
+       /* private final IInArchive inArchive;
+        private final String extractPath;*/
+
+        public ExtractCallback(IInArchive inArchive, String outputDirectoryFile) {
+            this.inArchive = inArchive;
+            this.outputDirectoryFile =
+                    new File(outputDirectoryFile.endsWith(File.separator) ?
+                            outputDirectoryFile : outputDirectoryFile+File.separator);
+        }
+
+        @Override
+        public void setTotal(long total) throws SevenZipException {
+
+        }
+
+        @Override
+        public void setCompleted(long completeValue) throws SevenZipException {
+
+        }
+
+        @Override
+        public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
+
+            closeOutputStream();
+            this.index = index;
+            this.extractAskMode = extractAskMode;
+            this.isFolder = (Boolean) inArchive.getProperty(index,PropID.IS_FOLDER);
+
+            if (extractAskMode != ExtractAskMode.EXTRACT) {
+                // Skipped files or files being tested
+                return null;
+            }
+
+            //SET File Path
+            //String filePath = (String) inArchive.getProperty(index, PropID.PATH);
+            String filePath  = inArchive.getStringProperty(index, PropID.PATH);
+
+            file = new File(outputDirectoryFile, filePath );
+            //file = new File(outputDirectoryFile + filePath);
+
+            if (isFolder) {
+                createDirectory(file);
+               /* if (!file.exists()) {
+                    file.createNewFile();
+                }*/
+                return null;
+            }
+
+            createDirectory(file.getParentFile());
+            /*  if (!file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+            }*/
+
+            try {
+                outputStream = new FileOutputStream(file,true);
+            } catch (FileNotFoundException e) {
+                throw new SevenZipException("Error opening file: "+ file.getAbsolutePath(), e);
+            }
+
+            return new ISequentialOutStream() {
+                @Override
+                public int write(byte[] data) throws SevenZipException {
+                    try {
+                        outputStream.write(data);
+                    } catch (IOException e) {
+                        throw new SevenZipException("Error writing to file: "+ file.getAbsolutePath());
+                    }finally {
+                        try {
+                            if (outputStream != null) {
+                                outputStream.flush();
+                                outputStream.close();
+                            }
+                        } catch (IOException e) {
+                            logger.error("Could not close FileOutputStream", e);
+                        }
+                    }
+                    return data.length; // Return amount of consumed data
+                }
+            };
+
+        }
+
+        private void createDirectory(File parentFile) throws SevenZipException {
+            if (!parentFile.exists()) {
+                if (!parentFile.mkdirs()) {
+                    throw new SevenZipException("Error creating directory: "
+                            + parentFile.getAbsolutePath());
+                }
+            }
+        }
+
+        private void closeOutputStream() throws SevenZipException {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                    outputStream = null;
+                } catch (IOException e) {
+                    throw new SevenZipException("Error closing file: "
+                            + file.getAbsolutePath());
+                }
+            }
+        }
+
+        @Override
+        public void prepareOperation(ExtractAskMode extractAskMode)
+                throws SevenZipException {
+
+        }
+
+        @Override
+        public void setOperationResult(
+                ExtractOperationResult extractOperationResult)
+                throws SevenZipException {
+            closeOutputStream();
+            String path = (String) inArchive.getProperty(index, PropID.PATH);
+            if (extractOperationResult != ExtractOperationResult.OK) {
+                throw new SevenZipException("Invalid file: " + path);
+            }
+
+            if (!isFolder) {
+                switch (extractAskMode) {
+                    case EXTRACT:
+                        logger.info("Extracted " + path);
+                        break;
+                    case TEST:
+                        logger.info("Tested " + path);
+                        break;
+                    default:
+                        logger.warn("No Extract Mode setted");
+                }
+            }
+        }
+
+    }
+
 
 }

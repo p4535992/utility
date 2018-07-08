@@ -1,9 +1,9 @@
 package com.github.p4535992.util.gtfs.database.support;
 
-import com.github.p4535992.util.collection.ArrayUtilities;
-import com.github.p4535992.util.collection.SetUtilities;
-import com.github.p4535992.util.file.csv.opencsv.OpenCsvUtilities;
+import com.github.p4535992.util.file.csv.CsvUtilities;
 import com.github.p4535992.util.gtfs.GTFSUtilities;
+
+import org.apache.commons.lang.StringUtils;
 import org.onebusaway.gtfs.model.Agency;
 
 import java.io.File;
@@ -174,16 +174,16 @@ public class GTFSModel {
         }
         String[] columns;
         if(csv != null){
-           columns = OpenCsvUtilities.getHeadersWithUnivocity(csv,true);
+           columns = CsvUtilities.getHeadersWithUnivocity(csv,true);
         }else{
-            columns = SetUtilities.toArray(map.keySet());
+            columns = map.keySet().toArray(new String[map.keySet().size()]);
         }
         List<String> newColumns = new ArrayList<>();
         for (String column : columns) {
             newColumns.add(map.get(column));
         }
         if(map.get("other")!=null) newColumns.add(map.get("other"));
-        return ArrayUtilities.toString(newColumns.toArray(),',');
+        return StringUtils.join(newColumns.toArray(),',');
     }
 
 }

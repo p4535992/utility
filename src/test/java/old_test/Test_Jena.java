@@ -12,7 +12,8 @@ import java.lang.reflect.InvocationTargetException;
 import javax.xml.transform.TransformerConfigurationException;
 
 import org.xml.sax.SAXException;
-import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
+
+import com.github.p4535992.util.rdf.Jena3Utilities;
 
 /**
  *

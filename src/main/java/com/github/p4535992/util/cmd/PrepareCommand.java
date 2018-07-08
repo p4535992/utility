@@ -1,7 +1,5 @@
 package com.github.p4535992.util.cmd;
 
-import com.github.p4535992.util.string.StringUtilities;
-
 import java.io.*;
 import java.util.Map;
 
@@ -15,6 +13,12 @@ public class PrepareCommand {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(PrepareCommand.class);
+    
+    /**
+     * A non-breaking space string. Using this instead of a regular space string (" ") will
+     * prevent from applying their normal line-breaking behavior.
+     */
+    private static final String NBSP = "\u00A0";
     
     public PrepareCommand(){}
     
@@ -58,7 +62,7 @@ public class PrepareCommand {
         int exitVal = 0;
         PrepareCommand rte = new PrepareCommand();
         PrepareCommand.StreamWrapper error, output;
-        File file = new File(StringUtilities.PROJECT_DIR+File.separator+fileName);
+        File file = new File(File.separator+fileName);
         //Creating a text file (note that this will overwrite the file if it already exists
         PrintWriter writer = new PrintWriter(file, "UTF-8");
         for (String aListString : listString) {
@@ -117,8 +121,8 @@ public class PrepareCommand {
         StringBuilder builder = new StringBuilder();
         builder.append(" -Dexec.args=\"");
         for(Map.Entry<String,String> entry: params.entrySet()){
-            builder.append("--").append(entry.getKey()).append(StringUtilities.NBSP)
-                    .append(entry.getValue()).append(StringUtilities.NBSP);
+            builder.append("--").append(entry.getKey()).append(NBSP)
+                    .append(entry.getValue()).append(NBSP);
         }
         builder.append("\"");
         commandLine.addArgument(builder.toString());

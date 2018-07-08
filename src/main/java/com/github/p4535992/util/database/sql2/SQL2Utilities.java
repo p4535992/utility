@@ -1,8 +1,12 @@
 package com.github.p4535992.util.database.sql2;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jooq.*;
 import org.jooq.impl.*;
+
+import com.github.p4535992.util.file.csv.CsvUtilities;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1119,6 +1124,265 @@ public class SQL2Utilities {
         }
         return conn;
     }
+    
+//    /**
+//     * Method to get a Connection from a List to possible choice.
+//     * @param dialectDB the String of the dialectDb.
+//     * @param host String name of the host where is the server.
+//     * @param port String number of the port where the server communicate.
+//     * @param database string name of the database.
+//     * @param username string username.
+//     * @param password string password.
+//     * @return the connection.
+//     */
+//    public static Connection chooseAndGetConnection(String dialectDB,
+//                                String host,String port,String database,String username,String password){
+//        if(StringUtilities.isNullOrEmpty(username) || StringUtilities.isNullOrEmpty(password)){
+//            username = "root";
+//            password = "";
+//        }
+//        if(!StringUtilities.isNullOrEmpty(port) || !StringUtilities.isNumeric(port)) port = "";
+//        if(StringUtilities.isNullOrEmpty(dialectDB)){
+//            logger.warn("No connection database type detected fro this type;"+dialectDB);
+//            return null;
+//        }else dialectDB = SQLConverter.convertDialectDatabaseToTypeNameId(dialectDB);
+//        switch (dialectDB) {
+//            case "cubrid": return null;
+//            case "derby": return null;
+//            case "firebird": return null;
+//            case "h2": return null;
+//            case "hsqldb": return null;
+//            case "mariadb": return null;
+//            case "mysql": return getMySqlConnection(host,port,database,username,password);
+//            case "postgres": return null;
+//            case "postgres93": return null;
+//            case "postgres94": return null;
+//            case "sqlite": return null;
+//            default: {logger.warn("No connection database type detected fro this type:"+dialectDB); return null;}
+//        }
+//    }
+//
+//    /**
+//     * Method to get a HSQL connection.
+//     * @param host String name of the host where is the server.
+//     * @param port String number of the port where the server communicate.
+//     * @param database string name of the database.
+//     * @param username string username.
+//     * @param password string password.
+//     * @return the connection.
+//     */
+//    public static Connection getHSQLDBConnection(String host,String port,String database,String username,String password) {
+//        // The newInstance() call is a work around for some broken Java implementations
+//        try {
+//            invokeClassDriverForDbType(SQLEnum.DBType.HSQLDB);
+//            String url = SQLEnum.DBConnector.HSQLDB.getConnector() + host;
+//            if (port != null && StringUtilities.isNumeric(port)) {
+//                url += ":" + port; //jdbc:hsqldb:data/database
+//            }
+//            url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
+//            conn = DriverManager.getConnection(url, username, password);
+//        }catch (InstantiationException e) {
+//            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
+//        }catch(IllegalAccessException e){
+//            logger.error("Access problem while loading!:"+e.getMessage(),e);
+//        } catch(ClassNotFoundException e){
+//            logger.error("Unable to load driver class!:"+e.getMessage(),e);
+//        }catch (SQLException e) {
+//            logger.error("The URL is not correct:" + e.getMessage(), e);
+//        }
+//        return conn;
+//    }
+//
+//    /**
+//     * Method to get a MySQL connection.
+//     * @param host the {@link String} host where the server is.
+//     * @param port the {@link String} {}number of the port of the server.
+//     * @param database the {@link String} name of the database.
+//     * @param username the {@link String} username.
+//     * @param password the {@link String} password.
+//     * @return the {@link Connection}.
+//     */
+//    public static Connection getMySqlConnection(
+//            String host,String port,String database,String username,String password) {
+//        return getMySqlConnection(
+//                host,port,database,username,password,false,false,false);
+//    }
+//
+//    /**
+//     * Method to get a MySQL connection.
+//     * @param host the {@link String} host where the server is.
+//     * @param port the {@link String} {}number of the port of the server.
+//     * @param database the {@link String} name of the database.
+//     * @param username the {@link String} username.
+//     * @param password the {@link String} password.
+//     * @param verifyServerCertificate  the {@link boolean} if true refuse to connect if the host certificate cannot be verified
+//     * @param useSSL  the {@link boolean} if true connect using SSL
+//     * @param requireSSL  the {@link boolean} if true refuse to connect if the MySQL server does not support SSL
+//     * @return the {@link Connection}.
+//     */
+//    public static Connection getMySqlConnection(
+//                    String host,String port,String database,String username,String password,
+//                    boolean verifyServerCertificate,boolean useSSL,boolean requireSSL) {
+//        // The newInstance() call is a work around for some broken Java implementations
+//        try {
+//            invokeClassDriverForDbType(SQLEnum.DBType.MYSQL);
+//            String url = SQLEnum.DBConnector.MYSQL.getConnector() + host;
+//            if (port != null && StringUtilities.isNumeric(port)) {
+//                url += ":" + port;
+//            }
+//            url += "/"  + database + "?noDatetimeStringSync=true" +
+//                    "&verifyServerCertificate="+String.valueOf(verifyServerCertificate)+
+//                    "&useSSL="+String.valueOf(useSSL)+
+//                    "&requireSSL="+String.valueOf(requireSSL)+""; //"jdbc:sql://localhost:3306/jdbctest"
+//            try {
+//                //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
+//                conn = DriverManager.getConnection(url, username, password);
+//            } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
+//                logger.error("You forgot to turn on your MySQL Server:" + e.getMessage(), e);
+//            } catch (SQLException e) {
+//                logger.error("The URL is not correct:" + e.getMessage(), e);
+//            }
+//        }catch (InstantiationException e) {
+//            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
+//        }catch(IllegalAccessException e){
+//            logger.error("Access problem while loading!:"+e.getMessage(),e);
+//        } catch(ClassNotFoundException e){
+//            logger.error("Unable to load driver class!:"+e.getMessage(),e);
+//        }
+//        return conn;
+//    }
+//
+//    /**
+//     * Method to get a MySQL connection.
+//     * @param host string name of the host where is it the database
+//     * @param database string name of the database.
+//     * @param username string username.
+//     * @param password string password.
+//     * @return the connection.
+//     */
+//    public static Connection getMySqlConnection(
+//            String host,String database,String username,String password) {
+//        return getMySqlConnection(host,null,database,username,password);
+//    }
+//
+//    /**
+//     * Method to get a MySQL connection.
+//     * @param hostAndDatabase string name of the host where is it the database
+//     * @param username string username.
+//     * @param password string password.
+//     * @return the connection.
+//     */
+//    public static Connection getMySqlConnection( String hostAndDatabase,String username,String password) {
+//        String[] split = hostAndDatabase.split("/");
+//        if(hostAndDatabase.startsWith("/")) hostAndDatabase = split[1];
+//        else hostAndDatabase = split[0];
+//        return getMySqlConnection(hostAndDatabase,null,split[split.length-1],username,password);
+//    }
+//
+//    public static Connection getMySqlConnection(String fullUrl) {
+//        //e.g. "jdbc:mysql://localhost:3306/geodb?noDatetimeStringSync=true&user=siimobility&password=siimobility"
+//        try {
+//            invokeClassDriverForDbType(SQLEnum.DBType.MYSQL);
+//            try {
+//                //DriverManager.getConnection("jdbc:mysql://localhost/test?" +"user=minty&password=greatsqldb");
+//                conn = DriverManager.getConnection(fullUrl);
+//            } catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException e) {
+//                logger.error("You forgot to turn on your MySQL Server:" + e.getMessage(), e);
+//            } catch (SQLException e) {
+//                logger.error("The URL is not correct" + e.getMessage(), e);
+//            }
+//        }catch (InstantiationException e) {
+//            logger.error("Unable to instantiate driver!:" + e.getMessage(), e);
+//        }catch(IllegalAccessException e){
+//            logger.error("Access problem while loading!:"+e.getMessage(),e);
+//        } catch(ClassNotFoundException e){
+//            logger.error("Unable to load driver class!:"+e.getMessage(),e);
+//        }
+//        return conn;
+//    }
+//
+//    /**
+//     * Method to get a Oracle connection.
+//     * @param host string name of the host where is it the database
+//     * @param port number of the port of the server.
+//     * @param database string name of the database.
+//     * @param username string username.
+//     * @param password string password.
+//     * @return the connection.
+//     */
+//    public static Connection getOracleConnection(String host,String port,String database,String username,String password){
+//        try {
+//            invokeClassDriverForDbType(SQLEnum.DBType.ORACLE);
+//            //String url = "jdbc:oracle:thin:@localhost:1521:"+database;// load Oracle driver
+//            String url = SQLEnum.DBConnector.ORACLE.getConnector() + host;
+//            if (port != null && StringUtilities.isNumeric(port)) {
+//                url += ":" + port;
+//            }
+//            url += "/" + database; //"jdbc:sql://localhost:3306/jdbctest"
+//            conn = DriverManager.getConnection(url, username, password);
+//        } catch(ClassNotFoundException|IllegalAccessException|InstantiationException e){
+//            logger.error("Unable to load driver class!:"+e.getMessage(),e);
+//        } catch (SQLException e) {
+//            logger.error("The URL is not correct:" + e.getMessage(), e);
+//        }
+//        return conn;
+//    }
+//
+//   /* private static Connection getMySqlConnection2(String fullUrl){
+//        //jdbc:mysql://localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
+//        //localhost:3306/geodb?user=minty&password=greatsqldb&noDatetimeStringSync=true
+//        if(fullUrl.toLowerCase().contains("jdbc:mysql://")) fullUrl = fullUrl.replace("jdbc:mysql://","");
+//        String[] split = fullUrl.split("\\?");
+//        String hostAndDatabase = split[0];//localhost:3306/geodb
+//        Pattern pat = Pattern.compile("(\\&|\\?)?(user|username)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
+//        String username = StringUtilities.findWithRegex(fullUrl, pat);
+//        if(Objects.equals(username, "?")) username = "root";
+//        pat = Pattern.compile("(\\&|\\?)?(pass|password)(\\=)(.*?)(\\&|\\?)?", Pattern.CASE_INSENSITIVE);
+//        String password = StringUtilities.findWithRegex(fullUrl, pat);
+//        if(Objects.equals(password, "?")) password ="";
+//        split = hostAndDatabase.split("/");
+//        String database = split[split.length-1];
+//        hostAndDatabase = hostAndDatabase.replace(database,"");
+//        pat = Pattern.compile("([0-9])+", Pattern.CASE_INSENSITIVE);
+//        String port = StringUtilities.findWithRegex(hostAndDatabase, pat);
+//        if(Objects.equals(port, "?")) port = null;
+//        else  hostAndDatabase = hostAndDatabase.replace(port, "").replace(":","").replace("/","");
+//        return getMySqlConnection(hostAndDatabase,port,database,username,password);
+//    }*/
+//
+//    /**
+//     * Method to connect to a h2  database.
+//     * href: http://www.h2database.com/html/features.html.
+//     * @param host string name of the host where is it the database.
+//     * @param port number of the port of the server.
+//     * @param database string name of the database.
+//     * @param username string username.
+//     * @param password string password.
+//     * @return the Connection to the H2 database.
+//     */
+//    public static Connection getH2RemoteConnection(
+//            String host,String port,String database,String username,String password) {
+//        try {
+//            invokeClassDriverForDbType(SQLEnum.DBType.H2);
+//            /*
+//            jdbc:h2:tcp://<server>[:<port>]/[<path>]<databaseName>
+//            jdbc:h2:tcp://localhost/~/test
+//            jdbc:h2:tcp://dbserv:8084/~/sample
+//            jdbc:h2:tcp://localhost/mem:test
+//            */
+//            String url = SQLEnum.DBConnector.H2.getConnector() + host;
+//            if (port != null && StringUtilities.isNumeric(port)) {
+//                url += ":" + port;
+//            }
+//            url += "/~/" + database;
+//            conn = DriverManager.getConnection(url, username, password);
+//        }catch (ClassNotFoundException|IllegalAccessException|InstantiationException e) {
+//            logger.error("Unable to load driver class!:" + e.getMessage(), e);
+//        } catch (SQLException e) {
+//            logger.error("The URL is not correct:" + e.getMessage(), e);
+//        }
+//        return conn;
+//    }
 
     /**
      * Method to get the columns from a specific Table.
@@ -1487,8 +1751,7 @@ public class SQL2Utilities {
      * @param sql the String SQL Query.
      * @param conn the Connection to the Database where execute the query.
      * @return the Long value of the time for execute the query.
-     */
-    
+     */  
     public static Long getExecutionTime(String sql,Connection conn){
         //sql = sql.replaceAll("''","''''");
         //Connection dbConnection = getConnectionFromDriver(  );
@@ -1510,6 +1773,120 @@ public class SQL2Utilities {
         logger.info("Query SQL result(s) in "+calculate+"ms.");
         return calculate;
     }
+    
+    /**
+     * Method to get the execution time of a SQL query with the Java API.
+     * @param sql the String SQL Query.
+     * @param conn the Connection to the Database where execute the query.
+     * @return the Long value of the time for execute the query.
+     */
+    
+    public static Long getExecutionTime(String sql,Connection conn,String providerSql){
+        switch(providerSql){
+        	case "mysql":{
+        		   preparePerformanceSchema(conn);
+        	        String duration = "0";
+        	        try {
+        	            executeSQL(sql,conn);
+        	            if(sql.endsWith(";")) sql = sql.substring(0, sql.length() - 1);
+        	            ResultSet resultSet;
+        	            try{
+        	                //sql = sql.replaceAll("''","''''");
+        	                resultSet = executeSQL(
+        	                        "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT\n" +
+        	                        "FROM performance_schema.events_statements_history_long WHERE SQL_TEXT like\n '%"+
+        	                         sql+"%'");
+        	            }catch(Exception e){
+        	                sql = sql.replaceAll("''","''''");
+        	                resultSet = executeSQL(
+        	                        "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT\n" +
+        	                                "FROM performance_schema.events_statements_history_long WHERE SQL_TEXT like\n '%"+
+        	                                sql+"%'");
+        	            }
+        	           /* ResultSet resultSet = SQLUtilities.executeSQL(
+        	                    "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, \n" +
+        	                            "FROM performance_schema.events_statements_history_long"
+        	            );*/
+        	            //noinspection LoopStatementThatDoesntLoop
+        	            if(resultSet.getFetchSize()==0){
+        	                resultSet = executeSQL(
+        	                        "SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT\n" +
+        	                                "FROM performance_schema.events_statements_history_long");
+        	            }
+
+        	            //logger.info("Size:"+resultSet.getFetchSize());
+        	            while(resultSet.next()) {
+        	                String sql_text2 = resultSet.getString("SQL_TEXT");
+        	                //logger.info(sql_text2);
+        	                if(sql !=null && sql_text2  != null &&  sql.contains(sql_text2)){
+        	                    duration = resultSet.getString("Duration");
+        	                    //if(!StringUtilities.isNullOrEmpty(duration)) break;
+        	                }
+        	            }
+        	            long calculate = 0L;
+        	            if(!StringUtils.isBlank(duration)) calculate = Math.round((Double.parseDouble(duration)*1000));
+        	            logger.info("Query MYSQL result(s) in "+calculate+"ms.");
+        	            return calculate;
+        	        } catch(java.lang.NumberFormatException e){
+        	            logger.error("The duration String is:'"+duration+"' -> "+e.getMessage(),e);
+        	            return 0L;
+        	        }catch (SQLException e) {
+        	            logger.error("Can't execute the query:"+sql+" -> "+e.getMessage(),e);
+        	            return 0L;
+        	        }      	
+    	        }
+        	default:{
+    		  Long calculate;
+    	        try {
+    	            stmt = conn.createStatement();
+    	            Timer timer = new Timer();
+    	            timer.startTimer();
+    	            ResultSet rs = stmt.executeQuery(sql);
+    	            calculate = timer.endTimer();
+
+    	        }catch (Exception e) {
+    	            logger.error("Can't get the execution time for the query:"+sql,e);
+    	            return 0L;
+    	        }
+    	        //Long calculate2 = JDBCLogger.getTime()/1000;
+    	        //if(calculate > calculate2) calculate = calculate2;
+    	        logger.info("Query SQL result(s) in "+calculate+"ms.");
+    	        return calculate;
+        	}
+        }
+      
+    }
+    
+    /**
+     * Method to prepare the server MySQL  to use the performance utility.
+     * @param conn the Connection to the MySQL server.
+     * @return if true all the operation all corrected done.
+     */
+    private static boolean preparePerformanceSchema(Connection conn){
+        try {
+            //Ensure that statement and stage instrumentation is enabled by updating the
+            //setup_instruments table. Some instruments may already be enabled by default.
+            executeSQL(
+                    "UPDATE performance_schema.setup_instruments SET ENABLED = 'YES', TIMED = 'YES'\n" +
+                            "WHERE NAME LIKE '%statement/%';\n" +
+                    "UPDATE performance_schema.setup_instruments SET ENABLED = 'YES', TIMED = 'YES'\n" +
+                    "WHERE NAME LIKE '%stage/%';",conn
+            );
+            //Ensure that events_statements_* and events_stages_* consumers are enabled.
+            //Some consumers may already be enabled by default.
+            executeSQL(
+                    "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES'\n" +
+                            "WHERE NAME LIKE '%events_statements_%';\n" +
+                    "UPDATE performance_schema.setup_consumers SET ENABLED = 'YES'\n" +
+                            "WHERE NAME LIKE '%events_stages_%';",conn
+            );
+            return true;
+        }catch(SQLException e){
+            logger.error(e.getMessage(),e);
+            return false;
+        }
+    }
+
 
     /*
      * Method to import a file CSV to a Database.
@@ -1891,21 +2268,26 @@ public class SQL2Utilities {
         return map;
     }
 
-    /*
-    public static Boolean importData(File file,char delimiter,String databaseName,String tableName){
+    /**
+     * @throws IOException 
+     * @deprecated
+     */
+    public static Boolean importData(File file,char delimiter,String databaseName,String tableName) throws IOException{
         return importData(conn,file,delimiter,databaseName,tableName);
     }
-    */
-
-    /*
-    public static Boolean importData(Connection conn,File file,char delimiter,String databaseName,String tableName){
+    
+    /**
+     * @throws IOException 
+     * @deprecated
+     */
+    public static Boolean importData(Connection conn,File file,char delimiter,String databaseName,String tableName) throws IOException{
         Statement stmt;
         String query = "";
         try {
-            if(!FileUtilities.isFileExists(file)) return false;
+            if(!file.exists()) return false;
             //Map<String,String[]> map = getTableAndColumn(conn,databaseName);
             //String[] columns = map.get(tableName);
-            String[] columns = OpenCsvUtilities.getHeadersWithUnivocity(file,true);
+            String[] columns = CsvUtilities.getHeadersWithUnivocity(file,true);
             stmt = conn.createStatement(
                     ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
@@ -1941,17 +2323,17 @@ public class SQL2Utilities {
                         if(getRowCount(rs2) == 0)throw new SQLException(e);
                         //https://coderwall.com/p/609ppa/printing-the-result-of-resultset
                         Map<String,String> map =  getInfoResultSet(rs2,true);
-                        String privFileDir = map.get("VARIABLE_VALUE");
-                        privFileDir =  privFileDir + FileUtilities.getFilename(file);
-                        if(!FileUtilities.copy(file.getAbsolutePath(),privFileDir))throw new SQLException(e);
+                        String privFileDirS = map.get("VARIABLE_VALUE");
+                        File  privFileDir =  new File(privFileDirS + file.getName());
+                        FileUtils.copyFileToDirectory(file,privFileDir);
 
-                        filePath = privFileDir.replace("\\","\\\\");
-                        if(FileUtilities.isFileExists(privFileDir)) FileUtilities.delete(privFileDir);
+                        filePath = privFileDir.getAbsolutePath().replace("\\","\\\\");
+                        if(privFileDir.exists()) FileUtils.deleteQuietly(privFileDir);
                         query = "LOAD DATA INFILE '"+filePath+"' INTO TABLE "+databaseName+"."+tableName+" "+
                                 "FIELDS TERMINATED BY ',' " +
                                 "LINES TERMINATED BY '\r\n'"+
                                 "IGNORE 1 LINES " +
-                                "("+ ArrayUtilities.toString(columns,delimiter)+");";
+                                "("+ StringUtils.join(columns,delimiter)+");";
                         executeSQL(query,conn,stmt);
                     }else{
                         throw new SQLException(e);
@@ -1966,11 +2348,13 @@ public class SQL2Utilities {
             return false;
         }
     }
-    */
-    /*
+   
+    /**
+     * @deprecated
+     */
     public static Boolean cleanSQLScriptForOldVersion(File sqlScript){
         try {
-            List<String> lines = FileUtilities.read(sqlScript);
+            List<String> lines = FileUtils.readLines(sqlScript);
             List<String> newLines = new ArrayList<>();
             for (String line : lines) {
                 if (line == null || line.isEmpty()) continue;
@@ -1992,13 +2376,13 @@ public class SQL2Utilities {
                 if (endWith) newLine = newLine + ";";
                 newLines.add(newLine);
             }
-            FileUtilities.write(newLines, new File(FileUtilities.addSuffixTimeStampToFileName(sqlScript.getAbsolutePath())));
+            FileUtils.writeLines(new File(FilenameUtils.getBaseName(sqlScript.getAbsolutePath())+TimeUnit.MILLISECONDS.toMillis(System.currentTimeMillis())+FilenameUtils.getExtension(sqlScript.getAbsolutePath())),newLines);
         }catch(Exception e){
             return false;
         }
         return true;
     }
-    */
+    
     public static Map<String, String> loadQueriesFromPropertiesFile(File queriesProperties) {
         Properties properties = new Properties();
         Map<String, String> queries = new TreeMap<>();

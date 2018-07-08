@@ -1,7 +1,8 @@
 package com.github.p4535992.util.html;
 
 import com.github.p4535992.util.http.HttpUtilities;
-import com.github.p4535992.util.string.StringUtilities;
+
+import org.apache.commons.validator.routines.UrlValidator;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -398,7 +399,7 @@ public class JSoupUtilities {
      */
     public static org.jsoup.nodes.Document toJsoupDocument(String htmlOrUri) {
         org.jsoup.nodes.Document htmldoc = new Document("");
-        if (StringUtilities.isURL(htmlOrUri) || StringUtilities.isURI(htmlOrUri)) {
+        if (UrlValidator.getInstance().isValid(htmlOrUri)) {
             try {//try 1
                 //htmldoc = org.jsoup.Jsoup.connect(htmlOrUri).get();
                 htmldoc = Jsoup.connect(htmlOrUri)

@@ -1,9 +1,8 @@
 package com.github.p4535992.util.file.archive;
 
-import com.github.p4535992.util.collection.CollectionUtilities;
-import com.github.p4535992.util.file.FileUtilities;
 import org.apache.commons.collections.map.MultiKeyMap;
 import org.apache.commons.collections.map.MultiValueMap;
+import org.apache.commons.io.FilenameUtils;
 import org.zeroturnaround.zip.*;
 import org.zeroturnaround.zip.commons.IOUtils;
 import org.zeroturnaround.zip.transform.StringZipEntryTransformer;
@@ -688,9 +687,9 @@ public class ZtZipUtilities{
 
     public static ZipEntrySource toEntryZipEntrySource(Object object){
         if(object instanceof File){
-            return new FileSource(FileUtilities.getFilename((File) object),(File) object);
+            return new FileSource(((File) object).getName(),(File) object);
         }else if(object instanceof Path){
-            return new FileSource(FileUtilities.getFilename((Path) object),((Path)object).toFile());
+            return new FileSource(((Path) object).getFileName().toString(),((Path)object).toFile());
         }else if(object instanceof URI){
             return new FileSource(object.toString(),new File(((URI)object)));
         }else if(object instanceof URL){

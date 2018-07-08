@@ -1,10 +1,5 @@
 package com.github.p4535992.util.reflection;
 
-import com.github.p4535992.util.collection.ArrayUtilities;
-import com.github.p4535992.util.collection.CollectionUtilities;
-import com.github.p4535992.util.collection.ListUtilities;
-import com.github.p4535992.util.file.FileUtilities;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -13,6 +8,10 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.commons.lang.ArrayUtils;
 
 /**
  * Created by 4535992 on 26/10/2015.
@@ -656,7 +655,7 @@ public class ReflectionUtilities {
         Method method =null;
         try {
             //If the method you are trying to access takes no parameters, pass null as the parameter type array, like this:
-            if (ArrayUtilities.isEmpty(param)) method = aClass.getMethod(nameOfMethod);//nameOfMethod, null
+            if (param.length==0) method = aClass.getMethod(nameOfMethod);//nameOfMethod, null
             else method = aClass.getMethod(nameOfMethod, param);// String.class
         }catch(NoSuchMethodException e){
             logger.error("ReflectionUtils::getMethodByNameAndParam ->",e);
@@ -756,7 +755,7 @@ public class ReflectionUtilities {
                 types.add(field);
             }
         }
-        return ListUtilities.toArray(types);
+        return types.toArray(new Field[types.size()]);
     }
 
     /**
@@ -771,7 +770,7 @@ public class ReflectionUtilities {
         for(Field field : fields) {
             classes.add(field.getType());
         }
-        return CollectionUtilities.toArray(classes);
+        return classes.toArray(new Class[classes.size()]);
     }
 
     /**
@@ -1689,7 +1688,7 @@ public class ReflectionUtilities {
         if (!directory.exists()) {
             return classes;
         }
-        List<File> files = FileUtilities.getFilesFromDirectory(directory);
+        List<File> files = (List<File>) FileUtils.listFiles(directory,TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
         if(files!= null && files.size()>0){
             for (File file : files) {
                 if (file.isDirectory()) {
@@ -2177,7 +2176,7 @@ public class ReflectionUtilities {
             //final Annotation annotation = field.getAnnotation(annotationClass);
             //list = getAnnotationField(aClass, annotation, fieldName);
             if(aObj != null && !aObj.isEmpty()) {
-                Object[] bObj = ArrayUtilities.concatenateArrays(fObj, aObj.toArray());
+                Object[] bObj = (String[])ArrayUtils.addAll(fObj, aObj.toArray());
                 list.add(bObj);
             }
         }

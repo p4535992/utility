@@ -1,7 +1,7 @@
 package com.github.p4535992.util.http;
 
 import com.github.p4535992.util.html.JSoupUtilities;
-import com.github.p4535992.util.regex.pattern.Patterns;
+import com.github.p4535992.util.regex.pattern.RegexUtilities;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItem;
@@ -48,7 +48,7 @@ public class HttpUtilities {
         Accept,
     }
 
-    private static final Pattern IP_PATTERN = Patterns.IP_ADDRESS;
+    private static final Pattern IP_PATTERN = RegexUtilities.IP_ADDRESS;
 
     private static String boundary;
     private static HttpURLConnection httpConn;

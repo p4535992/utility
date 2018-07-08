@@ -90,7 +90,7 @@ public class PropertiesUtilities extends PropertyPlaceholderConfigurer {
         InputStream inputStream = null;
         Properties prop = new Properties();
         try {
-            String nameFile = FileUtilities.getFilename(fileResourceProperties);
+            String nameFile = fileResourceProperties.getName();
             inputStream = getClass().getClassLoader().getResourceAsStream(nameFile);
             if (inputStream != null) {
                 prop.load(inputStream);

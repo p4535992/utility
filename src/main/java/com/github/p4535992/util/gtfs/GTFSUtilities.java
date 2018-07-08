@@ -1,14 +1,19 @@
 package com.github.p4535992.util.gtfs;
 
-import com.github.p4535992.util.database.sql.SQLUtilities;
-import com.github.p4535992.util.file.FileUtilities;
+
+import com.github.p4535992.util.database.sql2.SQL2Utilities;
+import com.github.p4535992.util.database.sql2.SQL2Utilities.DBType;
 import com.github.p4535992.util.file.archive.ZtZipUtilities;
 import com.github.p4535992.util.gtfs.database.support.GTFSModel;
 import com.github.p4535992.util.gtfs.tordf.helper.TransformerPicker;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
 import com.github.p4535992.util.log.logback.LogBackUtil;
-import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
-import com.github.p4535992.util.string.StringUtilities;
+import com.github.p4535992.util.rdf.Jena3Utilities;
+import com.github.p4535992.util.tmp.TempFileProvider;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.riot.Lang;
@@ -16,14 +21,16 @@ import org.apache.jena.riot.RDFFormat;
 
 import java.io.File;
 import java.io.IOException;
-
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by 4535992 on 30/11/2015.
@@ -69,17 +76,15 @@ public class GTFSUtilities {
 
     private List<List<Statement>> mapper(File zipFile, String baseUri) throws IOException {
         //List<File> files = ArchiveUtilities.extractAllFromZip(zipFile,FileUtilities.getDirectoryFullPath(zipFile));
-        List<File> files =
-                FileUtilities.getFilesFromDirectory(
-                        ZtZipUtilities.extractDirectoryFromZip(zipFile, new File(FileUtilities.getAndCreateDirectoryFullPath(zipFile))
-                        )
-                );
+    	File directory = ZtZipUtilities.extractDirectoryFromZip(zipFile,TempFileProvider.createTempFile(""+TimeUnit.MILLISECONDS.toMillis(System.currentTimeMillis()), zipFile.getName()));
+    	Collection<File> files =FileUtils.listFiles(directory, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+
         List<List<Statement>> listStmt = new ArrayList<>();
         logger.info("Start conversion GTFS to RDF...");
         for(File file : files){
-            String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
+            String nameFile = FilenameUtils.getBaseName(file.getAbsolutePath());
             Transformer specificTransformer = TransformerPicker.getNewInstance(nameFile).getTransformer();
-            List<Statement> stmts = specificTransformer._Transform(file, StringUtilities.UTF_8, baseUri);
+            List<Statement> stmts = specificTransformer._Transform(file, StandardCharsets.UTF_8, baseUri);
             listStmt.add(stmts);
         }
         logger.info("...end conversion GTFS to RDF");
@@ -106,9 +111,9 @@ public class GTFSUtilities {
     public File convertGTFSFileToRDF(File file,String baseUri,File fileRDFOutput, String outputFormat){
         Model jModel = Jena3Utilities.createModel();
         jModel.setNsPrefixes(setPrefixes());
-        String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
+        String nameFile = FilenameUtils.getBaseName(file.getAbsolutePath());
         Transformer specificTransformer = TransformerPicker.getNewInstance(nameFile).getTransformer();
-        List<Statement> stmts = specificTransformer._Transform(file, StringUtilities.UTF_8, baseUri);
+        List<Statement> stmts = specificTransformer._Transform(file, StandardCharsets.UTF_8, baseUri);
         jModel.add(stmts);
         Jena3Utilities.write(fileRDFOutput,jModel,outputFormat);
         return fileRDFOutput;
@@ -117,9 +122,9 @@ public class GTFSUtilities {
     public List<Statement> getRDFFromGTFSFile(File file,String baseUri){
         Model jModel = Jena3Utilities.createModel();
         jModel.setNsPrefixes(setPrefixes());
-        String nameFile = FileUtilities.getFilenameWithoutExt(file.getAbsolutePath());
+        String nameFile = FilenameUtils.getBaseName(file.getAbsolutePath());
         Transformer specificTransformer = TransformerPicker.getNewInstance(nameFile).getTransformer();
-        return specificTransformer._Transform(file, StringUtilities.UTF_8, baseUri);
+        return specificTransformer._Transform(file, StandardCharsets.UTF_8, baseUri);
     }
 
     public File convertGTFSZipToRDF(File zipFile,String baseUri,File fileOutput, String outputFormat) throws IOException {
@@ -149,68 +154,68 @@ public class GTFSUtilities {
      * @param createTables the {@link Boolean} is true if drop and create the tables.
      * @return the {@link Boolean} is true if all the operations are done.
      */
-    public Boolean importGTFSZipToDatabase(File zipFile,Connection conn,String database,boolean createDatabase,boolean createTables){
+    public Boolean importGTFSZipToDatabase(File zipFile,Connection conn,String database,boolean createDatabase,boolean createTables) throws IOException{
         try {
-            SQLUtilities.setConnection(conn);
+            SQL2Utilities.setConnection(conn);
             if(createDatabase){
                 //-- CREATE DATABASE IF NOT EXISTS gtfs;
-                SQLUtilities.executeSQL(
+                SQL2Utilities.executeSQL(
                         "DROP DATABASE IF EXISTS "+database+";");
-                SQLUtilities.executeSQL("CREATE DATABASE "+database+" " +
+                SQL2Utilities.executeSQL("CREATE DATABASE "+database+" " +
                         "DEFAULT CHARACTER SET utf8 " +
                         "DEFAULT COLLATE utf8_general_ci;"
                 );
             }
-            //Map<String,String[]> map = SQLUtilities.getTableAndColumn(conn,database);
+            //Map<String,String[]> map = SQL2Utilities.getTableAndColumn(conn,database);
             Map<String,File> files2 = getGTFSFilesFromZipFile(zipFile);
             if (createTables) {
-                SQLUtilities.executeSQL("USE gtfs;");
+                SQL2Utilities.executeSQL("USE gtfs;");
                 //"-- agency_id,agency_name,agency_url,agency_timezone,agency_phone,agency_lang\n" +
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS agency;");
-                SQLUtilities.executeSQL("CREATE TABLE `agency` ("
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS agency;");
+                SQL2Utilities.executeSQL("CREATE TABLE `agency` ("
                         +GTFSModel.prepareColumn(files2.get("agency"),GTFSFileType.agency)+");");
                 //"-- shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence\n" +
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS shapes;");
-                SQLUtilities.executeSQL("CREATE TABLE `shapes` ("
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS shapes;");
+                SQL2Utilities.executeSQL("CREATE TABLE `shapes` ("
                         +GTFSModel.prepareColumn(files2.get("shapes"),GTFSFileType.shapes)+");");
                 //"-- service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n" +
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS calendar;");
-                SQLUtilities.executeSQL("CREATE TABLE `calendar` ("
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS calendar;");
+                SQL2Utilities.executeSQL("CREATE TABLE `calendar` ("
                         +GTFSModel.prepareColumn(files2.get("calendar"),GTFSFileType.calendar)+");");
                 //"-- service_id,date,exception_type\n" +
-                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS calendar_dates;");
-                SQLUtilities.executeSQL("CREATE TABLE `calendar_dates` ("
+                SQL2Utilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS calendar_dates;");
+                SQL2Utilities.executeSQL("CREATE TABLE `calendar_dates` ("
                         +GTFSModel.prepareColumn(files2.get("calendar_dates"),GTFSFileType.calendar_dates)+ ");");
-                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
+                SQL2Utilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
                 //"-- route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color\n" +
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS routes;");
-                SQLUtilities.executeSQL("CREATE TABLE `routes` ("
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS routes;");
+                SQL2Utilities.executeSQL("CREATE TABLE `routes` ("
                         +GTFSModel.prepareColumn(files2.get("routes"),GTFSFileType.routes)+");");
                 //"-- trip_id,service_id,route_id,trip_headsign,direction_id,shape_id\n" +
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS trips;");
-                SQLUtilities.executeSQL("CREATE TABLE `trips` ("
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS trips;");
+                SQL2Utilities.executeSQL("CREATE TABLE `trips` ("
                         +GTFSModel.prepareColumn(files2.get("trips"),GTFSFileType.trips)+");");
                 //"-- stop_id,stop_code,stop_name,stop_lat,stop_lon,location_type,parent_station,wheelchair_boarding\n" +
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS stops;");
-                SQLUtilities.executeSQL("CREATE TABLE `stops` ("
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS stops;");
+                SQL2Utilities.executeSQL("CREATE TABLE `stops` ("
                         +GTFSModel.prepareColumn(files2.get("stops"),GTFSFileType.stops)+");");
                 //"-- trip_id,stop_id,stop_sequence,arrival_time,departure_time,stop_headsign,pickup_type,drop_off_type,shape_dist_traveled\n" +
-                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS stop_times;");
-                SQLUtilities.executeSQL("CREATE TABLE `stop_times` ("
+                SQL2Utilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS stop_times;");
+                SQL2Utilities.executeSQL("CREATE TABLE `stop_times` ("
                         +GTFSModel.prepareColumn(files2.get("stop_times"),GTFSFileType.stop_times)+");");
-                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
+                SQL2Utilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
                 //"-- trip_id,start_time,end_time,headway_secs\n" +
-                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
-                SQLUtilities.executeSQL("DROP TABLE IF EXISTS frequencies;");
-                SQLUtilities.executeSQL("CREATE TABLE `frequencies` ("
+                SQL2Utilities.executeSQL("SET FOREIGN_KEY_CHECKS=0;");
+                SQL2Utilities.executeSQL("DROP TABLE IF EXISTS frequencies;");
+                SQL2Utilities.executeSQL("CREATE TABLE `frequencies` ("
                         +GTFSModel.prepareColumn(files2.get("frequencies"),GTFSFileType.frequencies)+");");
-                SQLUtilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
+                SQL2Utilities.executeSQL("SET FOREIGN_KEY_CHECKS=1;");
             }
             //load data
             for(Map.Entry<String,File> entry : files2.entrySet()){
-                SQLUtilities.importData(entry.getValue(),',',database,entry.getKey());
+                SQL2Utilities.importData(entry.getValue(),',',database,entry.getKey());
             }
             return  true;
         } catch (SQLException e) {
@@ -220,14 +225,14 @@ public class GTFSUtilities {
     }
 
     public Boolean exportGTFSFileFromTable(Connection conn,String database,String tableName,File fileOutput){
-        return SQLUtilities.exportData(conn,fileOutput.getAbsolutePath(),database+"."+tableName);
+        return SQL2Utilities.exportData(conn,fileOutput.getAbsolutePath(),database+"."+tableName);
     }
 
     public Boolean exportGTFSZipFromDatabase(Connection conn,String database,File fileZipOutput){
         List<File> files = new ArrayList<>();
         try {
-            List<String> tables = SQLUtilities.getTablesFromConnection(conn, database);
-            File dir = FileUtilities.getParentFile(fileZipOutput);
+            List<String> tables = SQL2Utilities.getTablesFromConnection(conn, database);
+            File dir = fileZipOutput.getParentFile();
 
             for(String table : tables){
                 for (GTFSFileType ft : GTFSFileType.values()) {
@@ -259,9 +264,9 @@ public class GTFSUtilities {
     public Boolean exportGTFSDatabaseToRDF(Connection conn,File fileRDFOutput,String baseUri,Lang lang){
         List<Statement> stmt = new ArrayList<>();
         try {
-            String database = SQLUtilities.getDatabaseName(conn);
-            List<String> tables = SQLUtilities.getTablesFromConnection(conn, database);
-            File dir = FileUtilities.getParentFile(fileRDFOutput);
+            String database = SQL2Utilities.getDatabaseName(conn);
+            List<String> tables = SQL2Utilities.getTablesFromConnection(conn, database);
+            File dir = fileRDFOutput.getParentFile();
             for(String table : tables){
                 for (GTFSFileType ft : GTFSFileType.values()) {
                     //We use only the table match the name standard of the GTFS file....
@@ -270,7 +275,7 @@ public class GTFSUtilities {
                         //We save the content of the tsble on a temporary csv file...
                         if(exportGTFSFileFromTable(conn,database,table,file)){
                             stmt.addAll(getRDFFromGTFSFile(file,baseUri));
-                            FileUtilities.delete(file.toPath());
+                            FileUtils.deleteQuietly(file);
                             break;
                         }
                     }
@@ -294,9 +299,9 @@ public class GTFSUtilities {
         //List<File> files = ArchiveUtilities.extractFilesFromZip(zipFile);
         List<File> files = ZtZipUtilities.extractFilesFromZip(zipFile);
         for (File file : files) {
-            if (FileUtilities.isFileExists(file)) {
+            if (file.exists()) {
                 //String nameTable = database+"."+FileUtilities.getFilenameWithoutExt(file);
-                String nameTable = FileUtilities.getFilenameWithoutExt(file);
+                String nameTable = FilenameUtils.getBaseName(file.getAbsolutePath());
                 String path = file.getAbsolutePath();
                 path = path.replace("\\", "\\\\");
                 map.put(nameTable, new File(path));
@@ -321,14 +326,14 @@ public class GTFSUtilities {
         /* List<File> ss = ZtZipUtilities.extractFilesByPattern(zip,"agency");
          String srr = ss.get(0).getAbsolutePath();
          srr = FileUtilities.toString(ss.get(0));
-        Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","geodb","siimobility","siimobility",false,false,false);
+        Connection conn = SQL2Utilities.getMySqlConnection("localhost","3306","geodb","siimobility","siimobility",false,false,false);
         GTFSUtilities.getNewInstance().importGTFSZipToDatabase(zip,conn,"gtfs",true,true);*/
 
         //EXPORT SINGLE FILE FROM DATABASE
-        //Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","gtfs","siimobility","siimobility",false,false,false);
+        //Connection conn = SQL2Utilities.getMySqlConnection("localhost","3306","gtfs","siimobility","siimobility",false,false,false);
         //GTFSUtilities.getNewInstance().exportGTFSFileFromTable(conn,"gtfs","agency",new File("C:\\Users\\Utente\\Desktop\\agency.txt"));
 
-        //List<String> list  = SQLUtilities.getTablesFromConnection(conn,"gtfs");
+        //List<String> list  = SQL2Utilities.getTablesFromConnection(conn,"gtfs");
         /*for(String table : list){
             String directory = "C:\\Users\\Utente\\Desktop\\GTFS\\";
             GTFSUtilities.getNewInstance().exportGTFSFileFromTable(conn,"gtfs",table,
@@ -342,7 +347,9 @@ public class GTFSUtilities {
 
         //Convert database to RDF files
         File output2 = new File("C:\\Users\\Utente\\Desktop\\gtfsTest.ttl");
-        Connection conn = SQLUtilities.getMySqlConnection("localhost","3306","gtfs","siimobility","siimobility",false,false,false);
+        
+        
+        Connection conn = SQL2Utilities.prepareConnection("localhost","3306","gtfs","siimobility","siimobility",false,false,false,DBType.MYSQL);
         GTFSUtilities.getInstance().exportGTFSDatabaseToRDF(conn,output2);
 
     }

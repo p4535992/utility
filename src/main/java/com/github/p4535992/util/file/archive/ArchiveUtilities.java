@@ -1,7 +1,5 @@
 package com.github.p4535992.util.file.archive;
 
-import com.github.p4535992.util.file.FileUtilities;
-
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
@@ -9,6 +7,8 @@ import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.zip.*;
+
+import org.apache.commons.io.FileUtils;
 
 /**
  * Created by 4535992 on 30/11/2015.
@@ -135,9 +135,9 @@ public class ArchiveUtilities {
                             sb.append(line);
                         }
                     }
-                    files.add(FileUtilities.toFile(sb.toString(),
-                            FileUtilities.getDirectoryFullPath(zipFilePath)+File.separator+entry.getName()
-                    ));
+                    File tmp = new File(zipFilePath.getAbsolutePath()+File.separator+entry.getName());
+                    FileUtils.writeStringToFile(tmp, sb.toString());  
+                    files.add(tmp);
                 /*InputSupplier<InputStream> supplier = new InputSupplier<InputStream>() {
                     InputStream getInput() {
                         return zipStream;
@@ -379,9 +379,9 @@ public class ArchiveUtilities {
     }
 
     public static boolean compressToZip(File fileOrDirectoryToCompress,String filePathOutputZip) {
-        if(FileUtilities.isDirectoryExists(fileOrDirectoryToCompress)){
+        if(fileOrDirectoryToCompress.exists() && fileOrDirectoryToCompress.isDirectory()){
             return compressToZip(fileOrDirectoryToCompress.toPath(), filePathOutputZip);
-        }else if(FileUtilities.isFileExists(fileOrDirectoryToCompress)){
+        }else if(fileOrDirectoryToCompress.exists()){
             try {
                 File zipFileName = new File(filePathOutputZip);
                 try ( //create ZipOutputStream to write to the zip file

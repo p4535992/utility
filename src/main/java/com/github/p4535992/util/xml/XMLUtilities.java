@@ -1,6 +1,5 @@
 package com.github.p4535992.util.xml;
 
-import com.github.p4535992.util.string.StringUtilities;
 import com.github.p4535992.util.xml.impl.PrefixGrabber;
 import com.github.p4535992.util.xml.impl.TreeWalkerImpl;
 import org.w3c.dom.html.HTMLTitleElement;
@@ -10,6 +9,7 @@ import org.w3c.dom.*;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import javax.xml.parsers.*;
@@ -652,7 +652,7 @@ public class XMLUtilities {
      */
     public void writeToFile(Document xmlDoc,File file) throws IOException {
         try (PrintWriter tmpPW = new PrintWriter(new OutputStreamWriter(
-                new FileOutputStream(file), StringUtilities.UTF_8))) {
+                new FileOutputStream(file), StandardCharsets.UTF_8))) {
             tmpPW.println(toStringXML(xmlDoc));
             tmpPW.flush();
         }

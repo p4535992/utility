@@ -1,7 +1,6 @@
 package com.github.p4535992.util.http;
 
-import com.github.p4535992.util.http.helper.DefaultHttpRequestRetryHandler;
-import com.github.p4535992.util.string.StringUtilities;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -219,7 +218,7 @@ public class HttpUtilApache4 {
             if (entity != null) {
                 try (InputStream instream = entity.getContent()) {
                     // do something useful
-                    content = StringUtilities.toString(instream);
+                    content = IOUtils.toString(instream);
                 }
             }
         } finally {

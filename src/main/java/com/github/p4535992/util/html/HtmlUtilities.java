@@ -2,7 +2,6 @@ package com.github.p4535992.util.html;
 import com.github.p4535992.util.html.parser.Outliner;
 import com.github.p4535992.util.html.parser.PageSaver;
 import com.github.p4535992.util.html.parser.ParserGetter;
-import com.github.p4535992.util.string.StringUtilities;
 
 import java.io.*;
 import java.net.URL;
@@ -74,7 +73,7 @@ public class HtmlUtilities {
     }
 
     public static String toHtml( String string ) {
-        if(StringUtilities.isNullOrEmpty(string) )
+        if(string==null || string.isEmpty())
             return "<html><body></body></html>";
         BufferedReader st = new BufferedReader( new StringReader( string ) );
         StringBuilder buf = new StringBuilder( "<html><body>" );

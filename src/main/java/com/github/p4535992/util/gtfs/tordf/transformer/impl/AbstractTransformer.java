@@ -1,8 +1,9 @@
 package com.github.p4535992.util.gtfs.tordf.transformer.impl;
 
-import com.github.p4535992.util.file.FileUtilities;
+import com.github.p4535992.util.file.csv.CsvUtilities;
 import com.github.p4535992.util.gtfs.tordf.transformer.Transformer;
-import com.github.p4535992.util.repositoryRDF.jena.Jena3Utilities;
+import com.github.p4535992.util.rdf.Jena3Utilities;
+
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Statement;
 
@@ -60,7 +61,7 @@ public abstract class AbstractTransformer implements Transformer {
      * @return the List of Array of the content of the File comma separated.
      */
     protected List<String[]> CSVGetContent(File CSV,boolean header){
-        return FileUtilities.CSVGetContent(CSV,header);
+        return CsvUtilities.CSVGetContentWithUnivocity(CSV,header);
     }
 
     /**
@@ -70,7 +71,7 @@ public abstract class AbstractTransformer implements Transformer {
      * @return a String Array of the columns.
      */
     public static String[] CSVGetHeaders(File fileCSV,boolean hasFirstLine){
-        return FileUtilities.CSVGetHeaders(fileCSV,hasFirstLine);
+        return CsvUtilities.CSVGetHeadersWithUnivocity(fileCSV,hasFirstLine);
     }
 
     protected Date fc(String date) throws ParseException {

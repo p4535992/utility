@@ -1,6 +1,6 @@
 package old_test;
 
-import com.github.p4535992.util.repositoryRDF.sesame.Sesame2Utilities;
+import com.github.p4535992.util.rdf.Sesame2Utilities;
 
 public class Test_GraphDB6 {
 

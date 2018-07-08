@@ -1,10 +1,14 @@
 package com.github.p4535992.util.database.jooq;
 
-import com.github.p4535992.util.collection.ArrayUtilities;
-import com.github.p4535992.util.database.sql.SQLConverter;
-import com.github.p4535992.util.database.sql.SQLUtilities;
+import com.github.p4535992.util.database.sql2.SQL2Utilities;
+import com.github.p4535992.util.database.sql2.SQL2Utilities.DBType;
 
-import com.github.p4535992.util.string.StringUtilities;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.validator.routines.DoubleValidator;
+import org.apache.commons.validator.routines.FloatValidator;
+import org.apache.commons.validator.routines.IntegerValidator;
+import org.apache.commons.validator.routines.LongValidator;
+import org.apache.commons.validator.routines.ShortValidator;
 import org.jooq.*;
 import org.jooq.impl.*;
 
@@ -88,7 +92,7 @@ public class JOOQUtilities {
      * @return the SQLDialect of JOOQ.
      */
     public static SQLDialect convertStringToSQLDialectJOOQ(String sqlDialect) {
-        sqlDialect = SQLConverter.convertDialectDatabaseToTypeNameId(sqlDialect);
+        sqlDialect = SQL2Utilities.convertDialectDatabaseToTypeNameId(sqlDialect);
         switch (sqlDialect.toLowerCase()) {
             case "cubrid":return SQLDialect.CUBRID;
             case "derby": return SQLDialect.DERBY;
@@ -174,12 +178,12 @@ public class JOOQUtilities {
         Map<Field<String>,?> map = convertArraysToMapJOOQField(columns, values, types);
         Query iQuery = dslContext.insertInto(table).set(map);
         if(preparedStatement){
-            String query = StringUtilities.toStringInline(iQuery.toString());
+            String query = toStringInline(iQuery.toString());
             query = JOOQSupport.getQueryInsertValuesParam(query, columns);
             //return StringKit.toStringInline(iQuery.getSQL(ParamType.NAMED_OR_INLINED));
-            return StringUtilities.toStringInline(query);
+            return toStringInline(query);
         }
-        else return StringUtilities.toStringInline(iQuery.toString());
+        else return toStringInline(iQuery.toString());
     }
 
 
@@ -263,25 +267,25 @@ public class JOOQUtilities {
         sQuery.addSelect(fields);
         sQuery.addFrom(table);
         if(conditions!=null && !conditions.isEmpty()) sQuery.addConditions(conditions);
-        if(!StringUtilities.isNullOrEmpty(limit) && !StringUtilities.isNullOrEmpty(offset)) {
-            if (StringUtilities.isNumeric(limit) && StringUtilities.isNumeric(offset)) {
-                sQuery.addLimit(StringUtilities.toInt(offset), StringUtilities.toInt(limit));
+        if(!StringUtils.isBlank(limit) && !StringUtils.isBlank(offset)) {
+            if (isNumeric(limit) && isNumeric(offset)) {
+                sQuery.addLimit(Integer.parseInt(offset), Integer.parseInt(limit));
             }
-        }else if(!StringUtilities.isNullOrEmpty(limit)){
-            if (StringUtilities.isNumeric(limit)) {
-                sQuery.addLimit(StringUtilities.toInt(limit));
+        }else if(!StringUtils.isBlank(limit)){
+            if (isNumeric(limit)) {
+                sQuery.addLimit(Integer.parseInt(limit));
             }
-        }else if(!StringUtilities.isNullOrEmpty(offset)){
-            if (StringUtilities.isNumeric(offset)) {
-                sQuery.addLimit(StringUtilities.toInt(offset), 1000000);
+        }else if(!StringUtils.isBlank(offset)){
+            if (isNumeric(offset)) {
+                sQuery.addLimit(Integer.parseInt(offset), 1000000);
             }
         }
         if(preparedStatement ) {
             if (conditions==null || conditions.isEmpty()) {
-                return StringUtilities.toStringInline(sQuery.toString());
+                return toStringInline(sQuery.toString());
             }else {
-                String query = JOOQSupport.getQueryInsertWhereParam(StringUtilities.toStringInline(sQuery.toString()));
-                return StringUtilities.toStringInline(query);
+                String query = JOOQSupport.getQueryInsertWhereParam(toStringInline(sQuery.toString()));
+                return toStringInline(query);
             }
         } else{
             /*if(sqlDialect.equals(SQLDialect.MYSQL)) {
@@ -293,7 +297,7 @@ public class JOOQUtilities {
                 }
                 return StringKit.toStringInline(sss +" "+ s);
             }*/
-            return StringUtilities.toStringInline(sQuery.toString());
+            return toStringInline(sQuery.toString());
         }
     }
 
@@ -341,8 +345,8 @@ public class JOOQUtilities {
         //uQuery.addFrom(table);
         if(conditions!=null && !conditions.isEmpty()) uQuery.addConditions(conditions);
 
-        if(preparedStatement)return StringUtilities.toStringInline(uQuery.getSQL());
-        else return StringUtilities.toStringInline(uQuery.toString());
+        if(preparedStatement)return toStringInline(uQuery.getSQL());
+        else return toStringInline(uQuery.toString());
     }
 
     /**
@@ -356,8 +360,8 @@ public class JOOQUtilities {
         Table<Record> table = new TableImpl<>(nameTable);
         DeleteQuery<Record> dQuery = dslContext.deleteQuery(table);
         if(conditions!=null && !conditions.isEmpty()) dQuery.addConditions(conditions);
-        if(preparedStatement)return StringUtilities.toStringInline(dQuery.getSQL());
-        else return StringUtilities.toStringInline(dQuery.toString());
+        if(preparedStatement)return toStringInline(dQuery.getSQL());
+        else return toStringInline(dQuery.toString());
     }
 
     /**
@@ -402,9 +406,9 @@ public class JOOQUtilities {
      * @return a object JOOQ Field.
      */
     public static Field<?> createFieldValue(Object value){
-        if(value instanceof URL) return DSL.val(StringUtilities.toString(value), String.class);
-        if(value instanceof URI) return DSL.val(StringUtilities.toString(value), String.class);
-        if(value instanceof String) return DSL.val(StringUtilities.toString(value), String.class);
+        if(value instanceof URL) return DSL.val(String.valueOf(value), String.class);
+        if(value instanceof URI) return DSL.val(String.valueOf(value), String.class);
+        if(value instanceof String) return DSL.val(String.valueOf(value), String.class);
         if(value instanceof Condition) return DSL.val((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,Boolean.class);
         if(value instanceof Integer) return DSL.val(value,Integer.class);
@@ -436,9 +440,9 @@ public class JOOQUtilities {
      * @return a object JOOQ Field.
      */
     public static Field<?> createFieldValue(Object value,DataType<?> dataType){
-        if(value instanceof URL) return DSL.val(StringUtilities.toString(value), dataType);
-        if(value instanceof URI) return DSL.val(StringUtilities.toString(value), dataType);
-        if(value instanceof String) return DSL.val(StringUtilities.toString(value), dataType);
+        if(value instanceof URL) return DSL.val(String.valueOf(value), dataType);
+        if(value instanceof URI) return DSL.val(String.valueOf(value), dataType);
+        if(value instanceof String) return DSL.val(String.valueOf(value), dataType);
         //if(value instanceof Condition) return DSL.field((Condition) value);
         if(value instanceof Boolean) return DSL.val(value,dataType);
         if(value instanceof Integer) return DSL.val(value,dataType);
@@ -535,8 +539,8 @@ public class JOOQUtilities {
     public static DataType createDataType(int sqlTypes){
         return new DefaultDataType(
                 sqlDialect,
-                SQLConverter.convertSQLTypes2JavaClass(sqlTypes),
-                SQLConverter.convertSQLTypes2String(sqlTypes)
+                SQL2Utilities.convertSQLTypes2JavaClass(sqlTypes),
+                SQL2Utilities.convertSQLTypes2String(sqlTypes)
         );
     }
 
@@ -573,8 +577,8 @@ public class JOOQUtilities {
     public static DataType createDataType(int sqlTypes,SQLDialect sqlDialect){
         return new DefaultDataType(
                 sqlDialect,
-                SQLConverter.convertSQLTypes2JavaClass(sqlTypes),
-                SQLConverter.convertSQLTypes2String(sqlTypes)
+                SQL2Utilities.convertSQLTypes2JavaClass(sqlTypes),
+                SQL2Utilities.convertSQLTypes2String(sqlTypes)
         );
     }
 
@@ -633,7 +637,7 @@ public class JOOQUtilities {
             fields[i] = field;
             fv[i] = createFieldValueCapture(values[i], types[i]);
         }
-        return ArrayUtilities.toMap(fields, fv);
+        return toMap(fields, fv);
     }
 
     /**
@@ -652,7 +656,7 @@ public class JOOQUtilities {
             fields[i] = field;
             fv[i] = createFieldValueCapture(values[i]);
         }
-        return ArrayUtilities.toMap(fields, fv);
+        return toMap(fields, fv);
     }
 
     /*
@@ -701,7 +705,7 @@ public class JOOQUtilities {
     @SuppressWarnings("unchecked")
     public static List<Condition> convertToListConditionEqualsWithAND(String[] columns,Object[] values) {
         List<Condition> conds = new ArrayList<>();
-        if (columns != null && !ArrayUtilities.isEmpty(columns)) {
+        if (columns != null && columns.length>0) {
             for (int i = 0; i < columns.length; i++) {
                 if (values[i] == null) {
                     conds.add(createFieldValue(columns[i]).isNull());
@@ -800,8 +804,8 @@ public class JOOQUtilities {
      * @param password string password.
      * @return the DSLContext set with Connection.
      */
-    public static DSLContext getMySQLConnection(String host,String port,String database,String username,String password){
-        connection = SQLUtilities.getMySqlConnection(host, port, database, username, password);
+    public static DSLContext getMySQLConnection(Connection connection){
+        JOOQUtilities.connection = connection;//SQL2Utilities.getConnection(host, port, database, username, password);
         connProvider= new DefaultConnectionProvider(connection);
         connProvider.acquire();
         sqlDialect = SQLDialect.MYSQL;
@@ -814,20 +818,21 @@ public class JOOQUtilities {
         String[] columns = new String[]{"col1","col2","col3"};
         Object[] values =new Object[]{1,"test",null};
         int[] types = new int[]{Types.INTEGER,Types.VARCHAR,Types.NULL};
-        getMySQLConnection("localhost", "3306", "geodb", "siimobility", "siimobility");
+        
+        Connection connection =SQL2Utilities.prepareConnection("localhost", "3306", "geodb", "siimobility", "siimobility",DBType.MYSQL);
         //INSERT
         String query = insert("tabl1",columns,values,types);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         //query = insert("tabl1",columns,values,types,true);
         //System.out.println(StringKit.toStringInline(query));
 
         query = insert("tabl1", columns, values, types, true);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         //SELECT
         query = select("tabl1", columns);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         query = select("tabl1",columns,true);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         Field<String> f1 = (Field<String>) createFieldValue("col1");
         Field<String> f2 = (Field<String>) createFieldValue("col2");
         /*final Condition cond1 = f1.eq(f2);
@@ -842,25 +847,25 @@ public class JOOQUtilities {
         cinds = convertToListConditionEqualsWithAND(new String[]{"col1","col2"},new Object[]{null,"43"});
 
         query = select("tabl1", columns, false, cinds);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         query = select("tabl1", columns,true,cinds);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         cinds = convertToListConditionEqualsWithAND(new String[]{"col1","col2"},new Object[]{null,43});
         query = select("tabl1", columns, false, cinds);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         query = select("tabl1", columns,true,cinds);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
 
         //UPDATE
         query = update("tabl1", columns, values);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         query = update("tabl1",columns,values,true);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         query = update("tabl1", columns, values, false, cinds);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
         //DELETE
         query = delete("tabl1",false,cinds);
-        System.out.println(StringUtilities.toStringInline(query));
+        System.out.println(toStringInline(query));
 
 
 
@@ -880,5 +885,54 @@ public class JOOQUtilities {
 
     }*/
 
+    /**
+     * Method to simplify the content of a string for a better vision of the content.
+     * @param stringText string of the text.
+     * @return string of text simplify.
+     */
+    public static String toStringInline(String stringText){
+        return stringText.replaceAll("\\r\\n|\\r|\\n", " ").replaceAll("\\s+", " ").trim();
+        //return stringText.replaceAll("(?m)(^ *| +(?= |$))", "").replaceAll("(?m)^$([\r\n]+?)(^$[\r\n]+?^)+", "$1");
+    }
+    
+    public static boolean  isNumeric(String value){
+    	if(IntegerValidator.getInstance().isValid(value) ||
+			FloatValidator.getInstance().isValid(value) ||
+			DoubleValidator.getInstance().isValid(value) ||
+			LongValidator.getInstance().isValid(value) ||
+			ShortValidator.getInstance().isValid(value) ||
+			IntegerValidator.getInstance().isValid(value)
+    	){
+    		return true;
+    	}else{
+    		return false;
+    	}
+    }
+    
+    /**
+     * Method to convert two array keys and values tp a HashMap.
+     * @param keys array of keys.
+     * @param values array of values.
+     * @param <K> the generic key.
+     * @param <V> the generic value.
+     * @return the hasmap fulled with array.
+     */
+    public static <K,V> HashMap<K,V> toMap(K[] keys, V[] values) {
+        int keysSize = (keys != null) ? keys.length : 0;
+        int valuesSize = (values != null) ? values.length : 0;
+        if (keysSize == 0 && valuesSize == 0) {
+            // return mutable map
+            return new HashMap<>();
+        }
+        if (keysSize != valuesSize) {
+            throw new IllegalArgumentException(
+                    "The number of keys doesn't match the number of values.");
+        }
+        HashMap<K, V> map = new HashMap<>();
+        for (int i = 0; i < keysSize; i++) {
+            map.put(keys[i], values[i]);
+        }
+        return map;
+    }
 
 }

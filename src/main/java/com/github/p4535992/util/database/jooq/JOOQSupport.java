@@ -1,9 +1,9 @@
 package com.github.p4535992.util.database.jooq;
 
-import com.github.p4535992.util.collection.ArrayUtilities;
-import com.github.p4535992.util.string.StringUtilities;
+import com.github.p4535992.util.regex.pattern.RegexUtilities;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 
@@ -21,10 +21,10 @@ public class JOOQSupport {
      * @return the String of the Query SpringFramework JDBC.
      */
     public static String getQueryInsertValuesParam(String queryString, String[] columns){
-        String preQuery = StringUtilities.findWithRegex(queryString, MANAGE_SQL_PREQUERY_INSERT);
+        String preQuery = RegexUtilities.findWithRegex(queryString, MANAGE_SQL_PREQUERY_INSERT);
         if(preQuery != null) {
             String postQuery = queryString.replace(preQuery, "");
-            if (StringUtilities.isMatch(postQuery, MANAGE_SQL_QUERY_INSERT_CHECK_WHERE)) {
+            if (RegexUtilities.isMatch(postQuery, MANAGE_SQL_QUERY_INSERT_CHECK_WHERE)) {
                 String[] val = postQuery.split(MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_3.pattern());
                 if (val.length > 2) {
                     String postQuery0 = val[0].replace("(", "").replace(")", "");
@@ -34,14 +34,15 @@ public class JOOQSupport {
                 //queryString = queryString.replace(preQuery, "");
                 postQuery = "";
             }
-            preQuery = StringUtilities.findWithRegex(preQuery, MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
+            preQuery = RegexUtilities.findWithRegex(preQuery, MANAGE_SQL_QUERY_INSERT_GET_VALUES_PARAM_2v2).trim();
             //values = values.substring(0, values.length() - 1);
             //String[] param = values.split(",");
             //for(String s: param)values = values.replace(s.trim(),"?");
-            String[] array = ArrayUtilities.createSingleton("?", columns.length);
-            String values = ArrayUtilities.toString(array);
+            String[] array =  new String[columns.length];
+            Arrays.fill(array,0, columns.length - 1, "?");
+            String values = String.join(",", array);
             //return queryString + " values (" + values +")" + supportQuery;
-            return preQuery + ArrayUtilities.toString(columns)
+            return preQuery + String.join(",", columns)
                     + ") values (" + values + ")" + postQuery;
         }else{
             return null;
@@ -54,7 +55,7 @@ public class JOOQSupport {
      * @return the String of the Query SpringFramework JDBC.
      */
     public static String getQueryInsertWhereParam(String queryString){
-        String values = StringUtilities.findWithRegex(queryString,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1);
+        String values = RegexUtilities.findWithRegex(queryString,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_1);
         String supportQuery = queryString.replace(values, "");
         if (supportQuery.toLowerCase().contains(" order by ")){
             String[] val = queryString.split(values);
@@ -64,7 +65,7 @@ public class JOOQSupport {
             queryString = queryString.replace(values, "");
             supportQuery = "";
         }
-        values = values.replace(StringUtilities.findWithRegex(values,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2),"");
+        values = values.replace(RegexUtilities.findWithRegex(values,MANAGE_SQL_QUERY_INSERT_GET_WHERE_PARAM_2),"");
         values = values.substring(0,values.length()-1);
         String[] paramCond = values.split("(and|or)");
         for(String s: paramCond){

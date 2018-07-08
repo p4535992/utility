@@ -3,8 +3,9 @@ package old_test;
 import org.openrdf.query.*;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryException;
-import com.github.p4535992.util.repositoryRDF.sesame.Sesame2Utilities;
 import org.openrdf.repository.base.RepositoryConnectionWrapper;
+
+import com.github.p4535992.util.rdf.Sesame2Utilities;
 
 import java.io.UnsupportedEncodingException;
 
