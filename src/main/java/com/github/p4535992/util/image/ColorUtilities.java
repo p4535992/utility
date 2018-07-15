@@ -12,13 +12,13 @@ import java.awt.Color;
  * corresponding color or return a name for a given color.
  * @author Adrian Ber
  */
-public class Colors {
+public class ColorUtilities {
 
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(Color.class);
 
     /** Don't instantiate this, use only the static methods */
-    private Colors() {
+    private ColorUtilities() {
     }
 
     /** map between color names and colors;
@@ -34,7 +34,7 @@ public class Colors {
 
     /** Initialiase colors map */
     private static void initColorsMap() {
-        Field[] fields = Colors.class.getFields();
+        Field[] fields = ColorUtilities.class.getFields();
         for (Field field : fields) {
             if (field.getType().isAssignableFrom(Color.class)) {
                 addColor(field.getName());
@@ -61,8 +61,8 @@ public class Colors {
     /** Returns a color with the specified case-insensitive name. */
     private static Color getColorFromField(String name) {
         try {
-            Field colorField = Colors.class.getField(name.toLowerCase());
-            return (Color) colorField.get(Colors.class);
+            Field colorField = ColorUtilities.class.getField(name.toLowerCase());
+            return (Color) colorField.get(ColorUtilities.class);
         }
         catch (NoSuchFieldException exc) {
         }
@@ -113,7 +113,7 @@ public class Colors {
             c = Color.decode(s);
         }
         catch (NumberFormatException exc) {
-            c = Colors.getColor(s);
+            c = ColorUtilities.getColor(s);
         }
         return c;
     }

@@ -12,6 +12,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 /**
@@ -20,10 +21,10 @@ import java.util.Iterator;
  * @version 2015-07-14.
  */
 @SuppressWarnings("unused")
-public class ImageKit {
+public class ImageUtilitities {
 
     private static final org.slf4j.Logger logger =
-            org.slf4j.LoggerFactory.getLogger(ImageKit.class);
+            org.slf4j.LoggerFactory.getLogger(ImageUtilitities.class);
 
     public static void captureScreen(String fileName) throws Exception {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -67,7 +68,7 @@ public class ImageKit {
         }
     }
 
-    public static String convertImageToString(File file){
+    public static String toString(File file){
         StringBuilder sb = new StringBuilder();
         try {
             ImageInputStream iis = ImageIO.createImageInputStream(file);
@@ -84,7 +85,7 @@ public class ImageKit {
         return null;
     }
 
-    public static String convertImageToString(URL url){
+    public static String toString(URL url){
         StringBuilder sb = new StringBuilder();
         try {
             ImageInputStream iis = ImageIO.createImageInputStream(url.openStream());
@@ -106,7 +107,7 @@ public class ImageKit {
      * @param image the Image Object to convert.
      * @return the BufferedImage.
      */
-    public static BufferedImage convertImageToBufferedImage(Image image) {
+    public static BufferedImage toBufferedImage(Image image) {
         if (image instanceof BufferedImage)return (BufferedImage)image;
         // This code ensures that all the pixels in the image are loaded
         image = new ImageIcon(image).getImage();
@@ -140,7 +141,7 @@ public class ImageKit {
         return bimage;
     }
 
-    public static  BufferedImage convertImageToBufferedImage(File file){
+    public static  BufferedImage toBufferedImage(File file){
         try {
             return ImageIO.read(file);
         } catch (IOException e) {
@@ -149,7 +150,7 @@ public class ImageKit {
         return null;
     }
 
-    public static BufferedImage convertImageToBufferedImage(URL url) throws IOException {
+    public static BufferedImage toBufferedImage(URL url) throws IOException {
         // URLConnection.guessContentTypeFromStream only needs the first 12 bytes, but
         // just to be safe from future java api enhancements, we'll use a larger number
         int pushbackLimit = 100;
@@ -174,7 +175,94 @@ public class ImageKit {
 
     }
 
-
+    /**
+     * @href http://www.jguru.com/faq/view.jsp?EID=134008
+     */
+    public static RenderedImage toRenderedImage(BufferedImage bImage,Image image){
+    	// construct the buffered image
+    	//BufferedImage bImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_RGB);
+    	//obtain it's graphics
+    	Graphics2D bImageGraphics = bImage.createGraphics();
+    	//draw the Image (image) into the BufferedImage (bImage)
+    	bImageGraphics.drawImage(image, null, null);
+    	// cast it to rendered image
+    	RenderedImage rImage = (RenderedImage)bImage;
+    	return rImage;
+    }
+    
+    /**
+     * @href https://gist.github.com/jpt1122/f6bf89e8a97d40971150
+     */
+    public static BufferedImage toBufferedImage(RenderedImage img) {
+		if (img instanceof BufferedImage) {
+			return (BufferedImage) img;
+		}
+		ColorModel cm = img.getColorModel();
+		int width = img.getWidth();
+		int height = img.getHeight();
+		WritableRaster raster = cm
+				.createCompatibleWritableRaster(width, height);
+		boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+		Hashtable<String,Object> properties = new Hashtable<String,Object>();
+		String[] keys = img.getPropertyNames();
+		if (keys != null) {
+			for (int i = 0; i < keys.length; i++) {
+				properties.put(keys[i], img.getProperty(keys[i]));
+			}
+		}
+		BufferedImage result = new BufferedImage(cm, raster,
+				isAlphaPremultiplied, properties);
+		img.copyData(raster);
+		return result;
+    }
+    
+    /**
+     * @href https://coderanch.com/t/380929/java/convert-Image-RenderedImage
+     */
+    public static BufferedImage toBufferedImage(final Image image, final int type) {
+    	if (image instanceof BufferedImage)
+    		return (BufferedImage) image;
+    	if (image instanceof VolatileImage)
+    		return ((VolatileImage) image).getSnapshot();
+    	loadImage(image);
+    	final BufferedImage buffImg = new BufferedImage(image.getWidth(null), image.getHeight(null), type);
+    	final Graphics2D g2 = buffImg.createGraphics();
+    	g2.drawImage(image, null, null);
+    	g2.dispose();
+    	return buffImg;
+    }
+    
+    /**
+     * @href https://coderanch.com/t/380929/java/convert-Image-RenderedImage
+     */
+    private static void loadImage(final Image image) {
+    	class StatusObserver implements ImageObserver {
+    		boolean imageLoaded = false;
+    		@Override
+    		public boolean imageUpdate(final Image img, final int infoflags, 
+    				final int x, final int y, final int width, final int height) {
+    			if (infoflags == ALLBITS) {
+    				synchronized (this) {
+    					imageLoaded = true;
+    					notify();
+    				}
+    				return true;
+    			}
+    			return false;
+    		}
+    	}
+    	final StatusObserver imageStatus = new StatusObserver();
+    	synchronized (imageStatus) {
+    		if (image.getWidth(imageStatus) == -1 || image.getHeight(imageStatus) == -1) {
+    			while (!imageStatus.imageLoaded) {
+    				try {
+    					imageStatus.wait();
+    				} catch (InterruptedException ex) {}
+    			}
+    		}
+    	}
+    }
+    
     private static boolean hasAlpha(Image image) {
         // If buffered image, the color model is readily available
         if (image instanceof BufferedImage) return ((BufferedImage)image).getColorModel().hasAlpha();
