@@ -1,4 +1,4 @@
-package com.github.p4535992.util.collection.impl;
+package com.github.p4535992.util.collection;
 
 import java.util.ArrayList;
 import java.util.Collection;
