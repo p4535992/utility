@@ -6,12 +6,9 @@
 
 package old_test;
 
-import com.github.p4535992.util.file.FileUtilities;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
 
 /**
  *
@@ -33,9 +30,9 @@ public class Test_Encoding {
                 //text.writeSmallTextFile(lines, FILE_NAME);
                 
                 //treat as a large file - use some buffering
-                lines = FileUtilities.toUTF8(f);
+                //lines = FileUtilities.toUTF8(f);
                 //lines = readLargerTextFileWithReturn(FileUtil.filename(f));                     
-                FileUtilities.write(lines,f);
+                //FileUtilities.write(lines,f);
             }
             
           //main

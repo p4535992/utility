@@ -1,13 +1,15 @@
 package util;
 
 import com.drew.tools.FileUtil;
-import com.github.p4535992.util.file.FileUtilities;
 import com.github.p4535992.util.file.archive.ZtZipUtilities;
 import junit.framework.TestCase;
 import junit.framework.TestResult;
+
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -17,7 +19,7 @@ public class Test_ZtZipUtilities{
 
 
     @Test
-    public void getFromDirectory(){
+    public void getFromDirectory() throws IOException{
 
         File test = new File(Test_ZtZipUtilities.class.getClassLoader().getResource("ac-transit_20150218_1708.zip").getFile());
 
@@ -31,7 +33,7 @@ public class Test_ZtZipUtilities{
 
         List<File> files4 = ZtZipUtilities.extractFilesBySuffix(test,".txt");
 
-        String content = FileUtilities.toString(files2.get(0));
+        String content = FileUtils.readFileToString(files2.get(0));
         String s ="";
     }
 }

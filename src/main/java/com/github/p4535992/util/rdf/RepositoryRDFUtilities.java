@@ -11,6 +11,7 @@ import org.openrdf.repository.base.RepositoryConnectionWrapper;
 import org.openrdf.repository.config.RepositoryImplConfig;
 import org.openrdf.repository.manager.RepositoryManager;
 import org.openrdf.rio.RDFFormat;
+import org.openrdf.sail.SailException;
 
 import java.io.File;
 import java.io.InputStream;
@@ -23,6 +24,7 @@ import java.util.Map;
 
 /**
  * Created by 4535992 on 27/10/2015.
+ * @deprecated
  */
 @SuppressWarnings("unused")
 public class RepositoryRDFUtilities {
@@ -369,9 +371,9 @@ public class RepositoryRDFUtilities {
 
     //--------------------------------------------------------------------
 
-    public Repository connectToCassandra(String host,String keySpace,boolean isQuadStore){
+    public Repository connectToCassandra(String host,String keySpace,boolean isQuadStore) throws SailException{
         CumulusRDFUtilities cumulus = CumulusRDFUtilities.getInstance();
-        return cumulus.connectToCassandraRepository(host,keySpace,isQuadStore);
+        return cumulus.toRDFRepository(host,keySpace,isQuadStore);
     }
 
 

@@ -1,6 +1,8 @@
 package util;
 
-import com.github.p4535992.util.file.FileUtilities;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.junit.Test;
 
 import java.io.File;
@@ -16,13 +18,13 @@ public class Test_FileUtilities {
     public void getPathOfFile(){
         File dir = new File(Test_ZtZipUtilities.class.getClassLoader().getResource("dir").getFile());
 
-        List<File> files0 = FileUtilities.getFilesFromDirectory(dir);
+        List<File> files0 = (List<File>) FileUtils.listFiles(dir,TrueFileFilter.INSTANCE,TrueFileFilter.INSTANCE);
 
         File test = files0.get(0);
 
         String uri = test.toURI().toString();
 
-        String uri2 = FileUtilities.toUriWithPrefix(test).toString();
+        String uri2 = test.toURI().toString();
         String s ="";
     }
 }

@@ -5,6 +5,7 @@ import com.github.p4535992.util.reflection.ReflectionUtilities;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.bean.HeaderColumnNameTranslateMappingStrategy;
 import com.univocity.parsers.common.processor.ColumnProcessor;
 import com.univocity.parsers.common.processor.RowListProcessor;
@@ -193,6 +194,40 @@ public class CsvUtilities {
         }
         return records;
     }
+
+    /**
+     * Parses a csv file into a list of beans.
+     * @href https://gist.github.com/sharfah/4140517
+     * @param <T> the type of the bean
+     * @param filename the name of the csv file to parse
+     * @param fieldDelimiter the field delimiter
+     * @param beanClass the bean class to map csv records to
+     * @return the list of beans or an empty list there are none
+     * @throws FileNotFoundException if the file does not exist
+     */
+    public static <T> List<T> parseCsvFileToBeans(final String filename,
+    		final char fieldDelimiter,
+    		final Class<T> beanClass) throws FileNotFoundException {
+    	CSVReader reader = null;
+    	try {
+    		reader = new CSVReader(new BufferedReader(new FileReader(filename)), 
+    				fieldDelimiter);
+    		final HeaderColumnNameMappingStrategy<T> strategy =
+    				new HeaderColumnNameMappingStrategy<T>();
+    		strategy.setType(beanClass);
+    		final CsvToBean<T> csv = new CsvToBean<T>();
+    		return csv.parse(strategy, reader);
+    	} finally {
+    		if (reader != null) {
+    			try {
+    				reader.close();
+    			} catch (final IOException e) {
+    				// ignore
+    			}
+    		}
+    	}
+    }
+    
 
     /**
      * Method use OpenCsv Library for
