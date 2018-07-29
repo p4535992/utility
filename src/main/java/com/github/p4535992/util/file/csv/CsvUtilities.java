@@ -1,9 +1,11 @@
 package com.github.p4535992.util.file.csv;
 
 import com.github.p4535992.util.calendar.DateUtils;
-import com.github.p4535992.util.reflection.ReflectionUtilities;
+//import com.github.p4535992.util.reflection.ReflectionUtilities;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import com.opencsv.bean.BeanToCsv;
+import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.bean.HeaderColumnNameTranslateMappingStrategy;
@@ -34,27 +36,27 @@ public class CsvUtilities {
     private static final org.slf4j.Logger logger =
             org.slf4j.LoggerFactory.getLogger(CsvUtilities.class);
 
-    /**
-     * Method to write a CSV Data List of Beans to a String.
-     * @param beans the List of Beans to convert.
-     * @param separator the char separator.
-     * @param <T> the generic variable.
-     * @return the String content of the List of Beans.
-     */
-    public static <T> String writeCSVDataToStringWithBeans(List<T> beans,char separator){
-        try {
-            Writer writer = new StringWriter();
-            try (CSVWriter csvWriter = new CSVWriter(writer, separator)) {
-                List<String[]> data = toStringArray(beans);
-                csvWriter.writeAll(data);
-            }
-            return writer.toString();
-        }catch(IOException e) {
-            logger.error("Can't write the CSV String from the Bean:" + beans.get(0).getClass().getName()
-                    + " -> " + e.getMessage(), e);
-            return "";
-        }
-    }
+//    /**
+//     * Method to write a CSV Data List of Beans to a String.
+//     * @param beans the List of Beans to convert.
+//     * @param separator the char separator.
+//     * @param <T> the generic variable.
+//     * @return the String content of the List of Beans.
+//     */
+//    public static <T> String writeCSVDataToStringWithBeans(List<T> beans,char separator){
+//        try {
+//            Writer writer = new StringWriter();
+//            try (CSVWriter csvWriter = new CSVWriter(writer, separator)) {
+//                List<String[]> data = toStringArray(beans);
+//                csvWriter.writeAll(data);
+//            }
+//            return writer.toString();
+//        }catch(IOException e) {
+//            logger.error("Can't write the CSV String from the Bean:" + beans.get(0).getClass().getName()
+//                    + " -> " + e.getMessage(), e);
+//            return "";
+//        }
+//    }
 
     /**
      * Method to write a CSV Data List of Array of String to a String.
@@ -153,47 +155,47 @@ public class CsvUtilities {
         writeCSVDataToConsole(content,'\0');
     }
 
-    /**
-     * Method to convert a List of beans to a List of Array of Strings.
-     * @param beans the List of Beans.
-     * @param <T> generic value.
-     * @return the List of Array of String content of the csv.
-     */
-    public static <T> List<String[]> toStringArray(List<T> beans) {
-        return toStringArray(beans,null);
-    }
-
-    /**
-     * Method to convert a List of beans to a List of Array of Strings.
-     * @param beans the List of Beans.
-     * @param addNewHeader the new String Array for the Header row.
-     * @param <T> generic value.
-     * @return the List of Array of String content of the csv.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> List<String[]> toStringArray(List<T> beans,String[] addNewHeader) {
-        List<String[]> records = new ArrayList<>();
-        //add header record
-        //records.add(new String[]{"ID","Name","Role","Salary"});
-        if(addNewHeader != null) records.add(addNewHeader);
-        for(T bean : beans) {
-        //beans.stream().map((bean) -> {
-            List<String> record = new ArrayList<>();
-            //invoke getter method and convert to String
-            Class<T> clazz = (Class<T>) bean.getClass();
-            //T t = ReflectionUtilities.invokeConstructor(clazz);
-            List<Method> getter = (List<Method>) ReflectionUtilities.findGetters(clazz,true);
-
-            for(Method method : getter){
-                 record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method)));
-            }
-            //getter.stream().forEach((method) -> record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method))));
-            //return record;
-        //}).forEach((record) -> records.add(ListUtilities.toArray(record)));
-            records.add(record.toArray(new String[record.size()]));
-        }
-        return records;
-    }
+//    /**
+//     * Method to convert a List of beans to a List of Array of Strings.
+//     * @param beans the List of Beans.
+//     * @param <T> generic value.
+//     * @return the List of Array of String content of the csv.
+//     */
+//    public static <T> List<String[]> toStringArray(List<T> beans) {
+//        return toStringArray(beans,null);
+//    }
+//
+//    /**
+//     * Method to convert a List of beans to a List of Array of Strings.
+//     * @param beans the List of Beans.
+//     * @param addNewHeader the new String Array for the Header row.
+//     * @param <T> generic value.
+//     * @return the List of Array of String content of the csv.
+//     */
+//    @SuppressWarnings("unchecked")
+//    public static <T> List<String[]> toStringArray(List<T> beans,String[] addNewHeader) {
+//        List<String[]> records = new ArrayList<>();
+//        //add header record
+//        //records.add(new String[]{"ID","Name","Role","Salary"});
+//        if(addNewHeader != null) records.add(addNewHeader);
+//        for(T bean : beans) {
+//        //beans.stream().map((bean) -> {
+//            List<String> record = new ArrayList<>();
+//            //invoke getter method and convert to String
+//            Class<T> clazz = (Class<T>) bean.getClass();
+//            //T t = ReflectionUtilities.invokeConstructor(clazz);
+//            List<Method> getter = (List<Method>) ReflectionUtilities.findGetters(clazz,true);
+//
+//            for(Method method : getter){
+//                 record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method)));
+//            }
+//            //getter.stream().forEach((method) -> record.add(String.valueOf(ReflectionUtilities.invokeGetter(bean,method))));
+//            //return record;
+//        //}).forEach((record) -> records.add(ListUtilities.toArray(record)));
+//            records.add(record.toArray(new String[record.size()]));
+//        }
+//        return records;
+//    }
 
     /**
      * Parses a csv file into a list of beans.
@@ -205,7 +207,7 @@ public class CsvUtilities {
      * @return the list of beans or an empty list there are none
      * @throws FileNotFoundException if the file does not exist
      */
-    public static <T> List<T> parseCsvFileToBeans(final String filename,
+    public static <T> List<T> parseCSVFileToBeans(final String filename,
     		final char fieldDelimiter,
     		final Class<T> beanClass) throws FileNotFoundException {
     	CSVReader reader = null;
@@ -227,7 +229,103 @@ public class CsvUtilities {
     		}
     	}
     }
+    /**
+     * Reading the CSV File
+     * @href http://www.javainterviewpoint.com/csvtobean-and-beantocsv-example-using-opencsv/
+     * Delimiter is comma
+     * Default Quote character is double quote
+     * Start reading from line 1
+     */
+    public static <T> List<T> parseCSVFileToBeans(File csvFile,String[] columns,Class<T> clazz){
+    	CSVReader csvReader = null;
+    	 List<T> empList = null;
+    	try
+        {
+            csvReader = new CSVReader(new FileReader(csvFile),',','"',1);
+            //mapping of columns with their positions
+            ColumnPositionMappingStrategy<T> mappingStrategy = 
+            		new ColumnPositionMappingStrategy<T>();
+            //Set mappingStrategy type to Employee Type
+            mappingStrategy.setType(clazz);
+            //Fields in Employee Bean
+            //String[] columns = new String[]{"empId","firstName","lastName","salary"};
+            //Setting the colums for mappingStrategy
+            mappingStrategy.setColumnMapping(columns);
+            //create instance for CsvToBean class
+            CsvToBean<T> ctb = new CsvToBean<T>();
+            //parsing csvReader(Employee.csv) with mappingStrategy  
+            empList = ctb.parse(mappingStrategy,csvReader);
+            //Print the Employee Details
+            //for(T emp : empList)
+            //{
+            //	//Do somenthing
+            //}
+        }
+        catch(Exception ee)
+        {
+            ee.printStackTrace();
+        }
+        finally
+		{
+			try
+			{
+				csvReader.close();
+			}
+			catch(Exception ee)
+			{
+				ee.printStackTrace();
+			}
+		}    
+    	return empList;
+    }
     
+    /**
+     * Writing to a CSV Example (BeanToCsv)
+     * @href http://www.javainterviewpoint.com/csvtobean-and-beantocsv-example-using-opencsv/
+     * @param beans
+     * @param columns
+     * @param csvFile
+     */
+    public static <T> void writeCSVDataToFileFromBeans(List<T> beans,String columns,File csvFile)
+    {
+    	if(!beans.isEmpty()){ 		   	
+	    	CSVWriter csvWriter = null;
+	    	try
+	    	{
+	    		//Create CSVWriter for writing to Employee.csv 
+	    		csvWriter = new CSVWriter(new FileWriter(csvFile));
+	    		BeanToCsv<T> bc = new BeanToCsv<T>();
+	    		//mapping of columns with their positions
+	    		ColumnPositionMappingStrategy<T> mappingStrategy = 
+	    				new ColumnPositionMappingStrategy<T>();
+	    		//Set mappingStrategy type to Employee Type
+	    		mappingStrategy.setType((Class<T>)beans.get(0).getClass());
+	    		//Fields in Employee Bean
+	    		//String[] columns = new String[]{"empId","firstName","lastName","salary"};
+	    		//Setting the colums for mappingStrategy
+	    		mappingStrategy.setColumnMapping(columns);
+	    		//Writing empList to csv file
+	    		bc.write(mappingStrategy,csvWriter,beans);
+	    		logger.info("CSV File written successfully!!!");
+	    	}
+	    	catch(Exception ee)
+	    	{
+	    		ee.printStackTrace();
+	    	}
+	    	finally
+	    	{
+	    		try
+	    		{
+	    			//closing the writer
+	    			csvWriter.close();
+	    		}
+	    		catch(Exception ee)
+	    		{
+	    			ee.printStackTrace();
+	    		}
+	    	}
+    	}
+    }
 
     /**
      * Method use OpenCsv Library for
@@ -254,46 +352,46 @@ public class CsvUtilities {
         }
     }
 
-    /**
-     * Method use OpenCsv Library for
-     * @param clazz the Class of the Bean.
-     * @param fileInputCsv the File CSV to parse.
-     * @param separator the char separator.
-     * @param <T> the generic variable.
-     * @return the List of Bean parsed from the CSV file.
-     */
-    public static <T> List<T> parseCSVFileAsList(Class<T> clazz,File fileInputCsv,char separator){
-        try {
-            List<T> beans;
-            try ( //create CSVReader object
-                    CSVReader reader = new CSVReader(new FileReader(fileInputCsv), separator)) {
-                beans = new ArrayList<>();
-                //read line by line
-                String[] record;
-                //skip header row
-                String[] headers = reader.readNext();
-                //read content
-                while ((record = reader.readNext()) != null) {
-                    T t = ReflectionUtilities.invokeConstructor(clazz);
-                    for(int i=0; i < record.length; i++){
-                        String nameMethod = "set"+ org.apache.commons.lang3.StringUtils.capitalize(headers[i]);
-                        //invoke setter method
-                        if(ReflectionUtilities.checkMethod(clazz,nameMethod)){
-                            ReflectionUtilities.invokeSetter(t,nameMethod,record[i]);
-                        }else{
-                            logger.warn("Not exists the Method with name:"+nameMethod+" on the Bean:" +
-                                    t.getClass().getName());
-                        }
-                    }
-                    beans.add(t);
-                }
-            }
-            return beans;
-        }catch(IOException e){
-            logger.error("Can't parse the CSV file:"+ fileInputCsv.getAbsolutePath()+" -> "+e.getMessage(),e);
-            return new ArrayList<>();
-        }
-    }   
+//    /**
+//     * Method use OpenCsv Library for
+//     * @param clazz the Class of the Bean.
+//     * @param fileInputCsv the File CSV to parse.
+//     * @param separator the char separator.
+//     * @param <T> the generic variable.
+//     * @return the List of Bean parsed from the CSV file.
+//     */
+//    public static <T> List<T> parseCSVFileAsList(Class<T> clazz,File fileInputCsv,char separator){
+//        try {
+//            List<T> beans;
+//            try ( //create CSVReader object
+//                    CSVReader reader = new CSVReader(new FileReader(fileInputCsv), separator)) {
+//                beans = new ArrayList<>();
+//                //read line by line
+//                String[] record;
+//                //skip header row
+//                String[] headers = reader.readNext();
+//                //read content
+//                while ((record = reader.readNext()) != null) {
+//                    T t = ReflectionUtilities.invokeConstructor(clazz);
+//                    for(int i=0; i < record.length; i++){
+//                        String nameMethod = "set"+ org.apache.commons.lang3.StringUtils.capitalize(headers[i]);
+//                        //invoke setter method
+//                        if(ReflectionUtilities.checkMethod(clazz,nameMethod)){
+//                            ReflectionUtilities.invokeSetter(t,nameMethod,record[i]);
+//                        }else{
+//                            logger.warn("Not exists the Method with name:"+nameMethod+" on the Bean:" +
+//                                    t.getClass().getName());
+//                        }
+//                    }
+//                    beans.add(t);
+//                }
+//            }
+//            return beans;
+//        }catch(IOException e){
+//            logger.error("Can't parse the CSV file:"+ fileInputCsv.getAbsolutePath()+" -> "+e.getMessage(),e);
+//            return new ArrayList<>();
+//        }
+//    }   
     
 
     /**
